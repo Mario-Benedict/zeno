@@ -1,4 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
+import Header from '../components/header';
+import AppLayout from '@/layouts/app-layout';
 
 export default function Dashboard() {
   const { auth } = usePage().props;
@@ -11,7 +13,7 @@ export default function Dashboard() {
     <>
       <Head title="Dashboard" />
       <div className="flex min-h-screen flex-col bg-[#FDFDFC] dark:bg-[#0a0a0a]">
-        <header className="border-b border-[#e3e3e0] bg-white dark:border-[#3E3E3A] dark:bg-[#161615]">
+        {/* <header className="border-b border-[#e3e3e0] bg-white dark:border-[#3E3E3A] dark:bg-[#161615]">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
             <span className="text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
               {import.meta.env.VITE_APP_NAME || 'Laravel'}
@@ -28,16 +30,22 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
-        </header>
+        </header> */}
 
-        <main className="mx-auto w-full max-w-5xl px-6 py-12">
-          <h1 className="text-2xl font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">
-            Dashboard
-          </h1>
-          <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
-            Welcome back, {auth.user?.name}. You're logged in.
-          </p>
-        </main>
+        <header>
+          <Header></Header>
+        </header>
+        
+        <AppLayout>
+          <main className="mx-auto w-full max-w-5xl px-6 py-12">
+            <h1 className="text-2xl font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">
+              Dashboard
+            </h1>
+            <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+              Welcome back, {auth.user?.name}. You're logged in.
+            </p>
+          </main>
+        </AppLayout>
       </div>
     </>
   );
