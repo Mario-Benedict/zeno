@@ -1,10 +1,10 @@
-import { useState } from "react";
-import Zeno from "../../../public/logos/logo.svg?react";
-import ArrowDown from "../../../public/icons/small/arrow_down.svg?react";
-import Search from "../../../public/icons/small/search.svg?react";
-import Bell from "../../../public/icons/small/bell.svg?react";
-import People from "../../../public/icons/small/people.svg?react";
-import Gear from "../../../public/icons/small/gear.svg?react";
+import ArrowDown from '@public/icons/small/arrow_down.svg';
+import Bell from '@public/icons/small/bell.svg';
+import Gear from '@public/icons/small/gear.svg';
+import People from '@public/icons/small/people.svg';
+import Search from '@public/icons/small/search.svg';
+import Zeno from '@public/logos/logo.svg';
+import { useState } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,16 +28,15 @@ interface AppHeaderProps {
 
 function getInitials(name: string): string {
   return name
-    .split(" ")
+    .split(' ')
     .map((n) => n[0])
-    .join("")
+    .join('')
     .toUpperCase()
     .slice(0, 2);
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-/** Generic icon button with hover state */
 function IconButton({
   label,
   onClick,
@@ -51,21 +50,24 @@ function IconButton({
     <button
       aria-label={label}
       onClick={onClick}
-      className="flex items-center justify-center w-8 h-8 rounded-md text-[#aaa] hover:text-[#e8e8e8] hover:bg-white/[0.07] transition-colors"
+      className="flex h-8 w-8 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-white/[0.07] hover:text-dark-primary"
     >
       {children}
     </button>
   );
 }
 
-/** User avatar — image with initials fallback */
 function Avatar({ user }: { user: User }) {
   return (
-    <div className="w-7.5 h-7.5 rounded-full overflow-hidden bg-dark-primary flex items-center justify-center shrink-0">
+    <div className="flex h-7.5 w-7.5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-dark-surface-2">
       {user.avatarUrl ? (
-        <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+        <img
+          src={user.avatarUrl}
+          alt={user.name}
+          className="h-full w-full object-cover"
+        />
       ) : (
-        <span className="text-[10px] font-semibold text-white leading-none">
+        <span className="text-[10px] font-semibold leading-none text-dark-primary">
           {getInitials(user.name)}
         </span>
       )}
@@ -76,8 +78,8 @@ function Avatar({ user }: { user: User }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Header({
-  projectName = "Project Zeno",
-  user = { name: "Mario Benedict" },
+  projectName = 'Project Zeno',
+  user = { name: 'Mario Benedict' },
   onSearch,
   onProjectClick,
   onNotificationClick,
@@ -85,7 +87,7 @@ export default function Header({
   onSettingsClick,
   onUserMenuClick,
 }: AppHeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     const query = e.target.value;
@@ -94,30 +96,29 @@ export default function Header({
   }
 
   return (
-    <header className="flex items-center h-12 px-2 gap-2 bg-dark-surface-1 border-b border-[#2e2e2e] select-none">
-
-      {/* ── Left: Logo + Project selector ── */}
-      <div className="flex items-center w-100 gap-2 shrink-0">
-        <div className="flex items-center justify-center w-10 h-10 bg-dark-surface-2">
-          <Zeno className="w-8 h-8"/>
+    <header className="flex h-12 select-none items-center gap-2 border-b border-dark-border bg-dark-surface-1 px-2">
+      {/* ── Left: Logo + Project picker ── */}
+      <div className="flex w-100 shrink-0 items-center gap-2">
+        <div className="flex h-10 w-10 items-center justify-center bg-dark-surface-1">
+          <Zeno />
         </div>
 
         <button
           onClick={onProjectClick}
           aria-haspopup="true"
           aria-label="Select project"
-          className="flex items-center gap-1 px-1.5 py-1 rounded-md text-[#e8e8e8] hover:bg-white/[0.07] transition-colors"
+          className="flex items-center gap-1 rounded-md px-1.5 py-1 text-dark-primary transition-colors hover:bg-white/[0.07]"
         >
-          <span className="text-sm font-medium whitespace-nowrap">{projectName}</span>
-          <span className="text-[#888]"><ArrowDown/></span>
+          <span className="whitespace-nowrap text-sm font-medium">{projectName}</span>
+          <span className="text-dark-secondary"><ArrowDown /></span>
         </button>
       </div>
 
       {/* ── Center: Search ── */}
-      <div className="flex-1 flex justify-center px-4 min-w-0" role="search">
+      <div className="flex min-w-0 flex-1 justify-center px-4" role="search">
         <div className="relative w-full max-w-90">
-          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#888] pointer-events-none">
-            <Search/>
+          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-secondary">
+            <Search />
           </span>
           <input
             type="search"
@@ -126,11 +127,10 @@ export default function Header({
             placeholder="Search"
             aria-label="Search"
             className="
-              w-full h-8 pl-8 pr-3
-              bg-[#2a2a2a] border border-[#3a3a3a] rounded-full
-              text-[13px] text-[#e8e8e8] placeholder-[#888]
-              outline-none transition-colors
-              focus:bg-[#313131] focus:border-[#4a4a4a]
+              h-8 w-full rounded-full border border-dark-border bg-dark-input
+              pl-8 pr-3 text-[13px] text-dark-primary outline-none
+              transition-colors placeholder:text-dark-secondary
+              focus:border-dark-border-focus focus:bg-dark-input-focus
               [&::-webkit-search-cancel-button]:hidden
             "
           />
@@ -138,7 +138,7 @@ export default function Header({
       </div>
 
       {/* ── Right: Icons + Divider + User menu ── */}
-      <div className="flex items-center justify-end w-100 gap-2 shrink-0">
+      <div className="flex w-100 shrink-0 items-center justify-end gap-2">
         <IconButton label="Notifications" onClick={onNotificationClick}>
           <Bell />
         </IconButton>
@@ -151,22 +151,19 @@ export default function Header({
           <Gear />
         </IconButton>
 
-        {/* Divider */}
-        <div className="w-px h-5 bg-[#2e2e2e] mx-1.5" aria-hidden="true" />
+        <div className="mx-1.5 h-5 w-px bg-dark-border" aria-hidden="true" />
 
-        {/* User menu */}
         <button
           onClick={onUserMenuClick}
           aria-haspopup="true"
           aria-label="User menu"
-          className="flex items-center gap-2 px-1.5 py-1 rounded-md text-[#e8e8e8] hover:bg-white/[0.07] transition-colors"
+          className="flex items-center gap-2 rounded-md px-1.5 py-1 text-dark-primary transition-colors hover:bg-white/[0.07]"
         >
           <Avatar user={user} />
-          <span className="text-[13px] font-medium whitespace-nowrap">{user.name}</span>
-          <span className="text-[#888]"><ArrowDown /></span>
+          <span className="whitespace-nowrap text-[13px] font-medium">{user.name}</span>
+          <span className="text-dark-secondary"><ArrowDown /></span>
         </button>
       </div>
-
     </header>
   );
 }

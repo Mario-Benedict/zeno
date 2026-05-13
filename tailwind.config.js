@@ -31,6 +31,10 @@ export default {
                     },
                     primary: '#F0F0F0',
                     secondary: '#7B7B7B',
+                    border: '#3A3A3A',
+                    'border-focus': '#4A4A4A',
+                    input: '#2A2A2A',
+                    'input-focus': '#313131',
                 },
                 
                 // --- LIGHT MODE ---
