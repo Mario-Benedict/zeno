@@ -19,26 +19,24 @@ const floatLabel = [
   'peer-autofill:top-2 peer-autofill:translate-y-0 peer-autofill:text-[11px] peer-autofill:text-dark-primary',
 ].join(' ');
 
-export default function InputField({ id, label, error, suffix, ...props }: FloatInputFieldProps) {
-  return (
-    <div>
-      <div className="relative">
-        <input
-          id={id}
-          placeholder=" "
-          className={suffix ? `${inputBase} pr-10` : inputBase}
-          {...props}
-        />
-        <label htmlFor={id} className={floatLabel}>
-          {label}
-        </label>
-        {suffix && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            {suffix}
-          </div>
-        )}
-      </div>
-      {error && <p className="mt-1 text-xs text-status-error">{error}</p>}
+const FloatInputField = ({ id, label, error, suffix, ...props }: FloatInputFieldProps) => (
+  <div>
+    <div className="relative">
+      <input
+        id={id}
+        placeholder=" "
+        className={suffix ? `${inputBase} pr-10` : inputBase}
+        {...props}
+      />
+      <label htmlFor={id} className={floatLabel}>
+        {label}
+      </label>
+      {suffix && (
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</div>
+      )}
     </div>
-  );
-}
+    {error && <p className="mt-1 text-xs text-status-error">{error}</p>}
+  </div>
+);
+
+export default FloatInputField;

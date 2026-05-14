@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import type { InputHTMLAttributes } from 'react';
-import InputField from './FloatInputField';
+import { useState } from 'react';
+import FloatInputField from './FloatInputField';
 
 type PasswordFieldProps = {
   label: string;
@@ -21,11 +21,11 @@ const EyeClosed = () => (
   </svg>
 );
 
-export default function PasswordField({ label, error, ...props }: PasswordFieldProps) {
+const PasswordField = ({ label, error, ...props }: PasswordFieldProps) => {
   const [show, setShow] = useState(false);
 
   return (
-    <InputField
+    <FloatInputField
       label={label}
       error={error}
       type={show ? 'text' : 'password'}
@@ -42,4 +42,6 @@ export default function PasswordField({ label, error, ...props }: PasswordFieldP
       {...props}
     />
   );
-}
+};
+
+export default PasswordField;

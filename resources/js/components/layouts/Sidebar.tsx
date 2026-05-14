@@ -61,21 +61,21 @@ const SettingsIcon: React.FC = () => (
 
 const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: DashboardIcon },
-  { name: 'Board',     href: '/board',     icon: BoardIcon },
-  { name: 'Chat',      href: '/chat',      icon: ChatIcon },
-  { name: 'LLM',       href: '/llm',       icon: LLMIcon },
-  { name: 'Notes',     href: '/notes',     icon: NotesIcon },
+  { name: 'Board', href: '/board', icon: BoardIcon },
+  { name: 'Chat', href: '/chat', icon: ChatIcon },
+  { name: 'LLM', href: '/llm', icon: LLMIcon },
+  { name: 'Notes', href: '/notes', icon: NotesIcon },
   { name: 'Reminders', href: '/reminders', icon: RemindersIcon },
 ];
 
 const navLinkBase =
   'flex w-14 flex-col items-center justify-center gap-1.5 rounded-xl px-1.5 py-2.5 text-[10px] font-medium leading-none transition-colors duration-150';
 const navLinkActive = 'bg-accent-blue text-white hover:bg-accent-blue/90';
-const navLinkIdle   = 'text-dark-secondary hover:bg-white/[0.07] hover:text-dark-primary';
+const navLinkIdle = 'text-dark-secondary hover:bg-white/[0.07] hover:text-dark-primary';
 
-export default function Sidebar() {
+const Sidebar = () => {
   const { url } = usePage();
-  const isActive = (href: string): boolean => url.startsWith(href);
+  const isActive = (href: string) => url.startsWith(href);
 
   return (
     <aside className="flex h-dvh px-3 flex-col border-r border-dark-border bg-dark-surface-1">
@@ -92,8 +92,6 @@ export default function Sidebar() {
             </Link>
           ))}
         </div>
-
-        {/* Pinned settings */}
         <div className="flex flex-col items-center pb-1">
           <div className="my-2 h-px w-10 bg-dark-border" />
           <Link
@@ -104,8 +102,9 @@ export default function Sidebar() {
             <span>Settings</span>
           </Link>
         </div>
-
       </nav>
     </aside>
   );
-}
+};
+
+export default Sidebar;

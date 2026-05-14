@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
 
-export default function Welcome() {
-  return (
-    <>
-      <Head title="Welcome" />
-      <p>Test</p>
-    </>
-  );
-}
+const Welcome = () => (
+  <>
+    <Head title="Welcome" />
+    <p>Test</p>
+  </>
+);
+
+export default Welcome;
