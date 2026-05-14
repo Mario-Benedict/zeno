@@ -1,9 +1,10 @@
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEventHandler } from 'react';
 import Button from '@/components/shared/Button';
-import FloatInputField from '@/components/shared/FloatInputField';
+import PasswordStrengthBar from '@/components/shared/PasswordStrengthBar';
 import PasswordField from '@/components/shared/PasswordField';
 import AuthLayout from '@/layouts/AuthLayout';
+import { getPasswordStrength } from '@/lib/passwordStrength';
 
 interface ResetPasswordProps {
   token: string;
@@ -18,6 +19,8 @@ const ResetPassword = ({ token, email }: ResetPasswordProps) => {
     password_confirmation: '',
   });
 
+  const strength = getPasswordStrength(data.password);
+
   const submit: FormEventHandler = (e) => {
     e.preventDefault();
     post('/reset-password', {
@@ -27,35 +30,31 @@ const ResetPassword = ({ token, email }: ResetPasswordProps) => {
 
   return (
     <AuthLayout
-      title="Reset your password"
-      description="Choose a new password for your account"
+      title="Set New Password"
+      description="Make sure to save your password in a password manager."
     >
       <Head title="Reset Password" />
 
       <form onSubmit={submit} className="space-y-4">
-        <FloatInputField
-          id="email"
-          label="Email"
-          type="email"
-          value={data.email}
-          onChange={(e) => setData('email', e.target.value)}
-          autoComplete="email"
-          error={errors.email}
-        />
+        <input type="hidden" name="token" value={data.token} />
+        <input type="hidden" name="email" value={data.email} />
 
-        <PasswordField
-          id="password"
-          label="New password"
-          value={data.password}
-          onChange={(e) => setData('password', e.target.value)}
-          autoComplete="new-password"
-          autoFocus
-          error={errors.password}
-        />
+        <div>
+          <PasswordField
+            id="password"
+            label="Password"
+            value={data.password}
+            onChange={(e) => setData('password', e.target.value)}
+            autoComplete="new-password"
+            autoFocus
+            error={errors.password}
+          />
+          <PasswordStrengthBar strength={strength} />
+        </div>
 
         <PasswordField
           id="password_confirmation"
-          label="Confirm new password"
+          label="Confirm Password"
           value={data.password_confirmation}
           onChange={(e) => setData('password_confirmation', e.target.value)}
           autoComplete="new-password"
@@ -63,7 +62,7 @@ const ResetPassword = ({ token, email }: ResetPasswordProps) => {
         />
 
         <Button type="submit" loading={processing} className="mt-2 w-full">
-          {processing ? 'Resetting…' : 'Reset password'}
+          {processing ? 'Resetting…' : 'Reset Password'}
         </Button>
       </form>
     </AuthLayout>
