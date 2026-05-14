@@ -18,8 +18,8 @@ const ForgotPassword = ({ status }: ForgotPasswordProps) => {
 
   return (
     <AuthLayout
-      title="Forgot password?"
-      description="Enter your email and we'll send you a reset link"
+      title="Forgot Password"
+      description="Please enter your email address to reset your password."
     >
       <Head title="Forgot Password" />
 
@@ -42,14 +42,14 @@ const ForgotPassword = ({ status }: ForgotPasswordProps) => {
         />
 
         <Button type="submit" loading={processing} className="mt-2 w-full">
-          {processing ? 'Sending link…' : 'Send reset link'}
+          {processing ? 'Sending…' : 'Continue'}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-dark-secondary">
         Remembered it?{' '}
         <Link href="/login" className="font-medium text-dark-primary underline underline-offset-4">
-          Back to sign in
+          Back to Login
         </Link>
       </p>
     </AuthLayout>
