@@ -7,7 +7,7 @@ interface CreateProjectPanelProps {
 }
 
 const SLUG_CHAR_RE = /^[a-zA-Z0-9\- ]*$/;
-const NO_DBL_SPACE = /  /;
+const NO_DBL_SPACE = / {2}/;
 const RANDOM_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 const randomSuffix = (len = 5) =>
