@@ -59,13 +59,13 @@ const SettingsIcon: React.FC = () => (
   </svg>
 );
 
-const navItems: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: DashboardIcon },
-  { name: 'Board', href: '/board', icon: BoardIcon },
-  { name: 'Chat', href: '/chat', icon: ChatIcon },
-  { name: 'LLM', href: '/llm', icon: LLMIcon },
-  { name: 'Notes', href: '/notes', icon: NotesIcon },
-  { name: 'Reminders', href: '/reminders', icon: RemindersIcon },
+const buildNavItems = (projectSlug: string): NavItem[] => [
+  { name: 'Overview', href: `/p/${projectSlug}`, icon: DashboardIcon },
+  { name: 'Board', href: `/p/${projectSlug}/board`, icon: BoardIcon },
+  { name: 'Chat', href: `/p/${projectSlug}/chat`, icon: ChatIcon },
+  { name: 'LLM', href: `/p/${projectSlug}/llm`, icon: LLMIcon },
+  { name: 'Notes', href: `/p/${projectSlug}/notes`, icon: NotesIcon },
+  { name: 'Reminders', href: `/p/${projectSlug}/reminders`, icon: RemindersIcon },
 ];
 
 const navLinkBase =
@@ -73,12 +73,21 @@ const navLinkBase =
 const navLinkActive = 'bg-accent-blue text-white hover:bg-accent-blue/90';
 const navLinkIdle = 'text-dark-secondary hover:bg-white/[0.07] hover:text-dark-primary';
 
-const Sidebar = () => {
+interface SidebarProps {
+  projectSlug: string;
+}
+
+const Sidebar = ({ projectSlug }: SidebarProps) => {
   const { url } = usePage();
-  const isActive = (href: string) => url.startsWith(href);
+  const navItems = buildNavItems(projectSlug);
+
+  const isActive = (href: string) => {
+    if (href === `/p/${projectSlug}`) return url === href;
+    return url.startsWith(href);
+  };
 
   return (
-    <aside className="flex h-dvh px-3 flex-col border-r border-dark-border bg-dark-surface-1">
+    <aside className="flex h-dvh flex-col border-r border-dark-border bg-dark-surface-1 px-3">
       <nav className="flex flex-col py-3">
         <div className="flex flex-1 flex-col items-center gap-0.5 overflow-y-auto overflow-x-hidden py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map(({ name, href, icon: Icon }) => (
@@ -95,8 +104,8 @@ const Sidebar = () => {
         <div className="flex flex-col items-center pb-1">
           <div className="my-2 h-px w-10 bg-dark-border" />
           <Link
-            href="/settings"
-            className={`${navLinkBase} ${isActive('/settings') ? navLinkActive : navLinkIdle}`}
+            href={`/p/${projectSlug}/settings`}
+            className={`${navLinkBase} ${url.startsWith(`/p/${projectSlug}/settings`) ? navLinkActive : navLinkIdle}`}
           >
             <SettingsIcon />
             <span>Settings</span>

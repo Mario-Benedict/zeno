@@ -18,7 +18,7 @@ class OtpController extends Controller
     public function create(Request $request): Response|RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('projects.index'));
         }
 
         return Inertia::render('auth/verify-email', [
@@ -31,7 +31,7 @@ class OtpController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('projects.index'));
         }
 
         $key = 'otp-verify.' . $user->id;
@@ -59,7 +59,7 @@ class OtpController extends Controller
         $otp->delete();
         $user->markEmailAsVerified();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route('projects.index'));
     }
 
     public function resend(Request $request): RedirectResponse
@@ -67,7 +67,7 @@ class OtpController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('projects.index'));
         }
 
         $code = $user->generateEmailOtp();

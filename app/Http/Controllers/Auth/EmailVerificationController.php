@@ -15,7 +15,7 @@ class EmailVerificationController extends Controller
     public function notice(Request $request): Response|RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('projects.index'));
         }
 
         return Inertia::render('auth/verify-email', [
@@ -30,13 +30,13 @@ class EmailVerificationController extends Controller
             event(new Verified($request->user()));
         }
 
-        return redirect()->intended(route('dashboard').'?verified=1');
+        return redirect()->intended(route('projects.index').'?verified=1');
     }
 
     public function resend(Request $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('projects.index'));
         }
 
         $request->user()->sendEmailVerificationNotification();

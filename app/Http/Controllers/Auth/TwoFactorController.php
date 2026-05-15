@@ -67,7 +67,7 @@ class TwoFactorController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route('projects.index'));
     }
 
     private function challengeIsValid(Request $request): bool
