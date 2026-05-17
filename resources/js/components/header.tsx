@@ -26,18 +26,18 @@ interface AppHeaderProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getInitials(name: string): string {
+const getInitials = (name: string): string => {
   return name
     .split(' ')
     .map((n) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
-}
+};
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function IconButton({
+const IconButton = ({
   label,
   onClick,
   children,
@@ -45,7 +45,7 @@ function IconButton({
   label: string;
   onClick?: () => void;
   children: React.ReactNode;
-}) {
+}) => {
   return (
     <button
       aria-label={label}
@@ -55,11 +55,11 @@ function IconButton({
       {children}
     </button>
   );
-}
+};
 
-function Avatar({ user }: { user: User }) {
+const Avatar = ({ user }: { user: User }) => {
   return (
-    <div className="flex h-7.5 w-7.5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-dark-surface-2">
+    <div className="flex h-7.5 w-7.5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-dark-surface-3">
       {user.avatarUrl ? (
         <img
           src={user.avatarUrl}
@@ -73,11 +73,11 @@ function Avatar({ user }: { user: User }) {
       )}
     </div>
   );
-}
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function Header({
+const Header = ({
   projectName = 'Project Zeno',
   user = { name: 'Mario Benedict' },
   onSearch,
@@ -86,40 +86,49 @@ export default function Header({
   onContactsClick,
   onSettingsClick,
   onUserMenuClick,
-}: AppHeaderProps) {
+}: AppHeaderProps) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
     onSearch?.(query);
-  }
+  };
 
   return (
-    <header className="flex h-12 select-none items-center gap-2 border-b border-dark-border bg-dark-surface-1 px-2">
+    <header className="flex select-none items-center gap-2 bg-dark-surface-1 p-2">
       {/* ── Left: Logo + Project picker ── */}
       <div className="flex w-100 shrink-0 items-center gap-2">
-        <div className="flex h-10 w-10 items-center justify-center bg-dark-surface-1">
-          <Zeno />
+        <div className="flex p-1 rounded-lg items-center justify-center bg-dark-surface-2">
+          <Zeno className="h-6 w-6"/>
         </div>
 
         <button
           onClick={onProjectClick}
           aria-haspopup="true"
           aria-label="Select project"
-          className="flex items-center gap-1 rounded-md px-1.5 py-1 text-dark-primary transition-colors hover:bg-white/[0.07]"
+          className="flex h-8 items-center gap-1 rounded-lg px-2 text-dark-primary bg-dark-surface-2"
         >
-          <span className="whitespace-nowrap text-sm font-medium">{projectName}</span>
+          <span className="whitespace-nowrap text-regular font-bold">{projectName}</span>
           <span className="text-dark-secondary"><ArrowDown /></span>
         </button>
       </div>
 
       {/* ── Center: Search ── */}
       <div className="flex min-w-0 flex-1 justify-center px-4" role="search">
-        <div className="relative w-full max-w-90">
-          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-secondary">
-            <Search />
+        {/* Wrapper ini yang sekarang didandanin kaya input */}
+        <div 
+          className="
+            flex w-full max-w-90 items-center h-8 rounded-full bg-dark-surface-2 px-3 
+            transition-colors focus-within:bg-dark-surface-3
+          "
+        >
+          {/* Icon ditaruh biasa, sejajar pake flex, dikasih margin kanan (mr-2) */}
+          <span className="flex shrink-0 items-center justify-center text-dark-secondary mr-3">
+            <Search className="h-5"/>
           </span>
+
+          {/* Input-nya dibikin background transparan dan ambil sisa ruang (flex-1) */}
           <input
             type="search"
             value={searchQuery}
@@ -127,10 +136,9 @@ export default function Header({
             placeholder="Search"
             aria-label="Search"
             className="
-              h-8 w-full rounded-full border border-dark-border bg-dark-input
-              pl-8 pr-3 text-[13px] text-dark-primary outline-none
-              transition-colors placeholder:text-dark-secondary
-              focus:border-dark-border-focus focus:bg-dark-input-focus
+              flex-1 bg-transparent outline-none
+              text-regular font-bold text-dark-primary 
+              placeholder:text-dark-secondary
               [&::-webkit-search-cancel-button]:hidden
             "
           />
@@ -157,13 +165,15 @@ export default function Header({
           onClick={onUserMenuClick}
           aria-haspopup="true"
           aria-label="User menu"
-          className="flex items-center gap-2 rounded-md px-1.5 py-1 text-dark-primary transition-colors hover:bg-white/[0.07]"
+          className="flex items-center h-8 gap-2 rounded-lg px-2 text-dark-primary bg-dark-surface-2"
         >
+          <span className="whitespace-nowrap text-regular font-bold">{user.name}</span>
           <Avatar user={user} />
-          <span className="whitespace-nowrap text-[13px] font-medium">{user.name}</span>
           <span className="text-dark-secondary"><ArrowDown /></span>
         </button>
       </div>
     </header>
   );
-}
+};
+
+export default Header;
