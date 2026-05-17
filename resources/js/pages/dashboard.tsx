@@ -12,7 +12,7 @@ export default function Dashboard() {
     <>
       <Head title="Dashboard" />
       <AppLayout>
-        <div className="mx-auto w-full max-w-5xl px-6 py-12 bg-dark-surface-1">
+        <div className="mx-auto w-full px-6 py-12 bg-dark-surface-1">
           <h1 className="text-2xl font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">
             Dashboard
           </h1>

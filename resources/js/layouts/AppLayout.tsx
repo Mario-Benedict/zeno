@@ -15,7 +15,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </header>
         <main className="flex">
           <Sidebar />
-          {children}
+          <div className="flex w-full h-[calc(100dvh-48px)] pr-2 pb-2 bg-dark-surface-1">
+            <div className="flex flex-1 q-full h-full p-2 rounded-lg border-2 border-dark-surface-3 overflow-clip">
+              {children}
+            </div>
+          </div>
         </main>
       </>
     );

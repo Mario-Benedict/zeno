@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
   { name: 'Chat',      href: '/chat',      icon: ChatIcon },
   { name: 'LLM',       href: '/llm',       icon: LLMIcon },
   { name: 'Notes',     href: '/notes',     icon: NotesIcon },
-  { name: 'Reminder', href: '/reminders', icon: RemindersIcon },
+  { name: 'Reminder',  href: '/reminders', icon: RemindersIcon },
 ];
 
 const Sidebar = () => {
