@@ -59,7 +59,7 @@ const IconButton = ({
 
 const Avatar = ({ user }: { user: User }) => {
   return (
-    <div className="flex h-7.5 w-7.5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-dark-surface-3">
+    <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-dark-surface-3">
       {user.avatarUrl ? (
         <img
           src={user.avatarUrl}
