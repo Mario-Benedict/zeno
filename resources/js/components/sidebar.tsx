@@ -1,27 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
+import DashboardIcon from '@public/icons/large/dashboard.svg'
+import BoardIcon from '@public/icons/large/board.svg'
+import CalendarIcon from '@public/icons/large/calendar.svg'
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.FC;
 }
-
-const DashboardIcon: React.FC = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-    <rect x="14" y="14" width="7" height="7" rx="1.5" />
-  </svg>
-);
-
-const BoardIcon: React.FC = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="5" height="18" rx="1.5" />
-    <rect x="10" y="3" width="5" height="12" rx="1.5" />
-    <rect x="17" y="3" width="5" height="15" rx="1.5" />
-  </svg>
-);
 
 const ChatIcon: React.FC = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -62,50 +48,68 @@ const SettingsIcon: React.FC = () => (
 const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: DashboardIcon },
   { name: 'Board',     href: '/board',     icon: BoardIcon },
+  { name: 'Calendar',  href: '/calendar',  icon: CalendarIcon },
   { name: 'Chat',      href: '/chat',      icon: ChatIcon },
   { name: 'LLM',       href: '/llm',       icon: LLMIcon },
   { name: 'Notes',     href: '/notes',     icon: NotesIcon },
-  { name: 'Reminders', href: '/reminders', icon: RemindersIcon },
+  { name: 'Reminder', href: '/reminders', icon: RemindersIcon },
 ];
 
-const navLinkBase =
-  'flex w-14 flex-col items-center justify-center gap-1.5 rounded-xl px-1.5 py-2.5 text-[10px] font-medium leading-none transition-colors duration-150';
-const navLinkActive = 'bg-accent-blue text-white hover:bg-accent-blue/90';
-const navLinkIdle   = 'text-dark-secondary hover:bg-white/[0.07] hover:text-dark-primary';
-
-export default function Sidebar() {
+const Sidebar = () => {
   const { url } = usePage();
   const isActive = (href: string): boolean => url.startsWith(href);
 
   return (
-    <aside className="flex h-dvh px-3 flex-col border-r border-dark-border bg-dark-surface-1">
-      <nav className="flex flex-col py-3">
-        <div className="flex flex-1 flex-col items-center gap-0.5 overflow-y-auto overflow-x-hidden py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {navItems.map(({ name, href, icon: Icon }) => (
-            <Link
-              key={name}
-              href={href}
-              className={`${navLinkBase} ${isActive(href) ? navLinkActive : navLinkIdle}`}
-            >
-              <Icon />
-              <span>{name}</span>
-            </Link>
-          ))}
+    <aside className="flex h-[calc(100dvh-48px)] px-2 pb-2 flex-col bg-dark-surface-1">
+      <nav className="flex h-full rounded-lg flex-col justify-between p-2 bg-dark-surface-2">
+        <div className="flex flex-1 flex-col items-center gap-0.5 overflow-y-auto overflow-x-hidden py-1 scrollbar-none [&::-webkit-scrollbar]:hidden">
+          {navItems.map(({ name, href, icon: Icon }) => {
+            const active = isActive(href);
+            return (
+              <Link
+                key={name}
+                href={href}
+                // Container utama (teks akan ikut warna ini)
+                className={`group flex w-full flex-col items-center justify-center gap-2 py-2 text-[10px] font-medium leading-none transition-colors duration-150 ${
+                  active ? 'text-dark-primary' : 'text-dark-secondary hover:text-dark-primary'
+                }`}
+              >
+                {/* Bungkus Icon: Di sini background birunya ditaruh */}
+                <div 
+                  className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-150 ${
+                    active ? 'bg-accent-blue text-dark-primary' : 'bg-transparent group-hover:bg-dark-surface-3'
+                  }`}
+                >
+                  <Icon />
+                </div>
+                <span>{name}</span>
+              </Link>
+            );
+          })}
         </div>
 
         {/* Pinned settings */}
         <div className="flex flex-col items-center pb-1">
-          <div className="my-2 h-px w-10 bg-dark-border" />
+          <div className="my-2 h-px w-10 bg-dark-secondary" />
           <Link
             href="/settings"
-            className={`${navLinkBase} ${isActive('/settings') ? navLinkActive : navLinkIdle}`}
+            className={`group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-[10px] font-medium leading-none transition-colors duration-150 ${
+              isActive('/settings') ? 'text-white' : 'text-dark-secondary hover:text-dark-primary'
+            }`}
           >
-            <SettingsIcon />
+            <div 
+              className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-150 ${
+                isActive('/settings') ? 'bg-accent-blue text-white' : 'bg-transparent group-hover:bg-white/[0.07]'
+              }`}
+            >
+              <SettingsIcon />
+            </div>
             <span>Settings</span>
           </Link>
         </div>
-
       </nav>
     </aside>
   );
-}
+};
+
+export default Sidebar;
