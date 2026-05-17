@@ -1,5 +1,5 @@
-import Zeno from '@public/logos/logo.svg';
 import type { ReactNode } from 'react';
+import Zeno from '@public/logos/logo.svg';
 
 interface AuthLayoutProps {
   children: ReactNode;

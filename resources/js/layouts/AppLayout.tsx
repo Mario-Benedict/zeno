@@ -1,21 +1,21 @@
-import { Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Header from '@/components/layouts/Header';
 import Sidebar from '@/components/layouts/Sidebar';
 
+type Project = {
+  project_id: string;
+  project_name: string;
+  project_slug: string;
+};
+
 interface AppLayoutProps {
   children: ReactNode;
-  project: {
-    project_id: string;
-    project_name: string;
-    project_slug: string;
-  };
-}
+  project: Project;
+};
 
 const AppLayout = ({ children, project }: AppLayoutProps) => {
     return (
       <>
-        <Head title={project.project_name} />
         <header>
           <Header />
         </header>

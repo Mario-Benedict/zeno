@@ -1,8 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import Zeno from '@public/logos/logo.svg';
 import { useState } from 'react';
 import CreateProjectPanel from '@/components/projects/CreateProjectPanel';
 import type { Auth, PaginatedProjects, ProjectSummary } from '@/types';
+import Zeno from '@public/logos/logo.svg';
 
 interface ProjectsPageProps {
   auth: Auth;
@@ -58,7 +58,7 @@ interface ProjectRowProps {
 const ProjectRow = ({ project, onPin, showPin = true }: ProjectRowProps) => (
   <Link
     href={`/p/${project.project_slug}`}
-    className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
+    className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-white/4"
   >
     <div className="min-w-0">
       <p className="truncate text-sm font-medium text-dark-primary">{project.project_name}</p>
@@ -89,7 +89,7 @@ const ProjectsPage = () => {
   const hasProjects = projects.total > 0;
   const pageTitle = hasProjects ? 'All Projects' : 'Get Started';
 
-  const handlePin = (slug: string, current: boolean) => {
+  const handlePin = (slug: string) => {
     router.patch(`/p/${slug}/pin`, {}, {
       preserveScroll: true,
       onSuccess: () => router.reload({ only: ['projects', 'recentProjects'] }),
@@ -131,7 +131,7 @@ const ProjectsPage = () => {
         {/* Main content */}
         <div className="flex flex-1 gap-4 overflow-hidden px-6 pb-6">
           {/* Left panel */}
-          <div className="flex w-[360px] shrink-0 flex-col gap-4">
+          <div className="flex w-90 shrink-0 flex-col gap-4">
             {/* Create project card */}
             <button
               type="button"

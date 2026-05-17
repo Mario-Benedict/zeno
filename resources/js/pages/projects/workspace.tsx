@@ -16,6 +16,8 @@ interface WorkspaceProps {
 const Workspace = () => {
   const { project, role } = usePage<WorkspaceProps>().props;
 
+  console.log(project, role);
+
   return (
     <AppLayout project={project}>
       <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
