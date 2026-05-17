@@ -1,4 +1,4 @@
-import AuthLayout from '@/layouts/auth-layout';
+import AuthLayout from '@/layouts/AuthLayout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { FormEventHandler } from 'react';
 

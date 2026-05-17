@@ -1,6 +1,6 @@
-import AuthLayout from '@/layouts/auth-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { FormEventHandler } from 'react';
+import AuthLayout from '@/layouts/AuthLayout';
 
 interface ForgotPasswordProps {
   status?: string;

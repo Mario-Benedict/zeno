@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@config "../../tailwind.config.js";
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -12,7 +13,7 @@
 @font-face {
     font-family: 'Figtree';
     src: url('/fonts/Figtree-VariableFont_wght.ttf') format('truetype');
-    font-weight: 100 900; /* Font variable bisa support dari thin sampai black */
+    font-weight: 100 900;
     font-style: normal;
     font-display: swap;
 }
