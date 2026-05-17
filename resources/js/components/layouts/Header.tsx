@@ -1,12 +1,10 @@
+import { useState } from 'react';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
 import Bell from '@public/icons/small/bell.svg';
 import Gear from '@public/icons/small/gear.svg';
 import People from '@public/icons/small/people.svg';
 import Search from '@public/icons/small/search.svg';
 import Zeno from '@public/logos/logo.svg';
-import { useState } from 'react';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface User {
   name: string;
@@ -102,7 +100,6 @@ const Header = ({
         <div className="flex p-1 rounded-lg items-center justify-center bg-dark-surface-2">
           <Zeno className="h-6 w-6"/>
         </div>
-
         <button
           onClick={onProjectClick}
           aria-haspopup="true"
@@ -114,12 +111,11 @@ const Header = ({
         </button>
       </div>
 
-      {/* ── Center: Search ── */}
       <div className="flex min-w-0 flex-1 justify-center px-4" role="search">
         {/* Wrapper ini yang sekarang didandanin kaya input */}
-        <div 
+        <div
           className="
-            flex w-full max-w-90 items-center h-8 rounded-full bg-dark-surface-2 px-3 
+            flex w-full max-w-90 items-center h-8 rounded-full bg-dark-surface-2 px-3
             transition-colors focus-within:bg-dark-surface-3
           "
         >
@@ -137,7 +133,7 @@ const Header = ({
             aria-label="Search"
             className="
               flex-1 bg-transparent outline-none
-              text-regular font-bold text-dark-primary 
+              text-regular font-bold text-dark-primary
               placeholder:text-dark-secondary
               [&::-webkit-search-cancel-button]:hidden
             "
@@ -145,22 +141,17 @@ const Header = ({
         </div>
       </div>
 
-      {/* ── Right: Icons + Divider + User menu ── */}
       <div className="flex w-100 shrink-0 items-center justify-end gap-2">
         <IconButton label="Notifications" onClick={onNotificationClick}>
           <Bell />
         </IconButton>
-
         <IconButton label="Contacts" onClick={onContactsClick}>
           <People />
         </IconButton>
-
         <IconButton label="Settings" onClick={onSettingsClick}>
           <Gear />
         </IconButton>
-
         <div className="mx-1.5 h-5 w-px bg-dark-border" aria-hidden="true" />
-
         <button
           onClick={onUserMenuClick}
           aria-haspopup="true"

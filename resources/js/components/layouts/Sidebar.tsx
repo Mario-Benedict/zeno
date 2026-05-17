@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
-import DashboardIcon from '@public/icons/large/dashboard.svg'
 import BoardIcon from '@public/icons/large/board.svg'
 import CalendarIcon from '@public/icons/large/calendar.svg'
+import DashboardIcon from '@public/icons/large/dashboard.svg'
 
 interface NavItem {
   name: string;
@@ -45,19 +45,28 @@ const SettingsIcon: React.FC = () => (
   </svg>
 );
 
-const navItems: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: DashboardIcon },
-  { name: 'Board',     href: '/board',     icon: BoardIcon },
-  { name: 'Calendar',  href: '/calendar',  icon: CalendarIcon },
-  { name: 'Chat',      href: '/chat',      icon: ChatIcon },
-  { name: 'LLM',       href: '/llm',       icon: LLMIcon },
-  { name: 'Notes',     href: '/notes',     icon: NotesIcon },
-  { name: 'Reminder',  href: '/reminders', icon: RemindersIcon },
+const buildNavItems = (projectSlug: string): NavItem[] => [
+  { name: 'Dashboard', href: `/p/${projectSlug}`, icon: DashboardIcon },
+  { name: 'Board', href: `/p/${projectSlug}/board`, icon: BoardIcon },
+  { name: 'Calendar',  href: `/p/${projectSlug}/calendar`,  icon: CalendarIcon },
+  { name: 'Chat', href: `/p/${projectSlug}/chat`, icon: ChatIcon },
+  { name: 'LLM', href: `/p/${projectSlug}/llm`, icon: LLMIcon },
+  { name: 'Notes', href: `/p/${projectSlug}/notes`, icon: NotesIcon },
+  { name: 'Reminders', href: `/p/${projectSlug}/reminders`, icon: RemindersIcon },
 ];
 
-const Sidebar = () => {
+interface SidebarProps {
+  projectSlug: string;
+}
+
+const Sidebar = ({ projectSlug }: SidebarProps) => {
   const { url } = usePage();
-  const isActive = (href: string): boolean => url.startsWith(href);
+  const navItems = buildNavItems(projectSlug);
+
+  const isActive = (href: string) => {
+    if (href === `/p/${projectSlug}`) return url === href;
+    return url.startsWith(href);
+  };
 
   return (
     <aside className="flex h-[calc(100dvh-48px)] px-2 pb-2 flex-col bg-dark-surface-1">
@@ -65,6 +74,7 @@ const Sidebar = () => {
         <div className="flex flex-1 flex-col items-center gap-0.5 overflow-y-auto overflow-x-hidden py-1 scrollbar-none [&::-webkit-scrollbar]:hidden">
           {navItems.map(({ name, href, icon: Icon }) => {
             const active = isActive(href);
+
             return (
               <Link
                 key={name}
@@ -75,7 +85,7 @@ const Sidebar = () => {
                 }`}
               >
                 {/* Bungkus Icon: Di sini background birunya ditaruh */}
-                <div 
+                <div
                   className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-150 ${
                     active ? 'bg-accent-blue text-dark-primary' : 'bg-transparent group-hover:bg-dark-surface-3'
                   }`}
@@ -87,17 +97,15 @@ const Sidebar = () => {
             );
           })}
         </div>
-
-        {/* Pinned settings */}
         <div className="flex flex-col items-center pb-1">
           <div className="my-2 h-px w-10 bg-dark-secondary" />
           <Link
-            href="/settings"
             className={`group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-[10px] font-medium leading-none transition-colors duration-150 ${
               isActive('/settings') ? 'text-white' : 'text-dark-secondary hover:text-dark-primary'
             }`}
+            href={`/p/${projectSlug}/settings`}
           >
-            <div 
+            <div
               className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-150 ${
                 isActive('/settings') ? 'bg-accent-blue text-white' : 'bg-transparent group-hover:bg-white/[0.07]'
               }`}

@@ -1,12 +1,14 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { FormEventHandler } from 'react';
+import Button from '@/components/shared/Button';
+import FloatInputField from '@/components/shared/FloatInputField';
 import AuthLayout from '@/layouts/AuthLayout';
 
 interface ForgotPasswordProps {
   status?: string;
 }
 
-export default function ForgotPassword({ status }: ForgotPasswordProps) {
+const ForgotPassword = ({ status }: ForgotPasswordProps) => {
   const { data, setData, post, processing, errors } = useForm({ email: '' });
 
   const submit: FormEventHandler = (e) => {
@@ -16,60 +18,42 @@ export default function ForgotPassword({ status }: ForgotPasswordProps) {
 
   return (
     <AuthLayout
-      title="Forgot password?"
-      description="Enter your email and we'll send you a reset link"
+      title="Forgot Password"
+      description="Please enter your email address to reset your password."
     >
       <Head title="Forgot Password" />
 
       {status && (
-        <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700 dark:bg-green-950/40 dark:text-green-400">
+        <div className="mb-4 rounded-lg bg-status-success/10 px-4 py-3 text-sm text-status-success">
           {status}
         </div>
       )}
 
       <form onSubmit={submit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={data.email}
-            onChange={(e) => setData('email', e.target.value)}
-            autoComplete="email"
-            autoFocus
-            placeholder="you@example.com"
-            className="mt-1.5 block w-full rounded-lg border border-[#e3e3e0] bg-white px-3 py-2 text-sm text-[#1b1b18] placeholder:text-[#706f6c] focus:border-[#1b1b18] focus:outline-none dark:border-[#3E3E3A] dark:bg-[#161615] dark:text-[#EDEDEC] dark:placeholder:text-[#A1A09A] dark:focus:border-[#EDEDEC]"
-          />
-          {errors.email && (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-              {errors.email}
-            </p>
-          )}
-        </div>
+        <FloatInputField
+          id="email"
+          label="Email"
+          type="email"
+          value={data.email}
+          onChange={(e) => setData('email', e.target.value)}
+          autoComplete="email"
+          autoFocus
+          error={errors.email}
+        />
 
-        <button
-          type="submit"
-          disabled={processing}
-          className="w-full rounded-lg bg-[#1b1b18] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black disabled:opacity-50 dark:bg-[#eeeeec] dark:text-[#1C1C1A] dark:hover:bg-white"
-        >
-          {processing ? 'Sending link…' : 'Send reset link'}
-        </button>
+        <Button type="submit" loading={processing} className="mt-2 w-full">
+          {processing ? 'Sending…' : 'Continue'}
+        </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#706f6c] dark:text-[#A1A09A]">
+      <p className="mt-6 text-center text-sm text-dark-secondary">
         Remembered it?{' '}
-        <Link
-          href="/login"
-          className="font-medium text-[#1b1b18] underline underline-offset-4 dark:text-[#EDEDEC]"
-        >
-          Back to sign in
+        <Link href="/login" className="font-medium text-dark-primary underline underline-offset-4">
+          Back to Login
         </Link>
       </p>
     </AuthLayout>
   );
-}
+};
+
+export default ForgotPassword;

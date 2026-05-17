@@ -25,3 +25,17 @@
     font-style: italic;
     font-display: swap;
 }
+
+/* Override browser autofill background — keeps dark theme colours */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #2A2A2A inset !important;
+    -webkit-text-fill-color: #F0F0F0 !important;
+    caret-color: #F0F0F0;
+}
+
+input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #313131 inset !important;
+    -webkit-text-fill-color: #F0F0F0 !important;
+}
