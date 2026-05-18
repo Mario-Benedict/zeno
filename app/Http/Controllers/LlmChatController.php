@@ -61,7 +61,7 @@ class LlmChatController extends Controller
     }
 
     // 2. Bikin Sesi Chat Baru
-    $newSessionId = Str::uuid();
+    $newSessionId = Str::uuid()->toString();
     $session = LlmChatSession::create([
         'llm_chat_session_id' => $newSessionId,
         'llm_chat_account_id' => Auth::id(),
@@ -71,7 +71,7 @@ class LlmChatController extends Controller
 
     // 3. Simpan Pesan Kamu (User) ke Database
     LlmChatMessage::create([
-        'llm_chat_message_id' => Str::uuid(),
+        'llm_chat_message_id' => Str::uuid()->toString(),
         'llm_chat_session_id' => $newSessionId,
         'role' => 'user',
         'content' => $question
@@ -84,7 +84,7 @@ class LlmChatController extends Controller
 
         // 5. Simpan Pesan AI ke Database
         LlmChatMessage::create([
-            'llm_chat_message_id' => Str::uuid(),
+            'llm_chat_message_id' => Str::uuid()->toString(),
             'llm_chat_session_id' => $newSessionId,
             'role' => 'model', // Sesuai kesepakatan ERD
             'content' => $aiResponse
@@ -93,7 +93,7 @@ class LlmChatController extends Controller
     } catch (\Exception $e) {
         // Kalau error dari Google, simpan pesan errornya
         LlmChatMessage::create([
-            'llm_chat_message_id' => Str::uuid(),
+            'llm_chat_message_id' => Str::uuid()->toString(),
             'llm_chat_session_id' => $newSessionId,
             'role' => 'model',
             'content' => 'Error API Gemini: ' . $e->getMessage()
@@ -129,7 +129,7 @@ class LlmChatController extends Controller
 
       // 3. Simpan Pesan Baru Kamu di Database
       LlmChatMessage::create([
-          'llm_chat_message_id' => Str::uuid(),
+          'llm_chat_message_id' => Str::uuid()->toString(),
           'llm_chat_session_id' => $llm_chat_session_id,
           'role' => 'user',
           'content' => $request->question
@@ -142,14 +142,14 @@ class LlmChatController extends Controller
 
           // 5. Simpan balasan AI ke DB
           LlmChatMessage::create([
-              'llm_chat_message_id' => Str::uuid(),
+              'llm_chat_message_id' => Str::uuid()->toString(),
               'llm_chat_session_id' => $llm_chat_session_id,
               'role' => 'model',
               'content' => $aiResponse
           ]);
       } catch (\Exception $e) {
           LlmChatMessage::create([
-              'llm_chat_message_id' => Str::uuid(),
+              'llm_chat_message_id' => Str::uuid()->toString(),
               'llm_chat_session_id' => $llm_chat_session_id,
               'role' => 'model',
               'content' => 'Error API Gemini: ' . $e->getMessage()
