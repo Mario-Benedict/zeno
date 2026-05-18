@@ -7,23 +7,6 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import typescript from 'typescript-eslint';
 
-const controlStatements = [
-    'if',
-    'return',
-    'for',
-    'while',
-    'do',
-    'switch',
-    'try',
-    'throw',
-];
-const paddingAroundControl = [
-    ...controlStatements.flatMap((stmt) => [
-        { blankLine: 'always', prev: '*', next: stmt },
-        { blankLine: 'always', prev: stmt, next: '*' },
-    ]),
-];
-
 /** @type {import('eslint').Linter.Config[]} */
 export default [
     js.configs.recommended,
@@ -31,7 +14,7 @@ export default [
     ...typescript.configs.recommended,
     {
         ...react.configs.flat.recommended,
-        ...react.configs.flat['jsx-runtime'], // Required for React 17+
+        ...react.configs.flat['jsx-runtime'],
         languageOptions: {
             globals: {
                 ...globals.browser,
@@ -87,10 +70,10 @@ export default [
                     },
                 },
             ],
-            'import/consistent-type-specifier-style': [
-                'error',
-                'prefer-top-level',
-            ],
+            'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
+            // Prefer arrow functions — prevents `function X() {}` declarations
+            'func-style': ['error', 'expression'],
+            'prefer-arrow-callback': ['error', { allowNamedFunctions: false }],
         },
     },
     {
@@ -99,9 +82,10 @@ export default [
         },
         rules: {
             '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
+            // Only require a blank line before return when preceded by other statements
             '@stylistic/padding-line-between-statements': [
                 'error',
-                ...paddingAroundControl,
+                { blankLine: 'always', prev: ['const', 'let', 'var'], next: 'return' },
             ],
         },
     },
@@ -114,18 +98,18 @@ export default [
             'tailwind.config.js',
             'vite.config.ts',
             'resources/js/actions/**',
-            'resources/js/components/ui/*',
             'resources/js/routes/**',
             'resources/js/wayfinder/**',
         ],
     },
-    prettier, // Turn off all rules that might conflict with Prettier
+    prettier,
     {
         plugins: {
             '@stylistic': stylistic,
         },
         rules: {
-            curly: ['error', 'all'],
+            // Allow `if (cond) return x;` on one line; only multi-line blocks need braces
+            curly: ['error', 'multi-line'],
             '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
         },
     },
