@@ -18,7 +18,7 @@ class GoogleController extends Controller
 
     public function callback(): RedirectResponse
     {
-        $googleUser = Socialite::driver('google')->user();
+        $googleUser = Socialite::driver('google')->stateless()->user();
 
         $social = SocialAccount::where('provider', 'google')
             ->where('provider_id', $googleUser->getId())
