@@ -74,7 +74,7 @@
                       <!-- Pesan AI (Kiri) -->
                       <div class="flex justify-start w-full">
                           <div class="text-gray-300 px-5 py-3 max-w-[85%] sm:max-w-[75%] leading-relaxed ai-prose">
-                              {!! \Illuminate\Support\Str::markdown($message->content) !!}
+                              {!! \Illuminate\Support\Str::markdown($message->content, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
                           </div>
                       </div>
                   @endif
