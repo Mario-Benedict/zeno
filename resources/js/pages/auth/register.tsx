@@ -1,16 +1,25 @@
-import AuthLayout from '@/layouts/auth-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEventHandler } from 'react';
+import type { SubmitEventHandler } from 'react';
+import Button from '@/components/shared/Button';
+import GoogleButton from '@/components/shared/GoogleButton';
+import FloatInputField from '@/components/shared/FloatInputField';
+import PasswordField from '@/components/shared/PasswordField';
+import PasswordStrengthBar from '@/components/shared/PasswordStrengthBar';
+import AuthLayout from '@/layouts/AuthLayout';
+import { getPasswordStrength } from '@/lib/passwordStrength';
 
-export default function Register() {
+const Register = () => {
   const { data, setData, post, processing, errors, reset } = useForm({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     password: '',
     password_confirmation: '',
   });
 
-  const submit: FormEventHandler = (e) => {
+  const strength = getPasswordStrength(data.password);
+
+  const submit: SubmitEventHandler = (e) => {
     e.preventDefault();
     post('/register', {
       onFinish: () => reset('password', 'password_confirmation'),
@@ -18,124 +27,84 @@ export default function Register() {
   };
 
   return (
-    <AuthLayout
-      title="Create an account"
-      description="Fill in your details to get started"
-    >
+    <AuthLayout title="Create an account" description="Fill in your details to get started">
       <Head title="Register" />
 
       <form onSubmit={submit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]"
-          >
-            Name
-          </label>
-          <input
-            id="name"
+        <div className="grid grid-cols-2 gap-3">
+          <FloatInputField
+            id="first_name"
+            label="First name"
             type="text"
-            value={data.name}
-            onChange={(e) => setData('name', e.target.value)}
-            autoComplete="name"
+            value={data.first_name}
+            onChange={(e) => setData('first_name', e.target.value)}
+            autoComplete="given-name"
             autoFocus
-            placeholder="John Doe"
-            className="mt-1.5 block w-full rounded-lg border border-[#e3e3e0] bg-white px-3 py-2 text-sm text-[#1b1b18] placeholder:text-[#706f6c] focus:border-[#1b1b18] focus:outline-none dark:border-[#3E3E3A] dark:bg-[#161615] dark:text-[#EDEDEC] dark:placeholder:text-[#A1A09A] dark:focus:border-[#EDEDEC]"
+            error={errors.first_name}
           />
-          {errors.name && (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-              {errors.name}
-            </p>
-          )}
+          <FloatInputField
+            id="last_name"
+            label="Last name"
+            type="text"
+            value={data.last_name}
+            onChange={(e) => setData('last_name', e.target.value)}
+            autoComplete="family-name"
+            error={errors.last_name}
+          />
         </div>
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={data.email}
-            onChange={(e) => setData('email', e.target.value)}
-            autoComplete="email"
-            placeholder="you@example.com"
-            className="mt-1.5 block w-full rounded-lg border border-[#e3e3e0] bg-white px-3 py-2 text-sm text-[#1b1b18] placeholder:text-[#706f6c] focus:border-[#1b1b18] focus:outline-none dark:border-[#3E3E3A] dark:bg-[#161615] dark:text-[#EDEDEC] dark:placeholder:text-[#A1A09A] dark:focus:border-[#EDEDEC]"
-          />
-          {errors.email && (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-              {errors.email}
-            </p>
-          )}
-        </div>
+        <FloatInputField
+          id="email"
+          label="Email"
+          type="email"
+          value={data.email}
+          onChange={(e) => setData('email', e.target.value)}
+          autoComplete="email"
+          error={errors.email}
+        />
 
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]"
-          >
-            Password
-          </label>
-          <input
+          <PasswordField
             id="password"
-            type="password"
+            label="Password"
             value={data.password}
             onChange={(e) => setData('password', e.target.value)}
             autoComplete="new-password"
-            placeholder="Min. 8 characters"
-            className="mt-1.5 block w-full rounded-lg border border-[#e3e3e0] bg-white px-3 py-2 text-sm text-[#1b1b18] placeholder:text-[#706f6c] focus:border-[#1b1b18] focus:outline-none dark:border-[#3E3E3A] dark:bg-[#161615] dark:text-[#EDEDEC] dark:placeholder:text-[#A1A09A] dark:focus:border-[#EDEDEC]"
+            error={errors.password}
           />
-          {errors.password && (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-              {errors.password}
-            </p>
-          )}
+          <PasswordStrengthBar strength={strength} />
         </div>
 
-        <div>
-          <label
-            htmlFor="password_confirmation"
-            className="block text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]"
-          >
-            Confirm password
-          </label>
-          <input
-            id="password_confirmation"
-            type="password"
-            value={data.password_confirmation}
-            onChange={(e) => setData('password_confirmation', e.target.value)}
-            autoComplete="new-password"
-            placeholder="••••••••"
-            className="mt-1.5 block w-full rounded-lg border border-[#e3e3e0] bg-white px-3 py-2 text-sm text-[#1b1b18] placeholder:text-[#706f6c] focus:border-[#1b1b18] focus:outline-none dark:border-[#3E3E3A] dark:bg-[#161615] dark:text-[#EDEDEC] dark:placeholder:text-[#A1A09A] dark:focus:border-[#EDEDEC]"
-          />
-          {errors.password_confirmation && (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-              {errors.password_confirmation}
-            </p>
-          )}
-        </div>
+        <PasswordField
+          id="password_confirmation"
+          label="Confirm password"
+          value={data.password_confirmation}
+          onChange={(e) => setData('password_confirmation', e.target.value)}
+          autoComplete="new-password"
+          error={errors.password_confirmation}
+        />
 
-        <button
-          type="submit"
-          disabled={processing}
-          className="w-full rounded-lg bg-[#1b1b18] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black disabled:opacity-50 dark:bg-[#eeeeec] dark:text-[#1C1C1A] dark:hover:bg-white"
-        >
+        <Button type="submit" loading={processing} className="mt-2 w-full">
           {processing ? 'Creating account…' : 'Create account'}
-        </button>
+        </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#706f6c] dark:text-[#A1A09A]">
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-dark-border" />
+        <span className="text-xs text-dark-secondary">or</span>
+        <div className="h-px flex-1 bg-dark-border" />
+      </div>
+
+      <GoogleButton />
+
+      <p className="mt-6 text-center text-sm text-dark-secondary">
         Already have an account?{' '}
-        <Link
-          href="/login"
-          className="font-medium text-[#1b1b18] underline underline-offset-4 dark:text-[#EDEDEC]"
-        >
+        <Link href="/login" className="font-medium text-dark-primary underline underline-offset-4">
           Sign in
         </Link>
       </p>
     </AuthLayout>
   );
-}
+};
+
+export default Register;

@@ -20,6 +20,13 @@ export default {
                 'normal': ['16px', '22.4px'],
                 'small': ['14px', '19.6px'],
                 'xsmall': ['12px', '16.8px'],
+
+                'h1': ['56px', { lineHeight: '61.6px', fontWeight: '700' }],
+                'h2': ['48px', { lineHeight: '52.8px', fontWeight: '700' }],
+                'h3': ['40px', { lineHeight: '44px', fontWeight: '700' }],
+                'h4': ['32px', { lineHeight: '35.2px', fontWeight: '700' }],
+                'h5': ['24px', { lineHeight: '26.4px', fontWeight: '700' }],
+                'h6': ['20px', { lineHeight: '22px', fontWeight: '600' }],
             },
             colors: {
                 // --- DARK MODE ---
@@ -31,6 +38,10 @@ export default {
                     },
                     primary: '#F0F0F0',
                     secondary: '#7B7B7B',
+                    border: '#3A3A3A',
+                    'border-focus': '#4A4A4A',
+                    input: '#2A2A2A',
+                    'input-focus': '#313131',
                 },
                 
                 // --- LIGHT MODE ---
