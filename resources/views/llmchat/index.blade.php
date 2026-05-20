@@ -169,11 +169,11 @@
                 submitBtn.disabled = true;
                 submitBtn.classList.add('opacity-50');
 
-                // Allow the real sumbit to proceed to backend! The page will be replaced by the server response
+                // Allow the real submit to proceed to backend! The page will be replaced by the server response
             });
         }
 
-        // Helper func to prevent XSS in optimstic UI
+        // Helper func to prevent XSS in optimistic UI
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;")
                        .replace(/</g, "&lt;")
