@@ -182,7 +182,7 @@
                        .replace(/'/g, "&#039;");
         }
     });
-  </>
+  </script>
 
   <style>
     @keyframes fadeInUp {
