@@ -33,9 +33,11 @@ class LlmChatController extends Controller
 
     $sessions = LlmChatSession::where('llm_chat_account_id', Auth::id())->orderBy('updated_at', 'desc')->get();
 
-    $content = LlmChatMessage::where('llm_chat_session_id', $llm_chat_session_id)->oldest()->get();
+    $activeSession = LlmChatSession::where('llm_chat_session_id', $llm_chat_session_id)
+      ->where('llm_chat_account_id', Auth::id())
+      ->firstOrFail();
 
-    $activeSession = $sessions->firstWhere('llm_chat_session_id', $llm_chat_session_id);
+    $content = LlmChatMessage::where('llm_chat_session_id', $activeSession->llm_chat_session_id)->oldest()->get();
 
     return view('llmchat.index', compact('sessions', 'content', 'llm_chat_session_id', 'activeSession'));
   }
