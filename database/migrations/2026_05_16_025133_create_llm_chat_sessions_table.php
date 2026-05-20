@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('llm_chat_sessions', function (Blueprint $table) {
             $table->uuid('llm_chat_session_id')->primary();
-            $table->uuid('llm_chat_account_id');
+            $table->foreignId('llm_chat_account_id');
             $table->string('llm_chat_session_name', 20);
             $table->uuid('llm_chat_current_model_id');
             $table->timestamps();
