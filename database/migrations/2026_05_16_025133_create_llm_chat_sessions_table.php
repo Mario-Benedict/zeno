@@ -12,12 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('llm_chat_sessions', function (Blueprint $table) {
-            $table->uuid('llm_chat_session_id')->primary();
-            $table->foreignId('llm_chat_account_id');
-            $table->string('llm_chat_session_name', 20);
-            $table->uuid('llm_chat_current_model_id');
-            $table->timestamps();
-        });
+          $table->uuid('llm_chat_session_id')->primary();
+
+          $table->uuid('llm_chat_account_id');
+          $table->foreign('llm_chat_account_id')
+                ->references('account_id')->on('accounts')
+                ->cascadeOnDelete();
+
+          $table->string('llm_chat_session_name', 100);
+
+          $table->uuid('llm_chat_current_model_id');
+          $table->foreign('llm_chat_current_model_id')
+                ->references('llm_model_id')->on('llm_models')
+                ->restrictOnDelete(); // ERD pakai - (one-to-one ref), jangan null/cascade
+
+          $table->timestamps();
+      });
     }
 
     /**

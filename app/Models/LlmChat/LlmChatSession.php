@@ -4,19 +4,19 @@ namespace App\Models\LlmChat;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 
+#[Fillable([
+    'llm_chat_session_id',
+    'llm_chat_account_id',
+    'llm_chat_session_name',
+    'llm_chat_current_model_id',
+])]
 class LlmChatSession extends Model
 {
     protected $primaryKey = 'llm_chat_session_id';
     public $incrementing = false;
     protected $keyType = 'string';
-
-    protected $fillable = [
-        'llm_chat_session_id',
-        'llm_chat_account_id',
-        'llm_chat_session_name',
-        'llm_chat_current_model_id',
-    ];
 
     public function Users()
     {
