@@ -50,7 +50,7 @@ const buildNavItems = (projectSlug: string): NavItem[] => [
   { name: 'Board', href: `/p/${projectSlug}/board`, icon: BoardIcon },
   { name: 'Calendar',  href: `/p/${projectSlug}/calendar`,  icon: CalendarIcon },
   { name: 'Chat', href: `/p/${projectSlug}/chat`, icon: ChatIcon },
-  { name: 'LLM', href: `/p/${projectSlug}/llm`, icon: LLMIcon },
+  { name: 'LLM', href: `/p/${projectSlug}/llmchat`, icon: LLMIcon },
   { name: 'Notes', href: `/p/${projectSlug}/notes`, icon: NotesIcon },
   { name: 'Reminders', href: `/p/${projectSlug}/reminders`, icon: RemindersIcon },
 ];
