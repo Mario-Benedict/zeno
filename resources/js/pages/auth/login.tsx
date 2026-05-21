@@ -2,8 +2,8 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import type { SubmitEventHandler } from 'react';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
-import GoogleButton from '@/components/shared/GoogleButton';
 import FloatInputField from '@/components/shared/FloatInputField';
+import GoogleButton from '@/components/shared/GoogleButton';
 import PasswordField from '@/components/shared/PasswordField';
 import AuthLayout from '@/layouts/AuthLayout';
 

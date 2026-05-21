@@ -18,7 +18,7 @@ beforeEach(function () {
 
 it('prevents guests from accessing chat index', function () {
     $response = $this->get('/llmchat');
-    $response->assertStatus(403);
+    $response->assertStatus(302);
 });
 
 it('allows authenticated users to access chat index', function () {

@@ -12,42 +12,42 @@ use Illuminate\Support\Str;
 use Gemini\Laravel\Facades\Gemini;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
+use Inertia\Inertia;
+
+use App\Models\Project;
 
 class LlmChatController extends Controller
 {
-  public function index()
+  public function index(Project $project)
   {
-    if(!Auth::check()){
-      return abort(403);
-    }
-
     $sessions = LlmChatSession::where('llm_chat_account_id', Auth::id())->orderBy('updated_at', 'desc')->get();
-    return view('llmchat.index', compact('sessions'));
+    return Inertia::render('LlmChat/Index', [
+        'project' => $project,
+        'sessions' => $sessions
+    ]);
   }
 
-  public function switch($llm_chat_session_id)
+  public function switch(Project $project, $llm_chat_session_id)
   {
-    if(!Auth::check()){
-      return abort(403);
-    }
-
     $sessions = LlmChatSession::where('llm_chat_account_id', Auth::id())->orderBy('updated_at', 'desc')->get();
 
     $activeSession = LlmChatSession::where('llm_chat_session_id', $llm_chat_session_id)
       ->where('llm_chat_account_id', Auth::id())
       ->firstOrFail();
 
-    $content = LlmChatMessage::where('llm_chat_session_id', $activeSession->llm_chat_session_id)->oldest()->get();
+    $content = LlmChatMessage::where('llm_chat_session_id', $activeSession->llm_chat_session_id)->orderBy('created_at', 'asc')->get();
 
-    return view('llmchat.index', compact('sessions', 'content', 'llm_chat_session_id', 'activeSession'));
+    return Inertia::render('LlmChat/Index', [
+        'project' => $project,
+        'sessions' => $sessions,
+        'content' => $content,
+        'llm_chat_session_id' => $llm_chat_session_id,
+        'activeSession' => $activeSession
+    ]);
   }
 
-  public function ask(Request $request)
+  public function ask(Request $request, Project $project)
   {
-    if(!Auth::check()){
-      return abort(403);
-    }
-
     $request->validate([
       'question' => 'required|string'
     ]);
@@ -103,11 +103,11 @@ class LlmChatController extends Controller
     }
 
     // 6. Selesai! Lempar user ke halaman Sesi yang baru saja dibuat
-    return redirect()->route('chat.switch', $newSessionId);
+    return redirect()->route('chat.switch', ['project' => $project->project_slug, 'llm_chat_session_id' => $newSessionId]);
   }
 
   // Fungsi tambahan untuk meneruskan chat di sesi yang SAMA
-  public function reply(Request $request, $llm_chat_session_id)
+  public function reply(Request $request, Project $project, $llm_chat_session_id)
   {
       $request->validate(['question' => 'required|string']);
 
@@ -118,7 +118,7 @@ class LlmChatController extends Controller
       // 1. Ambil history sebelum pesan baru ditambahkan dari DB berdasarkan Sesi ini
       // Kita ambil urut dari yang terlama menggunakan oldest()
       $history = LlmChatMessage::where('llm_chat_session_id', $llm_chat_session_id)
-          ->latest()
+          ->orderBy('created_at', -1)
           ->take(10)
           ->get()
           ->reverse()
@@ -159,6 +159,6 @@ class LlmChatController extends Controller
       }
 
       // 6. Kembali ke layar itu
-      return redirect()->route('chat.switch', $llm_chat_session_id);
+      return redirect()->route('chat.switch', ['project' => $project->project_slug, 'llm_chat_session_id' => $llm_chat_session_id]);
   }
 }

@@ -45,6 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail
     public function llmAccounts()
     {
       return $this->hasMany(LlmAccount::class, 'llm_account_id', 'id');
+    }
+
     public function socialAccounts(): HasMany
     {
         return $this->hasMany(SocialAccount::class);

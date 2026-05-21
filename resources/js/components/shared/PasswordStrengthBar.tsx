@@ -1,9 +1,10 @@
 import {
   barColors,
   strengthLabel,
-  strengthLabelColor,
-  type PasswordStrength,
+  strengthLabelColor
+  
 } from '@/lib/passwordStrength';
+import type {PasswordStrength} from '@/lib/passwordStrength';
 
 interface PasswordStrengthBarProps {
   strength: PasswordStrength;

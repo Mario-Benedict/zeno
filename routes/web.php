@@ -15,6 +15,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/p/{project:project_slug}', [ProjectController::class, 'show'])->name('projects.show');
     Route::patch('/p/{project:project_slug}/pin', [ProjectController::class, 'togglePin'])->name('projects.toggle-pin');
 
+    // LLM Chat inside project
+    Route::prefix('/p/{project:project_slug}/llmchat')->name('chat.')->group(function () {
+        Route::get('/', [LlmChatController::class, 'index'])->name('index');
+        Route::get('/{llm_chat_session_id}', [LlmChatController::class, 'switch'])->name('switch');
+        Route::post('/new', [LlmChatController::class, 'ask'])->name('ask');
+        Route::post('/{llm_chat_session_id}/reply', [LlmChatController::class, 'reply'])->name('reply');
+    });
+
     Route::prefix('two-factor')->name('two-factor.')->group(function () {
         Route::get('setup', [TwoFactorSetupController::class, 'show'])->name('setup');
         Route::post('generate', [TwoFactorSetupController::class, 'generate'])->name('generate');
@@ -24,10 +32,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
-
-Route::name('chat.')->group(function() {
-	Route::get('/llmchat', [LlmChatController::class, 'index'])->name('index');
-  Route::get('/llmchat/{llm_chat_session_id}', [LlmChatController::class, 'switch'])->name('switch');
-  Route::post('/llmchat/new', [LlmChatController::class, 'ask'])->name('ask');
-  Route::post('/llmchat/{llm_chat_session_id}/reply', [LlmChatController::class, 'reply'])->name('reply');
-});

@@ -43,7 +43,7 @@ export default {
                     input: '#2A2A2A',
                     'input-focus': '#313131',
                 },
-                
+
                 // --- LIGHT MODE ---
                 light: {
                     surface: {
