@@ -19,7 +19,7 @@ const Workspace = () => {
   console.log(project, role);
 
   return (
-    <AppLayout project={project}>
+    <AppLayout>
       <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
         <h1 className="text-xl font-semibold text-dark-primary">{project.project_name}</h1>
         <p className="text-sm text-dark-secondary">

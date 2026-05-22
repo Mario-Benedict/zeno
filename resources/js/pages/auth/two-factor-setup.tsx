@@ -55,7 +55,7 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
   };
 
   return (
-    <AppLayout title="2FA Setup">
+    <AppLayout>
       <Head title="2FA Debug Setup" />
 
       <div className="mx-auto w-full max-w-xl px-6 py-10 space-y-6">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Services\ChatRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,6 +65,9 @@ class ProjectController extends Controller
             'role'      => 'OWNER',
             'opened_at' => now(),
         ]);
+
+        // Auto-create group chat room for the project
+        app(ChatRoomService::class)->createProjectGroupRoom($project, auth()->id());
 
         return redirect()->route('projects.show', $project->project_slug);
     }

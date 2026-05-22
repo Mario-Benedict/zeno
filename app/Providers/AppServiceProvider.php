@@ -11,25 +11,19 @@ use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
+
     public function register(): void
     {
-        //
+        $this->app->singleton(\App\Services\MongoDB\MongoConnection::class);
+        $this->app->singleton(\App\Services\StorageService::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
+
     public function boot(): void
     {
         $this->configureDefaults();
     }
 
-    /**
-     * Configure default behaviors for production-ready applications.
-     */
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
