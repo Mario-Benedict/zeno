@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\User;
+use App\Models\Project;
+
+class ProjectPolicy
+{
+    /**
+     * Determine if the user can view the project.
+     */
+    public function view(User $user, Project $project): bool
+    {
+        return $project->members()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Determine if the user can update the project.
+     */
+    public function update(User $user, Project $project): bool
+    {
+        return $project->members()->where('user_id', $user->id)->first()?->pivot?->role === 'owner';
+    }
+
+    /**
+     * Determine if the user can delete the project.
+     */
+    public function delete(User $user, Project $project): bool
+    {
+        return $project->members()->where('user_id', $user->id)->first()?->pivot?->role === 'owner';
+    }
+}

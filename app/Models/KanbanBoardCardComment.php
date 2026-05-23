@@ -34,6 +34,11 @@ class KanbanBoardCardComment extends Model
 
     public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'kanban_board_card_comment_from', 'user_id');
+        return $this->belongsTo(User::class, 'kanban_board_card_comment_from', 'id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->author();
     }
 }

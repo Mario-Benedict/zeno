@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('kanban_board_cards', function (Blueprint $table) {
             $table->uuid('kanban_board_card_id')->primary();
             $table->foreignUuid('kanban_board_id')
-                  ->constrained('kanban_boards', 'kanban_board_id')
-                  ->cascadeOnDelete();
+                ->constrained('kanban_boards', 'kanban_board_id')
+                ->cascadeOnDelete();
+            $table->timestamps();
         });
     }
 

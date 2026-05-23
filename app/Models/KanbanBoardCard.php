@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'kanban_board_id',
+    'position',
 ])]
 class KanbanBoardCard extends Model
 {
