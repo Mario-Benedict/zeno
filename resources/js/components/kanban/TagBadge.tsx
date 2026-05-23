@@ -1,4 +1,4 @@
-import { CardLabelColor } from './types';
+import type { CardLabelColor } from './types';
 import { getContrastColor } from './utils'
 
 interface TagBadgeProps {

@@ -1,18 +1,19 @@
 import React from 'react';
-import { KanbanBoardCardDetail, User } from './types';
-import { LocalAttachment, formatBytes, getFileEmoji } from '@/utils/attachmentStorage';
-import { calculateChecklistProgress, generateInitials, MEMBER_COLORS } from './utils';
-import { TagBadge } from './TagBadge';
+import type { LocalAttachment} from '@/utils/attachmentStorage';
+import { formatBytes, getFileEmoji } from '@/utils/attachmentStorage';
+import ArrowRightIcon from '@public/icons/small/arrow_left.svg';
+import CloseIcon from '@public/icons/small/cancel.svg';
+import CheckIcon from '@public/icons/small/check.svg';
+import ChecklistIcon from '@public/icons/small/checkbox.svg';
+import CommentIcon from '@public/icons/small/comment.svg';
+import DescriptionIcon from '@public/icons/small/description.svg';
+import PaperclipIcon from '@public/icons/small/paperclip.svg';
+import CalendarIcon from '@public/icons/small/time.svg';
 import { AvatarStack } from './AvatarStack';
 import { SectionHeader } from './CardDetailComponents';
-import CheckIcon from '@public/icons/small/check.svg';
-import CloseIcon from '@public/icons/small/cancel.svg';
-import DescriptionIcon from '@public/icons/small/description.svg';
-import ChecklistIcon from '@public/icons/small/checkbox.svg';
-import CalendarIcon from '@public/icons/small/time.svg';
-import PaperclipIcon from '@public/icons/small/paperclip.svg';
-import ArrowRightIcon from '@public/icons/small/arrow_left.svg';
-import CommentIcon from '@public/icons/small/comment.svg';
+import { TagBadge } from './TagBadge';
+import type { KanbanBoardCardDetail, User } from './types';
+import { calculateChecklistProgress, generateInitials, MEMBER_COLORS } from './utils';
 
 export interface DescState {
     editing: boolean;
@@ -82,7 +83,58 @@ export const CardDetailBody = ({
     checklists,
     comments,
 }: CardDetailBodyProps) => {
-    const totalAttachments = attachments.local.length + (detail.attachments?.length || 0);
+    // Destructure desc properties to avoid ref access warnings
+    const {
+        editing: descEditing,
+        value: descValue,
+        ref: descRef,
+        onEdit: descOnEdit,
+        onChange: descOnChange,
+        onCommit: descOnCommit,
+        onDiscard: descOnDiscard,
+    } = desc;
+
+    // Destructure attachments properties to avoid ref access warnings
+    const {
+        local: attachmentsLocal,
+        adding: attachmentsAdding,
+        uploading: attachmentsUploading,
+        dragOver: attachmentsDragOver,
+        fileInputRef: attachmentsFileInputRef,
+        zoneRef: attachmentsZoneRef,
+        onSetDragOver: attachmentsOnSetDragOver,
+        onProcess: attachmentsOnProcess,
+        onDownload: attachmentsOnDownload,
+        onDelete: attachmentsOnDelete,
+        onCancel: attachmentsOnCancel,
+    } = attachments;
+
+    // Destructure checklists properties
+    const {
+        adding: checklistsAdding,
+        newName: checklistsNewName,
+        saving: checklistsSaving,
+        newItems: checklistsNewItems,
+        onAdd: checklistsOnAdd,
+        onNameChange: checklistsOnNameChange,
+        onCancel: checklistsOnCancel,
+        onItemChange: checklistsOnItemChange,
+        onAddItem: checklistsOnAddItem,
+        onToggleItem: checklistsOnToggleItem,
+        onDeleteItem: checklistsOnDeleteItem,
+        onDeleteChecklist: checklistsOnDeleteChecklist,
+    } = checklists;
+
+    // Destructure comments properties
+    const {
+        newComment: commentsNewComment,
+        onChange: commentsOnChange,
+        onSubmit: commentsOnSubmit,
+        onDelete: commentsOnDelete,
+        onDiscard: commentsOnDiscard,
+    } = comments;
+
+    const totalAttachments = attachmentsLocal.length + (detail.attachments?.length || 0);
 
     return (
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 min-w-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-thumb]:rounded-full">
@@ -144,9 +196,9 @@ export const CardDetailBody = ({
                     icon={<DescriptionIcon className="w-4 h-4" />}
                     label="Description"
                     action={
-                        !desc.editing && (
+                        !descEditing && (
                             <button
-                                onClick={desc.onEdit}
+                                onClick={descOnEdit}
                                 className="text-xsmall text-dark-secondary hover:text-dark-primary transition px-2 py-0.5 rounded hover:bg-dark-surface-3"
                             >
                                 Edit
@@ -154,25 +206,25 @@ export const CardDetailBody = ({
                         )
                     }
                 />
-                {desc.editing ? (
+                {descEditing ? (
                     <div>
                         <textarea
-                            ref={desc.ref}
-                            value={desc.value}
-                            onChange={(e) => desc.onChange(e.target.value)}
+                            ref={descRef}
+                            value={descValue}
+                            onChange={(e) => descOnChange(e.target.value)}
                             rows={5}
                             placeholder="Add a more detailed description..."
                             className="w-full bg-dark-surface-2 border border-dark-border-focus rounded-xl px-3.5 py-3 text-small text-dark-primary placeholder-white/20 focus:outline-none resize-none leading-relaxed [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-thumb]:rounded-full"
                         />
                         <div className="flex gap-2 mt-2">
                             <button
-                                onClick={desc.onCommit}
+                                onClick={descOnCommit}
                                 className="px-3.5 py-1.5 bg-accent-blue rounded-lg text-xsmall font-semibold text-white hover:bg-opacity-90 transition"
                             >
                                 Save
                             </button>
                             <button
-                                onClick={desc.onDiscard}
+                                onClick={descOnDiscard}
                                 className="px-3.5 py-1.5 border border-dark-border rounded-lg text-xsmall text-white/50 hover:text-white hover:bg-white/5 transition"
                             >
                                 Discard
@@ -181,7 +233,7 @@ export const CardDetailBody = ({
                     </div>
                 ) : (
                     <div
-                        onClick={desc.onEdit}
+                        onClick={descOnEdit}
                         className="min-h-15 bg-dark-surface-2 hover:bg-dark-surface-3 rounded-xl px-3.5 py-3 text-small cursor-pointer transition leading-relaxed"
                     >
                         {detail.kanban_board_card_description ? (
@@ -216,7 +268,7 @@ export const CardDetailBody = ({
                                 <ArrowRightIcon className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition shrink-0" />
                             </a>
                         ))}
-                        {attachments.local.map((att) => (
+                        {attachmentsLocal.map((att) => (
                             <div
                                 key={att.id}
                                 className="flex items-center gap-3 px-3.5 py-2.5 bg-dark-surface-2 rounded-xl border border-dark-border group/att"
@@ -238,14 +290,14 @@ export const CardDetailBody = ({
                                 </div>
                                 <div className="flex items-center gap-1 opacity-0 group-hover/att:opacity-100 transition shrink-0">
                                     <button
-                                        onClick={() => attachments.onDownload(att)}
+                                        onClick={() => attachmentsOnDownload(att)}
                                         className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition text-xsmall"
                                         title="Download"
                                     >
                                         ↓
                                     </button>
                                     <button
-                                        onClick={() => attachments.onDelete(att.id)}
+                                        onClick={() => attachmentsOnDelete(att.id)}
                                         className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-accent-red hover:bg-accent-red/10 transition"
                                         title="Delete"
                                     >
@@ -259,35 +311,41 @@ export const CardDetailBody = ({
             )}
 
             {/* Upload drop zone */}
-            {attachments.adding && (
-                <div ref={attachments.zoneRef} className="space-y-2 p-4 bg-dark-surface-2 rounded-xl border border-dark-border">
+            {attachmentsAdding && (
+                <div ref={attachmentsZoneRef} className="space-y-2 p-4 bg-dark-surface-2 rounded-xl border border-dark-border">
                     <p className="text-xsmall font-semibold text-white/40 mb-2">Add attachment</p>
                     <div
-                        onDragOver={(e) => { e.preventDefault(); attachments.onSetDragOver(true); }}
-                        onDragLeave={() => attachments.onSetDragOver(false)}
-                        onDrop={(e) => { e.preventDefault(); attachments.onSetDragOver(false); attachments.onProcess(e.dataTransfer.files); }}
-                        onClick={() => attachments.fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                            e.preventDefault(); attachmentsOnSetDragOver(true); 
+                        }}
+                        onDragLeave={() => attachmentsOnSetDragOver(false)}
+                        onDrop={(e) => {
+                            e.preventDefault(); attachmentsOnSetDragOver(false); attachmentsOnProcess(e.dataTransfer.files); 
+                        }}
+                        onClick={() => attachmentsFileInputRef.current?.click()}
                         className={`w-full flex flex-col items-center justify-center gap-2 py-6 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
-                            attachments.dragOver
+                            attachmentsDragOver
                                 ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
                                 : 'border-dark-border hover:border-dark-border-focus text-white/25 hover:text-white/40'
                         }`}
                     >
                         <PaperclipIcon className="w-5 h-5" />
                         <p className="text-xsmall text-center">
-                            {attachments.uploading ? 'Uploading...' : 'Drop file here or click to select'}
+                            {attachmentsUploading ? 'Uploading...' : 'Drop file here or click to select'}
                         </p>
                         <p className="text-xsmall text-white/20">Max 20 MB per file</p>
                     </div>
                     <input
-                        ref={attachments.fileInputRef}
+                        ref={attachmentsFileInputRef}
                         type="file"
                         multiple
                         className="hidden"
-                        onChange={(e) => { if (e.target.files) attachments.onProcess(e.target.files); e.target.value = ''; }}
+                        onChange={(e) => {
+                            if (e.target.files) attachmentsOnProcess(e.target.files); e.target.value = ''; 
+                        }}
                     />
                     <button
-                        onClick={attachments.onCancel}
+                        onClick={attachmentsOnCancel}
                         className="px-3.5 py-1.5 border border-dark-border rounded-lg text-xsmall text-white/40 hover:text-white hover:bg-white/5 transition"
                     >
                         Cancel
@@ -299,6 +357,7 @@ export const CardDetailBody = ({
             {(detail.checklists || []).map((checklist) => {
                 const prog = calculateChecklistProgress([checklist]);
                 const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
+
                 return (
                     <div key={checklist.kanban_board_card_checklist_id}>
                         <div className="flex items-center justify-between mb-3">
@@ -309,7 +368,7 @@ export const CardDetailBody = ({
                                 </span>
                             </div>
                             <button
-                                onClick={() => checklists.onDeleteChecklist(checklist.kanban_board_card_checklist_id)}
+                                onClick={() => checklistsOnDeleteChecklist(checklist.kanban_board_card_checklist_id)}
                                 className="text-xsmall text-white/20 hover:text-accent-red transition px-2 py-0.5 rounded hover:bg-accent-red/10"
                             >
                                 Delete
@@ -336,7 +395,7 @@ export const CardDetailBody = ({
                                     className="flex items-center gap-3 group/item px-1 py-1 rounded-lg hover:bg-white/3 transition"
                                 >
                                     <button
-                                        onClick={() => checklists.onToggleItem(
+                                        onClick={() => checklistsOnToggleItem(
                                             checklist.kanban_board_card_checklist_id,
                                             item.kanban_board_card_checklist_item_id,
                                             item.is_completed
@@ -355,7 +414,7 @@ export const CardDetailBody = ({
                                         {item.kanban_board_card_checklist_item_name}
                                     </span>
                                     <button
-                                        onClick={() => checklists.onDeleteItem(
+                                        onClick={() => checklistsOnDeleteItem(
                                             checklist.kanban_board_card_checklist_id,
                                             item.kanban_board_card_checklist_item_id
                                         )}
@@ -369,14 +428,16 @@ export const CardDetailBody = ({
 
                         <div className="flex gap-2 mt-2.5 pl-1">
                             <input
-                                value={checklists.newItems[checklist.kanban_board_card_checklist_id] || ''}
-                                onChange={(e) => checklists.onItemChange(checklist.kanban_board_card_checklist_id, e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') checklists.onAddItem(checklist.kanban_board_card_checklist_id); }}
+                                value={checklistsNewItems[checklist.kanban_board_card_checklist_id] || ''}
+                                onChange={(e) => checklistsOnItemChange(checklist.kanban_board_card_checklist_id, e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') checklistsOnAddItem(checklist.kanban_board_card_checklist_id); 
+                                }}
                                 placeholder="Add an item..."
                                 className="flex-1 bg-dark-surface-2 border border-dark-secondary rounded-lg px-3 py-1.5 text-small text-dark-primary placeholder-dark-secondary focus:outline-none focus:border-dark-surface-3 transition"
                             />
                             <button
-                                onClick={() => checklists.onAddItem(checklist.kanban_board_card_checklist_id)}
+                                onClick={() => checklistsOnAddItem(checklist.kanban_board_card_checklist_id)}
                                 className="px-3 py-1.5 bg-dark-surface-2 hover:bg-dark-surface-3 rounded-lg text-small text-white/50 hover:text-white transition border border-dark-secondary"
                             >
                                 Add
@@ -387,30 +448,30 @@ export const CardDetailBody = ({
             })}
 
             {/* Add checklist form */}
-            {checklists.adding && (
+            {checklistsAdding && (
                 <div className="space-y-2 p-4 bg-dark-surface-2 rounded-xl border border-dark-border">
                     <p className="text-xsmall font-semibold text-white/40 mb-2">New checklist</p>
                     <input
                         autoFocus
-                        value={checklists.newName}
-                        onChange={(e) => checklists.onNameChange(e.target.value)}
+                        value={checklistsNewName}
+                        onChange={(e) => checklistsOnNameChange(e.target.value)}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter') checklists.onAdd();
-                            if (e.key === 'Escape') checklists.onCancel();
+                            if (e.key === 'Enter') checklistsOnAdd();
+                            if (e.key === 'Escape') checklistsOnCancel();
                         }}
                         placeholder="Checklist title..."
                         className="w-full bg-dark-surface-1 border border-dark-border-focus rounded-lg px-3 py-2 text-small text-white placeholder-white/20 focus:outline-none"
                     />
                     <div className="flex gap-2">
                         <button
-                            onClick={checklists.onAdd}
-                            disabled={checklists.saving}
+                            onClick={checklistsOnAdd}
+                            disabled={checklistsSaving}
                             className="px-3.5 py-1.5 bg-accent-blue rounded-lg text-xsmall font-semibold text-white hover:bg-opacity-90 disabled:opacity-50 transition"
                         >
                             Add Checklist
                         </button>
                         <button
-                            onClick={checklists.onCancel}
+                            onClick={checklistsOnCancel}
                             className="px-3.5 py-1.5 border border-dark-border rounded-lg text-xsmall text-white/40 hover:text-white hover:bg-white/5 transition"
                         >
                             Cancel
@@ -434,25 +495,27 @@ export const CardDetailBody = ({
                     </div>
                     <div className="flex-1">
                         <textarea
-                            value={comments.newComment}
-                            onChange={(e) => comments.onChange(e.target.value)}
+                            value={commentsNewComment}
+                            onChange={(e) => commentsOnChange(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); comments.onSubmit(); }
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault(); commentsOnSubmit(); 
+                                }
                             }}
                             placeholder="Write a comment... (Enter to send)"
-                            rows={comments.newComment ? 3 : 2}
+                            rows={commentsNewComment ? 3 : 2}
                             className="w-full bg-dark-surface-2 border border-dark-border rounded-xl px-3.5 py-2.5 text-small text-white placeholder-white/20 focus:outline-none focus:border-dark-border-focus resize-none transition-all"
                         />
-                        {comments.newComment.trim() && (
+                        {commentsNewComment.trim() && (
                             <div className="flex gap-2 mt-2">
                                 <button
-                                    onClick={comments.onSubmit}
+                                    onClick={commentsOnSubmit}
                                     className="px-3.5 py-1.5 bg-accent-blue rounded-lg text-xsmall font-semibold text-white hover:bg-opacity-90 transition"
                                 >
                                     Save
                                 </button>
                                 <button
-                                    onClick={comments.onDiscard}
+                                    onClick={commentsOnDiscard}
                                     className="px-3.5 py-1.5 border border-dark-border rounded-lg text-xsmall text-white/40 hover:text-white hover:bg-white/5 transition"
                                 >
                                     Discard
@@ -497,7 +560,7 @@ export const CardDetailBody = ({
                             </div>
                             {comment.kanban_board_card_comment_from === currentUser.id && (
                                 <button
-                                    onClick={() => comments.onDelete(comment.kanban_board_card_comment_id)}
+                                    onClick={() => commentsOnDelete(comment.kanban_board_card_comment_id)}
                                     className="opacity-0 group-hover/comment:opacity-100 text-white/20 hover:text-accent-red transition text-xsmall self-start mt-2 w-5 h-5 flex items-center justify-center rounded"
                                 >
                                     <CloseIcon />

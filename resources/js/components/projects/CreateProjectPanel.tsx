@@ -37,6 +37,8 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 300);
     } else {
+      // Reset form when panel closes
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName('');
       setSlug('');
       setSlugAvailable(null);

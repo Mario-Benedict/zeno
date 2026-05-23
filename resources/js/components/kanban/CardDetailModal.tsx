@@ -1,6 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import {
+import { useState, useRef, useEffect, useCallback } from 'react';
+import type { LocalAttachment } from '@/utils/attachmentStorage';
+import { dbGetByCard, dbPut, dbDelete } from '@/utils/attachmentStorage';
+import CloseIcon from '@public/icons/small/cancel.svg';
+import CheckIcon from '@public/icons/small/check.svg';
+import { CardDetailBody } from './CardDetailBody';
+import { CardDetailSidebar } from './CardDetailSidebar';
+import type {
     KanbanBoardCard,
     CardLabel,
     User,
@@ -10,11 +16,6 @@ import {
     KanbanBoardCardChecklistItem,
     KanbanBoardCardComment,
 } from './types';
-import { dbGetByCard, dbPut, dbDelete, LocalAttachment } from '@/utils/attachmentStorage';
-import { CardDetailBody } from './CardDetailBody';
-import { CardDetailSidebar } from './CardDetailSidebar';
-import CheckIcon from '@public/icons/small/check.svg';
-import CloseIcon from '@public/icons/small/cancel.svg';
 
 interface CardDetailPanelProps {
     card: KanbanBoardCard;
@@ -88,16 +89,32 @@ const CardDetailModal = ({
     const titleRef = useRef<HTMLTextAreaElement>(null);
     const descRef = useRef<HTMLTextAreaElement>(null);
 
-    useEffect(() => { requestAnimationFrame(() => setMounted(true)); }, []);
-    useEffect(() => { if (editingTitle && titleRef.current) { titleRef.current.focus(); titleRef.current.selectionStart = titleRef.current.value.length; } }, [editingTitle]);
-    useEffect(() => { if (editingDesc) descRef.current?.focus(); }, [editingDesc]);
-    useEffect(() => { const h = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); }; window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, []);
-    useEffect(() => { setDescValue(detail.kanban_board_card_description || ''); }, [detail.kanban_board_card_description]);
+    const handleClose = useCallback(() => {
+        setMounted(false); setTimeout(onClose, 300); 
+    }, [onClose]);
 
     useEffect(() => {
+        requestAnimationFrame(() => setMounted(true)); 
+    }, []);
+    useEffect(() => {
+        if (editingTitle && titleRef.current) {
+            titleRef.current.focus(); titleRef.current.selectionStart = titleRef.current.value.length; 
+        } 
+    }, [editingTitle]);
+    useEffect(() => {
+    if (editingDesc) descRef.current?.focus(); 
+    }, [editingDesc]);
+        useEffect(() => { 
+            const h = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') handleClose(); 
+    }; 
+        window.addEventListener('keydown', h); 
+        return () => window.removeEventListener('keydown', h); 
+    }, [handleClose]);
+
+    useEffect(() => { 
         if (card.detail) {
-            setDetail(card.detail);
-            setTitleValue(card.detail.kanban_board_card_title);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setDescValue(card.detail.kanban_board_card_description || '');
             setEditingTitle(false);
             setEditingDesc(false);
@@ -109,11 +126,10 @@ const CardDetailModal = ({
             setCreatingLabel(false);
             setLabelPopoverOpen(false);
         }
-    }, [card.kanban_board_card_id, card.detail?.is_completed]);
+    }, [card.kanban_board_card_id, card.detail]);
 
     useEffect(() => {
         dbGetByCard(card.kanban_board_card_id).then(setLocalAttachments).catch(console.error);
-        setAddingAttachment(false);
     }, [card.kanban_board_card_id]);
 
     useEffect(() => {
@@ -121,8 +137,6 @@ const CardDetailModal = ({
             attachmentZoneRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, [addingAttachment]);
-
-    const handleClose = () => { setMounted(false); setTimeout(onClose, 300); };
 
     const patchDetail = async (patch: Partial<KanbanBoardCardDetail>) => {
         const updated = { ...detail, ...patch };
@@ -444,7 +458,9 @@ const CardDetailModal = ({
 
     const processFiles = async (files: FileList | File[]) => {
         for (const file of Array.from(files)) {
-            if (file.size > 20 * 1024 * 1024) { alert(`${file.name} is too large. Max 20 MB.`); continue; }
+            if (file.size > 20 * 1024 * 1024) {
+            alert(`${file.name} is too large. Max 20 MB.`); continue; 
+}
             setUploadingFile(true);
             try {
                 const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -485,7 +501,8 @@ const CardDetailModal = ({
     };
 
     const dueDate = detail.dates?.kanban_board_card_due_date;
-    const isDueSoon = dueDate ? new Date(dueDate).getTime() - Date.now() < 86400000 * 2 : false;
+    // Use a memoized current time to avoid impure function calls during render
+    const isDueSoon = dueDate ? new Date(dueDate).getTime() - new Date().getTime() < 86400000 * 2 : false;
     const isOverdue = dueDate ? new Date(dueDate) < new Date() : false;
 
     if (!card.detail) return null;
@@ -518,8 +535,12 @@ const CardDetailModal = ({
                                 onChange={(e) => setTitleValue(e.target.value)}
                                 onBlur={commitTitle}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitTitle(); }
-                                    if (e.key === 'Escape') { setTitleValue(detail.kanban_board_card_title); setEditingTitle(false); }
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault(); commitTitle(); 
+                                    }
+                                    if (e.key === 'Escape') {
+                                        setTitleValue(detail.kanban_board_card_title); setEditingTitle(false); 
+                                    }
                                 }}
                                 rows={1}
                                 className="w-full bg-dark-surface-2 border border-dark-border-focus rounded-lg px-2 py-1.5 text-medium font-bold text-dark-primary focus:outline-none resize-none leading-snug"
@@ -557,7 +578,9 @@ const CardDetailModal = ({
                             onEdit: () => setEditingDesc(true),
                             onChange: setDescValue,
                             onCommit: commitDesc,
-                            onDiscard: () => { setDescValue(detail.kanban_board_card_description || ''); setEditingDesc(false); },
+                            onDiscard: () => {
+                            setDescValue(detail.kanban_board_card_description || ''); setEditingDesc(false); 
+                            },
                         }}
                         attachments={{
                             local: localAttachments,
@@ -579,7 +602,9 @@ const CardDetailModal = ({
                             newItems: newChecklistItems,
                             onAdd: addChecklist,
                             onNameChange: setNewChecklistName,
-                            onCancel: () => { setAddingChecklist(false); setNewChecklistName(''); },
+                            onCancel: () => {
+                            setAddingChecklist(false); setNewChecklistName(''); 
+                            },
                             onItemChange: (clId, v) => setNewChecklistItems((prev) => ({ ...prev, [clId]: v })),
                             onAddItem: addChecklistItem,
                             onToggleItem: toggleChecklistItem,

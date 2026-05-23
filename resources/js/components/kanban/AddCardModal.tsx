@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KanbanBoard, CardLabel } from './types';
+import type { KanbanBoard, CardLabel } from './types';
 
 interface AddCardModalProps {
     boards: KanbanBoard[];
@@ -10,14 +10,13 @@ interface AddCardModalProps {
 }
 
 export const AddCardModal = ({
-    boards,
     cardLabels,
     defaultBoardId,
     onClose,
     onSubmit,
 }: AddCardModalProps) => {
     const [title, setTitle] = useState('');
-    const [boardId, setBoardId] = useState(defaultBoardId);
+    const [boardId] = useState(defaultBoardId);
     const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -60,6 +59,7 @@ export const AddCardModal = ({
                                 {cardLabels.map((label) => {
                                     const active = selectedLabelIds.includes(label.card_label_id);
                                     const hexColor = label.color?.card_label_color_hex || '#7B7B7B';
+
                                     return (
                                         <button
                                             key={label.card_label_id}

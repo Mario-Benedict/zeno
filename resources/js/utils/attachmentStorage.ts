@@ -25,6 +25,7 @@ const openDB = (): Promise<IDBDatabase> =>
 
 export const dbGetByCard = async (cardId: string): Promise<LocalAttachment[]> => {
     const db = await openDB();
+
     return new Promise((resolve, reject) => {
         const results: LocalAttachment[] = [];
         const req = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).openCursor();
@@ -41,6 +42,7 @@ export const dbGetByCard = async (cardId: string): Promise<LocalAttachment[]> =>
 
 export const dbPut = async (cardId: string, att: LocalAttachment): Promise<void> => {
     const db = await openDB();
+
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).put({ ...att, cardId });
@@ -51,6 +53,7 @@ export const dbPut = async (cardId: string, att: LocalAttachment): Promise<void>
 
 export const dbDelete = async (id: string): Promise<void> => {
     const db = await openDB();
+
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).delete(id);

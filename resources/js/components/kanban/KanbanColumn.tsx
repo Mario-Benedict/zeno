@@ -1,9 +1,9 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { KanbanBoard, KanbanBoardCard } from './types';
-import { KanbanCard } from './KanbanCard';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
-import AddIcon from '@public/icons/small/plus.svg';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import CloseIcon from '@public/icons/small/cancel.svg';
+import AddIcon from '@public/icons/small/plus.svg';
+import { KanbanCard } from './KanbanCard';
+import type { KanbanBoard, KanbanBoardCard } from './types';
 
 interface KanbanColumnProps {
     board: KanbanBoard;
@@ -124,7 +124,9 @@ export const KanbanColumn = ({
                                 </p>
                                 <div className="flex items-center justify-end gap-3">
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); setShowDeleteConfirm(false); 
+                                        }}
                                         className="px-4 py-2 rounded-lg text-small font-medium text-white/50 hover:text-white hover:bg-white/10 transition"
                                     >
                                         Cancel

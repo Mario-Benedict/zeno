@@ -37,6 +37,7 @@ export const DatePicker = ({
     useEffect(() => {
         if (value) {
             const d = new Date(value + 'T00:00:00');
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setViewYear(d.getFullYear());
             setViewMonth(d.getMonth());
         }
@@ -80,12 +81,14 @@ export const DatePicker = ({
     }
 
     const prevMonth = () => {
-        if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
-        else setViewMonth((m) => m - 1);
+        if (viewMonth === 0) {
+            setViewMonth(11); setViewYear((y) => y - 1); 
+        } else setViewMonth((m) => m - 1);
     };
     const nextMonth = () => {
-        if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
-        else setViewMonth((m) => m + 1);
+        if (viewMonth === 11) {
+            setViewMonth(0); setViewYear((y) => y + 1); 
+        } else setViewMonth((m) => m + 1);
     };
 
     const selectDate = (date: Date) => {
@@ -119,7 +122,9 @@ export const DatePicker = ({
                     {selectedDate && onClear && (
                         <span
                             role="button"
-                            onClick={(e) => { e.stopPropagation(); onClear(); }}
+                            onClick={(e) => {
+                                e.stopPropagation(); onClear(); 
+                            }}
                             className="shrink-0 w-3.5 h-3.5 flex items-center justify-center rounded-full text-white/20 hover:text-white/60 hover:bg-white/10 transition text-xsmall"
                         >
                             ✕
@@ -139,7 +144,9 @@ export const DatePicker = ({
                         </button>
                         <button
                             className="flex items-center gap-1.5 text-small font-semibold text-white/70 hover:text-white transition"
-                            onClick={() => { setViewMonth(new Date().getMonth()); setViewYear(new Date().getFullYear()); }}
+                            onClick={() => {
+                                setViewMonth(new Date().getMonth()); setViewYear(new Date().getFullYear()); 
+                            }}
                             title="Jump to today"
                         >
                             {MONTHS[viewMonth]} {viewYear}
@@ -201,7 +208,9 @@ export const DatePicker = ({
                         </button>
                         {selectedDate && onClear && (
                             <button
-                                onClick={() => { onClear(); setOpen(false); }}
+                                onClick={() => {
+                                    onClear(); setOpen(false); 
+                                }}
                                 className="flex-1 py-1.5 rounded-lg bg-dark-surface-2 hover:bg-accent-red/10 border border-dark-border hover:border-accent-red/30 text-xsmall text-white/40 hover:text-accent-red transition"
                             >
                                 Clear

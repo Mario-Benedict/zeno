@@ -1,4 +1,4 @@
-import { User } from './types';
+import type { User } from './types';
 import { generateInitials, MEMBER_COLORS } from './utils';
 
 interface AvatarStackProps {

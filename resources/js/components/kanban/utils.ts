@@ -1,8 +1,9 @@
-import { KanbanBoardCardChecklist } from './types';
+import type { KanbanBoardCardChecklist } from './types';
 
 export const generateInitials = (name: string | null | undefined): string => {
     if (!name || typeof name !== 'string') return '?';
     const parts = name.trim().split(/\s+/).filter(Boolean);
+
     return parts.slice(0, 2).map((n) => n[0]?.toUpperCase()).join('') || '?';
 };
 
@@ -63,5 +64,6 @@ export const getContrastColor = (hexColor: string): string => {
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
     const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+
     return yiq >= 128 ? '#1A1A1A' : '#FFFFFF';
 };

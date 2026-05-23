@@ -1,15 +1,15 @@
+import { Draggable } from '@hello-pangea/dnd';
 import { useState } from 'react';
-import { KanbanBoardCard } from './types';
-import { calculateChecklistProgress, formatDate } from './utils';
+import CheckIcon from '@public/icons/small/check.svg';
+import CheckboxIcon from '@public/icons/small/checkbox.svg';
+import CommentIcon from '@public/icons/small/comment.svg';
+import DescIcon from '@public/icons/small/description.svg';
+import PaperclipIcon from '@public/icons/small/paperclip.svg';
+import ClockIcon from '@public/icons/small/time.svg';
 import { AvatarStack } from './AvatarStack';
 import { TagBadge } from './TagBadge';
-import { Draggable } from '@hello-pangea/dnd';
-import CheckIcon from '@public/icons/small/check.svg';
-import DescIcon from '@public/icons/small/description.svg';
-import CommentIcon from '@public/icons/small/comment.svg';
-import ClockIcon from '@public/icons/small/time.svg';
-import CheckboxIcon from '@public/icons/small/checkbox.svg';
-import PaperclipIcon from '@public/icons/small/paperclip.svg';
+import type { KanbanBoardCard } from './types';
+import { calculateChecklistProgress, formatDate } from './utils';
 
 interface KanbanCardProps {
     card: KanbanBoardCard;
@@ -28,13 +28,14 @@ export const KanbanCard = ({
     onClick,
     onDeleteCard,
 }: KanbanCardProps) => {
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    
     const detail = card.detail;
     if (!detail) return null;
 
     const checklistProgress = calculateChecklistProgress(detail.checklists);
     const commentsCount = detail.comments?.length || 0;
     const hasDueDate = !!detail.dates?.kanban_board_card_due_date;
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     return (
         <>
@@ -55,7 +56,9 @@ export const KanbanCard = ({
                         </p>
                         <div className="flex items-center justify-end gap-3">
                             <button
-                                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
+                                onClick={(e) => {
+                                    e.stopPropagation(); setShowDeleteConfirm(false); 
+                                }}
                                 className="px-4 py-2 rounded-lg text-small font-medium text-white/50 hover:text-white hover:bg-white/10 transition"
                             >
                                 Cancel
@@ -113,7 +116,9 @@ export const KanbanCard = ({
                             </div>
 
                             <button
-                                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+                                onClick={(e) => {
+                                    e.stopPropagation(); setShowDeleteConfirm(true); 
+                                }}
                                 className="shrink-0 w-5 h-5 rounded flex items-center justify-center text-white/0 group-hover:text-white/30 hover:text-accent-red! hover:bg-accent-red/10 transition-all"
                                 title="Delete card"
                             >

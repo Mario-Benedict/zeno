@@ -1,19 +1,18 @@
-import AppLayout from '@/layouts/AppLayout';
+import type { DropResult} from '@hello-pangea/dnd';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
-import { DragDropContext, DropResult, Droppable } from '@hello-pangea/dnd';
-import SearchIcon from '@public/icons/small/search.svg';
-import AddIcon from '@public/icons/small/plus.svg';
-
 import {
     KanbanColumn,
     CardDetailModalWrapper,
     AddCardModal,
-    AddBoardInput,
-    type KanbanBoardCard,
-    type KanbanBoard,
-    type KanbanProps,
+    AddBoardInput
 } from '@/components/kanban';
+import type {KanbanBoardCard, KanbanBoard, KanbanProps} from '@/components/kanban';
+import AppLayout from '@/layouts/AppLayout';
+import AddIcon from '@public/icons/small/plus.svg';
+import SearchIcon from '@public/icons/small/search.svg';
+
 
 export default function Kanban({
     project,

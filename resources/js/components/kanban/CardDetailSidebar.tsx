@@ -1,11 +1,11 @@
-import { KanbanBoardCardDetail, CardLabel, User } from './types';
-import { generateInitials, MEMBER_COLORS } from './utils';
-import { SidebarButton } from './CardDetailComponents';
-import { LabelPopover } from './LabelPopover';
-import { DatePicker } from '../shared/DatePicker';
 import CheckIcon from '@public/icons/small/check.svg';
 import ChecklistIcon from '@public/icons/small/checkbox.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
+import { DatePicker } from '../shared/DatePicker';
+import { SidebarButton } from './CardDetailComponents';
+import { LabelPopover } from './LabelPopover';
+import type { KanbanBoardCardDetail, CardLabel, User } from './types';
+import { generateInitials, MEMBER_COLORS } from './utils';
 
 interface LabelState {
     popoverOpen: boolean;
@@ -81,13 +81,17 @@ export const CardDetailSidebar = ({
                     <SidebarButton
                         icon={<ChecklistIcon className="w-3.5 h-3.5" />}
                         label="Checklist"
-                        onClick={() => { onToggleChecklist(true); onToggleAttachment(false); }}
+                        onClick={() => {
+                            onToggleChecklist(true); onToggleAttachment(false); 
+                        }}
                         active={addingChecklist}
                     />
                     <SidebarButton
                         icon={<PaperclipIcon className="w-3.5 h-3.5" />}
                         label="Attachment"
-                        onClick={() => { onToggleAttachment(true); onToggleChecklist(false); }}
+                        onClick={() => {
+                            onToggleAttachment(true); onToggleChecklist(false); 
+                        }}
                         active={addingAttachment}
                     />
                 </div>
@@ -104,6 +108,7 @@ export const CardDetailSidebar = ({
                         .filter((label) => (detail.labels || []).some((l) => l.card_label_id === label.card_label_id))
                         .map((label) => {
                             const hex = label.color?.card_label_color_hex || '#7B7B7B';
+
                             return (
                                 <div
                                     key={label.card_label_id}
@@ -142,7 +147,9 @@ export const CardDetailSidebar = ({
                             activeLabels={detail.labels || []}
                             onToggle={labels.onToggle}
                             onDelete={labels.onDelete}
-                            onClose={() => { labels.setPopoverOpen(false); labels.setCreatingLabel(false); }}
+                            onClose={() => {
+                            labels.setPopoverOpen(false); labels.setCreatingLabel(false); 
+                            }}
                             creatingLabel={labels.creatingLabel}
                             setCreatingLabel={labels.setCreatingLabel}
                             newName={labels.newName}
@@ -164,6 +171,7 @@ export const CardDetailSidebar = ({
                 <div className="space-y-1">
                     {projectUsers?.map((user, i) => {
                         const isMember = (detail.members || []).some((m) => m.id === user.id);
+
                         return (
                             <button
                                 key={user.id}

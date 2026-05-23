@@ -25,6 +25,9 @@ const StatusBadge = ({ enabled }: { enabled: boolean }) => (
 );
 
 const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupProps) => {
+  const { props: pageProps } = usePage<any>();
+  const project = pageProps.project;
+
   const [copied, setCopied] = useState(false);
 
   const { post: generate, processing: generating } = useForm({});
@@ -55,7 +58,7 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
   };
 
   return (
-    <AppLayout title="2FA Setup">
+    <AppLayout project={project}>
       <Head title="2FA Debug Setup" />
 
       <div className="mx-auto w-full max-w-xl px-6 py-10 space-y-6">
