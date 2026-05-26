@@ -47,7 +47,7 @@ const SettingsIcon: React.FC = () => (
 
 const buildNavItems = (projectSlug: string): NavItem[] => [
   { name: 'Dashboard', href: `/p/${projectSlug}`, icon: DashboardIcon },
-  { name: 'Board', href: `/p/${projectSlug}/board`, icon: BoardIcon },
+  { name: 'Board', href: `/p/${projectSlug}/kanbanboard`, icon: BoardIcon },
   { name: 'Calendar',  href: `/p/${projectSlug}/calendar`,  icon: CalendarIcon },
   { name: 'Chat', href: `/p/${projectSlug}/chat`, icon: ChatIcon },
   { name: 'LLM', href: `/p/${projectSlug}/llm`, icon: LLMIcon },

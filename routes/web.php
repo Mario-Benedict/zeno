@@ -20,6 +20,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('verify', [TwoFactorSetupController::class, 'verify'])->name('verify');
         Route::post('disable', [TwoFactorSetupController::class, 'disable'])->name('disable');
     });
+    
+    require __DIR__.'/kanban.php';
 });
 
 require __DIR__.'/auth.php';
