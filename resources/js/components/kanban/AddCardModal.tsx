@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { KanbanBoard, CardLabel } from './types';
+import { useState } from 'react';
+import type { KanbanBoard, CardLabel } from '@/types/kanban';
 
 interface AddCardModalProps {
     boards: KanbanBoard[];

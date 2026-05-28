@@ -1,28 +1,31 @@
 import { router } from '@inertiajs/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import projects from '@/routes/projects';
+import type {
+    KanbanBoardCard,
+    CardLabel,
+    KanbanUser,
+    KanbanProject,
+    KanbanBoardCardDetail,
+    KanbanBoardCardDate,
+    KanbanBoardCardChecklist,
+    KanbanBoardCardChecklistItem,
+    KanbanBoardCardComment,
+} from '@/types/kanban';
 import type { LocalAttachment } from '@/utils/attachmentStorage';
 import { dbGetByCard, dbPut, dbDelete } from '@/utils/attachmentStorage';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import CheckIcon from '@public/icons/small/check.svg';
 import { CardDetailBody } from './CardDetailBody';
 import { CardDetailSidebar } from './CardDetailSidebar';
-import type {
-    KanbanBoardCard,
-    CardLabel,
-    User,
-    KanbanBoardCardDetail,
-    KanbanBoardCardDate,
-    KanbanBoardCardChecklist,
-    KanbanBoardCardChecklistItem,
-    KanbanBoardCardComment,
-} from './types';
 
 interface CardDetailPanelProps {
     card: KanbanBoardCard;
     boardId: string;
     cardLabels: CardLabel[];
-    projectUsers: User[];
-    currentUser: User;
+    projectUsers: KanbanUser[];
+    currentUser: KanbanUser;
+    project: KanbanProject;
     onClose: () => void;
     onUpdate: (updatedCard: KanbanBoardCard, boardId: string) => void;
 }
@@ -36,12 +39,21 @@ export const CardDetailModalWrapper = (props: CardDetailModalWrapperProps) => {
     return <CardDetailModal {...props} />;
 };
 
+// Shared Inertia options for every write request in this modal — the modal
+// already runs its own optimistic updates, so we preserve scroll + state
+// and only react to server-side validation failures.
+const inertiaWriteOptions = {
+    preserveScroll: true,
+    preserveState: true,
+} as const;
+
 const CardDetailModal = ({
     card,
     boardId,
     cardLabels,
     projectUsers,
     currentUser,
+    project,
     onClose,
     onUpdate,
 }: CardDetailPanelProps) => {
@@ -89,30 +101,33 @@ const CardDetailModal = ({
     const titleRef = useRef<HTMLTextAreaElement>(null);
     const descRef = useRef<HTMLTextAreaElement>(null);
 
+    const cardId = card.kanban_board_card_id;
+    const projectSlug = project.project_slug;
+
     const handleClose = useCallback(() => {
-        setMounted(false); setTimeout(onClose, 300); 
+        setMounted(false); setTimeout(onClose, 300);
     }, [onClose]);
 
     useEffect(() => {
-        requestAnimationFrame(() => setMounted(true)); 
+        requestAnimationFrame(() => setMounted(true));
     }, []);
     useEffect(() => {
         if (editingTitle && titleRef.current) {
-            titleRef.current.focus(); titleRef.current.selectionStart = titleRef.current.value.length; 
-        } 
+            titleRef.current.focus(); titleRef.current.selectionStart = titleRef.current.value.length;
+        }
     }, [editingTitle]);
     useEffect(() => {
-    if (editingDesc) descRef.current?.focus(); 
+    if (editingDesc) descRef.current?.focus();
     }, [editingDesc]);
-        useEffect(() => { 
+        useEffect(() => {
             const h = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') handleClose(); 
-    }; 
-        window.addEventListener('keydown', h); 
-        return () => window.removeEventListener('keydown', h); 
+    if (e.key === 'Escape') handleClose();
+    };
+        window.addEventListener('keydown', h);
+        return () => window.removeEventListener('keydown', h);
     }, [handleClose]);
 
-    useEffect(() => { 
+    useEffect(() => {
         if (card.detail) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setDescValue(card.detail.kanban_board_card_description || '');
@@ -138,19 +153,25 @@ const CardDetailModal = ({
         }
     }, [addingAttachment]);
 
-    const patchDetail = async (patch: Partial<KanbanBoardCardDetail>) => {
+    type DetailScalarPatch = {
+        kanban_board_card_title?: string;
+        kanban_board_card_description?: string | null;
+        is_completed?: boolean;
+    };
+
+    const patchDetail = (patch: DetailScalarPatch) => {
         const updated = { ...detail, ...patch };
         setDetail(updated);
         onUpdate({ ...card, detail: updated }, boardId);
-        try {
-            await fetch(`/cards/${card.kanban_board_card_id}/detail`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify(patch),
-            });
-        } catch (err) {
-            console.error('Failed to save card detail', err);
-        }
+
+        router.patch(
+            projects.kanban.cards.detail.update.url({ project: projectSlug, card: cardId }),
+            { ...patch },
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to save card detail'),
+            },
+        );
     };
 
     const commitTitle = () => {
@@ -168,50 +189,79 @@ const CardDetailModal = ({
         patchDetail({ kanban_board_card_description: descValue || null });
     };
 
-    const createLabel = async () => {
+    const createLabel = () => {
         if (!newLabelName.trim() || !newLabelColor) return;
         setSavingLabel(true);
-        try {
-            const res = await fetch(`/cards/${card.kanban_board_card_id}/labels/create`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ card_label_name: newLabelName.trim(), card_label_color_hex: newLabelColor }),
-            });
-            if (!res.ok) throw new Error(`Failed to create label: ${await res.text()}`);
-            const { label: newLabel } = await res.json() as { label: CardLabel };
-            setNewLabelName('');
-            setNewLabelColor(null);
-            setCreatingLabel(false);
-            const updatedLabels = [...(detail.labels || []), newLabel];
-            setDetail({ ...detail, labels: updatedLabels });
-            onUpdate({ ...card, detail: { ...detail, labels: updatedLabels } }, boardId);
-            router.reload({ only: ['cardLabels'] });
-        } catch (err) {
-            console.error('Create label failed:', err);
-            alert(err instanceof Error ? err.message : 'Unknown error');
-        } finally {
-            setSavingLabel(false);
-        }
+
+        // Pre-generate the label id so optimistic UI matches the server
+        const labelId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const optimisticLabel: CardLabel = {
+            card_label_id:           labelId,
+            card_label_project_id:   project.project_id,
+            card_label_category_id:  '',
+            card_label_color_id:     '',
+            card_label_name:         newLabelName.trim(),
+            color: {
+                card_label_color_id:  '',
+                card_label_color_hex: newLabelColor,
+                created_at:           now,
+                updated_at:           now,
+            },
+            created_at: now,
+            updated_at: now,
+        };
+
+        const updatedLabels = [...(detail.labels || []), optimisticLabel];
+        const updatedDetail = { ...detail, labels: updatedLabels };
+        setDetail(updatedDetail);
+        onUpdate({ ...card, detail: updatedDetail }, boardId);
+        setNewLabelName('');
+        setNewLabelColor(null);
+        setCreatingLabel(false);
+
+        router.post(
+            projects.kanban.cards.labels.create.url({ project: projectSlug, card: cardId }),
+            {
+                card_label_id:        labelId,
+                card_label_name:      optimisticLabel.card_label_name,
+                card_label_color_hex: newLabelColor,
+            },
+            {
+                ...inertiaWriteOptions,
+                onSuccess: () => router.reload({ only: ['cardLabels'] }),
+                onError: (errors) => {
+                    console.error('Create label failed:', errors);
+                    alert('Failed to create label.');
+                },
+                onFinish: () => setSavingLabel(false),
+            },
+        );
     };
 
-    const deleteLabel = async (labelId: string) => {
+    const deleteLabel = (labelId: string) => {
         const isActive = (detail.labels || []).some((l) => l.card_label_id === labelId);
         if (isActive) {
             const label = cardLabels.find((l) => l.card_label_id === labelId);
-            if (label) await toggleLabel(label);
+            if (label) toggleLabel(label);
         }
-        try {
-            const res = await fetch(`/cards/${card.kanban_board_card_id}/labels/${labelId}/global`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            });
-            if (res.ok) router.reload({ only: ['cardLabels'] });
-        } catch (err) {
-            console.error('Failed to delete label', err);
-        }
+
+        router.delete(
+            projects.kanban.cards.labels.delete.url({
+                project: projectSlug,
+                card:    cardId,
+                label:   labelId,
+            }),
+            {
+                ...inertiaWriteOptions,
+                onSuccess: () => router.reload({ only: ['cardLabels'] }),
+                onError: () => console.error('Failed to delete label'),
+            },
+        );
     };
 
-    const toggleLabel = async (label: CardLabel) => {
+    const toggleLabel = (label: CardLabel) => {
         const currentLabels = detail.labels || [];
         const hasLabel = currentLabels.some((l) => l.card_label_id === label.card_label_id);
         const updatedLabels = hasLabel
@@ -220,25 +270,32 @@ const CardDetailModal = ({
         const updated = { ...detail, labels: updatedLabels };
         setDetail(updated);
         onUpdate({ ...card, detail: updated }, boardId);
-        try {
-            if (hasLabel) {
-                await fetch(`/cards/${card.kanban_board_card_id}/labels/${label.card_label_id}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                });
-            } else {
-                await fetch(`/cards/${card.kanban_board_card_id}/labels`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify({ label_id: label.card_label_id }),
-                });
-            }
-        } catch (err) {
-            console.error('Failed to toggle label', err);
+
+        if (hasLabel) {
+            router.delete(
+                projects.kanban.cards.labels.destroy.url({
+                    project: projectSlug,
+                    card:    cardId,
+                    label:   label.card_label_id,
+                }),
+                {
+                    ...inertiaWriteOptions,
+                    onError: () => console.error('Failed to detach label'),
+                },
+            );
+        } else {
+            router.post(
+                projects.kanban.cards.labels.store.url({ project: projectSlug, card: cardId }),
+                { label_id: label.card_label_id },
+                {
+                    ...inertiaWriteOptions,
+                    onError: () => console.error('Failed to attach label'),
+                },
+            );
         }
     };
 
-    const toggleMember = async (user: User) => {
+    const toggleMember = (user: KanbanUser) => {
         const currentMembers = detail.members || [];
         const hasMember = currentMembers.some((m) => m.id === user.id);
         const updatedMembers = hasMember
@@ -247,25 +304,32 @@ const CardDetailModal = ({
         const updated = { ...detail, members: updatedMembers };
         setDetail(updated);
         onUpdate({ ...card, detail: updated }, boardId);
-        try {
-            if (hasMember) {
-                await fetch(`/cards/${card.kanban_board_card_id}/members/${user.id}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                });
-            } else {
-                await fetch(`/cards/${card.kanban_board_card_id}/members`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify({ user_id: user.id }),
-                });
-            }
-        } catch (err) {
-            console.error('Failed to toggle member', err);
+
+        if (hasMember) {
+            router.delete(
+                projects.kanban.cards.members.destroy.url({
+                    project: projectSlug,
+                    card:    cardId,
+                    user:    user.id,
+                }),
+                {
+                    ...inertiaWriteOptions,
+                    onError: () => console.error('Failed to remove member'),
+                },
+            );
+        } else {
+            router.post(
+                projects.kanban.cards.members.store.url({ project: projectSlug, card: cardId }),
+                { user_id: user.id },
+                {
+                    ...inertiaWriteOptions,
+                    onError: () => console.error('Failed to add member'),
+                },
+            );
         }
     };
 
-    const updateDates = async (
+    const updateDates = (
         field: 'kanban_board_card_start_date' | 'kanban_board_card_due_date',
         value: string
     ) => {
@@ -283,104 +347,127 @@ const CardDetailModal = ({
         const updated = { ...detail, dates: updatedDates };
         setDetail(updated);
         onUpdate({ ...card, detail: updated }, boardId);
-        try {
-            await fetch(`/cards/${card.kanban_board_card_id}/dates`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ [field]: value || null }),
-            });
-        } catch (err) {
-            console.error('Failed to update dates', err);
-        }
+
+        router.patch(
+            projects.kanban.cards.dates.update.url({ project: projectSlug, card: cardId }),
+            { [field]: value || null },
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to update dates'),
+            },
+        );
     };
 
-    const addChecklist = async () => {
+    const addChecklist = () => {
         if (!newChecklistName.trim()) return;
         setSaving(true);
-        try {
-            const res = await fetch(`/cards/${card.kanban_board_card_id}/checklists`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ kanban_board_card_checklist_name: newChecklistName.trim() }),
-            });
-            const data = await res.json();
-            const created: KanbanBoardCardChecklist = data.checklist || {
-                kanban_board_card_checklist_id: Math.random().toString(36).slice(2, 9),
-                kanban_board_card_checklist_detail_id: detail.kanban_board_card_detail_id,
-                kanban_board_card_checklist_name: newChecklistName.trim(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                items: [],
-            };
-            const updated = { ...detail, checklists: [...(detail.checklists || []), created] };
-            setDetail(updated);
-            onUpdate({ ...card, detail: updated }, boardId);
-            setNewChecklistName('');
-            setAddingChecklist(false);
-        } catch (err) {
-            console.error('Failed to add checklist', err);
-        } finally {
-            setSaving(false);
-        }
+
+        const checklistId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const optimisticChecklist: KanbanBoardCardChecklist = {
+            kanban_board_card_checklist_id:        checklistId,
+            kanban_board_card_checklist_detail_id: detail.kanban_board_card_detail_id,
+            kanban_board_card_checklist_name:      newChecklistName.trim(),
+            created_at:                            now,
+            updated_at:                            now,
+            items:                                 [],
+        };
+
+        const updated = { ...detail, checklists: [...(detail.checklists || []), optimisticChecklist] };
+        setDetail(updated);
+        onUpdate({ ...card, detail: updated }, boardId);
+        setNewChecklistName('');
+        setAddingChecklist(false);
+
+        router.post(
+            projects.kanban.cards.checklists.store.url({ project: projectSlug, card: cardId }),
+            {
+                kanban_board_card_checklist_id:   checklistId,
+                kanban_board_card_checklist_name: optimisticChecklist.kanban_board_card_checklist_name,
+            },
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to add checklist'),
+                onFinish: () => setSaving(false),
+            },
+        );
     };
 
-    const addChecklistItem = async (checklistId: string) => {
+    const addChecklistItem = (checklistId: string) => {
         const text = newChecklistItems[checklistId]?.trim();
         if (!text) return;
-        try {
-            const res = await fetch(`/checklists/${checklistId}/items`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ kanban_board_card_checklist_item_name: text }),
-            });
-            const data = await res.json();
-            const created: KanbanBoardCardChecklistItem = data.item || {
-                kanban_board_card_checklist_item_id: Math.random().toString(36).slice(2, 9),
-                kanban_board_card_checklist_id: checklistId,
-                kanban_board_card_checklist_item_name: text,
-                is_completed: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            };
-            const updated = {
-                ...detail,
-                checklists: (detail.checklists || []).map((cl) =>
-                    cl.kanban_board_card_checklist_id !== checklistId
-                        ? cl
-                        : { ...cl, items: [...(cl.items || []), created] }
-                ),
-            };
-            setDetail(updated);
-            onUpdate({ ...card, detail: updated }, boardId);
-            setNewChecklistItems((prev) => ({ ...prev, [checklistId]: '' }));
-        } catch (err) {
-            console.error('Failed to add checklist item', err);
-        }
-    };
 
-    const toggleChecklistItem = async (checklistId: string, itemId: string, current: boolean) => {
+        const itemId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const optimisticItem: KanbanBoardCardChecklistItem = {
+            kanban_board_card_checklist_item_id:   itemId,
+            kanban_board_card_checklist_id:        checklistId,
+            kanban_board_card_checklist_item_name: text,
+            is_completed:                          false,
+            created_at:                            now,
+            updated_at:                            now,
+        };
+
         const updated = {
             ...detail,
             checklists: (detail.checklists || []).map((cl) =>
                 cl.kanban_board_card_checklist_id !== checklistId
                     ? cl
-                    : { ...cl, items: (cl.items || []).map((item) => item.kanban_board_card_checklist_item_id !== itemId ? item : { ...item, is_completed: !current }) }
+                    : { ...cl, items: [...(cl.items || []), optimisticItem] }
             ),
         };
         setDetail(updated);
         onUpdate({ ...card, detail: updated }, boardId);
-        try {
-            await fetch(`/checklist-items/${itemId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ is_completed: !current }),
-            });
-        } catch (err) {
-            console.error('Failed to toggle checklist item', err);
-        }
+        setNewChecklistItems((prev) => ({ ...prev, [checklistId]: '' }));
+
+        router.post(
+            projects.kanban.checklist.items.store.url({
+                project:   projectSlug,
+                checklist: checklistId,
+            }),
+            {
+                kanban_board_card_checklist_item_id:   itemId,
+                kanban_board_card_checklist_item_name: text,
+            },
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to add checklist item'),
+            },
+        );
     };
 
-    const deleteChecklistItem = async (checklistId: string, itemId: string) => {
+    const toggleChecklistItem = (checklistId: string, itemId: string, current: boolean) => {
+        const updated = {
+            ...detail,
+            checklists: (detail.checklists || []).map((cl) =>
+                cl.kanban_board_card_checklist_id !== checklistId
+                    ? cl
+                    : {
+                        ...cl,
+                        items: (cl.items || []).map((item) =>
+                            item.kanban_board_card_checklist_item_id !== itemId
+                                ? item
+                                : { ...item, is_completed: !current }
+                        ),
+                      }
+            ),
+        };
+        setDetail(updated);
+        onUpdate({ ...card, detail: updated }, boardId);
+
+        router.patch(
+            projects.kanban.checklist.items.update.url({ project: projectSlug, item: itemId }),
+            { is_completed: !current },
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to toggle checklist item'),
+            },
+        );
+    };
+
+    const deleteChecklistItem = (checklistId: string, itemId: string) => {
         const updated = {
             ...detail,
             checklists: (detail.checklists || []).map((cl) =>
@@ -391,75 +478,95 @@ const CardDetailModal = ({
         };
         setDetail(updated);
         onUpdate({ ...card, detail: updated }, boardId);
-        try {
-            await fetch(`/checklist-items/${itemId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            });
-        } catch (err) {
-            console.error('Failed to delete checklist item', err);
-        }
+
+        router.delete(
+            projects.kanban.checklist.items.destroy.url({ project: projectSlug, item: itemId }),
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to delete checklist item'),
+            },
+        );
     };
 
-    const deleteChecklist = async (checklistId: string) => {
-        const updated = { ...detail, checklists: (detail.checklists || []).filter((cl) => cl.kanban_board_card_checklist_id !== checklistId) };
+    const deleteChecklist = (checklistId: string) => {
+        const updated = {
+            ...detail,
+            checklists: (detail.checklists || []).filter(
+                (cl) => cl.kanban_board_card_checklist_id !== checklistId
+            ),
+        };
         setDetail(updated);
         onUpdate({ ...card, detail: updated }, boardId);
-        try {
-            await fetch(`/checklists/${checklistId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            });
-        } catch (err) {
-            console.error('Failed to delete checklist', err);
-        }
+
+        router.delete(
+            projects.kanban.checklists.destroy.url({
+                project:   projectSlug,
+                checklist: checklistId,
+            }),
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to delete checklist'),
+            },
+        );
     };
 
-    const submitComment = async () => {
+    const submitComment = () => {
         if (!newComment.trim()) return;
-        try {
-            const res = await fetch(`/cards/${card.kanban_board_card_id}/comments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ kanban_board_card_comment_message: newComment.trim() }),
-            });
-            const data = await res.json();
-            const created: KanbanBoardCardComment = data.comment || {
-                kanban_board_card_comment_id: Math.random().toString(36).slice(2, 9),
-                kanban_board_card_detail_id: detail.kanban_board_card_detail_id,
-                kanban_board_card_comment_from: currentUser.id,
-                kanban_board_card_comment_message: newComment.trim(),
-                user: currentUser,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            };
-            const updated = { ...detail, comments: [...(detail.comments || []), created] };
-            setDetail(updated);
-            onUpdate({ ...card, detail: updated }, boardId);
-            setNewComment('');
-        } catch (err) {
-            console.error('Failed to add comment', err);
-        }
-    };
 
-    const deleteComment = async (commentId: string) => {
-        const updated = { ...detail, comments: (detail.comments || []).filter((c) => c.kanban_board_card_comment_id !== commentId) };
+        const commentId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const optimisticComment: KanbanBoardCardComment = {
+            kanban_board_card_comment_id:       commentId,
+            kanban_board_card_detail_id:        detail.kanban_board_card_detail_id,
+            kanban_board_card_comment_from:     currentUser.id,
+            kanban_board_card_comment_message:  newComment.trim(),
+            user:                               currentUser,
+            created_at:                         now,
+            updated_at:                         now,
+        };
+
+        const updated = { ...detail, comments: [...(detail.comments || []), optimisticComment] };
         setDetail(updated);
         onUpdate({ ...card, detail: updated }, boardId);
-        try {
-            await fetch(`/comments/${commentId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            });
-        } catch (err) {
-            console.error('Failed to delete comment', err);
-        }
+        setNewComment('');
+
+        router.post(
+            projects.kanban.cards.comments.store.url({ project: projectSlug, card: cardId }),
+            {
+                kanban_board_card_comment_id:      commentId,
+                kanban_board_card_comment_message: optimisticComment.kanban_board_card_comment_message,
+            },
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to add comment'),
+            },
+        );
+    };
+
+    const deleteComment = (commentId: string) => {
+        const updated = {
+            ...detail,
+            comments: (detail.comments || []).filter(
+                (c) => c.kanban_board_card_comment_id !== commentId
+            ),
+        };
+        setDetail(updated);
+        onUpdate({ ...card, detail: updated }, boardId);
+
+        router.delete(
+            projects.kanban.comments.destroy.url({ project: projectSlug, comment: commentId }),
+            {
+                ...inertiaWriteOptions,
+                onError: () => console.error('Failed to delete comment'),
+            },
+        );
     };
 
     const processFiles = async (files: FileList | File[]) => {
         for (const file of Array.from(files)) {
             if (file.size > 20 * 1024 * 1024) {
-            alert(`${file.name} is too large. Max 20 MB.`); continue; 
+            alert(`${file.name} is too large. Max 20 MB.`); continue;
 }
             setUploadingFile(true);
             try {
@@ -536,10 +643,10 @@ const CardDetailModal = ({
                                 onBlur={commitTitle}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault(); commitTitle(); 
+                                        e.preventDefault(); commitTitle();
                                     }
                                     if (e.key === 'Escape') {
-                                        setTitleValue(detail.kanban_board_card_title); setEditingTitle(false); 
+                                        setTitleValue(detail.kanban_board_card_title); setEditingTitle(false);
                                     }
                                 }}
                                 rows={1}
@@ -579,7 +686,7 @@ const CardDetailModal = ({
                             onChange: setDescValue,
                             onCommit: commitDesc,
                             onDiscard: () => {
-                            setDescValue(detail.kanban_board_card_description || ''); setEditingDesc(false); 
+                            setDescValue(detail.kanban_board_card_description || ''); setEditingDesc(false);
                             },
                         }}
                         attachments={{
@@ -603,7 +710,7 @@ const CardDetailModal = ({
                             onAdd: addChecklist,
                             onNameChange: setNewChecklistName,
                             onCancel: () => {
-                            setAddingChecklist(false); setNewChecklistName(''); 
+                            setAddingChecklist(false); setNewChecklistName('');
                             },
                             onItemChange: (clId, v) => setNewChecklistItems((prev) => ({ ...prev, [clId]: v })),
                             onAddItem: addChecklistItem,

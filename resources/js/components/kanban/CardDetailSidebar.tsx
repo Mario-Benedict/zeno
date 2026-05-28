@@ -1,11 +1,11 @@
+import { DatePicker } from '@/components/shared/DatePicker';
+import type { KanbanBoardCardDetail, CardLabel, KanbanUser } from '@/types/kanban';
+import { generateInitials, MEMBER_COLORS } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 import ChecklistIcon from '@public/icons/small/checkbox.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
-import { DatePicker } from '../shared/DatePicker';
 import { SidebarButton } from './CardDetailComponents';
 import { LabelPopover } from './LabelPopover';
-import type { KanbanBoardCardDetail, CardLabel, User } from './types';
-import { generateInitials, MEMBER_COLORS } from './utils';
 
 interface LabelState {
     popoverOpen: boolean;
@@ -25,14 +25,14 @@ interface LabelState {
 interface CardDetailSidebarProps {
     detail: KanbanBoardCardDetail;
     cardLabels: CardLabel[];
-    projectUsers: User[];
+    projectUsers: KanbanUser[];
     addingChecklist: boolean;
     addingAttachment: boolean;
     onToggleChecklist: (v: boolean) => void;
     onToggleAttachment: (v: boolean) => void;
     onUpdateDates: (field: 'kanban_board_card_start_date' | 'kanban_board_card_due_date', value: string) => void;
     labels: LabelState;
-    onToggleMember: (user: User) => void;
+    onToggleMember: (user: KanbanUser) => void;
 }
 
 export const CardDetailSidebar = ({
@@ -82,7 +82,7 @@ export const CardDetailSidebar = ({
                         icon={<ChecklistIcon className="w-3.5 h-3.5" />}
                         label="Checklist"
                         onClick={() => {
-                            onToggleChecklist(true); onToggleAttachment(false); 
+                            onToggleChecklist(true); onToggleAttachment(false);
                         }}
                         active={addingChecklist}
                     />
@@ -90,7 +90,7 @@ export const CardDetailSidebar = ({
                         icon={<PaperclipIcon className="w-3.5 h-3.5" />}
                         label="Attachment"
                         onClick={() => {
-                            onToggleAttachment(true); onToggleChecklist(false); 
+                            onToggleAttachment(true); onToggleChecklist(false);
                         }}
                         active={addingAttachment}
                     />
@@ -148,7 +148,7 @@ export const CardDetailSidebar = ({
                             onToggle={labels.onToggle}
                             onDelete={labels.onDelete}
                             onClose={() => {
-                            labels.setPopoverOpen(false); labels.setCreatingLabel(false); 
+                            labels.setPopoverOpen(false); labels.setCreatingLabel(false);
                             }}
                             creatingLabel={labels.creatingLabel}
                             setCreatingLabel={labels.setCreatingLabel}

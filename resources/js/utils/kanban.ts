@@ -1,4 +1,6 @@
-import type { KanbanBoardCardChecklist } from './types';
+import type { KanbanBoardCardChecklist } from '@/types/kanban';
+
+// ─── Display helpers ─────────────────────────────────────────────────────────
 
 export const generateInitials = (name: string | null | undefined): string => {
     if (!name || typeof name !== 'string') return '?';
@@ -6,6 +8,8 @@ export const generateInitials = (name: string | null | undefined): string => {
 
     return parts.slice(0, 2).map((n) => n[0]?.toUpperCase()).join('') || '?';
 };
+
+// ─── Color palettes ──────────────────────────────────────────────────────────
 
 export const MEMBER_COLORS = ['#8E24AA', '#F57C00', '#00897B', '#D32F2F', '#3949AB'];
 
@@ -32,6 +36,8 @@ export const LABEL_COLORS: { name: string; hex: string }[] = [
     { name: 'brown-light',  hex: '#D7CCC8' },
 ];
 
+// ─── Progress / formatting ───────────────────────────────────────────────────
+
 export const calculateChecklistProgress = (
     checklists?: KanbanBoardCardChecklist[] | null
 ): { done: number; total: number } => {
@@ -44,6 +50,7 @@ export const calculateChecklistProgress = (
             done += cl.items.filter((i) => i?.is_completed).length;
         }
     });
+
     return { done, total };
 };
 
@@ -52,6 +59,7 @@ export const formatDate = (iso: string | null | undefined): string => {
     try {
         const date = new Date(iso);
         if (isNaN(date.getTime())) return '';
+
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch {
         return '';

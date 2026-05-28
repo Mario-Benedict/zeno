@@ -1,5 +1,5 @@
-import type { CardLabelColor } from './types';
-import { getContrastColor } from './utils'
+import type { CardLabelColor } from '@/types/kanban';
+import { getContrastColor } from '@/utils/kanban';
 
 interface TagBadgeProps {
     label?: string | null;

@@ -1,8 +1,8 @@
 import { useRef, useEffect } from 'react';
+import type { CardLabel } from '@/types/kanban';
+import { LABEL_COLORS, getContrastColor } from '@/utils/kanban';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import CheckIcon from '@public/icons/small/check.svg';
-import type { CardLabel } from './types';
-import { LABEL_COLORS, getContrastColor } from './utils';
 
 interface LabelPopoverProps {
     cardLabels: CardLabel[];
@@ -95,7 +95,7 @@ export const LabelPopover = ({
                                     </button>
                                     <button
                                         onClick={(e) => {
-                                            e.stopPropagation(); onDelete(label.card_label_id); 
+                                            e.stopPropagation(); onDelete(label.card_label_id);
                                         }}
                                         className="opacity-0 group-hover/lbl:opacity-100 w-5 h-5 flex items-center justify-center rounded text-white/20 hover:text-accent-red hover:bg-accent-red/10 transition text-xsmall shrink-0"
                                         title="Delete label"
@@ -122,7 +122,7 @@ export const LabelPopover = ({
                     <div className="flex items-center gap-2 px-4 py-3 border-b border-dark-border">
                         <button
                             onClick={() => {
-                                setCreatingLabel(false); setNewName(''); setNewColor(null); 
+                                setCreatingLabel(false); setNewName(''); setNewColor(null);
                             }}
                             className="text-white/30 hover:text-white/60 transition text-small"
                         >
@@ -151,7 +151,7 @@ export const LabelPopover = ({
                                 value={newName}
                                 onChange={(e) => setNewName(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter') onCreate(); 
+                                    if (e.key === 'Enter') onCreate();
                                 }}
                                 placeholder="Label name..."
                                 className="w-full bg-dark-surface-2 border border-dark-border rounded-lg px-3 py-2 text-small text-white placeholder-white/20 focus:outline-none focus:border-dark-border-focus transition"
@@ -189,7 +189,7 @@ export const LabelPopover = ({
                             </button>
                             <button
                                 onClick={() => {
-                                    setCreatingLabel(false); setNewName(''); setNewColor(null); 
+                                    setCreatingLabel(false); setNewName(''); setNewColor(null);
                                 }}
                                 className="px-3 py-2 border border-dark-border rounded-lg text-xsmall text-white/40 hover:text-white hover:bg-white/5 transition"
                             >

@@ -1,6 +1,8 @@
 import React from 'react';
+import type { KanbanBoardCardDetail, KanbanUser } from '@/types/kanban';
 import type { LocalAttachment} from '@/utils/attachmentStorage';
 import { formatBytes, getFileEmoji } from '@/utils/attachmentStorage';
+import { calculateChecklistProgress, generateInitials, MEMBER_COLORS } from '@/utils/kanban';
 import ArrowRightIcon from '@public/icons/small/arrow_left.svg';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import CheckIcon from '@public/icons/small/check.svg';
@@ -12,8 +14,6 @@ import CalendarIcon from '@public/icons/small/time.svg';
 import { AvatarStack } from './AvatarStack';
 import { SectionHeader } from './CardDetailComponents';
 import { TagBadge } from './TagBadge';
-import type { KanbanBoardCardDetail, User } from './types';
-import { calculateChecklistProgress, generateInitials, MEMBER_COLORS } from './utils';
 
 export interface DescState {
     editing: boolean;
@@ -64,7 +64,7 @@ export interface CommentState {
 
 interface CardDetailBodyProps {
     detail: KanbanBoardCardDetail;
-    currentUser: User;
+    currentUser: KanbanUser;
     isDueSoon: boolean;
     isOverdue: boolean;
     desc: DescState;
@@ -316,11 +316,11 @@ export const CardDetailBody = ({
                     <p className="text-xsmall font-semibold text-white/40 mb-2">Add attachment</p>
                     <div
                         onDragOver={(e) => {
-                            e.preventDefault(); attachmentsOnSetDragOver(true); 
+                            e.preventDefault(); attachmentsOnSetDragOver(true);
                         }}
                         onDragLeave={() => attachmentsOnSetDragOver(false)}
                         onDrop={(e) => {
-                            e.preventDefault(); attachmentsOnSetDragOver(false); attachmentsOnProcess(e.dataTransfer.files); 
+                            e.preventDefault(); attachmentsOnSetDragOver(false); attachmentsOnProcess(e.dataTransfer.files);
                         }}
                         onClick={() => attachmentsFileInputRef.current?.click()}
                         className={`w-full flex flex-col items-center justify-center gap-2 py-6 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
@@ -341,7 +341,7 @@ export const CardDetailBody = ({
                         multiple
                         className="hidden"
                         onChange={(e) => {
-                            if (e.target.files) attachmentsOnProcess(e.target.files); e.target.value = ''; 
+                            if (e.target.files) attachmentsOnProcess(e.target.files); e.target.value = '';
                         }}
                     />
                     <button
@@ -431,7 +431,7 @@ export const CardDetailBody = ({
                                 value={checklistsNewItems[checklist.kanban_board_card_checklist_id] || ''}
                                 onChange={(e) => checklistsOnItemChange(checklist.kanban_board_card_checklist_id, e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter') checklistsOnAddItem(checklist.kanban_board_card_checklist_id); 
+                                    if (e.key === 'Enter') checklistsOnAddItem(checklist.kanban_board_card_checklist_id);
                                 }}
                                 placeholder="Add an item..."
                                 className="flex-1 bg-dark-surface-2 border border-dark-secondary rounded-lg px-3 py-1.5 text-small text-dark-primary placeholder-dark-secondary focus:outline-none focus:border-dark-surface-3 transition"
@@ -499,7 +499,7 @@ export const CardDetailBody = ({
                             onChange={(e) => commentsOnChange(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault(); commentsOnSubmit(); 
+                                    e.preventDefault(); commentsOnSubmit();
                                 }
                             }}
                             placeholder="Write a comment... (Enter to send)"

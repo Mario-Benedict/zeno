@@ -1,12 +1,17 @@
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Kanban Domain Types ─────────────────────────────────────────────────────
 
-export interface Project {
+/**
+ * Lightweight project shape used by the kanban page. Mirrors the payload
+ * sent by `KanbanController::show` — separate from the richer `Project`
+ * type in `@/types/project` which is used by the project listing.
+ */
+export interface KanbanProject {
     project_id: string;
     project_name: string;
     project_slug: string;
 }
 
-export interface User {
+export interface KanbanUser {
     id: number;
     name: string;
     email: string;
@@ -87,7 +92,7 @@ export interface KanbanBoardCardComment {
     kanban_board_card_detail_id: string;
     kanban_board_card_comment_from: number;
     kanban_board_card_comment_message: string;
-    user?: User;
+    user?: KanbanUser;
     created_at: string;
     updated_at: string;
 }
@@ -99,7 +104,7 @@ export interface KanbanBoardCardDetail {
     kanban_board_card_description: string | null;
     is_completed: boolean;
     labels?: CardLabel[];
-    members?: User[];
+    members?: KanbanUser[];
     checklists?: KanbanBoardCardChecklist[];
     dates?: KanbanBoardCardDate;
     attachments?: KanbanBoardCardAttachment[];
@@ -127,11 +132,12 @@ export interface KanbanBoard {
 }
 
 export interface KanbanProps {
-    project: Project;
+    project: KanbanProject;
     kanbanBoards: KanbanBoard[];
     cardLabelColors?: CardLabelColor[];
     cardLabelCategories?: CardLabelCategory[];
-    projectUsers: User[];
-    currentUser: User;
+    projectUsers: KanbanUser[];
+    currentUser: KanbanUser;
     cardLabels: CardLabel[];
+    [key: string]: unknown;
 }

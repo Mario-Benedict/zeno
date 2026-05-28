@@ -1,8 +1,8 @@
-import type { User } from './types';
-import { generateInitials, MEMBER_COLORS } from './utils';
+import type { KanbanUser } from '@/types/kanban';
+import { generateInitials, MEMBER_COLORS } from '@/utils/kanban';
 
 interface AvatarStackProps {
-    members?: User[];
+    members?: KanbanUser[];
 }
 
 export const AvatarStack = ({ members }: AvatarStackProps) => {

@@ -1,5 +1,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { useState } from 'react';
+import type { KanbanBoardCard } from '@/types/kanban';
+import { calculateChecklistProgress, formatDate } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 import CheckboxIcon from '@public/icons/small/checkbox.svg';
 import CommentIcon from '@public/icons/small/comment.svg';
@@ -8,8 +10,6 @@ import PaperclipIcon from '@public/icons/small/paperclip.svg';
 import ClockIcon from '@public/icons/small/time.svg';
 import { AvatarStack } from './AvatarStack';
 import { TagBadge } from './TagBadge';
-import type { KanbanBoardCard } from './types';
-import { calculateChecklistProgress, formatDate } from './utils';
 
 interface KanbanCardProps {
     card: KanbanBoardCard;
@@ -29,7 +29,7 @@ export const KanbanCard = ({
     onDeleteCard,
 }: KanbanCardProps) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    
+
     const detail = card.detail;
     if (!detail) return null;
 
@@ -57,7 +57,7 @@ export const KanbanCard = ({
                         <div className="flex items-center justify-end gap-3">
                             <button
                                 onClick={(e) => {
-                                    e.stopPropagation(); setShowDeleteConfirm(false); 
+                                    e.stopPropagation(); setShowDeleteConfirm(false);
                                 }}
                                 className="px-4 py-2 rounded-lg text-small font-medium text-white/50 hover:text-white hover:bg-white/10 transition"
                             >
@@ -117,7 +117,7 @@ export const KanbanCard = ({
 
                             <button
                                 onClick={(e) => {
-                                    e.stopPropagation(); setShowDeleteConfirm(true); 
+                                    e.stopPropagation(); setShowDeleteConfirm(true);
                                 }}
                                 className="shrink-0 w-5 h-5 rounded flex items-center justify-center text-white/0 group-hover:text-white/30 hover:text-accent-red! hover:bg-accent-red/10 transition-all"
                                 title="Delete card"

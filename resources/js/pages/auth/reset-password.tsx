@@ -1,8 +1,8 @@
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEventHandler } from 'react';
 import Button from '@/components/shared/Button';
-import PasswordStrengthBar from '@/components/shared/PasswordStrengthBar';
 import PasswordField from '@/components/shared/PasswordField';
+import PasswordStrengthBar from '@/components/shared/PasswordStrengthBar';
 import AuthLayout from '@/layouts/AuthLayout';
 import { getPasswordStrength } from '@/lib/passwordStrength';
 
