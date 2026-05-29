@@ -19,7 +19,13 @@ const floatLabel = [
   'peer-autofill:top-2 peer-autofill:translate-y-0 peer-autofill:text-[11px] peer-autofill:text-dark-primary',
 ].join(' ');
 
-const FloatInputField = ({ id, label, error, suffix, ...props }: FloatInputFieldProps) => (
+const FloatInputField = ({
+  id,
+  label,
+  error,
+  suffix,
+  ...props
+}: FloatInputFieldProps) => (
   <div>
     <div className="relative">
       <input
@@ -32,7 +38,9 @@ const FloatInputField = ({ id, label, error, suffix, ...props }: FloatInputField
         {label}
       </label>
       {suffix && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</div>
+        <div className="absolute top-1/2 right-3 -translate-y-1/2">
+          {suffix}
+        </div>
       )}
     </div>
     {error && <p className="mt-1 text-xs text-status-error">{error}</p>}

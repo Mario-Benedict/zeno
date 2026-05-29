@@ -1,8 +1,8 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { SubmitEventHandler } from 'react';
 import Button from '@/components/shared/Button';
-import GoogleButton from '@/components/shared/GoogleButton';
 import FloatInputField from '@/components/shared/FloatInputField';
+import GoogleButton from '@/components/shared/GoogleButton';
 import PasswordField from '@/components/shared/PasswordField';
 import PasswordStrengthBar from '@/components/shared/PasswordStrengthBar';
 import AuthLayout from '@/layouts/AuthLayout';
@@ -27,7 +27,10 @@ const Register = () => {
   };
 
   return (
-    <AuthLayout title="Create an account" description="Fill in your details to get started">
+    <AuthLayout
+      title="Create an account"
+      description="Fill in your details to get started"
+    >
       <Head title="Register" />
 
       <form onSubmit={submit} className="space-y-4">
@@ -99,7 +102,10 @@ const Register = () => {
 
       <p className="mt-6 text-center text-sm text-dark-secondary">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-dark-primary underline underline-offset-4">
+        <Link
+          href="/login"
+          className="font-medium text-dark-primary underline underline-offset-4"
+        >
           Sign in
         </Link>
       </p>

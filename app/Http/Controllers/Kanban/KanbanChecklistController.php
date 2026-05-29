@@ -6,135 +6,119 @@ use App\Http\Controllers\Controller;
 use App\Models\KanbanBoardCard;
 use App\Models\KanbanBoardCardChecklist;
 use App\Models\KanbanBoardCardChecklistItem;
+use App\Models\Project;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class KanbanChecklistController extends Controller
 {
-    /**
-     * Create a new checklist.
-     */
-    public function store(Request $request, KanbanBoardCard $card)
-    {
-        // Check authorization
-        $project = $card->kanbanBoard->project;
-        if (!$request->user()->can('view', $project)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+    /*
+    | Every route in this controller is nested under `/p/{project:project_slug}/...`,
+    | so `Project $project` is declared on each method for Laravel's positional
+    | route resolver — even where the body doesn't reference it directly.
+    */
 
-        // Validate request
+    /**
+     * Create a new checklist on a card. Accepts an optional client-generated
+     * `kanban_board_card_checklist_id` for optimistic rendering.
+     */
+    public function store(Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
+    {
+        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+
         $validated = $request->validate([
+            'kanban_board_card_checklist_id'   => ['nullable', 'string', 'uuid'],
             'kanban_board_card_checklist_name' => 'required|string|max:255',
         ]);
 
         $detail = $card->detail;
-        if (!$detail) {
-            return response()->json(['message' => 'Card detail not found'], 404);
-        }
+        abort_if($detail === null, 404);
 
-        // Create checklist
-        $checklist = KanbanBoardCardChecklist::create([
+        $checklist = new KanbanBoardCardChecklist([
             'kanban_board_card_checklist_detail_id' => $detail->kanban_board_card_detail_id,
-            'kanban_board_card_checklist_name' => $validated['kanban_board_card_checklist_name'],
+            'kanban_board_card_checklist_name'      => $validated['kanban_board_card_checklist_name'],
         ]);
 
-        return response()->json(['checklist' => $checklist], 201);
+        if (! empty($validated['kanban_board_card_checklist_id'])) {
+            $checklist->kanban_board_card_checklist_id = $validated['kanban_board_card_checklist_id'];
+        }
+
+        $checklist->save();
+
+        return back();
     }
 
     /**
-     * Add item to checklist.
+     * Add an item to an existing checklist. Accepts an optional client-
+     * generated `kanban_board_card_checklist_item_id` for optimistic UI.
      */
-    public function addItem(Request $request, KanbanBoardCardChecklist $checklist)
+    public function addItem(Request $request, Project $project, KanbanBoardCardChecklist $checklist): RedirectResponse
     {
-        // Check authorization
-        $detail = $checklist->cardDetail;
-        $card = $detail->kanbanBoardCard;
-        $project = $card->kanbanBoard->project;
+        $owningProject = $checklist->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        abort_unless($request->user()->can('view', $owningProject), 403);
 
-        if (!$request->user()->can('view', $project)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        // Validate request
         $validated = $request->validate([
+            'kanban_board_card_checklist_item_id'   => ['nullable', 'string', 'uuid'],
             'kanban_board_card_checklist_item_name' => 'required|string|max:255',
         ]);
 
-        // Create item
-        $item = KanbanBoardCardChecklistItem::create([
-            'kanban_board_card_checklist_id' => $checklist->kanban_board_card_checklist_id,
+        $item = new KanbanBoardCardChecklistItem([
+            'kanban_board_card_checklist_id'        => $checklist->kanban_board_card_checklist_id,
             'kanban_board_card_checklist_item_name' => $validated['kanban_board_card_checklist_item_name'],
-            'is_completed' => false,
+            'is_completed'                          => false,
         ]);
 
-        return response()->json(['item' => $item], 201);
+        if (! empty($validated['kanban_board_card_checklist_item_id'])) {
+            $item->kanban_board_card_checklist_item_id = $validated['kanban_board_card_checklist_item_id'];
+        }
+
+        $item->save();
+
+        return back();
     }
 
     /**
-     * Update checklist item.
+     * Update an existing checklist item (name and / or completed flag).
      */
-    public function updateItem(Request $request, KanbanBoardCardChecklistItem $item)
+    public function updateItem(Request $request, Project $project, KanbanBoardCardChecklistItem $item): RedirectResponse
     {
-        // Check authorization
-        $checklist = $item->checklist;
-        $detail = $checklist->cardDetail;
-        $card = $detail->kanbanBoardCard;
-        $project = $card->kanbanBoard->project;
+        $owningProject = $item->checklist->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        abort_unless($request->user()->can('view', $owningProject), 403);
 
-        if (!$request->user()->can('view', $project)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        // Validate request
         $validated = $request->validate([
             'kanban_board_card_checklist_item_name' => 'string|max:255',
-            'is_completed' => 'boolean',
+            'is_completed'                          => 'boolean',
         ]);
 
-        // Update item
         $item->update($validated);
 
-        return response()->json(['item' => $item]);
+        return back();
     }
 
     /**
-     * Delete checklist item.
+     * Delete a checklist item.
      */
-    public function destroyItem(Request $request, KanbanBoardCardChecklistItem $item)
+    public function destroyItem(Request $request, Project $project, KanbanBoardCardChecklistItem $item): RedirectResponse
     {
-        // Check authorization
-        $checklist = $item->checklist;
-        $detail = $checklist->cardDetail;
-        $card = $detail->kanbanBoardCard;
-        $project = $card->kanbanBoard->project;
+        $owningProject = $item->checklist->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        abort_unless($request->user()->can('view', $owningProject), 403);
 
-        if (!$request->user()->can('view', $project)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        // Delete item
         $item->delete();
 
-        return response()->json(['message' => 'Item deleted successfully']);
+        return back();
     }
 
     /**
-     * Delete checklist.
+     * Delete a checklist and all of its items.
      */
-    public function destroy(Request $request, KanbanBoardCardChecklist $checklist)
+    public function destroy(Request $request, Project $project, KanbanBoardCardChecklist $checklist): RedirectResponse
     {
-        // Check authorization
-        $detail = $checklist->cardDetail;
-        $card = $detail->kanbanBoardCard;
-        $project = $card->kanbanBoard->project;
+        $owningProject = $checklist->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        abort_unless($request->user()->can('view', $owningProject), 403);
 
-        if (!$request->user()->can('view', $project)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        // Delete checklist and its items
         $checklist->items()->delete();
         $checklist->delete();
 
-        return response()->json(['message' => 'Checklist deleted successfully']);
+        return back();
     }
 }

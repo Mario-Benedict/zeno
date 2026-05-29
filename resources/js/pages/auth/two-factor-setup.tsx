@@ -19,12 +19,19 @@ const StatusBadge = ({ enabled }: { enabled: boolean }) => (
         : 'bg-dark-surface-3 text-dark-secondary'
     }`}
   >
-    <span className={`h-1.5 w-1.5 rounded-full ${enabled ? 'bg-status-success' : 'bg-dark-secondary'}`} />
+    <span
+      className={`h-1.5 w-1.5 rounded-full ${enabled ? 'bg-status-success' : 'bg-dark-secondary'}`}
+    />
     {enabled ? 'Enabled' : 'Disabled'}
   </span>
 );
 
-const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupProps) => {
+const TwoFactorSetup = ({
+  enabled,
+  secret,
+  qrCodeUrl,
+  status,
+}: TwoFactorSetupProps) => {
   const { props: pageProps } = usePage<any>();
   const project = pageProps.project;
 
@@ -32,7 +39,9 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
 
   const { post: generate, processing: generating } = useForm({});
   const { post: disablePost, processing: disabling } = useForm({});
-  const { data, setData, post, processing, errors, reset } = useForm({ code: '' });
+  const { data, setData, post, processing, errors, reset } = useForm({
+    code: '',
+  });
 
   const handleGenerate: FormEventHandler = (e) => {
     e.preventDefault();
@@ -61,12 +70,15 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
     <AppLayout project={project}>
       <Head title="2FA Debug Setup" />
 
-      <div className="mx-auto w-full max-w-xl px-6 py-10 space-y-6">
-
+      <div className="mx-auto w-full max-w-xl space-y-6 px-6 py-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-dark-primary">Two-Factor Authentication</h1>
-            <p className="mt-0.5 text-sm text-dark-secondary">Debug setup — scan the QR code with your authenticator app.</p>
+            <h1 className="text-lg font-semibold text-dark-primary">
+              Two-Factor Authentication
+            </h1>
+            <p className="mt-0.5 text-sm text-dark-secondary">
+              Debug setup — scan the QR code with your authenticator app.
+            </p>
           </div>
           <StatusBadge enabled={enabled} />
         </div>
@@ -83,8 +95,10 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
         )}
 
         {/* Step 1 — Generate secret */}
-        <div className="rounded-xl border border-dark-border bg-dark-surface-2 p-5 space-y-4">
-          <p className="text-sm font-medium text-dark-primary">Step 1 — Generate a secret</p>
+        <div className="space-y-4 rounded-xl border border-dark-border bg-dark-surface-2 p-5">
+          <p className="text-sm font-medium text-dark-primary">
+            Step 1 — Generate a secret
+          </p>
 
           {!secret ? (
             <form onSubmit={handleGenerate}>
@@ -95,7 +109,9 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
           ) : (
             <div className="space-y-3">
               <div className="flex items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-3 px-3 py-2">
-                <code className="flex-1 break-all font-mono text-xs text-dark-primary">{secret}</code>
+                <code className="flex-1 font-mono text-xs break-all text-dark-primary">
+                  {secret}
+                </code>
                 <button
                   type="button"
                   onClick={copySecret}
@@ -105,7 +121,8 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
                 </button>
               </div>
               <p className="text-xs text-dark-secondary">
-                You can enter this secret manually in any TOTP app (Google Authenticator, Authy, etc.).
+                You can enter this secret manually in any TOTP app (Google
+                Authenticator, Authy, etc.).
               </p>
               <form onSubmit={handleGenerate}>
                 <button
@@ -122,8 +139,10 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
 
         {/* Step 2 — Scan QR code */}
         {qrCodeUrl && (
-          <div className="rounded-xl border border-dark-border bg-dark-surface-2 p-5 space-y-4">
-            <p className="text-sm font-medium text-dark-primary">Step 2 — Scan this QR code</p>
+          <div className="space-y-4 rounded-xl border border-dark-border bg-dark-surface-2 p-5">
+            <p className="text-sm font-medium text-dark-primary">
+              Step 2 — Scan this QR code
+            </p>
             <div className="flex justify-center">
               <div className="rounded-xl bg-white p-3">
                 <img
@@ -136,14 +155,15 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
               </div>
             </div>
             <p className="text-center text-xs text-dark-secondary">
-              Open Google Authenticator, Authy, or any TOTP app and scan the code above.
+              Open Google Authenticator, Authy, or any TOTP app and scan the
+              code above.
             </p>
           </div>
         )}
 
         {/* Step 3 — Verify + enable */}
         {secret && (
-          <div className="rounded-xl border border-dark-border bg-dark-surface-2 p-5 space-y-4">
+          <div className="space-y-4 rounded-xl border border-dark-border bg-dark-surface-2 p-5">
             <div>
               <p className="text-sm font-medium text-dark-primary">
                 Step 3 — Verify &amp; {enabled ? 'test' : 'enable'}
@@ -163,13 +183,17 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
                   inputMode="numeric"
                   maxLength={6}
                   value={data.code}
-                  onChange={(e) => setData('code', e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) =>
+                    setData('code', e.target.value.replace(/\D/g, ''))
+                  }
                   placeholder="000000"
                   autoComplete="one-time-code"
-                  className="h-11 w-full rounded-lg border border-dark-border bg-dark-surface-3 px-3 text-center font-mono text-lg tracking-[0.4em] text-dark-primary outline-none transition-colors placeholder:text-dark-secondary/40 focus:border-dark-border-focus"
+                  className="h-11 w-full rounded-lg border border-dark-border bg-dark-surface-3 px-3 text-center font-mono text-lg tracking-[0.4em] text-dark-primary transition-colors outline-none placeholder:text-dark-secondary/40 focus:border-dark-border-focus"
                 />
                 {errors.code && (
-                  <p className="mt-1.5 text-xs text-status-error">{errors.code}</p>
+                  <p className="mt-1.5 text-xs text-status-error">
+                    {errors.code}
+                  </p>
                 )}
               </div>
 
@@ -182,10 +206,11 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
 
         {/* Disable */}
         {enabled && (
-          <div className="rounded-xl border border-dark-border bg-dark-surface-2 p-5 space-y-3">
+          <div className="space-y-3 rounded-xl border border-dark-border bg-dark-surface-2 p-5">
             <p className="text-sm font-medium text-dark-primary">Disable 2FA</p>
             <p className="text-xs text-dark-secondary">
-              This removes the 2FA requirement. You can re-enable it at any time.
+              This removes the 2FA requirement. You can re-enable it at any
+              time.
             </p>
             <form onSubmit={handleDisable}>
               <button
@@ -198,7 +223,6 @@ const TwoFactorSetup = ({ enabled, secret, qrCodeUrl, status }: TwoFactorSetupPr
             </form>
           </div>
         )}
-
       </div>
     </AppLayout>
   );

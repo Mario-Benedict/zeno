@@ -5,66 +5,60 @@ namespace App\Http\Controllers\Kanban;
 use App\Http\Controllers\Controller;
 use App\Models\KanbanBoardCard;
 use App\Models\KanbanBoardCardComment;
+use App\Models\Project;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class KanbanCommentController extends Controller
 {
-    /**
-     * Create a new comment.
-     */
-    public function store(Request $request, KanbanBoardCard $card)
-    {
-        // Check authorization
-        $project = $card->kanbanBoard->project;
-        if (!$request->user()->can('view', $project)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+    /*
+    | Every route lives under `/p/{project:project_slug}/...`, so `Project $project`
+    | is declared on each method so Laravel's positional resolver lines up
+    | correctly — even when the body derives the project from a related model.
+    */
 
-        // Validate request
+    /**
+     * Post a new comment on a card. Accepts an optional client-generated
+     * `kanban_board_card_comment_id` for optimistic UI.
+     */
+    public function store(Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
+    {
+        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+
         $validated = $request->validate([
+            'kanban_board_card_comment_id'      => ['nullable', 'string', 'uuid'],
             'kanban_board_card_comment_message' => 'required|string',
         ]);
 
         $detail = $card->detail;
-        if (!$detail) {
-            return response()->json(['message' => 'Card detail not found'], 404);
-        }
+        abort_if($detail === null, 404);
 
-        // Create comment
-        $comment = KanbanBoardCardComment::create([
-            'kanban_board_card_detail_id' => $detail->kanban_board_card_detail_id,
-            'kanban_board_card_comment_from' => $request->user()->id,
+        $comment = new KanbanBoardCardComment([
+            'kanban_board_card_detail_id'       => $detail->kanban_board_card_detail_id,
+            'kanban_board_card_comment_from'    => $request->user()->id,
             'kanban_board_card_comment_message' => $validated['kanban_board_card_comment_message'],
         ]);
 
-        // Load with user information
-        $comment->load(['user']);
+        if (! empty($validated['kanban_board_card_comment_id'])) {
+            $comment->kanban_board_card_comment_id = $validated['kanban_board_card_comment_id'];
+        }
 
-        return response()->json(['comment' => $comment], 201);
+        $comment->save();
+
+        return back();
     }
 
     /**
-     * Delete a comment.
+     * Delete a comment. Only the author may delete their own comments.
      */
-    public function destroy(Request $request, KanbanBoardCardComment $comment)
+    public function destroy(Request $request, Project $project, KanbanBoardCardComment $comment): RedirectResponse
     {
-        // Check authorization
-        $detail = $comment->cardDetail;
-        $card = $detail->kanbanBoardCard;
-        $project = $card->kanbanBoard->project;
+        $owningProject = $comment->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        abort_unless($request->user()->can('view', $owningProject), 403);
+        abort_unless($comment->kanban_board_card_comment_from === $request->user()->id, 403);
 
-        if (!$request->user()->can('view', $project)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        // Only allow comment author or project admin to delete
-        if ($comment->kanban_board_card_comment_from !== $request->user()->id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        // Delete comment
         $comment->delete();
 
-        return response()->json(['message' => 'Comment deleted successfully']);
+        return back();
     }
 }

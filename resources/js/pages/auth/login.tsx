@@ -2,8 +2,8 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import type { SubmitEventHandler } from 'react';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
-import GoogleButton from '@/components/shared/GoogleButton';
 import FloatInputField from '@/components/shared/FloatInputField';
+import GoogleButton from '@/components/shared/GoogleButton';
 import PasswordField from '@/components/shared/PasswordField';
 import AuthLayout from '@/layouts/AuthLayout';
 
@@ -25,7 +25,10 @@ const Login = ({ status, canResetPassword }: LoginProps) => {
   };
 
   return (
-    <AuthLayout title="Welcome back" description="Sign in to your account to continue">
+    <AuthLayout
+      title="Welcome back"
+      description="Sign in to your account to continue"
+    >
       <Head title="Log in" />
 
       {status && (
@@ -87,7 +90,10 @@ const Login = ({ status, canResetPassword }: LoginProps) => {
 
       <p className="mt-6 text-center text-sm text-dark-secondary">
         Don't have an account?{' '}
-        <Link href="/register" className="font-medium text-dark-primary underline underline-offset-4">
+        <Link
+          href="/register"
+          className="font-medium text-dark-primary underline underline-offset-4"
+        >
           Sign up
         </Link>
       </p>

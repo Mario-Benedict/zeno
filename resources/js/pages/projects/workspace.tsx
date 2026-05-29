@@ -1,29 +1,20 @@
-import { usePage } from '@inertiajs/react';
+import { useProject } from '@/hooks/useProject';
 import AppLayout from '@/layouts/AppLayout';
-import type { Auth, ProjectRole } from '@/types';
 
-interface WorkspaceProps {
-  auth: Auth;
-  project: {
-    project_id: string;
-    project_name: string;
-    project_slug: string;
-  };
-  role: ProjectRole;
-  [key: string]: unknown;
-}
-
+// No `WorkspaceProps` interface needed — `project` and `projectRole` come from
+// Inertia's shared page props (see `HandleInertiaRequests::share()` +
+// `types/global.d.ts`) and are auto-typed for every project-scoped page.
 const Workspace = () => {
-  const { project, role } = usePage<WorkspaceProps>().props;
-
-  console.log(project, role);
+  const { project, projectRole } = useProject();
 
   return (
     <AppLayout project={project}>
       <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-        <h1 className="text-xl font-semibold text-dark-primary">{project.project_name}</h1>
+        <h1 className="text-xl font-semibold text-dark-primary">
+          {project.project_name}
+        </h1>
         <p className="text-sm text-dark-secondary">
-          {project.project_slug} · {role}
+          {project.project_slug} · {projectRole}
         </p>
       </div>
     </AppLayout>
