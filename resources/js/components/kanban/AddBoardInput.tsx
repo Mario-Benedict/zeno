@@ -1,53 +1,53 @@
 import { useState, useRef, useEffect } from 'react';
 
 interface AddBoardInputProps {
-    onAdd: (name: string) => void;
-    onCancel: () => void;
+  onAdd: (name: string) => void;
+  onCancel: () => void;
 }
 
 export const AddBoardInput = ({ onAdd, onCancel }: AddBoardInputProps) => {
-    const [name, setName] = useState('');
-    const inputRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        inputRef.current?.focus();
-    }, []);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
-    const handleAdd = () => {
-        const trimmed = name.trim();
-        if (!trimmed) return;
-        onAdd(trimmed);
-        setName('');
-    };
+  const handleAdd = () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    onAdd(trimmed);
+    setName('');
+  };
 
-    return (
-        <div className="shrink-0 w-70 bg-dark-surface-2 rounded-2xl p-4">
-            <input
-                ref={inputRef}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAdd();
-                    if (e.key === 'Escape') onCancel();
-                }}
-                placeholder="Board name..."
-                className="w-full bg-dark-input border border-dark-border-focus rounded-xl px-3 py-2 text-sm text-white placeholder-dark-secondary focus:outline-none mb-2"
-            />
-            <div className="flex gap-2">
-                <button
-                    onClick={handleAdd}
-                    disabled={!name.trim()}
-                    className="flex-1 py-1.5 bg-accent-blue rounded-lg text-xs font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition"
-                >
-                    Add Board
-                </button>
-                <button
-                    onClick={onCancel}
-                    className="flex-1 py-1.5 border border-dark-border rounded-lg text-xs text-white/50 hover:text-white hover:bg-white/5 transition"
-                >
-                    Cancel
-                </button>
-            </div>
-        </div>
-    );
+  return (
+    <div className="w-70 shrink-0 rounded-2xl bg-dark-surface-2 p-4">
+      <input
+        ref={inputRef}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleAdd();
+          if (e.key === 'Escape') onCancel();
+        }}
+        placeholder="Board name..."
+        className="mb-2 w-full rounded-xl border border-dark-border-focus bg-dark-input px-3 py-2 text-sm text-white placeholder-dark-secondary focus:outline-none"
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={handleAdd}
+          disabled={!name.trim()}
+          className="flex-1 rounded-lg bg-accent-blue py-1.5 text-xs font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Add Board
+        </button>
+        <button
+          onClick={onCancel}
+          className="flex-1 rounded-lg border border-dark-border py-1.5 text-xs text-white/50 transition hover:bg-white/5 hover:text-white"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
 };

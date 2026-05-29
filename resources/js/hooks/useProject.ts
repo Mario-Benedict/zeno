@@ -14,7 +14,10 @@ import type { CurrentProject, ProjectRole } from '@/types/project';
  * If you call this outside of a project-scoped route it will throw, since
  * pages that depend on a project should never render without one.
  */
-export const useProject = (): { project: CurrentProject; projectRole: ProjectRole | null } => {
+export const useProject = (): {
+  project: CurrentProject;
+  projectRole: ProjectRole | null;
+} => {
   const { project, projectRole } = usePage().props;
 
   if (project === null) {
@@ -32,7 +35,10 @@ export const useProject = (): { project: CurrentProject; projectRole: ProjectRol
  * shared layouts/components that may render both inside and outside a
  * project context (e.g. the global header).
  */
-export const useOptionalProject = (): { project: CurrentProject | null; projectRole: ProjectRole | null } => {
+export const useOptionalProject = (): {
+  project: CurrentProject | null;
+  projectRole: ProjectRole | null;
+} => {
   const { project, projectRole } = usePage().props;
 
   return { project, projectRole };

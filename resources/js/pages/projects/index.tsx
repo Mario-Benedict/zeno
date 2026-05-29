@@ -28,26 +28,63 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
 );
 
 const SearchIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-dark-secondary">
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="text-dark-secondary"
+  >
     <circle cx="11" cy="11" r="8" />
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 );
 
 const ChevronIcon = ({ dir }: { dir: 'left' | 'right' }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    {dir === 'left' ? <polyline points="15 18 9 12 15 6" /> : <polyline points="9 18 15 12 9 6" />}
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {dir === 'left' ? (
+      <polyline points="15 18 9 12 15 6" />
+    ) : (
+      <polyline points="9 18 15 12 9 6" />
+    )}
   </svg>
 );
 
 const ChevronDown = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="6 9 12 15 18 9" />
   </svg>
 );
 
 const getInitials = (name: string) =>
-  name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+  name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
 interface ProjectRowProps {
   project: ProjectSummary;
@@ -61,8 +98,12 @@ const ProjectRow = ({ project, onPin, showPin = true }: ProjectRowProps) => (
     className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-white/4"
   >
     <div className="min-w-0">
-      <p className="truncate text-sm font-medium text-dark-primary">{project.project_name}</p>
-      <p className="truncate text-xs text-dark-secondary">{project.project_slug}</p>
+      <p className="truncate text-sm font-medium text-dark-primary">
+        {project.project_name}
+      </p>
+      <p className="truncate text-xs text-dark-secondary">
+        {project.project_slug}
+      </p>
     </div>
     {showPin && (
       <button
@@ -90,10 +131,15 @@ const ProjectsPage = () => {
   const pageTitle = hasProjects ? 'All Projects' : 'Get Started';
 
   const handlePin = (slug: string) => {
-    router.patch(`/p/${slug}/pin`, {}, {
-      preserveScroll: true,
-      onSuccess: () => router.reload({ only: ['projects', 'recentProjects'] }),
-    });
+    router.patch(
+      `/p/${slug}/pin`,
+      {},
+      {
+        preserveScroll: true,
+        onSuccess: () =>
+          router.reload({ only: ['projects', 'recentProjects'] }),
+      },
+    );
   };
 
   const filteredProjects = search.trim()
@@ -118,7 +164,9 @@ const ProjectsPage = () => {
       <div className="flex h-dvh flex-col bg-dark-surface-1 select-none">
         {/* Top bar */}
         <div className="flex h-12 shrink-0 items-center justify-between px-6">
-          <span className="text-sm font-semibold text-dark-primary">{pageTitle}</span>
+          <span className="text-sm font-semibold text-dark-primary">
+            {pageTitle}
+          </span>
           <button className="flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-dark-primary transition-colors hover:bg-white/[0.07]">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-dark-surface-3 text-[10px] font-semibold text-dark-primary">
               {getInitials(auth.user?.name ?? 'U')}
@@ -142,7 +190,9 @@ const ProjectsPage = () => {
                 <Zeno />
               </div>
               <div>
-                <p className="text-sm font-semibold text-dark-primary">Create your Project roadmap.</p>
+                <p className="text-sm font-semibold text-dark-primary">
+                  Create your Project roadmap.
+                </p>
                 <p className="mt-0.5 text-xs text-dark-secondary">
                   Define tasks, assign team members, and track progress.
                 </p>
@@ -151,7 +201,9 @@ const ProjectsPage = () => {
 
             {/* Recently Opened */}
             <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-dark-surface-2 p-4">
-              <h2 className="mb-3 text-sm font-semibold text-dark-primary">Recently Opened</h2>
+              <h2 className="mb-3 text-sm font-semibold text-dark-primary">
+                Recently Opened
+              </h2>
               {recentProjects.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center">
                   <p className="text-center text-sm font-medium text-dark-secondary">
@@ -161,7 +213,12 @@ const ProjectsPage = () => {
               ) : (
                 <div className="flex flex-col gap-0.5">
                   {recentProjects.map((project) => (
-                    <ProjectRow key={project.project_id} project={project} onPin={handlePin} showPin={false} />
+                    <ProjectRow
+                      key={project.project_id}
+                      project={project}
+                      onPin={handlePin}
+                      showPin={false}
+                    />
                   ))}
                 </div>
               )}
@@ -172,7 +229,7 @@ const ProjectsPage = () => {
           <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-dark-surface-2 p-4">
             {/* Search */}
             <div className="relative mb-4">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+              <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
                 <SearchIcon />
               </span>
               <input
@@ -180,7 +237,7 @@ const ProjectsPage = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search all projects"
-                className="h-9 w-full rounded-lg border border-dark-border bg-dark-input pl-9 pr-3 text-sm text-dark-primary outline-none placeholder:text-dark-secondary focus:border-dark-border-focus focus:bg-dark-input-focus"
+                className="h-9 w-full rounded-lg border border-dark-border bg-dark-input pr-3 pl-9 text-sm text-dark-primary outline-none placeholder:text-dark-secondary focus:border-dark-border-focus focus:bg-dark-input-focus"
               />
             </div>
 
@@ -189,13 +246,19 @@ const ProjectsPage = () => {
               {filteredProjects.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center">
                   <p className="text-sm font-medium text-dark-secondary">
-                    {search ? 'No projects match your search.' : "You Don't Have A Project Yet."}
+                    {search
+                      ? 'No projects match your search.'
+                      : "You Don't Have A Project Yet."}
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-0.5">
                   {filteredProjects.map((project) => (
-                    <ProjectRow key={project.project_id} project={project} onPin={handlePin} />
+                    <ProjectRow
+                      key={project.project_id}
+                      project={project}
+                      onPin={handlePin}
+                    />
                   ))}
                 </div>
               )}
@@ -205,11 +268,14 @@ const ProjectsPage = () => {
             {!search && projects.total > 0 && (
               <div className="mt-auto flex items-center justify-end gap-2 pt-3">
                 <span className="text-xs text-dark-secondary">
-                  {projects.from ?? 0} - {projects.current_page} of {projects.last_page}
+                  {projects.from ?? 0} - {projects.current_page} of{' '}
+                  {projects.last_page}
                 </span>
                 <button
                   type="button"
-                  onClick={() => canGoPrev && goToPage(projects.current_page - 1)}
+                  onClick={() =>
+                    canGoPrev && goToPage(projects.current_page - 1)
+                  }
                   disabled={!canGoPrev}
                   className="flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-white/[0.07] disabled:opacity-30"
                 >
@@ -217,7 +283,9 @@ const ProjectsPage = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => canGoNext && goToPage(projects.current_page + 1)}
+                  onClick={() =>
+                    canGoNext && goToPage(projects.current_page + 1)
+                  }
                   disabled={!canGoNext}
                   className="flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-white/[0.07] disabled:opacity-30"
                 >
@@ -229,7 +297,10 @@ const ProjectsPage = () => {
         </div>
       </div>
 
-      <CreateProjectPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
+      <CreateProjectPanel
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+      />
     </>
   );
 };

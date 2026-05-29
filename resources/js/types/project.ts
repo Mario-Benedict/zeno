@@ -20,7 +20,10 @@ export type Project = CurrentProject & {
   role: ProjectRole;
 };
 
-export type ProjectSummary = Pick<Project, 'project_id' | 'project_name' | 'project_slug' | 'is_pinned' | 'role'>;
+export type ProjectSummary = Pick<
+  Project,
+  'project_id' | 'project_name' | 'project_slug' | 'is_pinned' | 'role'
+>;
 
 export type PaginatedProjects = {
   data: ProjectSummary[];

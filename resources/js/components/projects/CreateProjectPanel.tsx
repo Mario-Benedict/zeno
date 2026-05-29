@@ -11,13 +11,24 @@ const NO_DBL_SPACE = / {2}/;
 const RANDOM_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 const randomSuffix = (len = 5) =>
-  Array.from({ length: len }, () => RANDOM_CHARS[Math.floor(Math.random() * RANDOM_CHARS.length)]).join('');
+  Array.from(
+    { length: len },
+    () => RANDOM_CHARS[Math.floor(Math.random() * RANDOM_CHARS.length)],
+  ).join('');
 
-const toSlug = (name: string) =>
-  name.trim().toLowerCase().replace(/\s+/g, '-');
+const toSlug = (name: string) => name.trim().toLowerCase().replace(/\s+/g, '-');
 
 const XIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
@@ -29,7 +40,10 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ project_name?: string; project_slug?: string }>({});
+  const [errors, setErrors] = useState<{
+    project_name?: string;
+    project_slug?: string;
+  }>({});
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -54,8 +68,10 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
 
     setChecking(true);
     try {
-      const res = await fetch(`/projects/check-slug?slug=${encodeURIComponent(candidate)}`);
-      const data = await res.json() as { available: boolean };
+      const res = await fetch(
+        `/projects/check-slug?slug=${encodeURIComponent(candidate)}`,
+      );
+      const data = (await res.json()) as { available: boolean };
 
       if (data.available) {
         setSlug(candidate);
@@ -152,11 +168,16 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
           >
             <XIcon />
           </button>
-          <span className="text-sm font-semibold text-dark-primary">Create a project</span>
+          <span className="text-sm font-semibold text-dark-primary">
+            Create a project
+          </span>
         </div>
 
         {/* Panel body */}
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col justify-between p-10">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-1 flex-col justify-between p-10"
+        >
           <div className="flex flex-col items-center gap-8">
             <h1 className="text-center text-xl font-semibold text-dark-primary">
               Let's start with a name for your project.
@@ -198,10 +219,14 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
               </div>
 
               {errors.project_name && (
-                <p className="mt-2 text-center text-xs text-status-error">{errors.project_name}</p>
+                <p className="mt-2 text-center text-xs text-status-error">
+                  {errors.project_name}
+                </p>
               )}
               {errors.project_slug && (
-                <p className="mt-2 text-center text-xs text-status-error">{errors.project_slug}</p>
+                <p className="mt-2 text-center text-xs text-status-error">
+                  {errors.project_slug}
+                </p>
               )}
             </div>
           </div>

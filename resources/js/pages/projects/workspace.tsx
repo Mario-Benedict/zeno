@@ -10,7 +10,9 @@ const Workspace = () => {
   return (
     <AppLayout project={project}>
       <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-        <h1 className="text-xl font-semibold text-dark-primary">{project.project_name}</h1>
+        <h1 className="text-xl font-semibold text-dark-primary">
+          {project.project_name}
+        </h1>
         <p className="text-sm text-dark-secondary">
           {project.project_slug} · {projectRole}
         </p>

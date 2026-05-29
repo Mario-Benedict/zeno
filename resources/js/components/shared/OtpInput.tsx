@@ -1,5 +1,5 @@
-import { useRef   } from 'react';
-import type {ClipboardEvent, KeyboardEvent} from 'react';
+import { useRef } from 'react';
+import type { ClipboardEvent, KeyboardEvent } from 'react';
 
 interface OtpInputProps {
   value: string[];
@@ -8,7 +8,12 @@ interface OtpInputProps {
   autoFocus?: boolean;
 }
 
-const OtpInput = ({ value, onChange, length = 6, autoFocus = true }: OtpInputProps) => {
+const OtpInput = ({
+  value,
+  onChange,
+  length = 6,
+  autoFocus = true,
+}: OtpInputProps) => {
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
   const focusAt = (i: number) => refs.current[i]?.focus();
@@ -39,7 +44,10 @@ const OtpInput = ({ value, onChange, length = 6, autoFocus = true }: OtpInputPro
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, length);
+    const digits = e.clipboardData
+      .getData('text')
+      .replace(/\D/g, '')
+      .slice(0, length);
     const next = Array.from({ length }, (_, i) => digits[i] ?? '');
     onChange(next);
     focusAt(Math.min(digits.length, length - 1));
@@ -51,7 +59,7 @@ const OtpInput = ({ value, onChange, length = 6, autoFocus = true }: OtpInputPro
         <input
           key={i}
           ref={(el) => {
-            refs.current[i] = el; 
+            refs.current[i] = el;
           }}
           type="text"
           inputMode="numeric"
@@ -61,7 +69,7 @@ const OtpInput = ({ value, onChange, length = 6, autoFocus = true }: OtpInputPro
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           autoFocus={autoFocus && i === 0}
-          className="h-14 w-11 rounded-xl border border-dark-border bg-dark-surface-3 text-center text-xl font-semibold text-dark-primary outline-none transition-colors focus:border-dark-border-focus"
+          className="h-14 w-11 rounded-xl border border-dark-border bg-dark-surface-3 text-center text-xl font-semibold text-dark-primary transition-colors outline-none focus:border-dark-border-focus"
         />
       ))}
     </div>
