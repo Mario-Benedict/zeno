@@ -7,12 +7,18 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
-    Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
-    Route::get('/projects/check-slug', [ProjectController::class, 'checkSlug'])->name('projects.check-slug');
+    Route::prefix('projects')->name('projects.')->group(function() {
+        Route::get('/', [ProjectController::class, 'index'])->name('index');
+        Route::post('/create', [ProjectController::class, 'store'])->name('store');
+        Route::get('/check-slug', [ProjectController::class, 'checkSlug'])->name('check-slug');
+    });
 
-    Route::get('/p/{project:project_slug}', [ProjectController::class, 'show'])->name('projects.show');
-    Route::patch('/p/{project:project_slug}/pin', [ProjectController::class, 'togglePin'])->name('projects.toggle-pin');
+    Route::prefix('p/{project:project_slug}')->name('projects.')->group(function() {
+        Route::get('/', [ProjectController::class, 'show'])->name('show');
+        Route::patch('/pin', [ProjectController::class, 'togglePin'])->name('toggle-pin');
+
+        require __DIR__.'/kanban.php';
+    });
 
     Route::prefix('two-factor')->name('two-factor.')->group(function () {
         Route::get('setup', [TwoFactorSetupController::class, 'show'])->name('setup');

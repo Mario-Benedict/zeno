@@ -99,14 +99,10 @@ class ProjectController extends Controller
             'opened_at' => now(),
         ]);
 
-        return Inertia::render('projects/workspace', [
-            'project' => [
-                'project_id'   => $project->project_id,
-                'project_name' => $project->project_name,
-                'project_slug' => $project->project_slug,
-            ],
-            'role' => $membership->pivot->role,
-        ]);
+        // `project` and `projectRole` are exposed automatically as Inertia
+        // shared data (see HandleInertiaRequests), so the page can read them
+        // via `usePage().props` — no need to pass them here.
+        return Inertia::render('projects/workspace');
     }
 
     public function togglePin(Project $project): JsonResponse

@@ -48,7 +48,10 @@ const ForgotPassword = ({ status }: ForgotPasswordProps) => {
 
       <p className="mt-6 text-center text-sm text-dark-secondary">
         Remembered it?{' '}
-        <Link href="/login" className="font-medium text-dark-primary underline underline-offset-4">
+        <Link
+          href="/login"
+          className="font-medium text-dark-primary underline underline-offset-4"
+        >
           Back to Login
         </Link>
       </p>

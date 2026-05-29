@@ -8,7 +8,7 @@ const pages = import.meta.glob('./pages/**/*.tsx');
 
 createInertiaApp({
   title: (title) => (title ? `${title} - ${appName}` : appName),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   resolve: async (name) =>
     ((await pages[`./pages/${name}.tsx`]()) as any).default,
   setup({ el, App, props }) {
