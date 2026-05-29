@@ -509,10 +509,11 @@ export const CardDetailBody = ({
                   )
                 }
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter')
+                  if (e.key === 'Enter') {
                     checklistsOnAddItem(
                       checklist.kanban_board_card_checklist_id,
                     );
+                  }
                 }}
                 placeholder="Add an item..."
                 className="flex-1 rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-dark-primary placeholder-dark-secondary transition focus:border-dark-surface-3 focus:outline-none"
