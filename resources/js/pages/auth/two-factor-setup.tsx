@@ -1,6 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import type { FormEventHandler } from 'react';
 import { useState } from 'react';
+import type { SyntheticEvent } from 'react';
 import Button from '@/components/shared/Button';
 import AppLayout from '@/layouts/AppLayout';
 
@@ -43,17 +43,17 @@ const TwoFactorSetup = ({
     code: '',
   });
 
-  const handleGenerate: FormEventHandler = (e) => {
+  const handleGenerate = (e: SyntheticEvent) => {
     e.preventDefault();
     generate('/two-factor/generate');
   };
 
-  const handleVerify: FormEventHandler = (e) => {
+  const handleVerify = (e: SyntheticEvent) => {
     e.preventDefault();
     post('/two-factor/verify', { onSuccess: () => reset('code') });
   };
 
-  const handleDisable: FormEventHandler = (e) => {
+  const handleDisable = (e: SyntheticEvent) => {
     e.preventDefault();
     disablePost('/two-factor/disable');
   };
@@ -224,7 +224,7 @@ const TwoFactorSetup = ({
           </div>
         )}
       </div>
-    </>
+    </AppLayout>
   );
 };
 

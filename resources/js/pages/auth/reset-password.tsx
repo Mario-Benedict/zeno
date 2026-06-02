@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import type { FormEventHandler } from 'react';
+import type { SyntheticEvent } from 'react';
 import Button from '@/components/shared/Button';
 import PasswordField from '@/components/shared/PasswordField';
 import PasswordStrengthBar from '@/components/shared/PasswordStrengthBar';
@@ -21,7 +21,7 @@ const ResetPassword = ({ token, email }: ResetPasswordProps) => {
 
   const strength = getPasswordStrength(data.password);
 
-  const submit: FormEventHandler = (e) => {
+  const submit = (e: SyntheticEvent) => {
     e.preventDefault();
     post('/reset-password', {
       onFinish: () => reset('password', 'password_confirmation'),
