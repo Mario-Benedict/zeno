@@ -74,7 +74,9 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
         ProjectController.checkSlug.url({ query: { slug: candidate } }),
       );
 
-      const finalSlug = data.available ? candidate : `${candidate}-${randomSuffix()}`;
+      const finalSlug = data.available
+        ? candidate
+        : `${candidate}-${randomSuffix()}`;
       setSlug(finalSlug);
       setSlugAvailable(true);
       return finalSlug;
