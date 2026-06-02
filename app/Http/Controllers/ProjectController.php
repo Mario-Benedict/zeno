@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Services\ChatRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,6 +66,9 @@ class ProjectController extends Controller
             'opened_at' => now(),
         ]);
 
+        // Auto-create group chat room for the project
+        app(ChatRoomService::class)->createProjectGroupRoom($project, auth()->id());
+
         return redirect()->route('projects.show', $project->project_slug);
     }
 
@@ -95,14 +99,10 @@ class ProjectController extends Controller
             'opened_at' => now(),
         ]);
 
-        return Inertia::render('projects/workspace', [
-            'project' => [
-                'project_id'   => $project->project_id,
-                'project_name' => $project->project_name,
-                'project_slug' => $project->project_slug,
-            ],
-            'role' => $membership->pivot->role,
-        ]);
+        // `project` and `projectRole` are exposed automatically as Inertia
+        // shared data (see HandleInertiaRequests), so the page can read them
+        // via `usePage().props` — no need to pass them here.
+        return Inertia::render('projects/workspace');
     }
 
     public function togglePin(Project $project): JsonResponse

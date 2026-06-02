@@ -65,7 +65,7 @@ const Avatar = ({ user }: { user: User }) => {
           className="h-full w-full object-cover"
         />
       ) : (
-        <span className="text-[10px] font-semibold leading-none text-dark-primary">
+        <span className="text-[10px] leading-none font-semibold text-dark-primary">
           {getInitials(user.name)}
         </span>
       )}
@@ -94,34 +94,33 @@ const Header = ({
   };
 
   return (
-    <header className="flex select-none items-center gap-2 bg-dark-surface-1 p-2">
+    <header className="flex items-center gap-2 bg-dark-surface-1 p-2 select-none">
       {/* ── Left: Logo + Project picker ── */}
       <div className="flex w-100 shrink-0 items-center gap-2">
-        <div className="flex p-1 rounded-lg items-center justify-center bg-dark-surface-2">
-          <Zeno className="h-6 w-6"/>
+        <div className="flex items-center justify-center rounded-lg bg-dark-surface-2 p-1">
+          <Zeno className="h-6 w-6" />
         </div>
         <button
           onClick={onProjectClick}
           aria-haspopup="true"
           aria-label="Select project"
-          className="flex h-8 items-center gap-1 rounded-lg px-2 text-dark-primary bg-dark-surface-2"
+          className="flex h-8 items-center gap-1 rounded-lg bg-dark-surface-2 px-2 text-dark-primary"
         >
-          <span className="whitespace-nowrap text-regular font-bold">{projectName}</span>
-          <span className="text-dark-secondary"><ArrowDown /></span>
+          <span className="text-regular font-bold whitespace-nowrap">
+            {projectName}
+          </span>
+          <span className="text-dark-secondary">
+            <ArrowDown />
+          </span>
         </button>
       </div>
 
       <div className="flex min-w-0 flex-1 justify-center px-4" role="search">
         {/* Wrapper ini yang sekarang didandanin kaya input */}
-        <div
-          className="
-            flex w-full max-w-90 items-center h-8 rounded-full bg-dark-surface-2 px-3
-            transition-colors focus-within:bg-dark-surface-3
-          "
-        >
+        <div className="flex h-8 w-full max-w-90 items-center rounded-full bg-dark-surface-2 px-3 transition-colors focus-within:bg-dark-surface-3">
           {/* Icon ditaruh biasa, sejajar pake flex, dikasih margin kanan (mr-2) */}
-          <span className="flex shrink-0 items-center justify-center text-dark-secondary mr-3">
-            <Search className="h-5"/>
+          <span className="mr-3 flex shrink-0 items-center justify-center text-dark-secondary">
+            <Search className="h-5" />
           </span>
 
           {/* Input-nya dibikin background transparan dan ambil sisa ruang (flex-1) */}
@@ -131,12 +130,7 @@ const Header = ({
             onChange={handleSearch}
             placeholder="Search"
             aria-label="Search"
-            className="
-              flex-1 bg-transparent outline-none
-              text-regular font-bold text-dark-primary
-              placeholder:text-dark-secondary
-              [&::-webkit-search-cancel-button]:hidden
-            "
+            className="text-regular flex-1 bg-transparent font-bold text-dark-primary outline-none placeholder:text-dark-secondary [&::-webkit-search-cancel-button]:hidden"
           />
         </div>
       </div>
@@ -156,11 +150,15 @@ const Header = ({
           onClick={onUserMenuClick}
           aria-haspopup="true"
           aria-label="User menu"
-          className="flex items-center h-8 gap-2 rounded-lg px-2 text-dark-primary bg-dark-surface-2"
+          className="flex h-8 items-center gap-2 rounded-lg bg-dark-surface-2 px-2 text-dark-primary"
         >
-          <span className="whitespace-nowrap text-regular font-bold">{user.name}</span>
+          <span className="text-regular font-bold whitespace-nowrap">
+            {user.name}
+          </span>
           <Avatar user={user} />
-          <span className="text-dark-secondary"><ArrowDown /></span>
+          <span className="text-dark-secondary">
+            <ArrowDown />
+          </span>
         </button>
       </div>
     </header>
