@@ -224,7 +224,7 @@ const TwoFactorSetup = ({
           </div>
         )}
       </div>
-    </AppLayout>
+    </>
   );
 };
 
