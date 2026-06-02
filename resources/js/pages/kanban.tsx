@@ -46,8 +46,9 @@ export default function Kanban({
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index
-    )
+    ) {
       return;
+    }
 
     // Handle column reordering
     if (type === 'BOARD') {

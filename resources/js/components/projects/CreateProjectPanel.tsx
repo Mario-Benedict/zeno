@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import ProjectController from '@/actions/App/Http/Controllers/ProjectController';
 
 interface CreateProjectPanelProps {
   open: boolean;
@@ -68,26 +70,20 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
 
     setChecking(true);
     try {
-      const res = await fetch(
-        `/projects/check-slug?slug=${encodeURIComponent(candidate)}`,
+      const { data } = await axios.get<{ available: boolean }>(
+        ProjectController.checkSlug.url({ query: { slug: candidate } }),
       );
-      const data = (await res.json()) as { available: boolean };
 
-      if (data.available) {
-        setSlug(candidate);
-        setSlugAvailable(true);
-        setChecking(false);
-        return candidate;
-      }
-
-      const unique = `${candidate}-${randomSuffix()}`;
-      setSlug(unique);
+      const finalSlug = data.available
+        ? candidate
+        : `${candidate}-${randomSuffix()}`;
+      setSlug(finalSlug);
       setSlugAvailable(true);
-      setChecking(false);
-      return unique;
+      return finalSlug;
     } catch {
-      setChecking(false);
       return candidate;
+    } finally {
+      setChecking(false);
     }
   }, []);
 

@@ -1,7 +1,8 @@
 import React from 'react';
+import { formatFileSize } from '@/lib/utils';
 import type { KanbanBoardCardDetail, KanbanUser } from '@/types/kanban';
 import type { LocalAttachment } from '@/utils/attachmentStorage';
-import { formatBytes, getFileEmoji } from '@/utils/attachmentStorage';
+import { getFileEmoji } from '@/utils/attachmentStorage';
 import {
   calculateChecklistProgress,
   generateInitials,
@@ -320,7 +321,7 @@ export const CardDetailBody = ({
                     {att.name}
                   </p>
                   <p className="mt-0.5 text-xsmall text-white/25">
-                    {formatBytes(att.size)} ·{' '}
+                    {formatFileSize(att.size)} ·{' '}
                     {new Date(att.uploadedAt).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',

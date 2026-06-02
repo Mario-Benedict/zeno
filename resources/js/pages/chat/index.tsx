@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import AppLayout from '@/layouts/AppLayout';
+import { useState, useCallback } from 'react';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
+import { useProject } from '@/hooks/useProject';
+import AppLayout from '@/layouts/AppLayout';
 import type { ChatRoom, ChatParticipant, ChatMessage } from '@/types/chat';
 
 /**
@@ -20,49 +21,53 @@ import type { ChatRoom, ChatParticipant, ChatMessage } from '@/types/chat';
  */
 
 interface Props {
-    rooms: ChatRoom[];
-    currentUser: ChatParticipant;
-    messages?: ChatMessage[];
-    nextCursor?: string | null;
-    hasMore?: boolean;
+  rooms: ChatRoom[];
+  currentUser: ChatParticipant;
+  messages?: ChatMessage[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
 }
 
 export default function Index({ rooms, currentUser }: Props) {
-    const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null);
+  const { project } = useProject();
+  const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null);
 
-    /**
-     * Tap-to-DM: clicking a member's name in a group chat opens the DM
-     * with that person. All DM rooms are pre-created on join so they
-     * should always be findable in the rooms list.
-     */
-    const handleSenderClick = useCallback((senderId: string) => {
-        // Can't DM yourself
-        if (String(senderId) === String(currentUser.id)) return;
+  /**
+   * Tap-to-DM: clicking a member's name in a group chat opens the DM
+   * with that person. All DM rooms are pre-created on join so they
+   * should always be findable in the rooms list.
+   */
+  const handleSenderClick = useCallback(
+    (senderId: string) => {
+      // Can't DM yourself
+      if (String(senderId) === String(currentUser.id)) return;
 
-        const dmRoom = rooms.find(
-            (r) =>
-                r.type === 'dm' &&
-                r.participants?.some((p) => String(p.id) === String(senderId)),
-        );
-        if (dmRoom) setActiveRoom(dmRoom);
-    }, [rooms, currentUser.id]);
+      const dmRoom = rooms.find(
+        (r) =>
+          r.type === 'dm' &&
+          r.participants?.some((p) => String(p.id) === String(senderId)),
+      );
+      if (dmRoom) setActiveRoom(dmRoom);
+    },
+    [rooms, currentUser.id],
+  );
 
-    return (
-        <AppLayout>
-            {/* gap-2 separates sidebar and window as two distinct boxes */}
-            <div className="flex h-full w-full gap-2 overflow-hidden">
-                <ChatSidebar
-                    rooms={rooms}
-                    currentUser={currentUser}
-                    activeRoomId={activeRoom?.id ?? null}
-                    onSelectRoom={setActiveRoom}
-                />
-                <ChatWindow
-                    room={activeRoom}
-                    currentUser={currentUser}
-                    onSenderClick={handleSenderClick}
-                />
-            </div>
-        </AppLayout>
-    );
+  return (
+    <AppLayout project={project}>
+      {/* gap-2 separates sidebar and window as two distinct boxes */}
+      <div className="flex h-full w-full gap-2 overflow-hidden">
+        <ChatSidebar
+          rooms={rooms}
+          currentUser={currentUser}
+          activeRoomId={activeRoom?.id ?? null}
+          onSelectRoom={setActiveRoom}
+        />
+        <ChatWindow
+          room={activeRoom}
+          currentUser={currentUser}
+          onSenderClick={handleSenderClick}
+        />
+      </div>
+    </AppLayout>
+  );
 }

@@ -20,12 +20,12 @@
  * Mirrors the `users` MySQL table (selected columns only).
  */
 export interface ChatParticipant {
-    /** UUID — PK from MySQL `users` table */
-    id: string;
-    name: string;
-    email: string;
-    /** Optional presigned/public avatar URL resolved by the backend */
-    avatarUrl?: string | null;
+  /** UUID — PK from MySQL `users` table */
+  id: string;
+  name: string;
+  email: string;
+  /** Optional presigned/public avatar URL resolved by the backend */
+  avatarUrl?: string | null;
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -43,36 +43,36 @@ export type RoomType = 'group' | 'dm';
  *                       scoped to a project via chat_project_id
  */
 export interface ChatRoom {
-    /** UUID — PK */
-    id: string;
+  /** UUID — PK */
+  id: string;
 
-    /** FK → projects.id; ensures DMs are project-scoped */
-    projectId: string;
+  /** FK → projects.id; ensures DMs are project-scoped */
+  projectId: string;
 
-    /** 'group' | 'dm' */
-    type: RoomType;
+  /** 'group' | 'dm' */
+  type: RoomType;
 
-    /**
-     * Human-readable name.
-     * - Group rooms: auto-set to the project name on creation.
-     * - DM rooms: null (frontend derives name from the other participant).
-     */
-    name: string | null;
+  /**
+   * Human-readable name.
+   * - Group rooms: auto-set to the project name on creation.
+   * - DM rooms: null (frontend derives name from the other participant).
+   */
+  name: string | null;
 
-    /** Optional avatar — relative path resolved to full URL by backend */
-    avatarUrl?: string | null;
+  /** Optional avatar — relative path resolved to full URL by backend */
+  avatarUrl?: string | null;
 
-    /** Eager-loaded participants (from chat_room_participants + users join) */
-    participants?: ChatParticipant[];
+  /** Eager-loaded participants (from chat_room_participants + users join) */
+  participants?: ChatParticipant[];
 
-    /**
-     * Last message preview (denormalised from MongoDB for performance).
-     * Populated by the backend; may be null for brand-new rooms.
-     */
-    lastMessage?: ChatMessagePreview | null;
+  /**
+   * Last message preview (denormalised from MongoDB for performance).
+   * Populated by the backend; may be null for brand-new rooms.
+   */
+  lastMessage?: ChatMessagePreview | null;
 
-    createdAt: string;
-    updatedAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -88,23 +88,23 @@ export type MessageType = 'text' | 'image' | 'file';
  * in one message bubble).
  */
 export interface MessageAttachment {
-    /** Unique identifier for the attachment */
-    id: string;
-    /** 'image' | 'file' */
-    type: MessageType;
-    /** Original filename (e.g. "report-q3.pdf") */
-    fileName: string;
-    /** MIME type (e.g. "application/pdf", "image/png") */
-    mimeType: string;
-    /** File size in bytes */
-    size: number;
-    /**
-     * Relative path stored in MongoDB (e.g. "chats/media/uuid.png").
-     * The backend resolves this to a full URL at query time.
-     */
-    path: string;
-    /** Resolved full URL — populated by backend, not stored in MongoDB */
-    url?: string;
+  /** Unique identifier for the attachment */
+  id: string;
+  /** 'image' | 'file' */
+  type: MessageType;
+  /** Original filename (e.g. "report-q3.pdf") */
+  fileName: string;
+  /** MIME type (e.g. "application/pdf", "image/png") */
+  mimeType: string;
+  /** File size in bytes */
+  size: number;
+  /**
+   * Relative path stored in MongoDB (e.g. "chats/media/uuid.png").
+   * The backend resolves this to a full URL at query time.
+   */
+  path: string;
+  /** Resolved full URL — populated by backend, not stored in MongoDB */
+  url?: string;
 }
 
 /**
@@ -114,40 +114,40 @@ export interface MessageAttachment {
  * FK:  roomId → MySQL chat_rooms.id (UUID string)
  */
 export interface ChatMessage {
-    /** MongoDB ObjectId (as string) */
-    _id: string;
+  /** MongoDB ObjectId (as string) */
+  _id: string;
 
-    /** FK → MySQL chat_rooms.id */
-    roomId: string;
+  /** FK → MySQL chat_rooms.id */
+  roomId: string;
 
-    /** FK → MySQL users.id */
-    senderId: string;
+  /** FK → MySQL users.id */
+  senderId: string;
 
-    /** Resolved sender info (joined from MySQL at query time) */
-    sender?: ChatParticipant;
+  /** Resolved sender info (joined from MySQL at query time) */
+  sender?: ChatParticipant;
 
-    /** Primary content type of the message */
-    type: MessageType;
+  /** Primary content type of the message */
+  type: MessageType;
 
-    /**
-     * Text body.
-     * - type === 'text'  → the actual message content
-     * - type === 'image' | 'file'  → optional caption; may be empty
-     */
-    body: string;
+  /**
+   * Text body.
+   * - type === 'text'  → the actual message content
+   * - type === 'image' | 'file'  → optional caption; may be empty
+   */
+  body: string;
 
-    /**
-     * Media attachments (empty array for text-only messages).
-     * Enables bulk-send: multiple files in one bubble.
-     */
-    attachments: MessageAttachment[];
+  /**
+   * Media attachments (empty array for text-only messages).
+   * Enables bulk-send: multiple files in one bubble.
+   */
+  attachments: MessageAttachment[];
 
-    /** True when the message has been soft-deleted (body replaced with tombstone). */
-    isDeleted?: boolean;
+  /** True when the message has been soft-deleted (body replaced with tombstone). */
+  isDeleted?: boolean;
 
-    /** ISO 8601 timestamp */
-    createdAt: string;
-    updatedAt: string;
+  /** ISO 8601 timestamp */
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -155,7 +155,7 @@ export interface ChatMessage {
  * Denormalised from MongoDB into the MySQL row (or assembled at query time).
  */
 export interface ChatMessagePreview {
-    body: string;
-    senderName: string;
-    createdAt: string;
+  body: string;
+  senderName: string;
+  createdAt: string;
 }
