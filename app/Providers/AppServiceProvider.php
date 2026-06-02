@@ -2,29 +2,46 @@
 
 namespace App\Providers;
 
+use App\Models\Project;
+use App\Policies\ProjectPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
+    protected $policies = [
+        Project::class => ProjectPolicy::class,
+    ];
+
     /**
      * Register any application services.
-     */
+    */
     public function register(): void
     {
-        //
+        $this->app->singleton(\App\Services\MongoDB\MongoConnection::class);
+        $this->app->singleton(\App\Services\StorageService::class);
+    }
+
+
+    public function boot(): void
+    {
+        $this->registerPolicies();
+        $this->configureDefaults();
     }
 
     /**
-     * Bootstrap any application services.
+     * Register authorization policies.
      */
-    public function boot(): void
+    protected function registerPolicies(): void
     {
-        $this->configureDefaults();
+        foreach ($this->policies as $model => $policy) {
+            Gate::policy($model, $policy);
+        }
     }
 
     /**
@@ -42,14 +59,15 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
+        Password::defaults(
+            fn(): ?Password => app()->isProduction()
+                ? Password::min(12)
                 ->mixedCase()
                 ->letters()
                 ->numbers()
                 ->symbols()
                 ->uncompromised()
-            : null,
+                : null,
         );
     }
 }

@@ -13,7 +13,7 @@ const Button = ({
 }: ButtonProps) => (
   <button
     disabled={loading || disabled}
-    className={`rounded-lg bg-dark-surface-3 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-dark-secondary cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    className={`cursor-pointer rounded-lg bg-dark-surface-3 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-dark-secondary disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     {...props}
   >
     {children}

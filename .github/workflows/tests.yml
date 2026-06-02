@@ -45,6 +45,8 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
+      - name: Clean install
+        run: rm -rf node_modules package-lock.json && npm install
       - name: Build Assets
         run: npm run build
 

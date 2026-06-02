@@ -4,8 +4,20 @@ export const getPasswordStrength = (password: string): PasswordStrength => {
   if (!password.length) return 0;
   let score = 1;
   if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password) && password.length >= 6) score++;
-  if (/[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password) && password.length >= 6) score++;
+  if (
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    password.length >= 6
+  ) {
+    score++;
+  }
+  if (
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password) &&
+    password.length >= 6
+  ) {
+    score++;
+  }
   return score as PasswordStrength;
 };
 
