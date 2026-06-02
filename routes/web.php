@@ -9,7 +9,7 @@ Route::inertia('/', 'welcome')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('projects')->name('projects.')->group(function() {
         Route::get('/', [ProjectController::class, 'index'])->name('index');
-        Route::post('/create', [ProjectController::class, 'store'])->name('store');
+        Route::post('/', [ProjectController::class, 'store'])->name('store');
         Route::get('/check-slug', [ProjectController::class, 'checkSlug'])->name('check-slug');
     });
 

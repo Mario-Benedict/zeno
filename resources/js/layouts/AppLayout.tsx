@@ -1,20 +1,11 @@
 import type { ReactNode } from 'react';
-import { usePage } from '@inertiajs/react';
 import Header from '@/components/layouts/Header';
 import Sidebar from '@/components/layouts/Sidebar';
-
-interface PageProps {
-    project?: {
-        project_id: string;
-        project_name: string;
-        project_slug: string;
-    };
-    [key: string]: unknown;
-}
+import type { CurrentProject } from '@/types';
 
 interface AppLayoutProps {
   children: ReactNode;
-  project: Project;
+  project: CurrentProject;
 }
 
 const AppLayout = ({ children, project }: AppLayoutProps) => {

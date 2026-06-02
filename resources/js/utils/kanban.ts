@@ -52,8 +52,9 @@ export const LABEL_COLORS: { name: string; hex: string }[] = [
 export const calculateChecklistProgress = (
   checklists?: KanbanBoardCardChecklist[] | null,
 ): { done: number; total: number } => {
-  if (!Array.isArray(checklists) || checklists.length === 0)
+  if (!Array.isArray(checklists) || checklists.length === 0) {
     return { done: 0, total: 0 };
+  }
   let total = 0;
   let done = 0;
   checklists.forEach((cl) => {

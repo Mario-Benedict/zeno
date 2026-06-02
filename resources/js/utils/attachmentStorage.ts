@@ -71,20 +71,24 @@ export const dbDelete = async (id: string): Promise<void> => {
   });
 };
 
-export const formatBytes = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
 export const getFileEmoji = (type: string): string => {
   if (type.startsWith('image/')) return '🖼️';
   if (type === 'application/pdf') return '📄';
-  if (type.includes('sheet') || type.includes('excel') || type.includes('csv'))
+  if (
+    type.includes('sheet') ||
+    type.includes('excel') ||
+    type.includes('csv')
+  ) {
     return '📊';
+  }
   if (type.includes('word') || type.includes('document')) return '📝';
-  if (type.includes('zip') || type.includes('tar') || type.includes('compress'))
+  if (
+    type.includes('zip') ||
+    type.includes('tar') ||
+    type.includes('compress')
+  ) {
     return '🗜️';
+  }
   if (type.startsWith('video/')) return '🎬';
   if (type.startsWith('audio/')) return '🎵';
   return '📎';
