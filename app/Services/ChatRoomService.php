@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Models\User;
-use Illuminate\Support\Str;
 
 /**
  * ChatRoomService
@@ -25,30 +24,27 @@ use Illuminate\Support\Str;
  */
 class ChatRoomService
 {
-
     /**
      * Auto-create group room saat project baru dibuat.
      * Dipanggil dari ProjectController::store() setelah project & pivot dibuat.
      *
-     * @param  Project $project
      * @param  string  $creatorUserId  auth()->id() dari controller
-     * @return ChatRoom
      */
     public function createProjectGroupRoom(Project $project, string $creatorUserId): ChatRoom
     {
         /** @var ChatRoom $room */
         $room = ChatRoom::create([
             'project_id' => $project->project_id,
-            'type'       => 'group',
-            'name'       => $project->project_name,
+            'type' => 'group',
+            'name' => $project->project_name,
         ]);
 
-        $members     = $project->members()->get();
-        $attachData  = [];
+        $members = $project->members()->get();
+        $attachData = [];
 
         foreach ($members as $member) {
             $attachData[$member->id] = [
-                'role'      => (string) $member->id === (string) $creatorUserId ? 'admin' : 'member',
+                'role' => (string) $member->id === (string) $creatorUserId ? 'admin' : 'member',
                 'joined_at' => now(),
             ];
         }
@@ -65,10 +61,6 @@ class ChatRoomService
     /**
      * Tambah member baru ke group room sebuah project.
      * Dipanggil saat user diundang ke project.
-     *
-     * @param  Project $project
-     * @param  User    $user
-     * @return void
      */
     public function addMemberToGroupRoom(Project $project, User $user): void
     {
@@ -82,7 +74,7 @@ class ChatRoomService
 
         $groupRoom->participants()->syncWithoutDetaching([
             $user->id => [
-                'role'      => 'member',
+                'role' => 'member',
                 'joined_at' => now(),
             ],
         ]);
@@ -99,10 +91,6 @@ class ChatRoomService
     /**
      * Hapus member dari group room dan semua DM mereka di project ini.
      * Dipanggil saat user dikeluarkan dari project.
-     *
-     * @param  Project $project
-     * @param  User    $user
-     * @return void
      */
     public function removeMemberFromProject(Project $project, User $user): void
     {
@@ -126,11 +114,6 @@ class ChatRoomService
      *
      * De-duplikasi: cari room DM di project ini yang punya KEDUA user
      * sebagai participant. Jika belum ada, buat baru.
-     *
-     * @param  Project $project
-     * @param  User    $userA
-     * @param  User    $userB
-     * @return ChatRoom
      */
     public function findOrCreateDmRoom(Project $project, User $userA, User $userB): ChatRoom
     {
@@ -149,8 +132,8 @@ class ChatRoomService
         $room = ChatRoom::create([
             // ✅ FIX: tidak perlu set 'id' manual — HasUuids handle otomatis
             'project_id' => $project->project_id,
-            'type'       => 'dm',
-            'name'       => null,
+            'type' => 'dm',
+            'name' => null,
         ]);
 
         $room->participants()->attach([

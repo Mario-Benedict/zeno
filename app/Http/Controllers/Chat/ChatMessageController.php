@@ -52,13 +52,13 @@ class ChatMessageController extends Controller
 
         $request->validate([
             'before' => ['nullable', 'string'],
-            'limit'  => ['nullable', 'integer', 'min:1', 'max:50'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $limit    = (int) ($request->query('limit', 30));
-        $before   = $request->query('before');
+        $limit = (int) ($request->query('limit', 30));
+        $before = $request->query('before');
 
-        $result   = $this->messageService->getMessages($room->id, $limit, $before);
+        $result = $this->messageService->getMessages($room->id, $limit, $before);
 
         // Update the participant's last_read_message_id for unread-count calculation.
         if (! empty($result['messages'])) {
@@ -88,8 +88,8 @@ class ChatMessageController extends Controller
         $this->authorize('sendMessage', $room);
 
         $message = $this->messageService->send(
-            room:    $room,
-            sender:  Auth::user(),
+            room: $room,
+            sender: Auth::user(),
             payload: $request->validated(),
         );
 
@@ -111,19 +111,19 @@ class ChatMessageController extends Controller
      * The message body is replaced with a tombstone; attachments are removed
      * from storage via StorageService.
      *
-     * @param  string $messageId  MongoDB ObjectId
+     * @param  string  $messageId  MongoDB ObjectId
      */
     public function destroy(
-        Project  $project,
+        Project $project,
         ChatRoom $room,
-        string   $messageId,
+        string $messageId,
     ): RedirectResponse {
         $this->authorize('sendMessage', $room); // basic membership check
 
         $this->messageService->delete(
-            room:      $room,
+            room: $room,
             messageId: $messageId,
-            actor:     Auth::user(),
+            actor: Auth::user(),
         );
 
         return redirect()->back();

@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\LlmChat\LlmAccount;
+use App\Models\LlmChat\LlmChatSession;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -26,12 +29,22 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
-            'email_verified_at'       => 'datetime',
-            'two_factor_enabled_at'   => 'datetime',
+            'email_verified_at' => 'datetime',
+            'two_factor_enabled_at' => 'datetime',
             'two_factor_last_counter' => 'integer',
-            'password'                => 'hashed',
-            'two_factor_secret'       => 'encrypted',
+            'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
         ];
+    }
+
+    public function llmChatSessions()
+    {
+        return $this->hasMany(LlmChatSession::class, 'llm_chat_account_id', 'id');
+    }
+
+    public function llmAccounts()
+    {
+        return $this->hasMany(LlmAccount::class, 'llm_account_id', 'id');
     }
 
     public function socialAccounts(): HasMany
@@ -57,7 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $this->emailOtps()->create([
-            'code'       => $code,
+            'code' => $code,
             'expires_at' => now()->addMinutes(10),
         ]);
 

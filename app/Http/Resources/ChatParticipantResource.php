@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
+use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,18 +20,18 @@ class ChatParticipantResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        /** @var \App\Models\User $this */
+        /** @var User $this */
         return [
-            'id'        => $this->id,
-            'name'      => $this->name,
-            'email'     => $this->email,
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
 
             'avatarUrl' => $this->avatar_path
-                ? app(\App\Services\StorageService::class)->url($this->avatar_path)
+                ? app(StorageService::class)->url($this->avatar_path)
                 : null,
 
-            'role'      => $this->whenPivotLoaded('chat_room_participants', fn () => $this->pivot->role),
-            'isMuted'   => $this->whenPivotLoaded('chat_room_participants', fn () => (bool) $this->pivot->is_muted),
+            'role' => $this->whenPivotLoaded('chat_room_participants', fn () => $this->pivot->role),
+            'isMuted' => $this->whenPivotLoaded('chat_room_participants', fn () => (bool) $this->pivot->is_muted),
         ];
     }
 }

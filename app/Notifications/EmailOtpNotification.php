@@ -20,10 +20,10 @@ class EmailOtpNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Your verification code — ' . config('app.name'))
+            ->subject('Your verification code — '.config('app.name'))
             ->greeting('Hello!')
             ->line('Use the code below to verify your email address.')
-            ->line('**' . $this->otp . '**')
+            ->line('**'.$this->otp.'**')
             ->line('This code expires in 10 minutes.')
             ->line('If you did not create an account, no further action is required.');
     }

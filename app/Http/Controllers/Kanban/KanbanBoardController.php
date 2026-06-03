@@ -23,14 +23,14 @@ class KanbanBoardController extends Controller
 
         $validated = $request->validate([
             'kanban_board_id' => ['nullable', 'string', 'uuid'],
-            'name'            => ['required', 'string', 'max:255'],
-            'position'        => ['required', 'integer', 'min:0'],
+            'name' => ['required', 'string', 'max:255'],
+            'position' => ['required', 'integer', 'min:0'],
         ]);
 
         $board = new KanbanBoard([
             'kanban_board_project_id' => $project->project_id,
-            'kanban_board_name'       => trim($validated['name']),
-            'kanban_board_position'   => $validated['position'],
+            'kanban_board_name' => trim($validated['name']),
+            'kanban_board_position' => $validated['position'],
         ]);
 
         if (! empty($validated['kanban_board_id'])) {
@@ -55,7 +55,7 @@ class KanbanBoardController extends Controller
         abort_unless($request->user()->can('view', $board->project), 403);
 
         $validated = $request->validate([
-            'name'     => 'nullable|string|max:255',
+            'name' => 'nullable|string|max:255',
             'position' => 'nullable|integer|min:0',
         ]);
 

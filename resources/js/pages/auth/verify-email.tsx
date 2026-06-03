@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import type { FormEventHandler } from 'react';
+import type { SyntheticEvent } from 'react';
 import Button from '@/components/shared/Button';
 import OtpInput from '@/components/shared/OtpInput';
 import AuthLayout from '@/layouts/AuthLayout';
@@ -19,12 +19,12 @@ const VerifyEmail = ({ status }: VerifyEmailProps) => {
     setData('code', value.join(''));
   };
 
-  const submit: FormEventHandler = (e) => {
+  const submit = (e: SyntheticEvent) => {
     e.preventDefault();
     post('/email/verify');
   };
 
-  const resend: FormEventHandler = (e) => {
+  const resend = (e: SyntheticEvent) => {
     e.preventDefault();
     resendPost('/email/verification-notification');
   };

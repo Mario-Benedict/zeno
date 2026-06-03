@@ -1,11 +1,11 @@
 <?php
 
-use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\Kanban\KanbanBoardController;
 use App\Http\Controllers\Kanban\KanbanCardController;
 use App\Http\Controllers\Kanban\KanbanCardDetailController;
 use App\Http\Controllers\Kanban\KanbanChecklistController;
 use App\Http\Controllers\Kanban\KanbanCommentController;
+use App\Http\Controllers\KanbanController;
 use Illuminate\Support\Facades\Route;
 
 /*

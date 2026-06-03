@@ -14,19 +14,19 @@ return new class extends Migration
         Schema::create('kanban_board_card_comments', function (Blueprint $table) {
             $table->uuid('kanban_board_card_comment_id')->primary();
             $table->foreignUuid('kanban_board_card_detail_id')
-                  ->constrained(
-                        'kanban_board_card_details', 
-                        'kanban_board_card_detail_id',
-                        'kb_card_detail_fk'
-                    )
-                  ->cascadeOnDelete();
+                ->constrained(
+                    'kanban_board_card_details',
+                    'kanban_board_card_detail_id',
+                    'kb_card_detail_fk'
+                )
+                ->cascadeOnDelete();
             $table->foreignId('kanban_board_card_comment_from')
-                  ->constrained(
-                        'users', 
-                        'id',
-                        'kb_card_cmnt_user_fk'
-                    )
-                  ->cascadeOnDelete();
+                ->constrained(
+                    'users',
+                    'id',
+                    'kb_card_cmnt_user_fk'
+                )
+                ->cascadeOnDelete();
             $table->text('kanban_board_card_comment_message');
             $table->timestamps();
         });

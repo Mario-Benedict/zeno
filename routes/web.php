@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::prefix('projects')->name('projects.')->group(function() {
+    Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [ProjectController::class, 'index'])->name('index');
         Route::post('/', [ProjectController::class, 'store'])->name('store');
         Route::get('/check-slug', [ProjectController::class, 'checkSlug'])->name('check-slug');
     });
 
-    Route::prefix('p/{project:project_slug}')->name('projects.')->group(function() {
+    Route::prefix('p/{project:project_slug}')->name('projects.')->group(function () {
         Route::get('/', [ProjectController::class, 'show'])->name('show');
         Route::patch('/pin', [ProjectController::class, 'togglePin'])->name('toggle-pin');
 
@@ -31,3 +31,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
 require __DIR__.'/auth.php';
 
 require __DIR__.'/chat.php';
+
+require __DIR__.'/llm-chat.php';

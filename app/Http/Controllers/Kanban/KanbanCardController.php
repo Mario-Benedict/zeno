@@ -26,11 +26,11 @@ class KanbanCardController extends Controller
         abort_unless($request->user()->can('view', $board->project), 403);
 
         $validated = $request->validate([
-            'kanban_board_card_id'        => ['nullable', 'string', 'uuid'],
+            'kanban_board_card_id' => ['nullable', 'string', 'uuid'],
             'kanban_board_card_detail_id' => ['nullable', 'string', 'uuid'],
-            'title'                       => 'required|string|max:20',
-            'label_ids'                   => 'array',
-            'label_ids.*'                 => 'string',
+            'title' => 'required|string|max:20',
+            'label_ids' => 'array',
+            'label_ids.*' => 'string',
         ]);
 
         DB::transaction(function () use ($validated, $board) {
@@ -38,7 +38,7 @@ class KanbanCardController extends Controller
 
             $card = new KanbanBoardCard([
                 'kanban_board_id' => $board->kanban_board_id,
-                'position'        => $lastPosition + 1,
+                'position' => $lastPosition + 1,
             ]);
 
             if (! empty($validated['kanban_board_card_id'])) {
@@ -48,10 +48,10 @@ class KanbanCardController extends Controller
             $card->save();
 
             $detail = new KanbanBoardCardDetail([
-                'kanban_board_card_id'          => $card->kanban_board_card_id,
-                'kanban_board_card_title'       => $validated['title'],
+                'kanban_board_card_id' => $card->kanban_board_card_id,
+                'kanban_board_card_title' => $validated['title'],
                 'kanban_board_card_description' => null,
-                'is_completed'                  => false,
+                'is_completed' => false,
             ]);
 
             if (! empty($validated['kanban_board_card_detail_id'])) {
@@ -87,8 +87,8 @@ class KanbanCardController extends Controller
             'position' => 'required|integer|min:0',
         ]);
 
-        $oldBoardId  = $card->kanban_board_id;
-        $newBoardId  = $validated['board_id'];
+        $oldBoardId = $card->kanban_board_id;
+        $newBoardId = $validated['board_id'];
         $newPosition = $validated['position'];
 
         DB::transaction(function () use ($card, $oldBoardId, $newBoardId, $newPosition) {
@@ -179,15 +179,15 @@ class KanbanCardController extends Controller
         foreach ($orderedCardIds as $index => $cardId) {
             $rows[] = [
                 'kanban_board_card_id' => $cardId,
-                'kanban_board_id'      => $boardId,
-                'position'             => $index,
+                'kanban_board_id' => $boardId,
+                'position' => $index,
             ];
         }
 
         KanbanBoardCard::upsert(
             $rows,
             uniqueBy: ['kanban_board_card_id'],
-            update:   $includeBoardId ? ['kanban_board_id', 'position'] : ['position'],
+            update: $includeBoardId ? ['kanban_board_id', 'position'] : ['position'],
         );
     }
 }

@@ -5,7 +5,9 @@ namespace App\Support;
 class Totp
 {
     private const PERIOD = 30;
+
     private const DIGITS = 6;
+
     private const WINDOW = 1;
 
     public static function generateSecret(): string
@@ -15,6 +17,7 @@ class Totp
         for ($i = 0; $i < 32; $i++) {
             $secret .= $chars[random_int(0, 31)];
         }
+
         return $secret;
     }
 
@@ -51,14 +54,14 @@ class Totp
 
     private static function compute(string $key, int $counter): string
     {
-        $hash = hash_hmac('sha1', pack('N*', 0) . pack('N*', $counter), $key, true);
-        $offset = ord($hash[19]) & 0x0f;
+        $hash = hash_hmac('sha1', pack('N*', 0).pack('N*', $counter), $key, true);
+        $offset = ord($hash[19]) & 0x0F;
 
         $otp = (
-            ((ord($hash[$offset]) & 0x7f) << 24) |
-            ((ord($hash[$offset + 1]) & 0xff) << 16) |
-            ((ord($hash[$offset + 2]) & 0xff) << 8) |
-            (ord($hash[$offset + 3]) & 0xff)
+            ((ord($hash[$offset]) & 0x7F) << 24) |
+            ((ord($hash[$offset + 1]) & 0xFF) << 16) |
+            ((ord($hash[$offset + 2]) & 0xFF) << 8) |
+            (ord($hash[$offset + 3]) & 0xFF)
         ) % (10 ** self::DIGITS);
 
         return str_pad((string) $otp, self::DIGITS, '0', STR_PAD_LEFT);
@@ -74,7 +77,9 @@ class Totp
 
         foreach (str_split($input) as $char) {
             $pos = strpos($alphabet, $char);
-            if ($pos === false) continue;
+            if ($pos === false) {
+                continue;
+            }
             $buffer = ($buffer << 5) | $pos;
             $bitsLeft += 5;
             if ($bitsLeft >= 8) {

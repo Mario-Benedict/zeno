@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\Project;
 use App\Policies\ProjectPolicy;
+use App\Services\MongoDB\MongoConnection;
+use App\Services\StorageService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -20,13 +22,12 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Register any application services.
-    */
+     */
     public function register(): void
     {
-        $this->app->singleton(\App\Services\MongoDB\MongoConnection::class);
-        $this->app->singleton(\App\Services\StorageService::class);
+        $this->app->singleton(MongoConnection::class);
+        $this->app->singleton(StorageService::class);
     }
-
 
     public function boot(): void
     {
@@ -60,13 +61,13 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Password::defaults(
-            fn(): ?Password => app()->isProduction()
+            fn (): ?Password => app()->isProduction()
                 ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
+                    ->mixedCase()
+                    ->letters()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised()
                 : null,
         );
     }

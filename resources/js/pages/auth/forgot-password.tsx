@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEventHandler } from 'react';
+import type { SyntheticEvent } from 'react';
 import Button from '@/components/shared/Button';
 import FloatInputField from '@/components/shared/FloatInputField';
 import AuthLayout from '@/layouts/AuthLayout';
@@ -11,7 +11,7 @@ interface ForgotPasswordProps {
 const ForgotPassword = ({ status }: ForgotPasswordProps) => {
   const { data, setData, post, processing, errors } = useForm({ email: '' });
 
-  const submit: FormEventHandler = (e) => {
+  const submit = (e: SyntheticEvent) => {
     e.preventDefault();
     post('/forgot-password');
   };

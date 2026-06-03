@@ -15,7 +15,9 @@ use Illuminate\Support\Str;
 class KanbanBoardCardAttachment extends Model
 {
     protected $primaryKey = 'kanban_board_card_attachment_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected static function booted(): void

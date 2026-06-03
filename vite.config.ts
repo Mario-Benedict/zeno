@@ -39,4 +39,7 @@ export default defineConfig({
             '@public': fileURLToPath(new URL('public', import.meta.url)),
         },
     },
+    optimizeDeps: {
+        include: ['react-markdown', 'remark-gfm'],
+    },
 });

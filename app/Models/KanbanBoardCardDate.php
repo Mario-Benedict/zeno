@@ -15,12 +15,14 @@ use Illuminate\Support\Str;
 class KanbanBoardCardDate extends Model
 {
     protected $primaryKey = 'kanban_board_card_date_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $casts = [
         'kanban_board_card_start_date' => 'datetime',
-        'kanban_board_card_due_date'   => 'datetime',
+        'kanban_board_card_due_date' => 'datetime',
     ];
 
     protected static function booted(): void

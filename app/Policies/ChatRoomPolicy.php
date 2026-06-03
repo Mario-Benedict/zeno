@@ -71,8 +71,6 @@ class ChatRoomPolicy
         return $this->isParticipant($user, $groupRoom);
     }
 
-
-
     private function isParticipant(User $user, ChatRoom $room): bool
     {
         return $room->participants()

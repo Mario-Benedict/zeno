@@ -15,14 +15,16 @@ use Inertia\Response;
 class LoginController extends Controller
 {
     private const MAX_ATTEMPTS = 5;
+
     private const DECAY_SECONDS = 60;
+
     private const TWO_FACTOR_TTL_MINUTES = 5;
 
     public function create(): Response
     {
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
-            'status'           => session('status'),
+            'status' => session('status'),
         ]);
     }
 
@@ -32,17 +34,18 @@ class LoginController extends Controller
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($key);
+
             return back()->withErrors([
                 'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
             ]);
         }
 
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
 
             return back()->withErrors([
@@ -58,6 +61,7 @@ class LoginController extends Controller
             $request->session()->put('auth.2fa_user_id', $user->id);
             $request->session()->put('auth.2fa_expires_at', now()->addMinutes(self::TWO_FACTOR_TTL_MINUTES)->timestamp);
             Auth::logout();
+
             return redirect()->route('two-factor');
         }
 
@@ -78,6 +82,6 @@ class LoginController extends Controller
 
     private function throttleKey(Request $request): string
     {
-        return 'login.' . Str::lower($request->input('email', '')) . '.' . $request->ip();
+        return 'login.'.Str::lower($request->input('email', '')).'.'.$request->ip();
     }
 }

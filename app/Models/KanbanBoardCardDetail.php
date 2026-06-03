@@ -19,7 +19,9 @@ use Illuminate\Support\Str;
 class KanbanBoardCardDetail extends Model
 {
     protected $primaryKey = 'kanban_board_card_detail_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $casts = [
