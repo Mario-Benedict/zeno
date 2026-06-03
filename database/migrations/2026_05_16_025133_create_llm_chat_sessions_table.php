@@ -20,14 +20,14 @@ return new class extends Migration
 
             // References the authenticated user — users.id is a bigint
             $table->foreignId('llm_chat_account_id')
-                  ->constrained('users', 'id')
-                  ->cascadeOnDelete();
+                ->constrained('users', 'id')
+                ->cascadeOnDelete();
 
             $table->string('llm_chat_session_name', 100);
 
             $table->foreignUuid('llm_chat_current_model_id')
-                  ->constrained('llm_models', 'llm_model_id')
-                  ->restrictOnDelete();
+                ->constrained('llm_models', 'llm_model_id')
+                ->restrictOnDelete();
 
             $table->timestamps();
         });

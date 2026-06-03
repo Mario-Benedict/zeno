@@ -24,7 +24,7 @@ class LlmModelSeeder extends Seeder
             LlmModel::updateOrCreate(
                 ['llm_model_name' => $model['name']],
                 [
-                    'llm_model_id'       => (string) Str::uuid(),
+                    'llm_model_id' => (string) Str::uuid(),
                     'llm_model_provider' => $model['provider'],
                 ],
             );

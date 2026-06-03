@@ -31,7 +31,7 @@ class StoreChatRoomRequest extends FormRequest
     {
         return [
             'recipient_id.required' => 'Please select a user to message.',
-            'recipient_id.exists'   => 'The selected user does not exist.',
+            'recipient_id.exists' => 'The selected user does not exist.',
         ];
     }
 }

@@ -17,6 +17,19 @@ jobs:
       matrix:
         php-version: ['8.4', '8.5']
 
+    services:
+      # MongoDB is required by the LlmChat feature (messages collection).
+      # Tests connect via MONGODB_URI (configured in phpunit.xml).
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' | grep -q 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -25,6 +38,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
+          extensions: mongodb
           tools: composer:v2
           coverage: xdebug
 
@@ -41,6 +55,11 @@ jobs:
 
       - name: Copy Environment File
         run: cp .env.example .env
+
+      - name: Configure MongoDB for CI
+        run: |
+          sed -i 's|^MONGODB_URI=.*|MONGODB_URI=mongodb://127.0.0.1:27017|' .env
+          echo "MONGODB_DATABASE=zeno_test" >> .env
 
       - name: Generate Application Key
         run: php artisan key:generate

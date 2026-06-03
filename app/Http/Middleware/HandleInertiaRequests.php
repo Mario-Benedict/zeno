@@ -55,7 +55,7 @@ class HandleInertiaRequests extends Middleware
                     'newMessage' => $request->session()->get('chat.newMessage'),
                 ],
             ],
-            'project'     => $project,
+            'project' => $project,
             'projectRole' => $projectRole,
         ];
     }
@@ -81,7 +81,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         $payload = [
-            'project_id'   => $project->project_id,
+            'project_id' => $project->project_id,
             'project_name' => $project->project_name,
             'project_slug' => $project->project_slug,
         ];

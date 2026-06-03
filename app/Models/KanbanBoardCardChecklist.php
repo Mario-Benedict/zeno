@@ -15,7 +15,9 @@ use Illuminate\Support\Str;
 class KanbanBoardCardChecklist extends Model
 {
     protected $primaryKey = 'kanban_board_card_checklist_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected static function booted(): void

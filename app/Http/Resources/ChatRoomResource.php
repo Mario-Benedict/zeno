@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\ChatRoom;
 use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -34,14 +35,14 @@ class ChatRoomResource extends JsonResource
 
     public function toArray(Request $request): array
     {
-        /** @var \App\Models\ChatRoom $this */
+        /** @var ChatRoom $this */
         return [
-            'id'          => $this->id,
-            'projectId'   => $this->project_id,
-            'type'        => $this->type,
-            'name'        => $this->name,
+            'id' => $this->id,
+            'projectId' => $this->project_id,
+            'type' => $this->type,
+            'name' => $this->name,
 
-            'avatarUrl'   => $this->avatarUrl(),
+            'avatarUrl' => $this->avatarUrl(),
 
             'participants' => ChatParticipantResource::collection(
                 $this->whenLoaded('participants')
@@ -52,8 +53,8 @@ class ChatRoomResource extends JsonResource
                 $this->lastMessagePreview,
             ),
 
-            'createdAt'   => $this->created_at->toIso8601String(),
-            'updatedAt'   => $this->updated_at->toIso8601String(),
+            'createdAt' => $this->created_at->toIso8601String(),
+            'updatedAt' => $this->updated_at->toIso8601String(),
         ];
     }
 }

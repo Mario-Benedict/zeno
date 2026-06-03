@@ -26,7 +26,7 @@ class KanbanCommentController extends Controller
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
         $validated = $request->validate([
-            'kanban_board_card_comment_id'      => ['nullable', 'string', 'uuid'],
+            'kanban_board_card_comment_id' => ['nullable', 'string', 'uuid'],
             'kanban_board_card_comment_message' => 'required|string',
         ]);
 
@@ -34,8 +34,8 @@ class KanbanCommentController extends Controller
         abort_if($detail === null, 404);
 
         $comment = new KanbanBoardCardComment([
-            'kanban_board_card_detail_id'       => $detail->kanban_board_card_detail_id,
-            'kanban_board_card_comment_from'    => $request->user()->id,
+            'kanban_board_card_detail_id' => $detail->kanban_board_card_detail_id,
+            'kanban_board_card_comment_from' => $request->user()->id,
             'kanban_board_card_comment_message' => $validated['kanban_board_card_comment_message'],
         ]);
 

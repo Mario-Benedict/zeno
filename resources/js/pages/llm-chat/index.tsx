@@ -2,11 +2,11 @@ import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { SyntheticEvent } from 'react';
 import LlmChatController from '@/actions/App/Http/Controllers/LlmChatController';
-import { useProject } from '@/hooks/useProject';
-import AppLayout from '@/layouts/AppLayout';
 import LlmChatComposer from '@/components/llm-chat/LlmChatComposer';
 import LlmChatMessageList from '@/components/llm-chat/LlmChatMessageList';
 import LlmChatSidebar from '@/components/llm-chat/LlmChatSidebar';
+import { useProject } from '@/hooks/useProject';
+import AppLayout from '@/layouts/AppLayout';
 import type { LlmMessage, LlmSession } from '@/types/llm-chat';
 
 interface Props {

@@ -17,8 +17,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class LlmChatSession extends Model
 {
     protected $primaryKey = 'llm_chat_session_id';
-    public $incrementing  = false;
-    protected $keyType    = 'string';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
 
     public function user(): BelongsTo
     {

@@ -13,6 +13,7 @@ use Inertia\Response;
 class OtpController extends Controller
 {
     private const MAX_ATTEMPTS = 5;
+
     private const DECAY_SECONDS = 600; // 10 minutes
 
     public function create(Request $request): Response|RedirectResponse
@@ -34,10 +35,11 @@ class OtpController extends Controller
             return redirect()->intended(route('projects.index'));
         }
 
-        $key = 'otp-verify.' . $user->id;
+        $key = 'otp-verify.'.$user->id;
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($key);
+
             return back()->withErrors([
                 'code' => "Too many attempts. Please try again in {$seconds} seconds.",
             ]);
@@ -50,8 +52,9 @@ class OtpController extends Controller
             ->where('expires_at', '>', now())
             ->first();
 
-        if (!$otp) {
+        if (! $otp) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
+
             return back()->withErrors(['code' => 'Invalid or expired verification code.']);
         }
 

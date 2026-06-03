@@ -32,7 +32,6 @@ class EnsureProjectMember
             abort(403, 'You are not a member of this project.');
         }
 
-
         /** @var ChatRoom|null $room */
         $room = $request->route('room');
 

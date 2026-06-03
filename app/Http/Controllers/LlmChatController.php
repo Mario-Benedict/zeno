@@ -21,8 +21,10 @@ class LlmChatController extends Controller
 {
     // ─── Constants ────────────────────────────────────────────────────────────
 
-    private const DEFAULT_MODEL    = 'gemini-2.5-flash';
-    private const HISTORY_LIMIT    = 10;
+    private const DEFAULT_MODEL = 'gemini-2.5-flash';
+
+    private const HISTORY_LIMIT = 10;
+
     private const SESSION_NAME_MAX = 40;
 
     /**
@@ -88,7 +90,7 @@ PROMPT;
 
         return Inertia::render('llm-chat/index', [
             'sessions' => $this->userSessions(),
-            'session'  => $session->only(['llm_chat_session_id', 'llm_chat_session_name']),
+            'session' => $session->only(['llm_chat_session_id', 'llm_chat_session_name']),
             'messages' => $messages,
         ]);
     }
@@ -101,14 +103,14 @@ PROMPT;
      */
     public function ask(Request $request, Project $project): RedirectResponse
     {
-        $question  = $this->validated($request);
-        $model     = $this->resolveModel();
+        $question = $this->validated($request);
+        $model = $this->resolveModel();
         $sessionId = Str::uuid()->toString();
 
         LlmChatSession::create([
-            'llm_chat_session_id'       => $sessionId,
-            'llm_chat_account_id'       => Auth::id(),
-            'llm_chat_session_name'     => Str::limit($question, self::SESSION_NAME_MAX),
+            'llm_chat_session_id' => $sessionId,
+            'llm_chat_account_id' => Auth::id(),
+            'llm_chat_session_name' => Str::limit($question, self::SESSION_NAME_MAX),
             'llm_chat_current_model_id' => $model->llm_model_id,
         ]);
 
@@ -126,9 +128,9 @@ PROMPT;
     {
         $this->authorizeSession($session);
 
-        $question  = $this->validated($request);
+        $question = $this->validated($request);
         $modelName = $session->llmModel?->llm_model_name ?? self::DEFAULT_MODEL;
-        $history   = $this->buildHistory($session->llm_chat_session_id);
+        $history = $this->buildHistory($session->llm_chat_session_id);
 
         $this->saveMessage($session->llm_chat_session_id, 'user', $question);
         $this->saveMessage($session->llm_chat_session_id, 'model', $this->callGemini($modelName, $question, $history));
@@ -195,8 +197,8 @@ PROMPT;
         LlmChatMessage::create([
             'llm_chat_message_id' => Str::uuid()->toString(),
             'llm_chat_session_id' => $sessionId,
-            'role'                => $role,
-            'content'             => $content,
+            'role' => $role,
+            'content' => $content,
         ]);
     }
 
@@ -212,13 +214,16 @@ PROMPT;
             $model = Gemini::generativeModel($modelName)
                 ->withSystemInstruction(Content::parse(self::SYSTEM_INSTRUCTION));
 
-            $response = empty($history)
-                ? $model->generateContent($question)
-                : $model->startChat(history: $history)->sendMessage($question);
+            // Send the full conversation (prior history + new user turn) as a
+            // single generateContent call. Matches what startChat()->sendMessage
+            // does under the hood, but keeps the call site uniform and lets the
+            // testing fake satisfy any path with a single GenerateContentResponse.
+            $contents = [...$history, Content::parse($question, Role::USER)];
+            $response = $model->generateContent(...$contents);
 
             return $response->text();
         } catch (\Exception $e) {
-            return 'Error: ' . $e->getMessage();
+            return 'Error: '.$e->getMessage();
         }
     }
 

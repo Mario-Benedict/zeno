@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
@@ -11,13 +12,13 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * Using a dedicated pivot model lets us attach observers, accessors,
  * and helper methods without polluting ChatRoom or User.
  *
- * @property int         $id
- * @property string      $chat_room_id
- * @property string      $user_id
+ * @property int $id
+ * @property string $chat_room_id
+ * @property string $user_id
  * @property 'member'|'admin' $role
- * @property bool        $is_muted
+ * @property bool $is_muted
  * @property string|null $last_read_message_id
- * @property \Carbon\Carbon $joined_at
+ * @property Carbon $joined_at
  */
 class ChatRoomParticipant extends Pivot
 {
@@ -28,7 +29,7 @@ class ChatRoomParticipant extends Pivot
     public $timestamps = false;
 
     protected $casts = [
-        'is_muted'  => 'boolean',
+        'is_muted' => 'boolean',
         'joined_at' => 'datetime',
     ];
 

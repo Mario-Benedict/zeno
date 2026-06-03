@@ -50,18 +50,18 @@ class SendMessageRequest extends FormRequest
              * Uploaded attachments array (supports bulk-send).
              * Required when type is image or file; forbidden for text.
              */
-            'attachments'             => ['required_unless:type,text', 'nullable', 'array', 'max:10'],
-            'attachments.*.file'      => ['required', 'file', 'max:51200'], // 50 MB per file
-            'attachments.*.type'      => ['required', 'in:image,file'],
+            'attachments' => ['required_unless:type,text', 'nullable', 'array', 'max:10'],
+            'attachments.*.file' => ['required', 'file', 'max:51200'], // 50 MB per file
+            'attachments.*.type' => ['required', 'in:image,file'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'body.required_if'            => 'A message body is required for text messages.',
-            'attachments.required_unless'  => 'At least one attachment is required for image or file messages.',
-            'attachments.*.file.max'       => 'Each attachment must be 50 MB or smaller.',
+            'body.required_if' => 'A message body is required for text messages.',
+            'attachments.required_unless' => 'At least one attachment is required for image or file messages.',
+            'attachments.*.file.max' => 'Each attachment must be 50 MB or smaller.',
         ];
     }
 }

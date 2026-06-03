@@ -19,16 +19,16 @@ return new class extends Migration
         Schema::create('llm_accounts', function (Blueprint $table) {
             // References the authenticated user — users.id is a bigint
             $table->foreignId('llm_account_id')
-                  ->constrained('users', 'id')
-                  ->cascadeOnDelete();
+                ->constrained('users', 'id')
+                ->cascadeOnDelete();
 
             $table->foreignUuid('llm_project_id')
-                  ->constrained('projects', 'project_id')
-                  ->cascadeOnDelete();
+                ->constrained('projects', 'project_id')
+                ->cascadeOnDelete();
 
             $table->foreignUuid('llm_model_id')
-                  ->constrained('llm_models', 'llm_model_id')
-                  ->cascadeOnDelete();
+                ->constrained('llm_models', 'llm_model_id')
+                ->cascadeOnDelete();
 
             $table->integer('llm_token_limits');
             $table->integer('llm_token_used')->default(0);

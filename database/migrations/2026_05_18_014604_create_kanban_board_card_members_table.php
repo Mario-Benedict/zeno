@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('kanban_board_card_members', function (Blueprint $table) {
             $table->foreignUuid('kanban_board_card_detail_id')
-                  ->constrained('kanban_board_card_details', 'kanban_board_card_detail_id')
-                  ->cascadeOnDelete();
+                ->constrained('kanban_board_card_details', 'kanban_board_card_detail_id')
+                ->cascadeOnDelete();
             $table->foreignId('kanban_board_card_account_id')
-                  ->constrained('users', 'id')
-                  ->cascadeOnDelete();
+                ->constrained('users', 'id')
+                ->cascadeOnDelete();
         });
     }
 

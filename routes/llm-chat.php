@@ -30,7 +30,6 @@ use Illuminate\Support\Facades\Route;
  *
  * ============================================================
  */
-
 Route::middleware(['auth', 'verified', 'project.member'])
     ->prefix('p/{project:project_slug}/llm-chat')
     ->name('llm-chat.')

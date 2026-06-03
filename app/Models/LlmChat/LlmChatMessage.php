@@ -15,11 +15,14 @@ use MongoDB\Laravel\Eloquent\Model;
 class LlmChatMessage extends Model
 {
     protected $connection = 'mongodb';
+
     protected $collection = 'llm_chat_messages';
 
     protected $primaryKey = 'llm_chat_message_id';
-    public $incrementing  = false;
-    protected $keyType    = 'string';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
 
     public function llmChatSession(): BelongsTo
     {
