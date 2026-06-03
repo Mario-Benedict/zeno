@@ -27,7 +27,7 @@ class KanbanChecklistController extends Controller
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
         $validated = $request->validate([
-            'kanban_board_card_checklist_id'   => ['nullable', 'string', 'uuid'],
+            'kanban_board_card_checklist_id' => ['nullable', 'string', 'uuid'],
             'kanban_board_card_checklist_name' => 'required|string|max:255',
         ]);
 
@@ -36,7 +36,7 @@ class KanbanChecklistController extends Controller
 
         $checklist = new KanbanBoardCardChecklist([
             'kanban_board_card_checklist_detail_id' => $detail->kanban_board_card_detail_id,
-            'kanban_board_card_checklist_name'      => $validated['kanban_board_card_checklist_name'],
+            'kanban_board_card_checklist_name' => $validated['kanban_board_card_checklist_name'],
         ]);
 
         if (! empty($validated['kanban_board_card_checklist_id'])) {
@@ -58,14 +58,14 @@ class KanbanChecklistController extends Controller
         abort_unless($request->user()->can('view', $owningProject), 403);
 
         $validated = $request->validate([
-            'kanban_board_card_checklist_item_id'   => ['nullable', 'string', 'uuid'],
+            'kanban_board_card_checklist_item_id' => ['nullable', 'string', 'uuid'],
             'kanban_board_card_checklist_item_name' => 'required|string|max:255',
         ]);
 
         $item = new KanbanBoardCardChecklistItem([
-            'kanban_board_card_checklist_id'        => $checklist->kanban_board_card_checklist_id,
+            'kanban_board_card_checklist_id' => $checklist->kanban_board_card_checklist_id,
             'kanban_board_card_checklist_item_name' => $validated['kanban_board_card_checklist_item_name'],
-            'is_completed'                          => false,
+            'is_completed' => false,
         ]);
 
         if (! empty($validated['kanban_board_card_checklist_item_id'])) {
@@ -87,7 +87,7 @@ class KanbanChecklistController extends Controller
 
         $validated = $request->validate([
             'kanban_board_card_checklist_item_name' => 'string|max:255',
-            'is_completed'                          => 'boolean',
+            'is_completed' => 'boolean',
         ]);
 
         $item->update($validated);

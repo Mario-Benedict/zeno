@@ -13,7 +13,9 @@ use Illuminate\Support\Str;
 class CardLabelCategory extends Model
 {
     protected $primaryKey = 'card_label_category_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected static function booted(): void

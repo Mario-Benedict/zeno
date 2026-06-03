@@ -1,5 +1,6 @@
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useState, useMemo, useRef, useEffect } from 'react';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 import type { KanbanBoard, KanbanBoardCard } from '@/types/kanban';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import AddIcon from '@public/icons/small/plus.svg';
@@ -111,44 +112,24 @@ export const KanbanColumn = ({
               </button>
 
               {showDeleteConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                  <div
-                    className="w-full max-w-sm rounded-xl border border-dark-border bg-dark-surface-2 p-5 shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <h3 className="mb-2 text-normal font-semibold text-white">
-                      Delete Board
-                    </h3>
-                    <p className="mb-6 text-small leading-relaxed text-white/60">
+                <ConfirmModal
+                  title="Delete Board"
+                  description={
+                    <>
                       Are you sure you want to delete{' '}
                       <strong className="font-semibold text-white">
                         "{board.kanban_board_name}"
                       </strong>
                       ? All cards inside it will be permanently removed.
-                    </p>
-                    <div className="flex items-center justify-end gap-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowDeleteConfirm(false);
-                        }}
-                        className="rounded-lg px-4 py-2 text-small font-medium text-white/50 transition hover:bg-white/10 hover:text-white"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteBoard(board.kanban_board_id);
-                          setShowDeleteConfirm(false);
-                        }}
-                        className="rounded-lg border border-accent-red/20 bg-accent-red/15 px-4 py-2 text-small font-medium text-accent-red transition hover:bg-accent-red/30"
-                      >
-                        Yes, delete it
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                    </>
+                  }
+                  confirmLabel="Yes, delete it"
+                  onCancel={() => setShowDeleteConfirm(false)}
+                  onConfirm={() => {
+                    onDeleteBoard(board.kanban_board_id);
+                    setShowDeleteConfirm(false);
+                  }}
+                />
               )}
             </div>
           </div>

@@ -74,41 +74,64 @@ const AttachmentStrip = ({
 }) => {
   if (files.length === 0) return null;
 
+  const images = files.filter((f) => f.type === 'image');
+  const docs = files.filter((f) => f.type === 'file');
+
   return (
-    <div className="flex flex-wrap gap-2 px-4 pt-3 pb-0">
-      {files.map((pf) => (
-        <div
-          key={pf.id}
-          className="relative flex max-w-35 items-center gap-1.5 rounded-lg border border-dark-border bg-dark-surface-3 px-2 py-1.5"
-        >
-          {pf.previewUrl ? (
-            <img
-              src={pf.previewUrl}
-              alt={pf.file.name}
-              className="h-7 w-7 shrink-0 rounded object-cover"
-            />
-          ) : (
-            <span className="shrink-0 text-dark-secondary">
-              <FileIcon />
-            </span>
-          )}
-          <div className="min-w-0">
-            <p className="truncate text-xsmall leading-tight text-dark-primary">
-              {pf.file.name}
-            </p>
-            <p className="text-xsmall leading-tight text-dark-secondary">
-              {formatFileSize(pf.file.size)}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onRemove(pf.id)}
-            className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-dark-border bg-dark-surface-1 text-dark-secondary transition-colors hover:text-dark-primary"
-          >
-            <CancelSmallIcon className="h-2.5 w-2.5" />
-          </button>
+    <div className="space-y-2 px-3 pt-3 pb-1">
+      {/* ── Image previews — WhatsApp style large thumbnails ── */}
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {images.map((pf) => (
+            <div key={pf.id} className="relative h-16 w-16 shrink-0">
+              <img
+                src={pf.previewUrl}
+                alt={pf.file.name}
+                title={pf.file.name}
+                className="h-full w-full rounded-lg border border-dark-border object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => onRemove(pf.id)}
+                className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-dark-border bg-dark-surface-1 text-dark-secondary shadow-sm transition-colors hover:text-dark-primary"
+              >
+                <CancelSmallIcon className="h-2.5 w-2.5" />
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* ── File attachments — compact chip row ── */}
+      {docs.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {docs.map((pf) => (
+            <div
+              key={pf.id}
+              className="relative flex max-w-[160px] items-center gap-1.5 rounded-lg border border-dark-border bg-dark-surface-3 px-2 py-1.5"
+            >
+              <span className="shrink-0 text-dark-secondary">
+                <FileIcon />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-xsmall leading-tight text-dark-primary">
+                  {pf.file.name}
+                </p>
+                <p className="text-xsmall leading-tight text-dark-secondary">
+                  {formatFileSize(pf.file.size)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onRemove(pf.id)}
+                className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-dark-border bg-dark-surface-1 text-dark-secondary transition-colors hover:text-dark-primary"
+              >
+                <CancelSmallIcon className="h-2.5 w-2.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

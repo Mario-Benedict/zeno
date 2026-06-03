@@ -23,11 +23,11 @@ class ProjectController extends Controller
             ->limit(4)
             ->get(['projects.project_id', 'projects.project_name', 'projects.project_slug'])
             ->map(fn ($p) => [
-                'project_id'   => $p->project_id,
+                'project_id' => $p->project_id,
                 'project_name' => $p->project_name,
                 'project_slug' => $p->project_slug,
-                'is_pinned'    => (bool) $p->pivot->is_pinned,
-                'role'         => $p->pivot->role,
+                'is_pinned' => (bool) $p->pivot->is_pinned,
+                'role' => $p->pivot->role,
             ]);
 
         $paginated = $user->projects()
@@ -36,16 +36,16 @@ class ProjectController extends Controller
             ->paginate(5, ['projects.project_id', 'projects.project_name', 'projects.project_slug']);
 
         $projects = $paginated->through(fn ($p) => [
-            'project_id'   => $p->project_id,
+            'project_id' => $p->project_id,
             'project_name' => $p->project_name,
             'project_slug' => $p->project_slug,
-            'is_pinned'    => (bool) $p->pivot->is_pinned,
-            'role'         => $p->pivot->role,
+            'is_pinned' => (bool) $p->pivot->is_pinned,
+            'role' => $p->pivot->role,
         ]);
 
         return Inertia::render('projects/index', [
             'recentProjects' => $recentProjects,
-            'projects'       => $projects,
+            'projects' => $projects,
         ]);
     }
 
@@ -62,7 +62,7 @@ class ProjectController extends Controller
         ]);
 
         auth()->user()->projects()->attach($project->project_id, [
-            'role'      => 'OWNER',
+            'role' => 'OWNER',
             'opened_at' => now(),
         ]);
 
@@ -82,7 +82,7 @@ class ProjectController extends Controller
 
         $exists = Project::where('project_slug', $slug)->exists();
 
-        return response()->json(['available' => !$exists]);
+        return response()->json(['available' => ! $exists]);
     }
 
     public function show(Project $project): Response
@@ -133,7 +133,7 @@ class ProjectController extends Controller
         }
 
         do {
-            $candidate = $slug . '-' . Str::lower(Str::random(5));
+            $candidate = $slug.'-'.Str::lower(Str::random(5));
         } while (Project::where('project_slug', $candidate)->exists());
 
         return $candidate;

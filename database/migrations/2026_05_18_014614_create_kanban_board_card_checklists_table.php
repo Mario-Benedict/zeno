@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('kanban_board_card_checklists', function (Blueprint $table) {
             $table->uuid('kanban_board_card_checklist_id')->primary();
             $table->foreignUuid('kanban_board_card_checklist_detail_id')
-                  ->constrained(
-                        'kanban_board_card_details', 
-                        'kanban_board_card_detail_id',
-                        'kb_card_checkl_detail_fk'
-                    )
-                  ->cascadeOnDelete();
+                ->constrained(
+                    'kanban_board_card_details',
+                    'kanban_board_card_detail_id',
+                    'kb_card_checkl_detail_fk'
+                )
+                ->cascadeOnDelete();
             $table->string('kanban_board_card_checklist_name', 20);
             $table->timestamps();
         });

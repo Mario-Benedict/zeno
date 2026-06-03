@@ -31,19 +31,19 @@ class GoogleController extends Controller
             $user = User::firstOrCreate(
                 ['email' => $googleUser->getEmail()],
                 [
-                    'name'              => $googleUser->getName(),
+                    'name' => $googleUser->getName(),
                     'email_verified_at' => now(),
                 ],
             );
 
-            if (!$user->hasVerifiedEmail()) {
+            if (! $user->hasVerifiedEmail()) {
                 $user->markEmailAsVerified();
             }
 
             $user->socialAccounts()->create([
-                'provider'    => 'google',
+                'provider' => 'google',
                 'provider_id' => $googleUser->getId(),
-                'avatar'      => $googleUser->getAvatar(),
+                'avatar' => $googleUser->getAvatar(),
             ]);
         }
 

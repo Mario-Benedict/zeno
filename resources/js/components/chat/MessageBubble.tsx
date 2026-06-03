@@ -58,18 +58,38 @@ const SenderAvatar = ({
   );
 };
 
-const ImageAttachment = ({ att }: { att: MessageAttachment }) => (
+/**
+ * Image attachment — WhatsApp-style.
+ * Renders the image as the bubble itself when standalone (no caption);
+ * when a caption is present it sits flush at the top of a captioned bubble.
+ */
+const ImageAttachment = ({
+  att,
+  withCaption = false,
+  timestamp,
+}: {
+  att: MessageAttachment;
+  withCaption?: boolean;
+  timestamp?: string;
+}) => (
   <a
     href={att.url ?? att.path}
     target="_blank"
     rel="noopener noreferrer"
-    className="mt-1.5 block"
+    className={`relative block overflow-hidden ${
+      withCaption ? 'rounded-t-2xl' : 'rounded-2xl'
+    }`}
   >
     <img
       src={att.url ?? att.path}
       alt={att.fileName}
-      className="max-h-[180px] max-w-[240px] rounded-lg border border-dark-border object-cover transition-opacity hover:opacity-90"
+      className="block max-h-80 min-h-30 max-w-70 min-w-45 object-cover transition-opacity hover:opacity-90"
     />
+    {timestamp && !withCaption && (
+      <span className="pointer-events-none absolute right-2 bottom-2 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
+        {timestamp}
+      </span>
+    )}
   </a>
 );
 
@@ -80,9 +100,9 @@ const FileAttachment = ({ att }: { att: MessageAttachment }) => {
     <a
       href={href}
       download={att.fileName}
-      className="mt-1.5 flex max-w-[240px] items-center gap-2.5 rounded-lg border border-dark-border bg-dark-surface-1 p-2.5 transition-colors hover:border-dark-border-focus"
+      className="mt-1.5 flex max-w-60 items-center gap-2.5 rounded-lg border border-dark-border bg-dark-surface-1 p-2.5 transition-colors hover:border-dark-border-focus"
     >
-      <span className="flex-shrink-0 text-dark-secondary">
+      <span className="shrink-0 text-dark-secondary">
         <svg
           width="18"
           height="18"
@@ -105,7 +125,7 @@ const FileAttachment = ({ att }: { att: MessageAttachment }) => {
           {formatFileSize(att.size)}
         </p>
       </div>
-      <span className="flex-shrink-0 text-dark-secondary">
+      <span className="shrink-0 text-dark-secondary">
         <svg
           width="14"
           height="14"
@@ -134,8 +154,19 @@ const MessageBubble = ({
   const isOwn = String(message.senderId) === String(currentUser.id);
   const sender = message.sender;
   const isDeleted = message.isDeleted ?? false;
-  const hasAttachments = message.attachments.length > 0;
+  const attachments = message.attachments;
+  const hasAttachments = attachments.length > 0;
   const hasText = !isDeleted && message.body?.trim().length > 0;
+  const formattedTime = formatTime(message.createdAt);
+
+  // WhatsApp-style: an image-only message (single image, no caption, no other
+  // file attachments) renders as a bare image bubble — no padding, no chrome,
+  // timestamp overlaid on the image.
+  const isImageOnly =
+    !isDeleted &&
+    !hasText &&
+    attachments.length === 1 &&
+    attachments[0].type === 'image';
 
   if (isOwn) {
     return (
@@ -147,7 +178,7 @@ const MessageBubble = ({
         <div className="max-w-[62%]">
           {showHeader && (
             <p className="mb-1 pr-1 text-right text-xsmall text-dark-secondary">
-              {formatTime(message.createdAt)}
+              {formattedTime}
             </p>
           )}
 
@@ -155,23 +186,31 @@ const MessageBubble = ({
             <p className="pr-1 text-right text-small text-dark-secondary italic">
               This message was deleted.
             </p>
+          ) : isImageOnly ? (
+            <ImageAttachment att={attachments[0]} timestamp={formattedTime} />
           ) : (
-            <div className="rounded-2xl rounded-br-sm bg-dark-surface-3 px-3.5 py-2">
-              {hasText && (
-                <p className="text-small break-words whitespace-pre-wrap text-dark-primary">
-                  {message.body}
-                </p>
-              )}
+            <div className="overflow-hidden rounded-2xl rounded-br-sm bg-dark-surface-3">
               {hasAttachments && (
                 <div className="flex flex-col">
-                  {message.attachments.map((att) =>
+                  {attachments.map((att) =>
                     att.type === 'image' ? (
-                      <ImageAttachment key={att.id} att={att} />
+                      <ImageAttachment
+                        key={att.id}
+                        att={att}
+                        withCaption={hasText}
+                      />
                     ) : (
-                      <FileAttachment key={att.id} att={att} />
+                      <div key={att.id} className="flex items-center px-3 py-2">
+                        <FileAttachment att={att} />
+                      </div>
                     ),
                   )}
                 </div>
+              )}
+              {hasText && (
+                <p className="px-3.5 py-2 text-small wrap-break-word whitespace-pre-wrap text-dark-primary">
+                  {message.body}
+                </p>
               )}
             </div>
           )}
@@ -195,7 +234,7 @@ const MessageBubble = ({
         showHeader ? 'mt-4' : 'mt-0.5',
       ].join(' ')}
     >
-      <div className="mt-0.5 w-7 flex-shrink-0">
+      <div className="mt-0.5 w-7 shrink-0">
         {showHeader &&
           (canClickSender ? (
             <button
@@ -234,23 +273,31 @@ const MessageBubble = ({
           <p className="pl-1 text-small text-dark-secondary italic">
             This message was deleted.
           </p>
+        ) : isImageOnly ? (
+          <ImageAttachment att={attachments[0]} timestamp={formattedTime} />
         ) : (
-          <div className="inline-block max-w-full rounded-2xl rounded-bl-sm bg-dark-surface-3 px-3.5 py-2">
-            {hasText && (
-              <p className="text-small break-words whitespace-pre-wrap text-dark-primary">
-                {message.body}
-              </p>
-            )}
+          <div className="inline-block max-w-full overflow-hidden rounded-2xl rounded-bl-sm bg-dark-surface-3">
             {hasAttachments && (
               <div className="flex flex-col">
-                {message.attachments.map((att) =>
+                {attachments.map((att) =>
                   att.type === 'image' ? (
-                    <ImageAttachment key={att.id} att={att} />
+                    <ImageAttachment
+                      key={att.id}
+                      att={att}
+                      withCaption={hasText}
+                    />
                   ) : (
-                    <FileAttachment key={att.id} att={att} />
+                    <div key={att.id} className="px-3.5 pt-2 first:pt-2">
+                      <FileAttachment att={att} />
+                    </div>
                   ),
                 )}
               </div>
+            )}
+            {hasText && (
+              <p className="px-3.5 py-2 text-small wrap-break-word whitespace-pre-wrap text-dark-primary">
+                {message.body}
+              </p>
             )}
           </div>
         )}

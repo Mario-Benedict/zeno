@@ -1,0 +1,108 @@
+import { useEffect, useRef } from 'react';
+import type { KeyboardEvent, SyntheticEvent } from 'react';
+
+interface Props {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: (e: SyntheticEvent) => void;
+  disabled: boolean;
+}
+
+// No arrow-up icon exists in the icon set; keep it inline (same as ChatComposer).
+const SendIcon = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="12" y1="19" x2="12" y2="5" />
+    <polyline points="5 12 12 5 19 12" />
+  </svg>
+);
+
+const SpinnerIcon = () => (
+  <svg
+    className="animate-spin"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+  >
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+  </svg>
+);
+
+const LlmChatComposer = ({ value, onChange, onSubmit, disabled }: Props) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Reset height when value is cleared after send.
+  useEffect(() => {
+    if (value === '' && textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  }, [value]);
+
+  const adjustHeight = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (value.trim() && !disabled) {
+        onSubmit(e);
+      }
+    }
+  };
+
+  const canSend = !disabled && value.trim().length > 0;
+
+  return (
+    <div className="shrink-0 px-3 pt-1 pb-3">
+      <form
+        onSubmit={onSubmit}
+        className="flex items-center gap-2 rounded-xl border border-dark-border bg-dark-surface-3 px-3 py-2"
+      >
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            adjustHeight();
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask anything…"
+          disabled={disabled}
+          rows={1}
+          className="flex-1 resize-none bg-transparent py-0.5 text-small leading-normal text-dark-primary placeholder:text-dark-secondary focus:outline-none disabled:opacity-50"
+          style={{ minHeight: '22px', maxHeight: '120px' }}
+        />
+
+        <button
+          type="submit"
+          disabled={!canSend}
+          className={[
+            'mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all',
+            canSend
+              ? 'bg-accent-blue text-white hover:opacity-90 active:scale-95'
+              : 'cursor-not-allowed bg-dark-surface-2 text-dark-secondary',
+          ].join(' ')}
+        >
+          {disabled ? <SpinnerIcon /> : <SendIcon />}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default LlmChatComposer;

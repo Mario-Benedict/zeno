@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class Project extends Model
 {
     protected $primaryKey = 'project_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

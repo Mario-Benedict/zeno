@@ -5,11 +5,14 @@ namespace App\Services;
 use App\Models\ChatRoom;
 use App\Models\User;
 use App\Services\MongoDB\MongoConnection;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Collection;
+use MongoDB\Model\BSONDocument;
 
 /**
  * ChatMessageService
@@ -56,7 +59,7 @@ class ChatMessageService
 
     public function __construct(
         private readonly MongoConnection $mongo,
-        private readonly StorageService  $storage,
+        private readonly StorageService $storage,
     ) {
         $this->collection = $mongo->collection(self::COLLECTION);
     }
@@ -67,9 +70,9 @@ class ChatMessageService
      * Diurutkan newest-first (descending _id) agar infinite scroll ke atas
      * cukup mengirim cursor `before` = ObjectId pesan paling lama di layar.
      *
-     * @param  string      $roomId  UUID dari MySQL chat_rooms.id
-     * @param  int         $limit   Jumlah pesan per halaman (default 30)
-     * @param  string|null $before  ObjectId string sebagai cursor
+     * @param  string  $roomId  UUID dari MySQL chat_rooms.id
+     * @param  int  $limit  Jumlah pesan per halaman (default 30)
+     * @param  string|null  $before  ObjectId string sebagai cursor
      * @return array{
      *   messages: array<int, array>,
      *   nextCursor: string|null,
@@ -87,13 +90,13 @@ class ChatMessageService
         $cursor = $this->collection->find(
             $filter,
             [
-                'sort'  => ['_id' => -1],
+                'sort' => ['_id' => -1],
                 'limit' => $limit + 1,
             ],
         );
 
         $documents = iterator_to_array($cursor, false);
-        $hasMore   = count($documents) > $limit;
+        $hasMore = count($documents) > $limit;
 
         if ($hasMore) {
             array_pop($documents);
@@ -112,12 +115,11 @@ class ChatMessageService
             : null;
 
         return [
-            'messages'   => $messages,
+            'messages' => $messages,
             'nextCursor' => $nextCursor,
-            'hasMore'    => $hasMore,
+            'hasMore' => $hasMore,
         ];
     }
-
 
     /**
      * Ambil preview pesan terakhir untuk banyak room sekaligus (batch).
@@ -125,27 +127,29 @@ class ChatMessageService
      *
      * Strategi: 1 query MongoDB dengan $group + $sort, bukan N queries.
      *
-     * @param  string[] $roomIds
+     * @param  string[]  $roomIds
      * @return array<string, array{body: string, senderName: string, createdAt: string}>
-     *         Key = room_id (UUID string)
+     *                                                                                   Key = room_id (UUID string)
      */
     public function getLastMessagePreviewsForRooms(array $roomIds): array
     {
-        if (empty($roomIds)) return [];
+        if (empty($roomIds)) {
+            return [];
+        }
 
         $pipeline = [
             ['$match' => [
-                'room_id'    => ['$in' => $roomIds],
+                'room_id' => ['$in' => $roomIds],
                 'is_deleted' => false,
             ]],
 
             ['$sort' => ['_id' => -1]],
 
             ['$group' => [
-                '_id'       => '$room_id',
-                'body'      => ['$first' => '$body'],
+                '_id' => '$room_id',
+                'body' => ['$first' => '$body'],
                 'sender_id' => ['$first' => '$sender_id'],
-                'type'      => ['$first' => '$type'],
+                'type' => ['$first' => '$type'],
                 'createdAt' => ['$first' => '$created_at'],
             ]],
         ];
@@ -160,17 +164,17 @@ class ChatMessageService
 
         $map = [];
         foreach ($results as $doc) {
-            $sender  = $senderMap[$doc['sender_id']] ?? null;
+            $sender = $senderMap[$doc['sender_id']] ?? null;
             $preview = match ($doc['type']) {
                 'image' => $sender ? "{$sender['name']} sent an image" : 'Sent an image',
-                'file'  => $sender ? "{$sender['name']} sent a file"  : 'Sent a file',
+                'file' => $sender ? "{$sender['name']} sent a file" : 'Sent a file',
                 default => $doc['body'] ?? '',
             };
 
             $map[(string) $doc['_id']] = [
-                'body'        => $preview,
-                'senderName'  => $sender['name'] ?? 'Unknown',
-                'createdAt'   => $this->formatMongoDate($doc['createdAt']),
+                'body' => $preview,
+                'senderName' => $sender['name'] ?? 'Unknown',
+                'createdAt' => $this->formatMongoDate($doc['createdAt']),
             ];
         }
 
@@ -181,31 +185,28 @@ class ChatMessageService
      * Simpan pesan baru ke MongoDB.
      * Upload attachment ke StorageService jika ada.
      *
-     * @param  ChatRoom $room
-     * @param  User     $sender
      * @param  array{
      *   type: 'text'|'image'|'file',
      *   body: string|null,
      *   attachments?: array<int, array{file: UploadedFile, type: string}>
      * } $payload  Data dari SendMessageRequest yang sudah tervalidasi
-     *
-     * @return array  Dokumen pesan yang sudah diformat (siap dikembalikan ke frontend)
+     * @return array Dokumen pesan yang sudah diformat (siap dikembalikan ke frontend)
      */
     public function send(ChatRoom $room, User $sender, array $payload): array
     {
         $attachments = $this->uploadAttachments($payload['attachments'] ?? []);
 
-        $now = new UTCDateTime();
+        $now = new UTCDateTime;
 
         $document = [
-            'room_id'     => $room->id,
-            'sender_id'   => $sender->id,
-            'type'        => $payload['type'],
-            'body'        => $payload['body'] ?? '',
+            'room_id' => $room->id,
+            'sender_id' => $sender->id,
+            'type' => $payload['type'],
+            'body' => $payload['body'] ?? '',
             'attachments' => $attachments,
-            'is_deleted'  => false,
-            'created_at'  => $now,
-            'updated_at'  => $now,
+            'is_deleted' => false,
+            'created_at' => $now,
+            'updated_at' => $now,
         ];
 
         $result = $this->collection->insertOne($document);
@@ -226,19 +227,18 @@ class ChatMessageService
      * Hanya pengirim asli atau admin room yang boleh menghapus.
      * Attachment fisik dihapus dari storage agar tidak memakan space.
      *
-     * @param  ChatRoom $room
-     * @param  string   $messageId  MongoDB ObjectId string
-     * @param  User     $actor      User yang melakukan aksi hapus
+     * @param  string  $messageId  MongoDB ObjectId string
+     * @param  User  $actor  User yang melakukan aksi hapus
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException  jika bukan pemilik/admin
-     * @throws \InvalidArgumentException                        jika messageId tidak valid
+     * @throws AuthorizationException jika bukan pemilik/admin
+     * @throws \InvalidArgumentException jika messageId tidak valid
      */
     public function delete(ChatRoom $room, string $messageId, User $actor): void
     {
         $objectId = new ObjectId($messageId);
 
         $message = $this->collection->findOne([
-            '_id'     => $objectId,
+            '_id' => $objectId,
             'room_id' => $room->id,
         ]);
 
@@ -254,7 +254,7 @@ class ChatMessageService
             ->exists();
 
         if (! $isOwner && ! $isAdmin) {
-            throw new \Illuminate\Auth\Access\AuthorizationException(
+            throw new AuthorizationException(
                 'You are not allowed to delete this message.'
             );
         }
@@ -272,10 +272,10 @@ class ChatMessageService
         $this->collection->updateOne(
             ['_id' => $objectId],
             ['$set' => [
-                'body'        => self::DELETED_TOMBSTONE,
+                'body' => self::DELETED_TOMBSTONE,
                 'attachments' => [],
-                'is_deleted'  => true,
-                'updated_at'  => new UTCDateTime(),
+                'is_deleted' => true,
+                'updated_at' => new UTCDateTime,
             ]],
         );
     }
@@ -284,13 +284,14 @@ class ChatMessageService
      * Update last_read_message_id di MySQL untuk hitung unread count.
      * Dipanggil oleh ChatMessageController setiap kali user membuka room.
      *
-     * @param  ChatRoom    $room
-     * @param  string      $userId         MySQL users.id
-     * @param  string|null $lastMessageId  MongoDB ObjectId string pesan terbaru
+     * @param  string  $userId  MySQL users.id
+     * @param  string|null  $lastMessageId  MongoDB ObjectId string pesan terbaru
      */
     public function markAsRead(ChatRoom $room, string $userId, ?string $lastMessageId): void
     {
-        if (! $lastMessageId) return;
+        if (! $lastMessageId) {
+            return;
+        }
 
         DB::table('chat_room_participants')
             ->where('chat_room_id', $room->id)
@@ -306,10 +307,6 @@ class ChatMessageService
      * Strategi:
      *  1. Ambil last_read_message_id dari MySQL (pivot)
      *  2. Hitung dokumen MongoDB dengan _id > last_read ObjectId
-     *
-     * @param  string $roomId
-     * @param  string $userId
-     * @return int
      */
     public function countUnread(string $roomId, string $userId): int
     {
@@ -331,7 +328,7 @@ class ChatMessageService
      * Upload semua attachment dalam satu pesan ke StorageService.
      * Kembalikan array metadata attachment (tanpa URL — hanya relative path).
      *
-     * @param  array<int, array{file: UploadedFile, type: string}> $rawAttachments
+     * @param  array<int, array{file: UploadedFile, type: string}>  $rawAttachments
      * @return array<int, array>
      */
     private function uploadAttachments(array $rawAttachments): array
@@ -344,15 +341,15 @@ class ChatMessageService
             $type = $item['type']; // 'image' | 'file'
 
             $folder = $type === 'image' ? 'chats/images' : 'chats/files';
-            $path   = $this->storage->put($file, $folder);
+            $path = $this->storage->put($file, $folder);
 
             $result[] = [
-                'id'        => \Illuminate\Support\Str::uuid()->toString(),
-                'type'      => $type,
+                'id' => Str::uuid()->toString(),
+                'type' => $type,
                 'file_name' => $file->getClientOriginalName(),
                 'mime_type' => $file->getMimeType() ?? 'application/octet-stream',
-                'size'      => $file->getSize(),
-                'path'      => $path, // relative — URL di-resolve saat read
+                'size' => $file->getSize(),
+                'path' => $path, // relative — URL di-resolve saat read
             ];
         }
 
@@ -363,21 +360,23 @@ class ChatMessageService
      * Eager load data sender dari MySQL berdasarkan array sender_id.
      * Mengembalikan map [ userId => ['name' => ..., 'avatarUrl' => ...] ]
      *
-     * @param  string[] $senderIds
+     * @param  string[]  $senderIds
      * @return array<string, array{name: string, email: string, avatarUrl: string|null}>
      */
     private function loadSenders(array $senderIds): array
     {
-        if (empty($senderIds)) return [];
+        if (empty($senderIds)) {
+            return [];
+        }
 
         return DB::table('users')
             ->whereIn('id', $senderIds)
             ->get(['id', 'name', 'email'])
             ->keyBy('id')
             ->map(fn ($u) => [
-                'id'        => $u->id,
-                'name'      => $u->name,
-                'email'     => $u->email,
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
                 'avatarUrl' => null,
             ])
             ->all();
@@ -387,60 +386,61 @@ class ChatMessageService
      * Ubah dokumen MongoDB menjadi array yang siap dikembalikan ke frontend.
      * Resolve semua relative path attachment → full URL.
      *
-     * @param  array|\MongoDB\Model\BSONDocument $doc
-     * @param  array<string, array>              $senderMap  Hasil loadSenders()
-     * @return array
+     * @param  array|BSONDocument  $doc
+     * @param  array<string, array>  $senderMap  Hasil loadSenders()
      */
     private function formatMessage(mixed $doc, array $senderMap): array
     {
-        if ($doc instanceof \MongoDB\Model\BSONDocument) {
+        if ($doc instanceof BSONDocument) {
             $doc = $doc->getArrayCopy();
         }
 
         $attachments = [];
         foreach ((array) ($doc['attachments'] ?? []) as $att) {
-            $att = $att instanceof \MongoDB\Model\BSONDocument
+            $att = $att instanceof BSONDocument
                 ? $att->getArrayCopy()
                 : (array) $att;
 
             $attachments[] = [
-                'id'       => $att['id']       ?? '',
-                'type'     => $att['type']     ?? 'file',
+                'id' => $att['id'] ?? '',
+                'type' => $att['type'] ?? 'file',
                 'fileName' => $att['file_name'] ?? $att['fileName'] ?? '',
                 'mimeType' => $att['mime_type'] ?? $att['mimeType'] ?? '',
-                'size'     => (int) ($att['size'] ?? 0),
-                'path'     => $att['path']     ?? '',
-                'url'      => $this->storage->url($att['path'] ?? null),
+                'size' => (int) ($att['size'] ?? 0),
+                'path' => $att['path'] ?? '',
+                'url' => $this->storage->url($att['path'] ?? null),
             ];
         }
 
         $sender = $senderMap[(string) ($doc['sender_id'] ?? '')] ?? null;
 
         return [
-            '_id'         => (string) $doc['_id'],
-            'roomId'      => $doc['room_id'],
-            'senderId'    => $doc['sender_id'],
-            'sender'      => $sender,
-            'type'        => $doc['type'],
-            'body'        => $doc['is_deleted'] ?? false
+            '_id' => (string) $doc['_id'],
+            'roomId' => $doc['room_id'],
+            'senderId' => $doc['sender_id'],
+            'sender' => $sender,
+            'type' => $doc['type'],
+            'body' => $doc['is_deleted'] ?? false
                 ? self::DELETED_TOMBSTONE
                 : ($doc['body'] ?? ''),
             'attachments' => $attachments,
-            'isDeleted'   => (bool) ($doc['is_deleted'] ?? false),
-            'createdAt'   => $this->formatMongoDate($doc['created_at'] ?? null),
-            'updatedAt'   => $this->formatMongoDate($doc['updated_at'] ?? null),
+            'isDeleted' => (bool) ($doc['is_deleted'] ?? false),
+            'createdAt' => $this->formatMongoDate($doc['created_at'] ?? null),
+            'updatedAt' => $this->formatMongoDate($doc['updated_at'] ?? null),
         ];
     }
 
     /**
      * Konversi MongoDB UTCDateTime atau null → ISO 8601 string.
      *
-     * @param  \MongoDB\BSON\UTCDateTime|null $date
-     * @return string|null
+     * @param  UTCDateTime|null  $date
      */
     private function formatMongoDate(mixed $date): ?string
     {
-        if (! $date instanceof UTCDateTime) return null;
+        if (! $date instanceof UTCDateTime) {
+            return null;
+        }
+
         return $date->toDateTime()->format(\DateTimeInterface::ATOM);
     }
 }

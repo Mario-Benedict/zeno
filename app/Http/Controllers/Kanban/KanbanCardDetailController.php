@@ -34,17 +34,17 @@ class KanbanCardDetailController extends Controller
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
         $validated = $request->validate([
-            'kanban_board_card_title'       => 'string|max:255',
+            'kanban_board_card_title' => 'string|max:255',
             'kanban_board_card_description' => 'nullable|string',
-            'is_completed'                  => 'boolean',
+            'is_completed' => 'boolean',
         ]);
 
         $detail = $card->detail;
         if (! $detail) {
             $detail = $card->detail()->create([
-                'kanban_board_card_id'    => $card->kanban_board_card_id,
+                'kanban_board_card_id' => $card->kanban_board_card_id,
                 'kanban_board_card_title' => $card->detail->kanban_board_card_title ?? '',
-                'is_completed'            => false,
+                'is_completed' => false,
             ]);
         }
 
@@ -120,8 +120,8 @@ class KanbanCardDetailController extends Controller
         abort_unless($request->user()->can('view', $cardProject), 403);
 
         $validated = $request->validate([
-            'card_label_id'        => ['nullable', 'string', 'uuid'],
-            'card_label_name'      => 'required|string|max:20',
+            'card_label_id' => ['nullable', 'string', 'uuid'],
+            'card_label_name' => 'required|string|max:20',
             'card_label_color_hex' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
         ]);
 
@@ -138,10 +138,10 @@ class KanbanCardDetailController extends Controller
         ]);
 
         $label = new CardLabel([
-            'card_label_project_id'  => $cardProject->project_id,
+            'card_label_project_id' => $cardProject->project_id,
             'card_label_category_id' => $category->card_label_category_id,
-            'card_label_color_id'    => $color->card_label_color_id,
-            'card_label_name'        => $validated['card_label_name'],
+            'card_label_color_id' => $color->card_label_color_id,
+            'card_label_name' => $validated['card_label_name'],
         ]);
 
         if (! empty($validated['card_label_id'])) {
@@ -204,7 +204,7 @@ class KanbanCardDetailController extends Controller
 
         $validated = $request->validate([
             'kanban_board_card_start_date' => 'nullable|date',
-            'kanban_board_card_due_date'   => 'nullable|date',
+            'kanban_board_card_due_date' => 'nullable|date',
         ]);
 
         $detail = $card->detail;

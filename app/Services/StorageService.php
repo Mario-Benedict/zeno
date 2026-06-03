@@ -41,17 +41,16 @@ class StorageService
     /**
      * Upload sebuah file dan kembalikan relative path-nya.
      *
-     * @param  UploadedFile $file
-     * @param  string       $folder  Contoh: 'chats/media', 'avatars'
-     * @return string                Relative path, contoh: 'chats/media/uuid.png'
+     * @param  string  $folder  Contoh: 'chats/media', 'avatars'
+     * @return string Relative path, contoh: 'chats/media/uuid.png'
      *
      * @throws \RuntimeException jika upload gagal
      */
     public function put(UploadedFile $file, string $folder): string
     {
         $extension = $file->getClientOriginalExtension();
-        $filename  = Str::uuid() . '.' . $extension;
-        $path      = $folder . '/' . $filename;
+        $filename = Str::uuid().'.'.$extension;
+        $path = $folder.'/'.$filename;
 
         $stored = Storage::disk($this->disk)->putFileAs(
             $folder,
@@ -70,8 +69,7 @@ class StorageService
     /**
      * Hapus file dari storage berdasarkan relative path.
      *
-     * @param  string $path  Contoh: 'chats/media/uuid.png'
-     * @return bool
+     * @param  string  $path  Contoh: 'chats/media/uuid.png'
      */
     public function delete(string $path): bool
     {
@@ -81,12 +79,13 @@ class StorageService
     /**
      * Hapus beberapa file sekaligus.
      *
-     * @param  string[] $paths
-     * @return void
+     * @param  string[]  $paths
      */
     public function deleteMany(array $paths): void
     {
-        if (empty($paths)) return;
+        if (empty($paths)) {
+            return;
+        }
         Storage::disk($this->disk)->delete($paths);
     }
 
@@ -98,17 +97,15 @@ class StorageService
      *
      * MongoDB tidak pernah menyimpan URL; URL selalu di-generate fresh di sini
      * sehingga migrasi storage tidak merusak data lama.
-     *
-     * @param  string|null $path
-     * @return string|null
      */
     public function url(?string $path): ?string
     {
-        if (! $path) return null;
+        if (! $path) {
+            return null;
+        }
 
         return Storage::disk($this->disk)->url($path);
     }
-
 
     public function disk(): string
     {

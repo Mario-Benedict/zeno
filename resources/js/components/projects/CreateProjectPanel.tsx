@@ -108,7 +108,7 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
     }, 350);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
 
     const trimmed = name.trim();

@@ -33,7 +33,6 @@ use Illuminate\Support\Facades\Route;
  *
  * ============================================================
  */
-
 Route::middleware(['auth', 'verified', 'project.member'])
     ->prefix('p/{project:project_slug}/chat') // <-- PERUBAHAN UTAMA DI SINI
     ->name('chat.')

@@ -3,9 +3,9 @@
 namespace App\Services\MongoDB;
 
 use Illuminate\Support\Facades\DB;
+use MongoDB\Client;
 use MongoDB\Collection;
 use MongoDB\Database;
-use MongoDB\Client;
 
 /**
  * MongoConnection
@@ -24,8 +24,7 @@ class MongoConnection
     /**
      * Ambil sebuah collection dari database aktif.
      *
-     * @param  string $name  Nama collection, contoh: 'chat_messages'
-     * @return Collection
+     * @param  string  $name  Nama collection, contoh: 'chat_messages'
      */
     public function collection(string $name): Collection
     {

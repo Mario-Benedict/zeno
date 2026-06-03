@@ -16,7 +16,9 @@ use Illuminate\Support\Str;
 class KanbanBoard extends Model
 {
     protected $primaryKey = 'kanban_board_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected static function booted(): void

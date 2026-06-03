@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('kanban_board_card_labels', function (Blueprint $table) {
             $table->foreignUuid('kanban_board_card_detail_id')
-                  ->constrained('kanban_board_card_details', 'kanban_board_card_detail_id')
-                  ->cascadeOnDelete();
+                ->constrained('kanban_board_card_details', 'kanban_board_card_detail_id')
+                ->cascadeOnDelete();
             $table->foreignUuid('kanban_board_card_label_id')
-                  ->constrained('card_labels', 'card_label_id')
-                  ->cascadeOnDelete();
+                ->constrained('card_labels', 'card_label_id')
+                ->cascadeOnDelete();
             $table->unique(
-                        ['kanban_board_card_detail_id', 'kanban_board_card_label_id'], 
-                        'kb_card_labels_unique'
-                    );
+                ['kanban_board_card_detail_id', 'kanban_board_card_label_id'],
+                'kb_card_labels_unique'
+            );
         });
     }
 
