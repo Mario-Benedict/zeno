@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import projects from '@/routes/projects';
 import type {
@@ -57,6 +57,7 @@ const CardDetailModal = ({
   onClose,
   onUpdate,
 }: CardDetailPanelProps) => {
+  const accountIndex = usePage().props.account.index;
   const [detail, setDetail] = useState<KanbanBoardCardDetail>(
     card.detail || {
       kanban_board_card_detail_id: '',
@@ -179,6 +180,7 @@ const CardDetailModal = ({
 
     router.patch(
       projects.kanban.cards.detail.update.url({
+        accountIndex,
         project: projectSlug,
         card: cardId,
       }),
@@ -239,6 +241,7 @@ const CardDetailModal = ({
 
     router.post(
       projects.kanban.cards.labels.create.url({
+        accountIndex,
         project: projectSlug,
         card: cardId,
       }),
@@ -270,6 +273,7 @@ const CardDetailModal = ({
 
     router.delete(
       projects.kanban.cards.labels.delete.url({
+        accountIndex,
         project: projectSlug,
         card: cardId,
         label: labelId,
@@ -297,6 +301,7 @@ const CardDetailModal = ({
     if (hasLabel) {
       router.delete(
         projects.kanban.cards.labels.destroy.url({
+          accountIndex,
           project: projectSlug,
           card: cardId,
           label: label.card_label_id,
@@ -309,6 +314,7 @@ const CardDetailModal = ({
     } else {
       router.post(
         projects.kanban.cards.labels.store.url({
+          accountIndex,
           project: projectSlug,
           card: cardId,
         }),
@@ -334,6 +340,7 @@ const CardDetailModal = ({
     if (hasMember) {
       router.delete(
         projects.kanban.cards.members.destroy.url({
+          accountIndex,
           project: projectSlug,
           card: cardId,
           user: user.id,
@@ -346,6 +353,7 @@ const CardDetailModal = ({
     } else {
       router.post(
         projects.kanban.cards.members.store.url({
+          accountIndex,
           project: projectSlug,
           card: cardId,
         }),
@@ -379,6 +387,7 @@ const CardDetailModal = ({
 
     router.patch(
       projects.kanban.cards.dates.update.url({
+        accountIndex,
         project: projectSlug,
         card: cardId,
       }),
@@ -417,6 +426,7 @@ const CardDetailModal = ({
 
     router.post(
       projects.kanban.cards.checklists.store.url({
+        accountIndex,
         project: projectSlug,
         card: cardId,
       }),
@@ -463,6 +473,7 @@ const CardDetailModal = ({
 
     router.post(
       projects.kanban.checklist.items.store.url({
+        accountIndex,
         project: projectSlug,
         checklist: checklistId,
       }),
@@ -502,6 +513,7 @@ const CardDetailModal = ({
 
     router.patch(
       projects.kanban.checklist.items.update.url({
+        accountIndex,
         project: projectSlug,
         item: itemId,
       }),
@@ -532,6 +544,7 @@ const CardDetailModal = ({
 
     router.delete(
       projects.kanban.checklist.items.destroy.url({
+        accountIndex,
         project: projectSlug,
         item: itemId,
       }),
@@ -554,6 +567,7 @@ const CardDetailModal = ({
 
     router.delete(
       projects.kanban.checklists.destroy.url({
+        accountIndex,
         project: projectSlug,
         checklist: checklistId,
       }),
@@ -590,6 +604,7 @@ const CardDetailModal = ({
 
     router.post(
       projects.kanban.cards.comments.store.url({
+        accountIndex,
         project: projectSlug,
         card: cardId,
       }),
@@ -617,6 +632,7 @@ const CardDetailModal = ({
 
     router.delete(
       projects.kanban.comments.destroy.url({
+        accountIndex,
         project: projectSlug,
         comment: commentId,
       }),
@@ -741,7 +757,7 @@ const CardDetailModal = ({
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-y-auto">
+        <div className="scrollbar-app flex flex-1 overflow-y-auto">
           <CardDetailBody
             detail={detail}
             currentUser={currentUser}

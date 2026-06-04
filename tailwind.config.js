@@ -20,6 +20,7 @@ export default {
                 'normal': ['16px', '22.4px'],
                 'small': ['14px', '19.6px'],
                 'xsmall': ['12px', '16.8px'],
+                'micro': ['10px', '14px'],
 
                 'h1': ['56px', { lineHeight: '61.6px', fontWeight: '700' }],
                 'h2': ['48px', { lineHeight: '52.8px', fontWeight: '700' }],

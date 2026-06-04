@@ -13,15 +13,6 @@
     body {
         font-family: 'Inter', sans-serif;
     }
-    /* Hide scrollbar for Chrome, Safari and Opera */
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    /* Hide scrollbar for IE, Edge and Firefox */
-    .no-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-    }
   </style>
 </head>
 <body class="bg-[#0a0a0a] text-gray-200 h-screen w-screen flex gap-4 overflow-hidden font-sans antialiased text-sm p-4 sm:p-6 lg:p-4">
@@ -36,7 +27,7 @@
 
       <div class="text-xs font-semibold text-gray-500 mb-3 px-2">Chats</div>
 
-      <div class="flex flex-col gap-1 overflow-y-auto no-scrollbar pb-4">
+      <div class="scrollbar-app flex flex-col gap-1 overflow-y-auto pb-4">
           @foreach ($sessions as $session)
             @php
               // Cek apakah ini sesi yang sedang aktif
@@ -61,7 +52,7 @@
           </div>
 
           <!-- AREA PESAN -->
-          <div id="chat-messages" class="flex-1 overflow-y-auto no-scrollbar w-full flex flex-col md:px-20 lg:px-40 py-6 gap-6 pb-24">
+          <div id="chat-messages" class="scrollbar-app flex-1 overflow-y-auto w-full flex flex-col md:px-20 lg:px-40 py-6 gap-6 pb-24">
               @foreach($content as $message)
                   @if($message->role === 'user')
                       <!-- Pesan User (Kanan) -->

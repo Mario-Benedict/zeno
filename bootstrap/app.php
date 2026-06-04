@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Middleware\EnsureProjectMember;
+use App\Http\Middleware\EnsureProjectRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetAccountRouteDefaults;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,11 +20,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             SecurityHeaders::class,
+            SetAccountRouteDefaults::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        $middleware->alias(['project.member' => EnsureProjectMember::class,
+        $middleware->alias([
+            'project.member' => EnsureProjectMember::class,
+            'project.role' => EnsureProjectRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

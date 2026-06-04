@@ -146,7 +146,7 @@ const SearchOverlay = ({
         </button>
       </div>
 
-      <div className="max-h-72 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+      <div className="scrollbar-app max-h-72 overflow-y-auto">
         {query.trim() === '' && (
           <p className="px-4 py-5 text-center text-xsmall text-dark-secondary">
             Start typing to search…

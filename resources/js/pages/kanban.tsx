@@ -1,6 +1,6 @@
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import {
   KanbanColumn,
@@ -30,6 +30,7 @@ export default function Kanban({
   currentUser,
   cardLabels,
 }: KanbanProps) {
+  const accountIndex = usePage().props.account.index;
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [searchQuery, setSearchQuery] = useState('');
   const [modalBoardId, setModalBoardId] = useState<string | null>(null);
@@ -65,6 +66,7 @@ export default function Kanban({
           if (board.kanban_board_position !== idx) {
             router.patch(
               projects.kanban.boards.board.update.url({
+                accountIndex,
                 project: project.project_slug,
                 board: board.kanban_board_id,
               }),
@@ -102,6 +104,7 @@ export default function Kanban({
 
     router.patch(
       projects.kanban.boards.board.cards.move.url({
+        accountIndex,
         project: project.project_slug,
         board: source.droppableId,
         card: draggableId,
@@ -152,6 +155,7 @@ export default function Kanban({
     // Persist to backend
     router.patch(
       projects.kanban.cards.detail.update.url({
+        accountIndex,
         project: project.project_slug,
         card: cardId,
       }),
@@ -211,6 +215,7 @@ export default function Kanban({
 
     router.post(
       projects.kanban.boards.board.cards.store.url({
+        accountIndex,
         project: project.project_slug,
         board: boardId,
       }),
@@ -261,7 +266,10 @@ export default function Kanban({
     setAddingBoard(false);
 
     router.post(
-      projects.kanban.boards.store.url({ project: project.project_slug }),
+      projects.kanban.boards.store.url({
+        accountIndex,
+        project: project.project_slug,
+      }),
       { kanban_board_id: boardId, name, position: boards.length },
       {
         ...inertiaWriteOptions,
@@ -287,6 +295,7 @@ export default function Kanban({
 
     router.patch(
       projects.kanban.boards.board.update.url({
+        accountIndex,
         project: project.project_slug,
         board: boardId,
       }),
@@ -303,6 +312,7 @@ export default function Kanban({
 
     router.delete(
       projects.kanban.boards.board.destroy.url({
+        accountIndex,
         project: project.project_slug,
         board: boardId,
       }),
@@ -328,6 +338,7 @@ export default function Kanban({
 
     router.delete(
       projects.kanban.boards.board.cards.destroy.url({
+        accountIndex,
         project: project.project_slug,
         board: boardId,
         card: cardId,
@@ -412,7 +423,7 @@ export default function Kanban({
             </div>
           </header>
 
-          <main className="m-2 mr-4 flex w-full flex-1 items-start gap-4 overflow-x-auto pr-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+          <main className="scrollbar-app m-2 mr-4 flex w-full flex-1 items-start gap-4 overflow-x-auto pr-4">
             <Droppable droppableId="boards" type="BOARD" direction="horizontal">
               {(provided) => (
                 <div

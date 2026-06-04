@@ -21,7 +21,7 @@ class KanbanCardController extends Controller
      * render the card immediately and have it line up with the persisted
      * record after the request resolves.
      */
-    public function store(Request $request, Project $project, KanbanBoard $board): RedirectResponse
+    public function store(int $accountIndex, Request $request, Project $project, KanbanBoard $board): RedirectResponse
     {
         abort_unless($request->user()->can('view', $board->project), 403);
 
@@ -80,7 +80,7 @@ class KanbanCardController extends Controller
      *    cards being repacked, so two simultaneous drags by different users
      *    serialize cleanly instead of clobbering each other's positions.
      */
-    public function move(Request $request, Project $project, KanbanBoard $board, KanbanBoardCard $card): RedirectResponse
+    public function move(int $accountIndex, Request $request, Project $project, KanbanBoard $board, KanbanBoardCard $card): RedirectResponse
     {
         $validated = $request->validate([
             'board_id' => 'required|string',
@@ -136,7 +136,7 @@ class KanbanCardController extends Controller
      * commit together — otherwise a crash between them would leave a gap in
      * the position sequence.
      */
-    public function destroy(Request $request, Project $project, KanbanBoard $board, KanbanBoardCard $card): RedirectResponse
+    public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoard $board, KanbanBoardCard $card): RedirectResponse
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 

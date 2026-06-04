@@ -1,5 +1,10 @@
 import type { Auth } from '@/types/auth';
-import type { CurrentProject, ProjectRole } from '@/types/project';
+import type {
+  CurrentProject,
+  ProjectNavigation,
+  ProjectRole,
+  ProjectShare,
+} from '@/types/project';
 
 /**
  * Augment Inertia's `sharedPageProps` so every page automatically gets
@@ -16,12 +21,27 @@ declare module '@inertiajs/core' {
     sharedPageProps: {
       name: string;
       auth: Auth;
+      account: {
+        index: number;
+        baseUrl: string;
+      };
 
-      /** Current project context. `null` outside of `/p/{slug}/...` routes. */
+      /** All signed-in accounts for the multi-account switcher. */
+      accountsList: Array<{
+        index: number;
+        name: string;
+        email: string;
+        avatar: string | null;
+        is_active: boolean;
+      }>;
+
+      /** Current project context. `null` outside of `/u/{accountIndex}/p/{slug}/...` routes. */
       project: CurrentProject | null;
 
       /** Authenticated user's role on the current project. `null` outside a project context. */
       projectRole: ProjectRole | null;
+      projectNavigation: ProjectNavigation;
+      projectShare: ProjectShare | null;
 
       sidebarOpen: boolean;
       [key: string]: unknown;

@@ -1,7 +1,7 @@
-import { router } from '@inertiajs/react';
-import axios from 'axios';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import ProjectController from '@/actions/App/Http/Controllers/ProjectController';
+import { router, usePage } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent, SyntheticEvent } from 'react';
+import { accountPath } from '@/lib/accountRoutes';
 
 interface CreateProjectPanelProps {
   open: boolean;
@@ -10,13 +10,6 @@ interface CreateProjectPanelProps {
 
 const SLUG_CHAR_RE = /^[a-zA-Z0-9\- ]*$/;
 const NO_DBL_SPACE = / {2}/;
-const RANDOM_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
-
-const randomSuffix = (len = 5) =>
-  Array.from(
-    { length: len },
-    () => RANDOM_CHARS[Math.floor(Math.random() * RANDOM_CHARS.length)],
-  ).join('');
 
 const toSlug = (name: string) => name.trim().toLowerCase().replace(/\s+/g, '-');
 
@@ -37,16 +30,15 @@ const XIcon = () => (
 );
 
 const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
+  const { account } = usePage().props;
+  const accountIndex = account.index;
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
-  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
-  const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     project_name?: string;
     project_slug?: string;
   }>({});
-  const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,37 +49,11 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setName('');
       setSlug('');
-      setSlugAvailable(null);
       setErrors({});
     }
   }, [open]);
 
-  const checkSlugAvailability = useCallback(async (candidate: string) => {
-    if (!candidate) {
-      setSlugAvailable(null);
-      return candidate;
-    }
-
-    setChecking(true);
-    try {
-      const { data } = await axios.get<{ available: boolean }>(
-        ProjectController.checkSlug.url({ query: { slug: candidate } }),
-      );
-
-      const finalSlug = data.available
-        ? candidate
-        : `${candidate}-${randomSuffix()}`;
-      setSlug(finalSlug);
-      setSlugAvailable(true);
-      return finalSlug;
-    } catch {
-      return candidate;
-    } finally {
-      setChecking(false);
-    }
-  }, []);
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
 
     if (!SLUG_CHAR_RE.test(raw) || NO_DBL_SPACE.test(raw)) return;
@@ -97,18 +63,9 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
 
     const derived = toSlug(raw);
     setSlug(derived);
-    setSlugAvailable(null);
-
-    if (checkTimer.current) clearTimeout(checkTimer.current);
-
-    if (!derived) return;
-
-    checkTimer.current = setTimeout(() => {
-      void checkSlugAvailability(derived);
-    }, 350);
   };
 
-  const handleSubmit = async (e: React.SyntheticEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
 
     const trimmed = name.trim();
@@ -117,16 +74,12 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
       return;
     }
 
-    let finalSlug = slug;
-
-    if (!finalSlug || slugAvailable === null) {
-      finalSlug = await checkSlugAvailability(toSlug(trimmed));
-    }
+    const finalSlug = slug || toSlug(trimmed);
 
     setSubmitting(true);
 
     router.post(
-      '/projects',
+      accountPath(accountIndex, '/projects'),
       { project_name: trimmed, project_slug: finalSlug },
       {
         onError: (errs) => {
@@ -193,18 +146,7 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
               {/* Slug preview */}
               <div className="mt-3 flex justify-center">
                 {slug ? (
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      checking
-                        ? 'bg-dark-surface-3 text-dark-secondary'
-                        : slugAvailable
-                          ? 'bg-dark-surface-3 text-dark-secondary'
-                          : 'bg-dark-surface-3 text-dark-secondary'
-                    }`}
-                  >
-                    {checking && (
-                      <span className="inline-block h-2.5 w-2.5 animate-spin rounded-full border border-dark-border border-t-transparent" />
-                    )}
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-dark-surface-3 px-3 py-1 text-xs font-medium text-dark-secondary transition-colors">
                     {slug}
                   </span>
                 ) : (
@@ -231,7 +173,7 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={submitting || checking || !name.trim()}
+              disabled={submitting || !name.trim()}
               className="rounded-lg bg-dark-primary px-5 py-2 text-sm font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               {submitting ? 'Creating…' : 'Create Project'}

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\User;
 
@@ -12,7 +13,7 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        return $project->members()->where('user_id', $user->id)->exists();
+        return $project->isMember($user);
     }
 
     /**
@@ -20,7 +21,7 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        return $project->members()->where('user_id', $user->id)->first()?->pivot?->role === 'owner';
+        return $project->roleFor($user) === ProjectRole::Owner;
     }
 
     /**
@@ -28,6 +29,11 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        return $project->members()->where('user_id', $user->id)->first()?->pivot?->role === 'owner';
+        return $project->roleFor($user) === ProjectRole::Owner;
+    }
+
+    public function manageMembers(User $user, Project $project): bool
+    {
+        return $project->roleFor($user)?->canManageMembers() ?? false;
     }
 }

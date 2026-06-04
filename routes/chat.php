@@ -10,22 +10,15 @@ use Illuminate\Support\Facades\Route;
  * ============================================================
  *
  * File location: routes/chat.php
- * Include in:    routes/web.php  →  require __DIR__.'/chat.php';
+ * Include in:    routes/web.php inside /u/{accountIndex}/p/{project:project_slug}.
  *
  * Naming convention:
- *   chat.index          GET  /p/{project}/chat
- *   chat.rooms.store    POST /p/{project}/chat/rooms
- *   chat.rooms.show     GET  /p/{project}/chat/rooms/{room}
- *   chat.messages.index GET  /p/{project}/chat/rooms/{room}/messages
- *   chat.messages.store POST /p/{project}/chat/rooms/{room}/messages
- *   chat.messages.destroy DELETE /p/{project}/chat/rooms/{room}/messages/{message}
- *
- * Middleware stack (applied at group level):
- *   - auth          : user must be logged in (Breeze / Sanctum)
- *   - verified      : email must be verified
- *   - project.member: custom middleware — ensures the authenticated user is
- *                     a member of the {project} route parameter. Defined in
- *                     App\Http\Middleware\EnsureProjectMember.
+ *   chat.index          GET  /u/{accountIndex}/p/{project}/chat
+ *   chat.rooms.store    POST /u/{accountIndex}/p/{project}/chat/rooms
+ *   chat.rooms.show     GET  /u/{accountIndex}/p/{project}/chat/rooms/{room}
+ *   chat.messages.index GET  /u/{accountIndex}/p/{project}/chat/rooms/{room}/messages
+ *   chat.messages.store POST /u/{accountIndex}/p/{project}/chat/rooms/{room}/messages
+ *   chat.messages.destroy DELETE /u/{accountIndex}/p/{project}/chat/rooms/{room}/messages/{message}
  *
  * Route model binding:
  *   - {project} → App\Models\Project   (uses project_slug column via inline binding)
@@ -33,8 +26,7 @@ use Illuminate\Support\Facades\Route;
  *
  * ============================================================
  */
-Route::middleware(['auth', 'verified', 'project.member'])
-    ->prefix('p/{project:project_slug}/chat') // <-- PERUBAHAN UTAMA DI SINI
+Route::prefix('chat')
     ->name('chat.')
     ->group(function () {
 

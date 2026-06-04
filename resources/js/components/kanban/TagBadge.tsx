@@ -12,7 +12,7 @@ export const TagBadge = ({ label, color }: TagBadgeProps) => {
   }
   return (
     <span
-      className="rounded-full px-3 py-0.5 text-[10px] font-semibold text-white"
+      className="rounded-full px-3 py-0.5 text-micro font-semibold text-white"
       style={{
         backgroundColor: color.card_label_color_hex,
         color: getContrastColor(color.card_label_color_hex),

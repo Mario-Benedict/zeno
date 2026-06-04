@@ -2,23 +2,74 @@
 
 use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectInvitationController;
+use App\Http\Controllers\ProjectMemberController;
+use App\Models\Project;
+use App\Services\AccountSessionService;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::prefix('projects')->name('projects.')->group(function () {
-        Route::get('/', [ProjectController::class, 'index'])->name('index');
-        Route::post('/', [ProjectController::class, 'store'])->name('store');
-        Route::get('/check-slug', [ProjectController::class, 'checkSlug'])->name('check-slug');
-    });
+    Route::prefix('u/{accountIndex}')
+        ->whereNumber('accountIndex')
+        ->group(function () {
+            Route::prefix('projects')->name('projects.')->group(function () {
+                Route::get('/', [ProjectController::class, 'index'])->name('index');
+                Route::post('/', [ProjectController::class, 'store'])->name('store');
+                Route::get('/check-slug', [ProjectController::class, 'checkSlug'])->name('check-slug');
+            });
 
-    Route::prefix('p/{project:project_slug}')->name('projects.')->group(function () {
-        Route::get('/', [ProjectController::class, 'show'])->name('show');
-        Route::patch('/pin', [ProjectController::class, 'togglePin'])->name('toggle-pin');
+            Route::inertia('account', 'account/show')->name('account.show');
 
-        require __DIR__.'/kanban.php';
-    });
+            Route::prefix('p/{project:project_slug}')
+                ->middleware('project.member')
+                ->group(function () {
+                    Route::name('projects.')->group(function () {
+                        Route::get('/', [ProjectController::class, 'show'])->name('show');
+                        Route::patch('/pin', [ProjectController::class, 'togglePin'])->name('toggle-pin');
+
+                        require __DIR__.'/kanban.php';
+
+                        Route::middleware('project.role:OWNER,ADMIN')->group(function () {
+                            Route::post('/invitations', [ProjectInvitationController::class, 'store'])
+                                ->name('invitations.store');
+                            Route::post('/invitations/link', [ProjectInvitationController::class, 'createLink'])
+                                ->name('invitations.link.store');
+                            Route::patch('/invitations/link', [ProjectInvitationController::class, 'updateLink'])
+                                ->name('invitations.link.update');
+                            Route::delete('/invitations/link', [ProjectInvitationController::class, 'destroyLink'])
+                                ->name('invitations.link.destroy');
+
+                            Route::patch('/members/{user}', [ProjectMemberController::class, 'update'])
+                                ->name('members.update');
+                            Route::delete('/members/{user}', [ProjectMemberController::class, 'destroy'])
+                                ->name('members.destroy');
+                        });
+                    });
+
+                    require __DIR__.'/chat.php';
+
+                    require __DIR__.'/llm-chat.php';
+                });
+        });
+
+    Route::get('/projects', fn () => redirect()->route('projects.index', [
+        'accountIndex' => AccountSessionService::getActiveIndex(request()),
+    ]));
+    Route::post('/projects', [ProjectController::class, 'store']);
+    Route::get('/projects/check-slug', [ProjectController::class, 'checkSlug']);
+
+    Route::get('/p/{project:project_slug}/{path?}', function (Project $project, ?string $path = null) {
+        $suffix = $path === null ? '' : '/'.$path;
+
+        $accountIndex = AccountSessionService::getActiveIndex(request());
+
+        return redirect('/u/'.$accountIndex.'/p/'.$project->project_slug.$suffix);
+    })->where('path', '.*');
+
+    Route::get('/invite/{token}', [ProjectInvitationController::class, 'accept'])
+        ->name('projects.invitations.accept');
 
     Route::prefix('two-factor')->name('two-factor.')->group(function () {
         Route::get('setup', [TwoFactorSetupController::class, 'show'])->name('setup');
@@ -29,7 +80,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
-
-require __DIR__.'/chat.php';
-
-require __DIR__.'/llm-chat.php';

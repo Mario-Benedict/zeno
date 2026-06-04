@@ -182,7 +182,7 @@ const LlmChatMessageList = ({
   }, [messages, optimisticUser, isThinking, scrollToBottom]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+    <div className="scrollbar-app flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
       <div className="mx-auto w-full max-w-3xl py-6">
         <div className="space-y-6">
           {messages.map((msg) => {

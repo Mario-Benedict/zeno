@@ -17,7 +17,7 @@ import type { ChatRoom, ChatParticipant, ChatMessage } from '@/types/chat';
  *  - nextCursor    : optional — MongoDB cursor for the next older page
  *  - hasMore       : optional — whether more messages exist above
  *
- * Route: GET /p/{project:project_slug}/chat
+ * Route: GET /u/{accountIndex}/p/{project:project_slug}/chat
  */
 
 interface Props {

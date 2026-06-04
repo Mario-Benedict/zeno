@@ -12,7 +12,7 @@ export const AvatarStack = ({ members }: AvatarStackProps) => {
       {members.slice(0, 4).map((member, i) => (
         <div
           key={member.id}
-          className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-dark-surface-3 text-[10px] font-bold text-white"
+          className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-dark-surface-3 text-micro font-bold text-white"
           style={{ backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length] }}
           title={member.name}
         >

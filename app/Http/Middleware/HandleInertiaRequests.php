@@ -2,7 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ProjectRole;
 use App\Models\Project;
+use App\Models\ProjectInvitation;
+use App\Models\User;
+use App\Services\AccountSessionService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -50,13 +54,31 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'account' => $this->resolveAccount($request),
+            'accountsList' => fn () => AccountSessionService::accountsList($request),
             'flash' => [
                 'chat' => [
                     'newMessage' => $request->session()->get('chat.newMessage'),
                 ],
+                'status' => $request->session()->get('status'),
             ],
             'project' => $project,
             'projectRole' => $projectRole,
+            'projectNavigation' => fn () => $this->resolveProjectNavigation($request),
+            'projectShare' => fn () => $this->resolveProjectShare($request),
+        ];
+    }
+
+    /**
+     * @return array{index: int, baseUrl: string}
+     */
+    private function resolveAccount(Request $request): array
+    {
+        $accountIndex = max(0, (int) $request->attributes->get('account.index', 0));
+
+        return [
+            'index' => $accountIndex,
+            'baseUrl' => '/u/'.$accountIndex,
         ];
     }
 
@@ -96,5 +118,98 @@ class HandleInertiaRequests extends Middleware
             ->first();
 
         return [$payload, $membership?->pivot->role];
+    }
+
+    /**
+     * @return array{projects: list<array<string, mixed>>}
+     */
+    private function resolveProjectNavigation(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            return ['projects' => []];
+        }
+
+        $projects = $user->projects()
+            ->orderByPivot('is_pinned', 'desc')
+            ->orderByPivot('opened_at', 'desc')
+            ->orderBy('projects.project_name')
+            ->limit(8)
+            ->get(['projects.project_id', 'projects.project_name', 'projects.project_slug'])
+            ->map(fn (Project $project) => [
+                'project_id' => $project->project_id,
+                'project_name' => $project->project_name,
+                'project_slug' => $project->project_slug,
+                'is_pinned' => (bool) $project->pivot->is_pinned,
+                'role' => $project->pivot->role,
+            ])
+            ->values()
+            ->all();
+
+        return ['projects' => $projects];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveProjectShare(Request $request): ?array
+    {
+        $route = $request->route();
+        $project = $route?->parameter('project');
+
+        if (! $project instanceof Project) {
+            return null;
+        }
+
+        $user = $request->user();
+        $role = $user instanceof User ? $project->roleFor($user) : null;
+        $canManageMembers = $role?->canManageMembers() ?? false;
+
+        $members = $project->members()
+            ->select(['users.id', 'users.name', 'users.email'])
+            ->orderByRaw("CASE project_user.role WHEN 'OWNER' THEN 0 WHEN 'ADMIN' THEN 1 WHEN 'MEMBER' THEN 2 ELSE 3 END")
+            ->orderBy('users.name')
+            ->get()
+            ->map(fn (User $member) => [
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'role' => $member->pivot->role,
+                'is_current_user' => $user instanceof User && (int) $member->id === (int) $user->id,
+            ])
+            ->values()
+            ->all();
+
+        $pendingInvitations = $canManageMembers
+            ? $project->invitations()
+                ->whereNull('accepted_at')
+                ->latest()
+                ->limit(8)
+                ->get()
+                ->map(fn (ProjectInvitation $invitation) => [
+                    'id' => $invitation->id,
+                    'email' => $invitation->email,
+                    'name' => $invitation->name,
+                    'role' => $invitation->role,
+                    'url' => route('projects.invitations.accept', $invitation->token),
+                    'expires_at' => $invitation->expires_at?->toIso8601String(),
+                ])
+                ->values()
+                ->all()
+            : [];
+
+        return [
+            'can_manage_members' => $canManageMembers,
+            'assignable_roles' => ProjectRole::assignableValues(),
+            'invitation_link' => $project->invitation_link === null
+                ? null
+                : [
+                    'url' => route('projects.invitations.accept', $project->invitation_link),
+                    'role' => $project->invitation_role ?? ProjectRole::Member->value,
+                ],
+            'members' => $members,
+            'pending_invitations' => $pendingInvitations,
+        ];
     }
 }

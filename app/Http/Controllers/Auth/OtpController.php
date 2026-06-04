@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Notifications\EmailOtpNotification;
+use App\Services\AccountSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -19,7 +20,7 @@ class OtpController extends Controller
     public function create(Request $request): Response|RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('projects.index'));
+            return $this->redirectToProjects($request);
         }
 
         return Inertia::render('auth/verify-email', [
@@ -32,7 +33,7 @@ class OtpController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->intended(route('projects.index'));
+            return $this->redirectToProjects($request);
         }
 
         $key = 'otp-verify.'.$user->id;
@@ -62,7 +63,7 @@ class OtpController extends Controller
         $otp->delete();
         $user->markEmailAsVerified();
 
-        return redirect()->intended(route('projects.index'));
+        return $this->redirectToProjects($request);
     }
 
     public function resend(Request $request): RedirectResponse
@@ -70,12 +71,21 @@ class OtpController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->intended(route('projects.index'));
+            return $this->redirectToProjects($request);
         }
 
         $code = $user->generateEmailOtp();
         $user->notify(new EmailOtpNotification($code));
 
         return back()->with('status', 'verification-link-sent');
+    }
+
+    private function redirectToProjects(Request $request): RedirectResponse
+    {
+        $request->session()->forget('url.intended');
+
+        return redirect()->route('projects.index', [
+            'accountIndex' => AccountSessionService::getActiveIndex($request),
+        ]);
     }
 }

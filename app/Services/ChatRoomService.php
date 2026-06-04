@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ProjectRole;
 use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Models\User;
@@ -62,19 +63,25 @@ class ChatRoomService
      * Tambah member baru ke group room sebuah project.
      * Dipanggil saat user diundang ke project.
      */
-    public function addMemberToGroupRoom(Project $project, User $user): void
+    public function addMemberToGroupRoom(Project $project, User $user, string $projectRole = 'MEMBER'): void
     {
         $groupRoom = ChatRoom::query()
             ->where('project_id', $project->project_id)
             ->where('type', 'group')
             ->with('participants')
-            ->firstOrFail();
+            ->first();
+
+        if (! $groupRoom instanceof ChatRoom) {
+            $groupRoom = $this->createProjectGroupRoom($project, (string) $user->id);
+            $groupRoom->load('participants');
+        }
 
         $existingParticipants = $groupRoom->participants;
+        $chatRole = ProjectRole::tryFrom($projectRole)?->chatParticipantRole() ?? 'member';
 
         $groupRoom->participants()->syncWithoutDetaching([
             $user->id => [
-                'role' => 'member',
+                'role' => $chatRole,
                 'joined_at' => now(),
             ],
         ]);
