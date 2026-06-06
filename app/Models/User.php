@@ -18,6 +18,10 @@ use Illuminate\Notifications\Notifiable;
     'two_factor_secret', 'two_factor_enabled_at', 'two_factor_last_counter',
 ])]
 #[Hidden(['password', 'remember_token'])]
+
+/**
+ * @method \Illuminate\Database\Eloquent\Relations\BelongsToMany projects()
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */

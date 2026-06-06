@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Project extends Model
@@ -31,5 +32,10 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id', 'user_id')
             ->withPivot(['role', 'is_pinned', 'opened_at']);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class, 'project_id', 'project_id');
     }
 }

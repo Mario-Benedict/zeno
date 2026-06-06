@@ -1,0 +1,74 @@
+@theme {
+  /* Font */
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+
+  /* Font sizes */
+  --text-large: 20px;
+  --text-large--line-height: 28px;
+  --text-medium: 18px;
+  --text-medium--line-height: 25.2px;
+  --text-normal: 16px;
+  --text-normal--line-height: 22.4px;
+  --text-small: 14px;
+  --text-small--line-height: 19.6px;
+  --text-xsmall: 12px;
+  --text-xsmall--line-height: 16.8px;
+  --text-h1: 56px;
+  --text-h1--line-height: 61.6px;
+  --text-h2: 48px;
+  --text-h2--line-height: 52.8px;
+  --text-h3: 40px;
+  --text-h3--line-height: 44px;
+  --text-h4: 32px;
+  --text-h4--line-height: 35.2px;
+  --text-h5: 24px;
+  --text-h5--line-height: 26.4px;
+  --text-h6: 20px;
+  --text-h6--line-height: 22px;
+
+  /* Dark mode */
+  --color-dark-surface-1: #111111;
+  --color-dark-surface-2: #242424;
+  --color-dark-surface-3: #2E2E2E;
+  --color-dark-primary: #F0F0F0;
+  --color-dark-secondary: #7B7B7B;
+  --color-dark-border: #3A3A3A;
+  --color-dark-border-focus: #4A4A4A;
+  --color-dark-input: #2A2A2A;
+  --color-dark-input-focus: #313131;
+
+  /* Light mode */
+  --color-light-surface-1: #FFFFFF;
+  --color-light-surface-2: #F3F3F5;
+  --color-light-surface-3: #DDDDDD;
+  --color-light-primary: #2D2D2D;
+  --color-light-secondary: #B0B0B0;
+
+  /* Accent */
+  --color-accent-red: #D32F2F;
+  --color-accent-red-light: #FFB3B3;
+  --color-accent-orange: #F57C00;
+  --color-accent-orange-light: #FFD1A1;
+  --color-accent-yellow: #FBC02D;
+  --color-accent-yellow-light: #FFF0B3;
+  --color-accent-lime: #7CB342;
+  --color-accent-lime-light: #DCEDC8;
+  --color-accent-green: #00897B;
+  --color-accent-green-light: #B2DFDB;
+  --color-accent-cyan: #0288D1;
+  --color-accent-cyan-light: #B3E5FC;
+  --color-accent-blue: #3949AB;
+  --color-accent-blue-light: #C5CAE9;
+  --color-accent-purple: #8E24AA;
+  --color-accent-purple-light: #E1BEE7;
+  --color-accent-pink: #C2185B;
+  --color-accent-pink-light: #F8BBD0;
+  --color-accent-brown: #8D6E63;
+  --color-accent-brown-light: #D7CCC8;
+
+  /* Status */
+  --color-status-info: #2F80ED;
+  --color-status-success: #27AE60;
+  --color-status-warning: #E2B93B;
+  --color-status-error: #EB5757;
+}

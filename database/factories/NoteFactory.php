@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Note;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,14 +17,24 @@ class NoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'      => User::factory(),
-            'project_slug' => 'test-project',
-            'title'        => $this->faker->sentence(3),
-            'description'  => $this->faker->sentence(8),
-            'content'      => $this->faker->paragraphs(2, true),
-            'embed_url'    => null,
-            'type'         => 'personal',
-            'embed_title' => null,
+            'user_id'    => User::factory(),
+            'project_id' => Project::factory(),
+            'title'      => $this->faker->sentence(3),
+            'content'    => [
+                'html' => '<p>' . $this->faker->paragraph() . '</p>',
+                'text' => $this->faker->paragraph(),
+            ],
+            'is_shared'  => false,
         ];
+    }
+
+    public function shared(): static
+    {
+        return $this->state(['is_shared' => true]);
+    }
+
+    public function personal(): static
+    {
+        return $this->state(['is_shared' => false]);
     }
 }
