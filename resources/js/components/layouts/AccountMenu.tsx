@@ -2,6 +2,12 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { accountPath } from '@/lib/accountRoutes';
+import CheckIcon from '@public/icons/small/check.svg';
+import RightArrow from '@public/icons/small/arrow_down.svg';
+import PersonIcon from '@public/icons/small/person.svg';
+import PersonAddIcon from '@public/icons/small/person_add.svg';
+import PersonDeleteIcon from '@public/icons/small/person_delete.svg';
+import SignOutIcon from '@public/icons/small/signout.svg';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -157,8 +163,8 @@ const AccountMenu = ({ open, onClose }: AccountMenuProps) => {
   return (
     <div className="absolute top-10 right-0 z-40 w-80 rounded-xl border border-dark-border bg-dark-surface-2 p-2 shadow-2xl">
       {/* ── Signed-in accounts ─────────────────────────────────────── */}
-      <div className="px-3 pt-2 pb-1">
-        <p className="text-xsmall font-semibold tracking-wide text-dark-secondary uppercase">
+      <div className="px-2 pt-2 pb-1">
+        <p className="text-xsmall font-semibold tracking-wide text-dark-primary uppercase">
           Signed-in accounts
         </p>
       </div>
@@ -168,7 +174,7 @@ const AccountMenu = ({ open, onClose }: AccountMenuProps) => {
           acct.is_active ? (
             <div
               key={acct.index}
-              className="flex items-center gap-3 rounded-lg bg-dark-surface-1 px-3 py-2.5"
+              className="flex items-center gap-3 rounded-lg bg-dark-surface-1 px-2 py-2"
             >
               <div
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(acct.index)} text-xsmall font-bold text-white`}
@@ -179,23 +185,11 @@ const AccountMenu = ({ open, onClose }: AccountMenuProps) => {
                 <p className="truncate text-small font-semibold text-dark-primary">
                   {acct.name}
                 </p>
-                <p className="truncate text-xsmall text-dark-secondary">
+                <p className="truncate text-xsmall font-medium text-dark-secondary">
                   {acct.email}
                 </p>
               </div>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="shrink-0 text-accent-blue"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+              <CheckIcon className="text-accent-blue"/>
             </div>
           ) : (
             <button
@@ -205,7 +199,7 @@ const AccountMenu = ({ open, onClose }: AccountMenuProps) => {
                 onClose();
                 router.visit(accountPath(acct.index, '/projects'));
               }}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-white/[0.07]"
+              className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-white/[0.07]"
             >
               <div
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(acct.index)} text-xsmall font-bold text-white opacity-80`}
@@ -220,19 +214,7 @@ const AccountMenu = ({ open, onClose }: AccountMenuProps) => {
                   {acct.email}
                 </p>
               </div>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="shrink-0 text-dark-secondary"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
+              <RightArrow className='w-4 rotate-270'/>
             </button>
           ),
         )}
@@ -242,82 +224,25 @@ const AccountMenu = ({ open, onClose }: AccountMenuProps) => {
 
       {/* ── Actions ────────────────────────────────────────────────── */}
       <MenuButton onClick={() => setView('manage')}>
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="shrink-0 text-dark-secondary"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
+        <PersonIcon/>
         Manage account
       </MenuButton>
 
       <MenuButton onClick={() => logout('add_account')}>
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="shrink-0 text-dark-secondary"
-        >
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <line x1="19" y1="8" x2="19" y2="14" />
-          <line x1="22" y1="11" x2="16" y2="11" />
-        </svg>
+        <PersonAddIcon/>
         Add another account
       </MenuButton>
 
       <Divider />
 
       <MenuButton tone="danger" onClick={() => logout('home')}>
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="shrink-0"
-        >
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-          <polyline points="16 17 21 12 16 7" />
-          <line x1="21" y1="12" x2="9" y2="12" />
-        </svg>
+        <SignOutIcon/>
         Sign out
       </MenuButton>
 
       {accountsList.length > 1 && (
         <MenuButton tone="danger" onClick={() => logout('signout_all')}>
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="shrink-0"
-          >
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <line x1="23" y1="11" x2="17" y2="17" />
-            <line x1="17" y1="11" x2="23" y2="17" />
-          </svg>
+          <PersonDeleteIcon/>
           Sign out of all accounts
         </MenuButton>
       )}

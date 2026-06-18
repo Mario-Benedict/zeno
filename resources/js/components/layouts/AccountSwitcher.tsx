@@ -68,7 +68,7 @@ const AccountSwitcher = ({ onOpen }: AccountSwitcherProps = {}) => {
       >
         {/* Colour-coded avatar matching the account-menu style */}
         <div
-          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(account.index)} text-micro font-bold text-white`}
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(account.index)} text-micro font-bold text-white`}
         >
           {getInitials(userName)}
         </div>
