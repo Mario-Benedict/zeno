@@ -1,5 +1,5 @@
-import { NoteItem } from './types';
 import React from 'react';
+import type { NoteItem } from './types';
 
 interface NoteCardProps {
     note: NoteItem;
@@ -34,7 +34,9 @@ const NoteCard = ({ note, isActive, onSelect, onDeleteRequest }: NoteCardProps):
         )}
 
         <button
-            onClick={(e) => { e.stopPropagation(); onDeleteRequest(note.id); }}
+            onClick={(e) => {
+ e.stopPropagation(); onDeleteRequest(note.id); 
+}}
             title="Delete note"
             className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-dark-secondary hover:text-white p-1 rounded flex items-center justify-center transition-colors"
         >

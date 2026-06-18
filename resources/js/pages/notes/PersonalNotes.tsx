@@ -1,12 +1,12 @@
-    import { Head, router } from '@inertiajs/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import Header from '@/components/layouts/Header';
 import Sidebar from '@/components/layouts/Sidebar';
-import { NoteItem, PersonalNotesProps } from '@/components/notes/types';
 import DeleteConfirmModal from '@/components/notes/DeleteConfirmModal';
 import NoteEditorPanel from '@/components/notes/NoteEditorPanel';
 import NoteListPanel from '@/components/notes/NoteListPanel';
+import type { NoteItem, PersonalNotesProps } from '@/components/notes/types';
 
 const PersonalNotes = ({ projectSlug, initialNotes = [] }: PersonalNotesProps): React.ReactElement => {
     const [notes, setNotes]               = useState<NoteItem[]>(initialNotes);
@@ -20,12 +20,16 @@ const PersonalNotes = ({ projectSlug, initialNotes = [] }: PersonalNotesProps): 
         [searchQuery, notes],
     );
 
-    // Keep selection in sync when filter removes the active note
-    useEffect(() => {
-        if (filteredNotes.length === 0) { setSelectedNote(null); return; }
-        if (!filteredNotes.some((n) => n.id === selectedNote?.id))
+    // Sinkronisasi state di Rendering Phase
+    const [prevFilteredNotes, setPrevFilteredNotes] = useState(filteredNotes);
+    if (filteredNotes !== prevFilteredNotes) {
+        setPrevFilteredNotes(filteredNotes);
+        if (filteredNotes.length === 0) {
+            setSelectedNote(null);
+        } else if (!filteredNotes.some((n) => n.id === selectedNote?.id)) {
             setSelectedNote(filteredNotes[0]);
-    }, [filteredNotes, selectedNote]);
+        }
+    }
 
     const handleCreate = useCallback(() => {
         if (isCreating) return;

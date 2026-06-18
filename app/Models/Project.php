@@ -40,4 +40,9 @@ class Project extends Model
     {
         return $this->hasMany(KanbanBoard::class, 'kanban_board_project_id', 'project_id');
     }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class, 'project_id', 'project_id');
+    }
 }

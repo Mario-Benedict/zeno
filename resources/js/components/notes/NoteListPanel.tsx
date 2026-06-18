@@ -1,6 +1,6 @@
-import { NoteItem } from './types';
-import NoteCard from './NoteCard';
 import React from 'react';
+import NoteCard from './NoteCard';
+import type { NoteItem } from './types';
 
 interface NoteListPanelProps {
     notes: NoteItem[];

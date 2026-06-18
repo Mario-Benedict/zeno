@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/pin', [ProjectController::class, 'togglePin'])->name('toggle-pin');
 
         require __DIR__.'/kanban.php';
+        require __DIR__.'/notes.php';
     });
 
     Route::prefix('two-factor')->name('two-factor.')->group(function () {

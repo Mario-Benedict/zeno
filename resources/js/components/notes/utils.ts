@@ -1,22 +1,19 @@
 import React from 'react';
+import type { EmbedProvider } from './types';
 
-// Perbaikan: public modifier dihapus total sesuai standar kompatibilitas TypeScript compiler (ts1044)
-export interface EmbedProvider {
-    id: string;
-    label: string;
-    matcher: (url: string) => boolean;
-    getEmbedUrl?: (url: string) => string;
-    renderIcon: () => React.ReactElement;
-}
-
+/**
+ * Daftar penyedia layanan media luar (Embed Providers) yang didukung oleh editor.
+ * Regex sudah dibersihkan dari useless escapes agar lolos standarisasi ESLint.
+ */
 export const EMBED_PROVIDERS: EmbedProvider[] = [
     {
         id: 'youtube',
         label: 'YouTube',
-        matcher: (url: string) => /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i.test(url),
+        matcher: (url: string) => /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i.test(url),
         getEmbedUrl: (url: string) => {
-            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+            const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i);
             const videoId = match ? match[1] : '';
+
             return `https://www.youtube.com/embed/${videoId}`;
         },
         renderIcon: () => React.createElement('img', {
@@ -48,6 +45,9 @@ export const EMBED_PROVIDERS: EmbedProvider[] = [
     }
 ];
 
+/**
+ * Mendeteksi provider embed berdasarkan URL yang dimasukkan pengguna.
+ */
 export const detectEmbedProvider = (url: string): EmbedProvider | null => {
     for (const provider of EMBED_PROVIDERS) {
         if (provider.matcher(url)) return provider;
@@ -55,47 +55,18 @@ export const detectEmbedProvider = (url: string): EmbedProvider | null => {
     return null;
 };
 
-export const execFormatSafe = (
-    editorRef: React.RefObject<HTMLDivElement | null>,
-    command: string,
-    value: string = ''
-): void => {
-    if (!editorRef.current) return;
-    editorRef.current.focus();
-    document.execCommand(command, false, value);
+/**
+ * Menjalankan perintah manipulasi dokumen Rich Text format secara aman pada kontainer contentEditable.
+ */
+export const execFormatSafe = (editorRef: React.RefObject<HTMLDivElement | null>, cmd: string, value: string = '') => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    document.execCommand(cmd, false, value);
 };
 
-export const extractAllLinksFromHtml = (html: string): string[] => {
-    if (!html) return [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const links: string[] = [];
-    
-    doc.querySelectorAll('a').forEach((anchor) => {
-        const href = anchor.getAttribute('href');
-        if (href) links.push(href);
-    });
-
-    const textContent = doc.body.textContent || '';
-    const urlRegex = /(https?:\/\/[^\s<>"\']+)/g;
-    let match;
-    while ((match = urlRegex.exec(textContent)) !== null) {
-        links.push(match[0]);
-    }
-
-    return Array.from(new Set(links));
-};
-
-export const stripEmbedLinksFromHtml = (html: string): string => {
-    if (!html) return '';
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    let hasChanged = false;
-
-    doc.querySelectorAll('a').forEach((anchor) => {
-        anchor.remove();
-        hasChanged = true;
-    });
-
-    return hasChanged ? doc.body.innerHTML : html;
-};
+/**
+ * Utility Regex untuk mendeteksi format tautan URL global.
+ * Ditulis tanpa backslash (\') pada karakter petik tunggal untuk mematuhi aturan standar linter.
+ */
+export const urlRegex = /(https?:\/\/[^\s<>"']+)/g;

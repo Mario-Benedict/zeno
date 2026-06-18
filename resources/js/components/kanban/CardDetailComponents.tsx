@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface SectionHeaderProps {
   icon: React.ReactNode;
   label: string;

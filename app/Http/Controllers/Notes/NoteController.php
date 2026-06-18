@@ -47,27 +47,6 @@ class NoteController extends Controller
         ]);
     }
 
-    /**
-     * Trash page — soft-deleted notes within the last 30 days, restorable.
-     */
-    public function trash(Request $request, Project $project): Response
-    {
-        $this->authorizeMember($request, $project);
-
-        $notes = Note::onlyTrashed()
-            ->where('project_id', $project->project_id)
-            ->where('user_id', $request->user()->id)
-            ->where('deleted_at', '>=', now()->subDays(30))
-            ->orderByDesc('deleted_at')
-            ->get()
-            ->map(fn (Note $note) => $this->formatNote($note));
-
-        return Inertia::render('notes/TrashNotes', [
-            'projectSlug' => $project->project_slug,
-            'initialNotes' => $notes,
-        ]);
-    }
-
     public function store(Request $request, Project $project): RedirectResponse
     {
         $this->authorizeMember($request, $project);
@@ -110,6 +89,11 @@ class NoteController extends Controller
         return back();
     }
 
+    /**
+     * Soft-delete a note. There is no restore or trash-listing feature,
+     * so once deleted the note is no longer reachable through the app —
+     * but the delete operation itself must still succeed normally.
+     */
     public function destroy(Request $request, Project $project, Note $note): RedirectResponse
     {
         abort_unless($note->project_id === $project->project_id, HttpResponse::HTTP_NOT_FOUND);
@@ -123,40 +107,6 @@ class NoteController extends Controller
         return back();
     }
 
-    /**
-     * Restore a soft-deleted note, only if within the 30-day window.
-     */
-    public function restore(Request $request, Project $project, string $noteId): RedirectResponse
-    {
-        $note = Note::onlyTrashed()
-            ->where('note_id', $noteId)
-            ->where('project_id', $project->project_id)
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
-
-        abort_if($note->deleted_at->lt(now()->subDays(30)), HttpResponse::HTTP_GONE, 'Note is past the restore window.');
-
-        $note->restore();
-
-        return back();
-    }
-
-    /**
-     * Permanently delete a trashed note before the 30-day window expires.
-     */
-    public function forceDelete(Request $request, Project $project, string $noteId): RedirectResponse
-    {
-        $note = Note::onlyTrashed()
-            ->where('note_id', $noteId)
-            ->where('project_id', $project->project_id)
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
-
-        $note->forceDelete();
-
-        return back();
-    }
-
     private function formatNote(Note $note): array
     {
         return [
@@ -166,7 +116,6 @@ class NoteController extends Controller
             'content' => $note->content,
             'isShared' => $note->is_shared,
             'userId' => (string) $note->user_id,
-            'deletedAt' => $note->deleted_at?->toIso8601String(),
         ];
     }
 }

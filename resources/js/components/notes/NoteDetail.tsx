@@ -3,15 +3,11 @@ import NoteToolbar from './NoteToolbar';
 
 /**
  * Komponen Utama Editor Catatan (Right Panel).
- * Menggunakan arsitektur blok inline terisolasi Google Docs untuk penanganan multi-embed,
- * auto-save real-time ter-debounce, dan pencegahan bug delesi tombol Backspace.
  */
 const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: string, html: string) => void }): React.ReactElement => {
-    // Memberikan Null Guard (?.) agar tidak crash jika objek note belum siap/kosong
     const [title, setTitle] = useState(note?.title === 'Untitled' ? '' : (note?.title ?? ''));
     const editorRef = useRef<HTMLDivElement>(null);
     
-    // Fallback aman bertingkat untuk mendeteksi isi HTML tanpa memicu crash runtime
     const getInitialHtml = () => {
         if (!note) return '';
         if (note.content?.html) return note.content.html;
@@ -23,25 +19,38 @@ const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: s
     const savedHtmlRef = useRef<string>(getInitialHtml());
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Siklus pelepasan komponen (Unmount Lifecycle) - Memastikan data terakhir tersimpan
+    const latestTitleRef = useRef(title);
     useEffect(() => {
+        latestTitleRef.current = title;
+    }, [title]);
+
+    // SINKRONISASI DI RENDERING PHASE (Bebas Linter Error)
+    const [prevNoteId, setPrevNoteId] = useState(note?.id);
+    if (note?.id !== prevNoteId) {
+        setPrevNoteId(note?.id);
+        setTitle(note?.title === 'Untitled' ? '' : (note?.title ?? ''));
+    }
+
+    // FIX WARNING: Salin editorRef.current ke variabel lokal untuk cleanup
+    useEffect(() => {
+        const currentEditor = editorRef.current;
+
         return () => {
             if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-            const currentTitle = title.trim() || 'Untitled';
-            const currentHtml = editorRef.current?.innerHTML ?? '';
+            const currentTitle = latestTitleRef.current.trim() || 'Untitled';
+            const currentHtml = currentEditor?.innerHTML ?? '';
             if (currentTitle !== note?.title || currentHtml !== savedHtmlRef.current) {
                 if (note?.id) {
                     onSave(note.id, currentTitle, currentHtml);
                 }
             }
         };
-    }, [note?.id]);
+    }, [note, onSave]);
 
-    // Siklus pergantian catatan aktif dengan sistem pengaman Runtime Crash berlapis
+    // HANYA UNTUK MANIPULASI DOM EKSTERNAL (Tanpa setState)
     useEffect(() => {
         if (!note) return;
         try {
-            setTitle(note.title === 'Untitled' ? '' : (note.title ?? ''));
             const initialHtml = note?.content?.html ?? note?.content?.text ?? (typeof note?.content === 'string' ? note.content : '');
             savedHtmlRef.current = initialHtml;
             
@@ -51,11 +60,8 @@ const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: s
         } catch (error) {
             console.error("Gagal menyinkronkan data catatan:", error);
         }
-    }, [note?.id, note]);
+    }, [note]);
 
-    /**
-     * Membuka jembatan router Inertia untuk menyimpan data permanen ke basis data Laravel.
-     */
     const triggerSave = useCallback(() => {
         if (!note?.id) return;
         const currentTitle = title.trim() || 'Untitled';
@@ -64,11 +70,8 @@ const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: s
             savedHtmlRef.current = currentHtml;
             onSave(note.id, currentTitle, currentHtml);
         }
-    }, [note?.id, note?.title, title, onSave]);
+    }, [note, title, onSave]);
 
-    /**
-     * Mesin Auto-Save Otomatis (Debounce 500ms) untuk mengamankan data ketikan saat refresh tidak sengaja.
-     */
     const triggerDebounceSave = useCallback(() => {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = setTimeout(() => {
@@ -80,15 +83,10 @@ const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: s
         triggerDebounceSave();
     }, [triggerDebounceSave]);
 
-    /**
-     * Google Docs Key Interceptor.
-     * Mengelola pembentukan otomatis bullet-point (- ) dan mengisolasi perlindungan backspace baris teks.
-     */
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
         const editor = editorRef.current;
         if (!editor) return;
 
-        // Transformasi otomatis kode ketikan "- " menjadi struktur Bullet List
         if (e.key === ' ') {
             const selection = window.getSelection();
             if (selection && selection.rangeCount > 0) {
@@ -105,7 +103,6 @@ const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: s
             }
         }
 
-        // Penanganan tombol Backspace Terisolasi (Mencegah penghapusan tidak sengaja pada blok baris atas)
         if (e.key === 'Backspace') {
             const selection = window.getSelection();
             if (selection && selection.rangeCount > 0) {
@@ -120,12 +117,11 @@ const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: s
                     currentBlock = currentBlock.parentElement;
                 }
 
-                // JIKA USER DI BARIS BULLET POINT KOSONG: Hancurkan format bullet-nya saja, jangan lompat ke atas!
                 if (currentBlock && currentBlock.tagName === 'LI' && range.startOffset === 0) {
                     const hasText = currentBlock.textContent && currentBlock.textContent.length > 0;
                     if (!hasText) {
                         e.preventDefault();
-                        document.execCommand('insertUnorderedList', false); // Kembalikan ke paragraf p biasa
+                        document.execCommand('insertUnorderedList', false);
                         return;
                     }
                 }
@@ -136,19 +132,18 @@ const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: s
 
     return (
         <div className="flex flex-col flex-1 w-full text-dark-primary p-6 box-border select-text">
-            {/* Input Judul Utama Catatan */}
             <input
                 value={title}
-                onChange={(e) => { setTitle(e?.target?.value ?? ''); triggerDebounceSave(); }}
+                onChange={(e) => {
+ setTitle(e?.target?.value ?? ''); triggerDebounceSave(); 
+}}
                 onBlur={triggerSave}
                 placeholder="New page"
                 className="w-full bg-transparent border-none outline-none font-bold text-h3 mb-4 box-border placeholder:text-dark-secondary text-dark-primary font-sans"
             />
 
-            {/* Toolbar Kontrol Aksi Rich Text Format */}
-            <NoteToolbar editorRef={editorRef} />
+            <NoteToolbar editorRef={editorRef} onContentChange={handleEditorInput} />
 
-            {/* Area Kanvas Teks Utama (ContentEditable Container) dengan standar Padding Eksak 24px (p-6) */}
             <div
                 ref={editorRef}
                 contentEditable
@@ -169,8 +164,6 @@ const NoteDetail = ({ note, onSave }: { note: any; onSave: (id: string, title: s
                     [&_ul]:list-disc [&_ul]:pl-8 [&_ul]:my-2
                     [&_li]:pl-1 [&_li]:my-1
                     empty:before:content-[attr(data-placeholder)] empty:before:text-dark-secondary empty:before:pointer-events-none
-                    
-                    /* Styling khusus kartu Multi-Embed Card di dalam editor */
                     [&_.embed-card-block]:block [&_.embed-card-block]:w-full [&_.embed-card-block]:bg-[#1E1E1E] 
                     [&_.embed-card-block]:border [&_.embed-card-block]:border-dark-secondary/10 [&_.embed-card-block]:rounded-xl 
                     [&_.embed-card-block]:px-4 [&_.embed-card-block]:py-3 [&_.embed-card-block]:my-3 [&_.embed-card-block]:no-underline

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AlignCommand, HeadingTag } from './types';
+import type { AlignCommand, HeadingTag } from './types';
 import { execFormatSafe } from './utils';
 
 interface ToolbarButtonProps {
@@ -13,7 +13,9 @@ interface ToolbarButtonProps {
 const ToolbarButton = ({ title, onClick, isActive = false, children, className }: ToolbarButtonProps) => (
     <button
         title={title}
-        onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+        onMouseDown={(e) => {
+ e.preventDefault(); onClick(); 
+}}
         className={`
             w-8 h-8 flex items-center justify-center border-none rounded-lg cursor-pointer shrink-0 transition-colors duration-150
             ${isActive ? 'bg-dark-surface-1 text-white' : 'bg-transparent text-dark-secondary hover:bg-dark-surface-3'}
@@ -76,7 +78,9 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
         };
     }, [syncFormats]);
 
-    const handleAlign = (cmd: AlignCommand) => { execFormatSafe(editorRef, cmd); syncFormats(); onContentChange(); };
+    const handleAlign = (cmd: AlignCommand) => {
+ execFormatSafe(editorRef, cmd); syncFormats(); onContentChange(); 
+};
 
     const handleHeading = (tag: HeadingTag) => {
         const editor = editorRef.current;
@@ -147,13 +151,19 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
 
     return (
         <div className="flex items-center w-full border-t-2 border-b-2 border-dark-secondary py-2 gap-1 my-2 relative select-none">
-            <ToolbarButton title="Bold (Ctrl+B)" isActive={activeFormats.has('bold')} onClick={() => { execFormatSafe(editorRef, 'bold'); syncFormats(); onContentChange(); }} className="font-bold text-medium">B</ToolbarButton>
+            <ToolbarButton title="Bold (Ctrl+B)" isActive={activeFormats.has('bold')} onClick={() => {
+ execFormatSafe(editorRef, 'bold'); syncFormats(); onContentChange(); 
+}} className="font-bold text-medium">B</ToolbarButton>
 
-            <ToolbarButton title="Italic (Ctrl+I)" isActive={activeFormats.has('italic')} onClick={() => { execFormatSafe(editorRef, 'italic'); syncFormats(); onContentChange(); }}>
+            <ToolbarButton title="Italic (Ctrl+I)" isActive={activeFormats.has('italic')} onClick={() => {
+ execFormatSafe(editorRef, 'italic'); syncFormats(); onContentChange(); 
+}}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" /></svg>
             </ToolbarButton>
 
-            <ToolbarButton title="Underline (Ctrl+U)" isActive={activeFormats.has('underline')} onClick={() => { execFormatSafe(editorRef, 'underline'); syncFormats(); onContentChange(); }}>
+            <ToolbarButton title="Underline (Ctrl+U)" isActive={activeFormats.has('underline')} onClick={() => {
+ execFormatSafe(editorRef, 'underline'); syncFormats(); onContentChange(); 
+}}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3" /><line x1="4" y1="21" x2="20" y2="21" /></svg>
             </ToolbarButton>
 
@@ -210,7 +220,9 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
 
             <ToolbarSeparator />
 
-            <ToolbarButton title="Bulleted list" isActive={activeFormats.has('ul')} onClick={() => { execFormatSafe(editorRef, 'insertUnorderedList'); syncFormats(); onContentChange(); }}>
+            <ToolbarButton title="Bulleted list" isActive={activeFormats.has('ul')} onClick={() => {
+ execFormatSafe(editorRef, 'insertUnorderedList'); syncFormats(); onContentChange(); 
+}}>
                 <svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="currentColor" strokeWidth="2"><line x1="6" y1="1" x2="18" y2="1" /><line x1="6" y1="6" x2="18" y2="6" /><line x1="6" y1="11" x2="18" y2="11" /><circle cx="2" cy="1" r="1.5" fill="currentColor" stroke="none" /><circle cx="2" cy="6" r="1.5" fill="currentColor" stroke="none" /><circle cx="2" cy="11" r="1.5" fill="currentColor" stroke="none" /></svg>
             </ToolbarButton>
 

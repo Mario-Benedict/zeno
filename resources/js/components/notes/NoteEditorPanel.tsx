@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { NoteItem } from './types';
-import NoteToolbar from './NoteToolbar';
 import NoteEmptyState from './NoteEmptyState';
 import NoteTabSwitcher from './NoteTabSwitcher';
+import NoteToolbar from './NoteToolbar';
+import type { NoteItem } from './types';
 
 interface NoteEditorPanelProps {
     projectSlug: string;
@@ -17,11 +17,21 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
     const savedHtmlRef = useRef<string>('');
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // ✨ SOLUSI AMAN: Gunakan Ref untuk merekam perubahan state tanpa merusak closure hook
     const latestTitleRef = useRef(title);
     useEffect(() => {
         latestTitleRef.current = title;
     }, [title]);
+
+    //  SINKRONISASI DI RENDERING PHASE (Mencegah Error Linter)
+    const [prevNoteId, setPrevNoteId] = useState(note?.id);
+    if (note?.id !== prevNoteId) {
+        setPrevNoteId(note?.id);
+        if (!note) {
+            setTitle('');
+        } else {
+            setTitle(note.title === 'Untitled' ? '' : note.title);
+        }
+    }
 
     const triggerSave = useCallback(() => {
         if (!note) return;
@@ -45,43 +55,45 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
         triggerDebounceSave();
     }, [triggerDebounceSave]);
 
-    // AUTO-SAVE LIKECYCLE: Berjalan aman saat ganti catatan atau unmount komponen
+    //  FIX WARNING: Salin editorRef.current ke variabel lokal untuk cleanup
     useEffect(() => {
+        const currentEditor = editorRef.current;
+
         return () => {
             if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-            if (!note) return;
+            if (!note) { 
+                savedHtmlRef.current = '';
+                if (currentEditor) currentEditor.innerHTML = '';
+                return;
+            }
             
-            // Membaca nilai dari ref teranyar, bebas dari bug stale closure!
             const currentTitle = latestTitleRef.current.trim() || 'Untitled';
-            const currentHtml = editorRef.current?.innerHTML ?? '';
+            const currentHtml = currentEditor?.innerHTML ?? '';
             
             if (currentTitle !== note.title || currentHtml !== savedHtmlRef.current) {
                 onSave(note.id, currentTitle, currentHtml);
             }
         };
-    }, [note?.id, onSave]); // Tambahkan onSave ke dependency
+    }, [note, onSave]);
 
-    // Sinkronisasi saat ganti dokumen aktif
+    //  HANYA UNTUK MANIPULASI DOM (Bebas setState)
     useEffect(() => {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
         
         if (!note) {
-            setTitle('');
             savedHtmlRef.current = '';
             if (editorRef.current) editorRef.current.innerHTML = '';
             return;
         }
 
-        setTitle(note.title === 'Untitled' ? '' : note.title);
         const initialHtml = note.content?.html ?? note.content?.text ?? '';
         savedHtmlRef.current = initialHtml;
         
         if (editorRef.current) {
             editorRef.current.innerHTML = initialHtml;
         }
-    }, [note?.id]);
+    }, [note]);
 
-    // ... handleKeyDown tetap sama seperti kode aslimu
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
         const editor = editorRef.current;
         if (!editor) return;
@@ -146,7 +158,9 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
                     <>
                         <input
                             value={title}
-                            onChange={(e) => { setTitle(e.target.value); handleContentChange(); }}
+                            onChange={(e) => {
+ setTitle(e.target.value); handleContentChange(); 
+}}
                             onBlur={triggerSave}
                             placeholder="New page"
                             className="w-full bg-transparent border-none outline-none font-bold text-[40px] leading-[44px] mb-4 p-0 box-border placeholder:text-dark-secondary text-dark-primary font-sans"

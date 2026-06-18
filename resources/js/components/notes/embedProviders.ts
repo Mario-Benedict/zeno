@@ -1,14 +1,16 @@
 import React from 'react';
-import { EmbedProvider } from './types';
+import type { EmbedProvider } from './types';
 
 export const EMBED_PROVIDERS: EmbedProvider[] = [
     {
         id: 'youtube',
         label: 'YouTube',
-        matcher: (url: string) => /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i.test(url),
+        // Slashes outside character classes are safely escaped (\/), slashes inside character classes ([^/]) left clean
+        matcher: (url: string) => /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i.test(url),
         getEmbedUrl: (url: string) => {
-            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+            const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i);
             const videoId = match ? match[1] : '';
+
             return `https://www.youtube.com/embed/${videoId}`;
         },
         renderIcon: () => React.createElement('img', {
