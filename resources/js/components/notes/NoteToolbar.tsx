@@ -14,8 +14,9 @@ const ToolbarButton = ({ title, onClick, isActive = false, children, className }
     <button
         title={title}
         onMouseDown={(e) => {
- e.preventDefault(); onClick(); 
-}}
+            e.preventDefault(); 
+            onClick(); 
+        }}
         className={`
             w-8 h-8 flex items-center justify-center border-none rounded-lg cursor-pointer shrink-0 transition-colors duration-150
             ${isActive ? 'bg-dark-surface-1 text-white' : 'bg-transparent text-dark-secondary hover:bg-dark-surface-3'}
@@ -40,6 +41,16 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
     const [headingLabel, setHeadingLabel] = useState<HeadingTag | null>(null);
     const [showHeadingMenu, setShowHeadingMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    // Pemetaan ukuran piksel heading agar rapi, clean, dan tidak memicu unterminated string
+    const headingSizes: Record<HeadingTag, string> = {
+        H1: '56px',
+        H2: '48px',
+        H3: '40px',
+        H4: '32px',
+        H5: '24px',
+        H6: '20px',
+    };
 
     const syncFormats = useCallback(() => {
         if (!editorRef.current) return;
@@ -79,8 +90,10 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
     }, [syncFormats]);
 
     const handleAlign = (cmd: AlignCommand) => {
- execFormatSafe(editorRef, cmd); syncFormats(); onContentChange(); 
-};
+        execFormatSafe(editorRef, cmd); 
+        syncFormats(); 
+        onContentChange(); 
+    };
 
     const handleHeading = (tag: HeadingTag) => {
         const editor = editorRef.current;
@@ -93,10 +106,6 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
         onContentChange();
     };
 
-    /**
-     * Sisipkan blok Link Embed — Mengikuti Arsitektur Blok Terisolasi Google Docs.
-     * Mencegah penghapusan teks sekitar dan menyediakan ruang kosong (cushion paragraph) agar kursor panah tidak tersangkut.
-     */
     const handleInsertEmbedBlock = () => {
         const editor = editorRef.current;
         if (!editor) return;
@@ -106,7 +115,6 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
         
         if (selectionBefore && selectionBefore.rangeCount > 0) {
             savedRange = selectionBefore.getRangeAt(0).cloneRange();
-            // Solusi Kritikal: Amankan kursor di titik ujung tunggal agar tidak menimpa bullet point lain
             if (!savedRange.collapsed) {
                 savedRange.collapse(false);
             }
@@ -125,21 +133,20 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
 
         const domainName = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
         
-        // Penamaan label sesuai provider
         let providerLabel = domainName;
         if (url.includes('figma.com')) providerLabel = 'Figma Resource';
         else if (url.includes('youtube.com') || url.includes('youtu.be')) providerLabel = 'YouTube Resource';
         else if (url.includes('gemini.google.com')) providerLabel = 'Gemini Resource';
 
-        // Solusi Google Docs: Bungkus menggunakan struktur blok baris mandiri yang diapit elemen editor kosong asli (<p><br></p>)
+        // Menggunakan kelas utilitas murni dari tailwind.config.js kelompokmu
         const embedHtmlString = `
-            <div class="embed-row-block-container" contenteditable="false" style="display: block; width: 100%; margin: 12px 0; user-select: none;">
-                <a href="${url}" target="_blank" rel="noopener noreferrer" class="embed-card-block" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; text-decoration: none;">
-                    <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
-                        <img src="https://www.google.com/s2/favicons?domain=${domainName}&sz=32" class="embed-card-icon" alt="" style="width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;" />
-                        <span style="font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${providerLabel}</span>
+            <div class="embed-row-block-container block w-full my-3 select-none" contenteditable="false">
+                <a href="${url}" target="_blank" rel="noopener noreferrer" class="embed-card-block flex items-center justify-between gap-3 no-underline">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <img src="https://www.google.com/s2/favicons?domain=${domainName}&sz=32" class="embed-card-icon w-6 h-6 rounded-md shrink-0" alt="" />
+                        <span class="font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">${providerLabel}</span>
                     </div>
-                    <span style="color: #9CA3AF; font-size: 11px; background-color: #2A2A2A; padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(156,163,175,0.1); flex-shrink: 0;">Embed Card</span>
+                    <span class="text-dark-secondary text-xsmall bg-dark-input px-2 py-1 rounded border border-dark-border shrink-0">Embed Card</span>
                 </a>
             </div>
             <p><br></p>
@@ -152,18 +159,18 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
     return (
         <div className="flex items-center w-full border-t-2 border-b-2 border-dark-secondary py-2 gap-1 my-2 relative select-none">
             <ToolbarButton title="Bold (Ctrl+B)" isActive={activeFormats.has('bold')} onClick={() => {
- execFormatSafe(editorRef, 'bold'); syncFormats(); onContentChange(); 
-}} className="font-bold text-medium">B</ToolbarButton>
+                execFormatSafe(editorRef, 'bold'); syncFormats(); onContentChange(); 
+            }} className="font-bold text-medium">B</ToolbarButton>
 
             <ToolbarButton title="Italic (Ctrl+I)" isActive={activeFormats.has('italic')} onClick={() => {
- execFormatSafe(editorRef, 'italic'); syncFormats(); onContentChange(); 
-}}>
+                execFormatSafe(editorRef, 'italic'); syncFormats(); onContentChange(); 
+            }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" /></svg>
             </ToolbarButton>
 
             <ToolbarButton title="Underline (Ctrl+U)" isActive={activeFormats.has('underline')} onClick={() => {
- execFormatSafe(editorRef, 'underline'); syncFormats(); onContentChange(); 
-}}>
+                execFormatSafe(editorRef, 'underline'); syncFormats(); onContentChange(); 
+            }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3" /><line x1="4" y1="21" x2="20" y2="21" /></svg>
             </ToolbarButton>
 
@@ -210,7 +217,7 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
                             >
                                 <span>Heading {tag.slice(1)}</span>
                                 <span className="text-xsmall opacity-40 font-mono">
-                                    {tag === 'H1' ? '56px' : tag === 'H2' ? '48px' : tag === 'H3' ? '40px' : tag === 'H4' ? '32px' : tag === 'H5' ? '24px' : '20px'}
+                                    {headingSizes[tag]}
                                 </span>
                             </button>
                         ))}
@@ -221,8 +228,8 @@ const NoteToolbar = ({ editorRef, onContentChange }: NoteToolbarProps): React.Re
             <ToolbarSeparator />
 
             <ToolbarButton title="Bulleted list" isActive={activeFormats.has('ul')} onClick={() => {
- execFormatSafe(editorRef, 'insertUnorderedList'); syncFormats(); onContentChange(); 
-}}>
+                execFormatSafe(editorRef, 'insertUnorderedList'); syncFormats(); onContentChange(); 
+            }}>
                 <svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="currentColor" strokeWidth="2"><line x1="6" y1="1" x2="18" y2="1" /><line x1="6" y1="6" x2="18" y2="6" /><line x1="6" y1="11" x2="18" y2="11" /><circle cx="2" cy="1" r="1.5" fill="currentColor" stroke="none" /><circle cx="2" cy="6" r="1.5" fill="currentColor" stroke="none" /><circle cx="2" cy="11" r="1.5" fill="currentColor" stroke="none" /></svg>
             </ToolbarButton>
 
