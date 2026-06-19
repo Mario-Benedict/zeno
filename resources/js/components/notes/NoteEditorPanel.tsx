@@ -22,7 +22,6 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
         latestTitleRef.current = title;
     }, [title]);
 
-    //  SINKRONISASI DI RENDERING PHASE (Mencegah Error Linter)
     const [prevNoteId, setPrevNoteId] = useState(note?.id);
     if (note?.id !== prevNoteId) {
         setPrevNoteId(note?.id);
@@ -55,7 +54,6 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
         triggerDebounceSave();
     }, [triggerDebounceSave]);
 
-    //  FIX WARNING: Salin editorRef.current ke variabel lokal untuk cleanup
     useEffect(() => {
         const currentEditor = editorRef.current;
 
@@ -76,7 +74,6 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
         };
     }, [note, onSave]);
 
-    //  HANYA UNTUK MANIPULASI DOM (Bebas setState)
     useEffect(() => {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
         
@@ -146,10 +143,12 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
     return (
         <div className="flex flex-col flex-1 h-full bg-dark-surface-2 p-4 box-border font-sans min-h-0">
             <div className="flex justify-start mb-4">
-                <NoteTabSwitcher projectSlug={projectSlug} />
+                {/* FIX: Mengirim properti activeTab agar centang muncul di Personal Notes */}
+                <NoteTabSwitcher projectSlug={projectSlug} activeTab="personal" />
             </div>
             
-            <div className="flex flex-col flex-1 w-full bg-dark-surface-3 p-6 box-border rounded-lg overflow-y-auto min-h-0">
+            {/* FIX: Menghapus scrollbar bawaan dengan class utilitas Tailwind */}
+            <div className="flex flex-col flex-1 w-full bg-dark-surface-3 p-6 box-border rounded-lg overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden min-h-0">
                 {!note ? (
                     <div className="flex flex-1 items-center justify-center w-full h-full">
                         <NoteEmptyState />
@@ -159,8 +158,8 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
                         <input
                             value={title}
                             onChange={(e) => {
- setTitle(e.target.value); handleContentChange(); 
-}}
+                                setTitle(e.target.value); handleContentChange(); 
+                            }}
                             onBlur={triggerSave}
                             placeholder="New page"
                             className="w-full bg-transparent border-none outline-none font-bold text-[40px] leading-[44px] mb-4 p-0 box-border placeholder:text-dark-secondary text-dark-primary font-sans"
