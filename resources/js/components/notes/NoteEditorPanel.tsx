@@ -10,12 +10,20 @@ interface NoteEditorPanelProps {
     onSave: (id: string, title: string, html: string) => void;
 }
 
+/**
+ * NoteEditorPanel Component (Dynamic Full-Width Workspace)
+ * * Serves both Personal and Shared note spaces seamlessly.
+ * * Drives typography modifiers and debounced state commits.
+ */
 const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelProps): React.ReactElement => {
     const note = selectedNote;
-    const [title, setTitle] = useState(note?.title === 'Untitled' ? '' : (note?.title ?? ''));
+    const [title, setTitle] = useState(note?.title === 'Untitled' || note?.title === 'Untitled Shared Page' ? '' : (note?.title ?? ''));
     const editorRef = useRef<HTMLDivElement>(null);
     const savedHtmlRef = useRef<string>('');
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Menentukan status tab aktif saat ini secara dinamis melalui parameter rute URL browser
+    const isSharedTab = window.location.pathname.includes('/notes/shared');
 
     const latestTitleRef = useRef(title);
     useEffect(() => {
@@ -28,20 +36,21 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
         if (!note) {
             setTitle('');
         } else {
-            setTitle(note.title === 'Untitled' ? '' : note.title);
+            setTitle(note.title === 'Untitled' || note.title === 'Untitled Shared Page' ? '' : note.title);
         }
     }
 
     const triggerSave = useCallback(() => {
         if (!note) return;
-        const currentTitle = latestTitleRef.current.trim() || 'Untitled';
+        const defaultTitle = isSharedTab ? 'Untitled Shared Page' : 'Untitled';
+        const currentTitle = latestTitleRef.current.trim() || defaultTitle;
         const currentHtml = editorRef.current?.innerHTML ?? '';
         
         if (currentTitle !== note.title || currentHtml !== savedHtmlRef.current) {
             savedHtmlRef.current = currentHtml;
             onSave(note.id, currentTitle, currentHtml);
         }
-    }, [note, onSave]);
+    }, [note, onSave, isSharedTab]);
 
     const triggerDebounceSave = useCallback(() => {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -65,14 +74,15 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
                 return;
             }
             
-            const currentTitle = latestTitleRef.current.trim() || 'Untitled';
+            const defaultTitle = isSharedTab ? 'Untitled Shared Page' : 'Untitled';
+            const currentTitle = latestTitleRef.current.trim() || defaultTitle;
             const currentHtml = currentEditor?.innerHTML ?? '';
             
             if (currentTitle !== note.title || currentHtml !== savedHtmlRef.current) {
                 onSave(note.id, currentTitle, currentHtml);
             }
         };
-    }, [note, onSave]);
+    }, [note, onSave, isSharedTab]);
 
     useEffect(() => {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -141,17 +151,17 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
     };
 
     return (
-        <div className="flex flex-col flex-1 h-full bg-dark-surface-2 p-4 box-border font-sans min-h-0">
+        <div className="flex flex-col flex-1 h-full bg-dark-surface-2 p-4 box-border font-sans min-h-0 rounded-lg">
             <div className="flex justify-start mb-4">
-                {/* FIX: Mengirim properti activeTab agar centang muncul di Personal Notes */}
-                <NoteTabSwitcher projectSlug={projectSlug} activeTab="personal" />
+                {/* Dinamis menentukan tab aktif berdasarkan URL halaman */}
+                <NoteTabSwitcher projectSlug={projectSlug} activeTab={isSharedTab ? "shared" : "personal"} />
             </div>
             
-            {/* FIX: Menghapus scrollbar bawaan dengan class utilitas Tailwind */}
             <div className="flex flex-col flex-1 w-full bg-dark-surface-3 p-6 box-border rounded-lg overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden min-h-0">
                 {!note ? (
                     <div className="flex flex-1 items-center justify-center w-full h-full">
-                        <NoteEmptyState />
+                        {/* Dinamis memuat tipe placeholder kosong sesuai tab aktif */}
+                        <NoteEmptyState type={isSharedTab ? "shared" : "personal"} />
                     </div>
                 ) : (
                     <>

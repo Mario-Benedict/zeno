@@ -2,13 +2,24 @@
 
 use App\Http\Controllers\Notes\NoteController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Notes\NoteCollaboratorController;
 
-Route::middleware(['web', 'auth'])->group(function () {
-    // ✂️ POTONG PREFIX: Karena sudah dibungkus group /p/{project} di web.php, kita langsung mulai dari 'notes/'
-    Route::get('notes/personal', [NoteController::class, 'personal'])->name('notes.personal');
-    Route::post('notes', [NoteController::class, 'store'])->name('notes.store');
+Route::post('/{note}/collaborators', [NoteCollaboratorController::class, 'store'])
+    ->name('notes.collaborators.store');
 
-    // Gunakan {note:note_id} langsung tanpa embel-embel project di depannya
-    Route::patch('notes/{note:note_id}', [NoteController::class, 'update'])->name('notes.update');
-    Route::delete('notes/{note:note_id}', [NoteController::class, 'destroy'])->name('notes.destroy');
+Route::patch('/{note}/collaborators/{user}', [NoteCollaboratorController::class, 'update'])
+    ->name('notes.collaborators.update');
+
+Route::delete('/{note}/collaborators/{user}', [NoteCollaboratorController::class, 'destroy'])
+    ->name('notes.collaborators.destroy');
+
+Route::prefix('notes')->name('notes.')->group(function () {
+    // View Pages
+    Route::get('personal', [NoteController::class, 'personal'])->name('personal');
+    Route::get('shared', [NoteController::class, 'shared'])->name('shared');
+
+    // Core CRUD
+    Route::post('', [NoteController::class, 'store'])->name('store');
+    Route::patch('{note}', [NoteController::class, 'update'])->name('update');
+    Route::delete('{note}', [NoteController::class, 'destroy'])->name('destroy');
 });

@@ -3,10 +3,10 @@ import NoteCard from './NoteCard';
 import type { NoteItem } from './types';
 
 interface NoteListPanelProps {
+    title?: string; // Properti opsional untuk mengubah nama header secara dinamis
     notes: NoteItem[];
     selectedNote: NoteItem | null;
     searchQuery: string;
-    isCreating: boolean;
     onSearchChange: (query: string) => void;
     onSelectNote: (note: NoteItem) => void;
     onCreateNote: () => void;
@@ -18,25 +18,24 @@ interface NoteListPanelProps {
  * Contains: title + create button, search bar, "Recent" label, note cards list.
  */
 const NoteListPanel = ({
+    title = 'Personal Notes', // Default title jika tidak dikirim dari komponen induk
     notes,
     selectedNote,
     searchQuery,
-    isCreating,
     onSearchChange,
     onSelectNote,
     onCreateNote,
     onDeleteRequest,
 }: NoteListPanelProps): React.ReactElement => (
-    <section className="w-[401px] shrink-0 bg-dark-surface-2 rounded-lg relative overflow-hidden flex flex-col">
+    <section className="w-[401px] shrink-0 bg-dark-surface-2 rounded-lg relative overflow-hidden flex flex-col box-border border border-dark-border/10">
         {/* Header: title + create button */}
         <div className="px-4 pt-4">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white font-bold text-h4 m-0">Personal Notes</h2>
+                <h2 className="text-white font-bold text-h4 m-0">{title}</h2>
                 <button
                     onClick={onCreateNote}
-                    disabled={isCreating}
                     title="New note"
-                    className={`w-8 h-8 flex items-center justify-center bg-dark-surface-3 border-none rounded-lg text-dark-secondary shrink-0 ${isCreating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className="w-8 h-8 flex items-center justify-center bg-dark-surface-3 border-none rounded-lg text-dark-secondary shrink-0 cursor-pointer hover:bg-dark-surface-1 hover:text-white transition-colors duration-150"
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -46,13 +45,13 @@ const NoteListPanel = ({
             </div>
 
             {/* Search bar */}
-            <div className="w-[369px] h-[42px] bg-dark-surface-3 rounded-lg mb-4 flex items-center box-border">
+            <div className="w-[369px] h-[42px] bg-dark-surface-3 rounded-lg mb-4 flex items-center box-border border border-dark-border/40">
                 <input
                     type="text"
                     placeholder="Search note..."
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="flex-1 h-full bg-transparent border-none outline-none pl-4 text-dark-secondary font-bold text-medium"
+                    className="flex-1 h-full bg-transparent border-none outline-none pl-4 text-dark-secondary font-bold text-medium placeholder:text-dark-secondary/40"
                 />
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 shrink-0 text-dark-secondary">
                     <circle cx="11" cy="11" r="8" />
@@ -63,8 +62,8 @@ const NoteListPanel = ({
             <span className="text-white/60 font-bold text-large block mb-2">Recent</span>
         </div>
 
-        {/* Note card list */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-4 [scrollbar-width:none]">
+        {/* Note card list dengan scrollbar tersembunyi total */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {notes.length > 0 ? (
                 notes.map((note) => (
                     <NoteCard
