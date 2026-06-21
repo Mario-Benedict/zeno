@@ -1,25 +1,13 @@
 import React from 'react';
-import { useNoteEditor } from './useNoteEditor';
-import NoteToolbar from './NoteToolbar';
 import NoteEmptyState from './NoteEmptyState';
 import NoteTabSwitcher from './NoteTabSwitcher';
-import CollaboratorsPanel from './CollaboratorsPanel';
-import type { PresenceUser } from './CollaboratorsPanel';
+import NoteToolbar from './NoteToolbar';
 import type { NoteItem } from './types';
-
-interface CollaboratorUser {
-    id: string;
-    name: string;
-    role: 'Editor' | 'Viewer Only';
-    avatarUrl?: string;
-    email: string;
-}
+import { useNoteEditor } from './useNoteEditor';
 
 interface SharedEditorPanelProps {
     projectSlug: string;
     selectedNote: NoteItem | null;
-    collaborators: CollaboratorUser[];
-    activeOnlineUsers: PresenceUser[];
     onSave: (id: string, title: string, html: string) => void;
 }
 
@@ -31,8 +19,6 @@ interface SharedEditorPanelProps {
 const SharedEditorPanel = ({ 
     projectSlug, 
     selectedNote, 
-    collaborators, 
-    activeOnlineUsers, 
     onSave 
 }: SharedEditorPanelProps): React.ReactElement => {
     const { title, setTitle, editorRef, triggerSave, triggerDebounceSave } = useNoteEditor({
@@ -48,7 +34,7 @@ const SharedEditorPanel = ({
             </div>
             
             <div className="flex flex-1 gap-4 w-full min-h-0 items-start">
-                <div className="flex flex-col flex-1 h-full bg-dark-surface-3 p-6 box-border rounded-lg overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden min-h-0">
+                <div className="flex flex-col flex-1 h-full bg-dark-surface-3 p-6 box-border rounded-lg overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                     {!selectedNote ? (
                         <div className="flex flex-1 items-center justify-center w-full h-full">
                             <NoteEmptyState type="shared" />
@@ -57,10 +43,12 @@ const SharedEditorPanel = ({
                         <>
                             <input
                                 value={title}
-                                onChange={(e) => { setTitle(e.target.value); triggerDebounceSave(); }}
+                                onChange={(e) => {
+ setTitle(e.target.value); triggerDebounceSave(); 
+}}
                                 onBlur={triggerSave}
                                 placeholder="New page"
-                                className="w-full bg-transparent border-none outline-none font-bold text-[40px] leading-[44px] mb-4 p-0 box-border placeholder:text-dark-secondary text-dark-primary font-sans"
+                                className="w-full bg-transparent border-none outline-none font-bold text-[40px] leading-[44px] mb-4 p-0 box-border placeholder:text-dark-secondary text-dark-primary"
                             />
                             <NoteToolbar editorRef={editorRef} onContentChange={triggerDebounceSave} />
                             <div
