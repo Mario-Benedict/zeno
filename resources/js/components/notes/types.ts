@@ -8,12 +8,21 @@ export interface NoteContent {
     embedTitle?: string | null;
 }
 
+interface CollaboratorUser {
+    id: string;
+    name: string;
+    role: 'Editor' | 'Viewer Only';
+    avatarUrl?: string;
+    email: string;
+}
+
 export interface NoteItem {
     id: string;
     title: string;
     content: NoteContent | null;
     timeAgo?: string;
     is_shared: boolean;
+    collaborators?: CollaboratorUser[]; // Validated strict type contract for SharedEditorPanel
 }
 
 export interface PersonalNotesProps {

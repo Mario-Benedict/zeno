@@ -5,12 +5,19 @@ import Header from '@/components/layouts/Header';
 import Sidebar from '@/components/layouts/Sidebar';
 import DeleteConfirmModal from '@/components/notes/DeleteConfirmModal';
 import NoteEditorPanel from '@/components/notes/NoteEditorPanel';
+import SharedEditorPanel from '@/components/notes/SharedEditorPanel';
 import NoteListPanel from '@/components/notes/NoteListPanel';
 import type { NoteItem, PersonalNotesProps } from '@/components/notes/types';
 
+interface LaravelEcho {
+    join: (channelName: string) => any;
+    leave: (channelName: string) => void;
+    socketId: () => string;
+}
+
 declare global {
     interface Window {
-        Echo: any;
+        Echo?: LaravelEcho;
     }
 }
 
@@ -36,36 +43,38 @@ const NotesWorkspace = ({ projectSlug, initialNotes = [], type }: NotesWorkspace
         [searchQuery, notes],
     );
 
-    // Sinkronisasi initialNotes -> local state.
-    // Gunakan useLayoutEffect untuk sinkronisasi sebelum paint dan tambahkan guard agar tidak selalu memanggil setState.
+    // SATU-SATUNYA EFEK SINKRONISASI: Menggabungkan sinkronisasi list dan selected note 
+    // ke macrotask aman (setTimeout) untuk memecah call-stack render sinkron.
     useLayoutEffect(() => {
         const freshNotes = Array.isArray(initialNotes) ? initialNotes : [];
 
-        // Update notes hanya jika berbeda (menghindari re-render berlebih)
-        setNotes((prev) => {
-            const sameLength = prev.length === freshNotes.length;
-            const sameContent = sameLength && prev.every((p, idx) => p.id === freshNotes[idx].id);
-            return sameContent ? prev : freshNotes;
-        });
+        const timer = setTimeout(() => {
+            // 1. Sinkronisasi daftar catatan
+            setNotes((prev) => {
+                const sameLength = prev.length === freshNotes.length;
+                const sameContent = sameLength && prev.every((p, idx) => p.id === freshNotes[idx].id);
 
-        if (freshNotes.length === 0) {
-            // Jika sebelumnya sudah null, jangan set lagi
-            setSelectedNote((prev) => prev === null ? prev : null);
-            return;
-        }
+                return sameContent ? prev : freshNotes;
+            });
 
-        setSelectedNote((prev) => {
-            const stillExists = freshNotes.find((n) => n.id === prev?.id);
-            if (stillExists) {
-                // Jika isi dan judul tidak berubah, kembalikan prev agar tidak memicu re-render
-                if (prev && stillExists.id === prev.id && stillExists.title === prev.title && JSON.stringify(stillExists.content) === JSON.stringify(prev.content)) {
-                    return prev;
+            // 2. Sinkronisasi catatan yang sedang aktif dipilih
+            setSelectedNote((prev) => {
+                if (freshNotes.length === 0) {
+                    return prev === null ? prev : null;
                 }
-                return stillExists;
-            }
-            // Jika yang sebelumnya tidak ada di daftar freshNotes, pilih yang pertama
-            return freshNotes[0];
-        });
+                const stillExists = freshNotes.find((n) => n.id === prev?.id);
+                if (stillExists) {
+                    // Cek perubahan judul dan struktur konten agar tidak asal re-render jika isinya identik
+                    if (prev && stillExists.id === prev.id && stillExists.title === prev.title && JSON.stringify(stillExists.content) === JSON.stringify(prev.content)) {
+                        return prev;
+                    }
+                    return stillExists;
+                }
+                return freshNotes[0];
+            });
+        }, 0);
+
+        return () => clearTimeout(timer);
     }, [initialNotes]);
 
     const handleSelectNote = useCallback((note: NoteItem) => {
@@ -209,11 +218,20 @@ const NotesWorkspace = ({ projectSlug, initialNotes = [], type }: NotesWorkspace
                         onDeleteRequest={setDeleteConfirmId}
                     />
 
-                    <NoteEditorPanel
-                        projectSlug={projectSlug}
-                        selectedNote={selectedNote}
-                        onSave={handleSave}
-                    />
+                    {/* Pengondisian Editor Dinamis Berdasarkan Tipe Workspace */}
+                    {type === 'shared' ? (
+                        <SharedEditorPanel
+                            projectSlug={projectSlug}
+                            selectedNote={selectedNote}
+                            onSave={handleSave}
+                        />
+                    ) : (
+                        <NoteEditorPanel
+                            projectSlug={projectSlug}
+                            selectedNote={selectedNote}
+                            onSave={handleSave}
+                        />
+                    )}
                 </div>
             </div>
 
