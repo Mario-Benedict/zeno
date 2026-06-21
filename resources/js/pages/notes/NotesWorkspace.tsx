@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useEffect, useMemo, useState } from 'react';
 
 import Header from '@/components/layouts/Header';
 import Sidebar from '@/components/layouts/Sidebar';
@@ -36,17 +36,36 @@ const NotesWorkspace = ({ projectSlug, initialNotes = [], type }: NotesWorkspace
         [searchQuery, notes],
     );
 
-    useEffect(() => {
+    // Sinkronisasi initialNotes -> local state.
+    // Gunakan useLayoutEffect untuk sinkronisasi sebelum paint dan tambahkan guard agar tidak selalu memanggil setState.
+    useLayoutEffect(() => {
         const freshNotes = Array.isArray(initialNotes) ? initialNotes : [];
-        setNotes(freshNotes);
-        if (freshNotes.length > 0) {
-            setSelectedNote((prev) => {
-                const stillExists = freshNotes.find((n) => n.id === prev?.id);
-                return stillExists ? stillExists : freshNotes[0];
-            });
-        } else {
-            setSelectedNote(null);
+
+        // Update notes hanya jika berbeda (menghindari re-render berlebih)
+        setNotes((prev) => {
+            const sameLength = prev.length === freshNotes.length;
+            const sameContent = sameLength && prev.every((p, idx) => p.id === freshNotes[idx].id);
+            return sameContent ? prev : freshNotes;
+        });
+
+        if (freshNotes.length === 0) {
+            // Jika sebelumnya sudah null, jangan set lagi
+            setSelectedNote((prev) => prev === null ? prev : null);
+            return;
         }
+
+        setSelectedNote((prev) => {
+            const stillExists = freshNotes.find((n) => n.id === prev?.id);
+            if (stillExists) {
+                // Jika isi dan judul tidak berubah, kembalikan prev agar tidak memicu re-render
+                if (prev && stillExists.id === prev.id && stillExists.title === prev.title && JSON.stringify(stillExists.content) === JSON.stringify(prev.content)) {
+                    return prev;
+                }
+                return stillExists;
+            }
+            // Jika yang sebelumnya tidak ada di daftar freshNotes, pilih yang pertama
+            return freshNotes[0];
+        });
     }, [initialNotes]);
 
     const handleSelectNote = useCallback((note: NoteItem) => {
@@ -129,7 +148,7 @@ const NotesWorkspace = ({ projectSlug, initialNotes = [], type }: NotesWorkspace
         );
     }, [projectSlug, type]);
 
-    // FIX UTAMA SINKRONISASI: Menyuntikkan X-Socket-ID ke header request patch
+    // ── PATCH / SAVE ──
     const handleSave = useCallback((id: string, title: string, html: string) => {
         // Mengambil kode socket ID aktif dari instance internal Laravel Echo kelompokmu
         const socketId = window.Echo?.socketId() ?? '';

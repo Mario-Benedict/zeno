@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import NoteEmptyState from './NoteEmptyState';
 import NoteTabSwitcher from './NoteTabSwitcher';
 import NoteToolbar from './NoteToolbar';
@@ -23,29 +23,43 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Menentukan status tab aktif saat ini secara dinamis melalui parameter rute URL browser
-    const isSharedTab = window.location.pathname.includes('/notes/shared');
+    const isSharedTab = typeof window !== 'undefined' && window.location.pathname.includes('/notes/shared');
 
     const latestTitleRef = useRef(title);
     useEffect(() => {
         latestTitleRef.current = title;
     }, [title]);
 
-    const [prevNoteId, setPrevNoteId] = useState(note?.id);
-    if (note?.id !== prevNoteId) {
-        setPrevNoteId(note?.id);
+    // Ketika selectedNote berubah, sinkronkan title + editor HTML.
+    // Gunakan useLayoutEffect supaya update DOM/state terjadi sebelum paint dan tidak memicu
+    // peringatan linter tentang setState di dalam useEffect.
+    useLayoutEffect(() => {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
         if (!note) {
+            savedHtmlRef.current = '';
             setTitle('');
-        } else {
-            setTitle(note.title === 'Untitled' || note.title === 'Untitled Shared Page' ? '' : note.title);
+            if (editorRef.current) editorRef.current.innerHTML = '';
+            return;
         }
-    }
+
+        const defaultTitle = isSharedTab ? 'Untitled Shared Page' : 'Untitled';
+        setTitle(note.title === defaultTitle ? '' : note.title);
+
+        const initialHtml = note.content?.html ?? note.content?.text ?? '';
+        savedHtmlRef.current = initialHtml;
+
+        if (editorRef.current) {
+            editorRef.current.innerHTML = initialHtml;
+        }
+    }, [note, isSharedTab]);
 
     const triggerSave = useCallback(() => {
         if (!note) return;
         const defaultTitle = isSharedTab ? 'Untitled Shared Page' : 'Untitled';
         const currentTitle = latestTitleRef.current.trim() || defaultTitle;
         const currentHtml = editorRef.current?.innerHTML ?? '';
-        
+
         if (currentTitle !== note.title || currentHtml !== savedHtmlRef.current) {
             savedHtmlRef.current = currentHtml;
             onSave(note.id, currentTitle, currentHtml);
@@ -68,38 +82,21 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
 
         return () => {
             if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-            if (!note) { 
+            if (!note) {
                 savedHtmlRef.current = '';
                 if (currentEditor) currentEditor.innerHTML = '';
                 return;
             }
-            
+
             const defaultTitle = isSharedTab ? 'Untitled Shared Page' : 'Untitled';
             const currentTitle = latestTitleRef.current.trim() || defaultTitle;
             const currentHtml = currentEditor?.innerHTML ?? '';
-            
+
             if (currentTitle !== note.title || currentHtml !== savedHtmlRef.current) {
                 onSave(note.id, currentTitle, currentHtml);
             }
         };
     }, [note, onSave, isSharedTab]);
-
-    useEffect(() => {
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-        
-        if (!note) {
-            savedHtmlRef.current = '';
-            if (editorRef.current) editorRef.current.innerHTML = '';
-            return;
-        }
-
-        const initialHtml = note.content?.html ?? note.content?.text ?? '';
-        savedHtmlRef.current = initialHtml;
-        
-        if (editorRef.current) {
-            editorRef.current.innerHTML = initialHtml;
-        }
-    }, [note]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
         const editor = editorRef.current;
@@ -111,7 +108,7 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
                 const range = selection.getRangeAt(0);
                 const container = range.startContainer;
                 const textContent = container.textContent ?? '';
-                
+
                 if (textContent.trim() === '-') {
                     e.preventDefault();
                     document.execCommand('delete', false);
@@ -127,9 +124,9 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
             if (selection && selection.rangeCount > 0) {
                 const range = selection.getRangeAt(0);
                 const startNode = range.startContainer;
-                
-                let currentBlock = startNode.nodeType === Node.ELEMENT_NODE 
-                    ? (startNode as Element) 
+
+                let currentBlock = startNode.nodeType === Node.ELEMENT_NODE
+                    ? (startNode as Element)
                     : startNode.parentElement;
 
                 while (currentBlock && currentBlock.parentElement !== editor && currentBlock.tagName !== 'LI') {
@@ -157,7 +154,7 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
                 <NoteTabSwitcher projectSlug={projectSlug} activeTab={isSharedTab ? "shared" : "personal"} />
             </div>
             
-            <div className="flex flex-col flex-1 w-full bg-dark-surface-3 p-6 box-border rounded-lg overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden min-h-0">
+            <div className="flex flex-col flex-1 w-full bg-dark-surface-3 p-6 box-border rounded-lg overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {!note ? (
                     <div className="flex flex-1 items-center justify-center w-full h-full">
                         {/* Dinamis memuat tipe placeholder kosong sesuai tab aktif */}
@@ -172,7 +169,7 @@ const NoteEditorPanel = ({ projectSlug, selectedNote, onSave }: NoteEditorPanelP
                             }}
                             onBlur={triggerSave}
                             placeholder="New page"
-                            className="w-full bg-transparent border-none outline-none font-bold text-[40px] leading-[44px] mb-4 p-0 box-border placeholder:text-dark-secondary text-dark-primary font-sans"
+                            className="w-full bg-transparent border-none outline-none font-bold text-[40px] leading-[44px] mb-4 p-0 box-border placeholder:text-dark-secondary text-dark-primary"
                         />
 
                         <NoteToolbar editorRef={editorRef} onContentChange={handleContentChange} />

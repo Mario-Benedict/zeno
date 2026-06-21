@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useEffect, useRef, useState } from 'react';
 import type { NoteItem } from './types';
 
 interface UseNoteEditorProps {
@@ -18,8 +18,9 @@ export const useNoteEditor = ({ note, onSave, defaultTitle }: UseNoteEditorProps
         latestTitleRef.current = title;
     }, [title]);
 
-    // AMAN: Sinkronisasi judul dan HTML editor dibungkus penuh di dalam useEffect tunggal
-    useEffect(() => {
+    // Sinkronisasi judul dan HTML editor — gunakan useLayoutEffect sehingga perubahan state yang
+    // perlu terjadi sebelum paint tidak memicu cascading renders yang dilaporkan oleh linter.
+    useLayoutEffect(() => {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
         
         if (!note) {
