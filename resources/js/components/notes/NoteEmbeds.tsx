@@ -1,13 +1,15 @@
 import React from 'react';
 import { detectEmbedProvider } from './utils';
 
+// Mengganti interface prop agar menggunakan kontrak tipe yang jelas tanpa 'any'
 interface NoteEmbedCardProps {
     url: string;
 }
 
 /**
  * Komponen Representasi Kartu Tautan Luar.
- * Memuat Ikon Vektor Orisinal Berukuran Presisi 24x24 px Sesuai Guideline Desain Kelompok.
+ * 100% menggunakan Tailwind CSS Utility Classes.
+ * Menggunakan display inline-block agar bersahabat dengan Selection API (Ctrl+A).
  */
 export const NoteEmbedCard = ({ url }: NoteEmbedCardProps): React.ReactElement | null => {
     if (!url) return null;
@@ -15,7 +17,7 @@ export const NoteEmbedCard = ({ url }: NoteEmbedCardProps): React.ReactElement |
     const provider = detectEmbedProvider(url);
     const domainName = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
 
-    const renderVectorIcon = () => {
+    const renderVectorIcon = (): React.ReactElement => {
         if (url.includes('gemini.google.com')) {
             return (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="shrink-0">
@@ -53,30 +55,32 @@ export const NoteEmbedCard = ({ url }: NoteEmbedCardProps): React.ReactElement |
                 src={`https://www.google.com/s2/favicons?domain=${domainName}&sz=32`} 
                 alt={domainName}
                 className="w-6 h-6 rounded-md shrink-0 select-none"
-                onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%237B7B7B" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                    e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%237B7B7B" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
                 }}
             />
         );
     };
 
     return (
-        <a 
-            href={url} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="w-full bg-dark-surface-2 border border-dark-secondary/10 rounded-xl px-4 py-3 flex items-center justify-between gap-3 my-1.5 no-underline transition-all hover:bg-dark-surface-3 hover:border-dark-secondary/30 group block cursor-pointer select-none"
+        <span 
+            contentEditable={false} 
+            data-embed-url={url}
+            className="embed-row-block-container inline-block w-full my-1.5 clear-both select-all pointer-events-auto"
         >
-            <div className="flex items-center gap-3 overflow-hidden">
-                {renderVectorIcon()}
-                <span className="truncate text-white font-bold text-normal group-hover:underline">
-                    {provider?.id === 'figma' ? 'Figma Resource' : provider ? `${provider.label} Resource` : domainName}
-                </span>
-            </div>
-            
-            <span className="text-dark-secondary text-xsmall bg-dark-surface-3 px-2 py-1 rounded border border-dark-secondary/10 shrink-0">
-                Embed Card
-            </span>
-        </a>
+            <a 
+                href={url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="embed-card-block flex items-center justify-start w-full bg-dark-surface-2 border border-dark-secondary/10 rounded-xl px-4 py-3 no-underline transition-colors duration-150 hover:bg-dark-surface-1 text-dark-primary font-bold cursor-pointer select-all"
+            >
+                <div className="flex items-center gap-3 overflow-hidden pointer-events-none">
+                    {renderVectorIcon()}
+                    <span className="truncate text-white font-bold text-normal group-hover:underline">
+                        {provider?.id === 'figma' ? 'Figma Resource' : provider ? `${provider.label} Resource` : domainName}
+                    </span>
+                </div>
+            </a>
+        </span>
     );
 };

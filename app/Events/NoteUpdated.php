@@ -5,17 +5,12 @@ namespace App\Events;
 use App\Models\Note;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Broadcasting\PresenceChannel; // Wajib import ini
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow; // Wajib import ini
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * NoteUpdated
- * ------------
- * Broadcast when a shared note's title/content is saved.
- */
-class NoteUpdated implements ShouldBroadcast
+class NoteUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,26 +19,25 @@ class NoteUpdated implements ShouldBroadcast
         public readonly string $editedByAccountId,
     ) {}
 
-    public function broadcastOn(): Channel
+    public function broadcastOn(): array
     {
-        // FIX: Menggunakan note_id agar sesuai dengan primary key database kelompokmu
-        return new PresenceChannel('note.'.$this->note->note_id);
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'note.updated';
+        // PASTIKAN INI ADALAH PresenceChannel, BUKAN Channel BIASA!
+        return [
+            new PresenceChannel('note.' . $this->note->note_id),
+        ];
     }
 
     public function broadcastWith(): array
     {
         return [
-            // FIX: Gunakan note_id untuk konsistensi data payload
-            'id' => (string) $this->note->note_id,
-            'title' => $this->note->title,
-            'content' => $this->note->content,
-            'editedBy' => $this->editedByAccountId,
-            'updatedAt' => $this->note->updated_at?->toIso8601String(),
+            'id'      => (string) $this->note->note_id,
+            'title'   => $this->note->title,
+            'content' => $this->note->content ?? ['html' => '', 'text' => ''],
         ];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'NoteUpdated';
     }
 }

@@ -8,8 +8,8 @@ export interface NoteContent {
     embedTitle?: string | null;
 }
 
-interface CollaboratorUser {
-    id: string;
+export interface CollaboratorUser {
+    id: number;
     name: string;
     role: 'Editor' | 'Viewer Only';
     avatarUrl?: string;
@@ -22,12 +22,14 @@ export interface NoteItem {
     content: NoteContent | null;
     timeAgo?: string;
     is_shared: boolean;
-    collaborators?: CollaboratorUser[]; // Validated strict type contract for SharedEditorPanel
+    ownerId?: number;
+    collaborators?: CollaboratorUser[];
 }
 
 export interface PersonalNotesProps {
     projectSlug: string;
     initialNotes: NoteItem[];
+    currentUserId: number;
 }
 
 export interface EmbedProvider {

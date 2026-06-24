@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreign('project_id')->references('project_id')->on('projects')->cascadeOnDelete();
             $table->string('title');
             $table->json('content');
-            $table->boolean('is_shared')->default(false);
+            $table->boolean('is_shared')->default(true);
             $table->timestamps();
             $table->softDeletes();
 

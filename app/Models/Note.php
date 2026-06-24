@@ -14,8 +14,6 @@ class Note extends Model
     use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'note_id';
-
-    // Menandakan bahwa primary key kelompokmu bukan auto-increment integer, melainkan UUID/String
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -26,11 +24,6 @@ class Note extends Model
         'is_shared' => 'boolean',
     ];
 
-    /**
-     * Pemicu Siklus Hidup Otomatis (Universal Lifecycle Boot)
-     * Menjamin note_id selalu terisi UUID otomatis baik saat aplikasi dijalankan 
-     * di browser, di-post lewat controller, maupun saat unit testing!
-     */
     protected static function boot()
     {
         parent::boot();
@@ -55,7 +48,7 @@ class Note extends Model
     public function collaborators(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'note_collaborators', 'note_id', 'user_id')
-                    ->withPivot('can_edit')
-                    ->withTimestamps();
+                    ->using(NoteCollaborator::class)
+                    ->withPivot('can_edit');
     }
 }
