@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import React, { useCallback, useLayoutEffect, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 
 import echo from '@/echo';
 import Header from '@/components/layouts/Header';

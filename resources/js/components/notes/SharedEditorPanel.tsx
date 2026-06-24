@@ -98,7 +98,7 @@ const SharedEditorPanel = ({
             echo?.leave(`note.${noteId}`);
             setOnlineUsers([]);
         };
-    }, [selectedNote?.id]);
+        }, [selectedNote?.id, editorRef, onRemoteUpdate, setTitle]); 
 
     return (
         <div className="flex flex-1 h-full min-h-0 gap-0">
