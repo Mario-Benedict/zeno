@@ -19,6 +19,8 @@ class Project extends Model
     protected $fillable = [
         'project_name',
         'project_slug',
+        'avatar_color',
+        'avatar_url',
         'invitation_link',
         'invitation_role',
     ];
@@ -53,6 +55,29 @@ class Project extends Model
     public function kanbanBoards(): HasMany
     {
         return $this->hasMany(KanbanBoard::class, 'kanban_board_project_id', 'project_id');
+    }
+
+    public static function generateUniqueSlug(string $name, ?string $excludeId = null): string
+    {
+        $base = Str::limit(Str::slug($name), 65, '');
+
+        if ($base === '') {
+            $base = Str::lower(Str::random(8));
+        }
+
+        $taken = fn (string $candidate): bool => static::where('project_slug', $candidate)
+            ->when($excludeId, fn ($q) => $q->where('project_id', '!=', $excludeId))
+            ->exists();
+
+        if (! $taken($base)) {
+            return $base;
+        }
+
+        do {
+            $candidate = Str::limit($base, 59, '').'-'.Str::lower(Str::random(5));
+        } while ($taken($candidate));
+
+        return $candidate;
     }
 
     public function roleFor(User|int|string|null $user): ?ProjectRole

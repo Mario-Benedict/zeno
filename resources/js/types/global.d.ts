@@ -43,6 +43,8 @@ declare module '@inertiajs/core' {
       projectNavigation: ProjectNavigation;
       projectShare: ProjectShare | null;
 
+      twoFactor: { enabled: boolean; qrCodeUrl: string | null };
+
       sidebarOpen: boolean;
       [key: string]: unknown;
     };

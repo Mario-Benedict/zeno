@@ -28,6 +28,35 @@
   font-display: swap;
 }
 
+/* ─── Light mode — override dark colour tokens via CSS variables ────────────
+   Tailwind v4 exposes every config colour as --color-{name}, so flipping
+   these variables here automatically recolours every utility that references
+   the dark-* palette, with no per-component changes required.
+   ─────────────────────────────────────────────────────────────────────────── */
+html.light-mode {
+  --color-dark-surface-1: #ffffff;
+  --color-dark-surface-2: #f3f3f5;
+  --color-dark-surface-3: #e2e2e6;
+  --color-dark-primary: #1a1a1a;
+  --color-dark-secondary: #6b6b6b;
+  --color-dark-border: #d8d8df;
+  --color-dark-border-focus: #b8b8c4;
+  --color-dark-input: #f8f8fb;
+  --color-dark-input-focus: #f0f0f4;
+}
+
+html.light-mode .scrollbar-app {
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+
+html.light-mode .scrollbar-app::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+html.light-mode .scrollbar-app:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.22);
+}
+
 /* Override browser autofill background — keeps dark theme colours */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -40,6 +69,19 @@ input:-webkit-autofill:active {
 input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 1000px #313131 inset !important;
   -webkit-text-fill-color: #f0f0f0 !important;
+}
+
+html.light-mode input:-webkit-autofill,
+html.light-mode input:-webkit-autofill:hover,
+html.light-mode input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f8f8fb inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  caret-color: #1a1a1a;
+}
+
+html.light-mode input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #f0f0f4 inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
 }
 
 .scrollbar-app {

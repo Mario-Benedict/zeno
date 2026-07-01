@@ -49,6 +49,15 @@ class GoogleController extends Controller
             ]);
         }
 
+        // Enforce 2FA challenge — same as password login
+        if ($user->hasTwoFactorEnabled()) {
+            $request->session()->put('auth.2fa_user_id', $user->id);
+            $request->session()->put('auth.2fa_expires_at', now()->addMinutes(5)->timestamp);
+            $request->session()->put('auth.2fa_remember', true);
+
+            return redirect()->route('two-factor');
+        }
+
         Auth::login($user, remember: true);
         $request->session()->regenerate();
 

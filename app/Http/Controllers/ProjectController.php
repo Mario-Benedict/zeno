@@ -8,7 +8,6 @@ use App\Services\ChatRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,15 +17,19 @@ class ProjectController extends Controller
     {
         $user = auth()->user();
 
+        $projectColumns = ['projects.project_id', 'projects.project_name', 'projects.project_slug', 'projects.avatar_color', 'projects.avatar_url'];
+
         $recentProjects = $user->projects()
             ->wherePivotNotNull('opened_at')
             ->orderByPivot('opened_at', 'desc')
             ->limit(4)
-            ->get(['projects.project_id', 'projects.project_name', 'projects.project_slug'])
+            ->get($projectColumns)
             ->map(fn ($p) => [
                 'project_id' => $p->project_id,
                 'project_name' => $p->project_name,
                 'project_slug' => $p->project_slug,
+                'avatar_color' => $p->avatar_color ?? 'accent-blue',
+                'avatar_url' => $p->avatar_url,
                 'is_pinned' => (bool) $p->pivot->is_pinned,
                 'role' => $p->pivot->role,
             ]);
@@ -34,12 +37,14 @@ class ProjectController extends Controller
         $paginated = $user->projects()
             ->orderByPivot('is_pinned', 'desc')
             ->orderBy('projects.project_name')
-            ->paginate(5, ['projects.project_id', 'projects.project_name', 'projects.project_slug']);
+            ->paginate(5, $projectColumns);
 
         $projects = $paginated->through(fn ($p) => [
             'project_id' => $p->project_id,
             'project_name' => $p->project_name,
             'project_slug' => $p->project_slug,
+            'avatar_color' => $p->avatar_color ?? 'accent-blue',
+            'avatar_url' => $p->avatar_url,
             'is_pinned' => (bool) $p->pivot->is_pinned,
             'role' => $p->pivot->role,
         ]);
@@ -57,7 +62,7 @@ class ProjectController extends Controller
             'project_slug' => ['required', 'string', 'max:65', 'regex:/^[a-z0-9-]+$/'],
         ]);
 
-        $slug = $this->generateUniqueSlug($validated['project_slug']);
+        $slug = Project::generateUniqueSlug($validated['project_slug']);
 
         $project = Project::create([
             'project_name' => trim($validated['project_name']),
@@ -138,22 +143,4 @@ class ProjectController extends Controller
         return back();
     }
 
-    private function generateUniqueSlug(string $base): string
-    {
-        $slug = Str::limit(Str::slug($base), 65, '');
-
-        if ($slug === '') {
-            $slug = Str::lower(Str::random(8));
-        }
-
-        if (! Project::where('project_slug', $slug)->exists()) {
-            return $slug;
-        }
-
-        do {
-            $candidate = Str::limit($slug, 59, '').'-'.Str::lower(Str::random(5));
-        } while (Project::where('project_slug', $candidate)->exists());
-
-        return $candidate;
-    }
 }

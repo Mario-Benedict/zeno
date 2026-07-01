@@ -2,6 +2,7 @@ import { router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, SyntheticEvent } from 'react';
 import { accountPath } from '@/lib/accountRoutes';
+import { toSlug } from '@/lib/projectSlug';
 
 interface CreateProjectPanelProps {
   open: boolean;
@@ -10,8 +11,6 @@ interface CreateProjectPanelProps {
 
 const SLUG_CHAR_RE = /^[a-zA-Z0-9\- ]*$/;
 const NO_DBL_SPACE = / {2}/;
-
-const toSlug = (name: string) => name.trim().toLowerCase().replace(/\s+/g, '-');
 
 const XIcon = () => (
   <svg

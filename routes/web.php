@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\TwoFactorSetupController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectInvitationController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\ProjectSettingsController;
 use App\Models\Project;
 use App\Services\AccountSessionService;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             });
 
             Route::inertia('account', 'account/show')->name('account.show');
+            Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
 
             Route::prefix('p/{project:project_slug}')
                 ->middleware('project.member')
@@ -28,6 +31,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::name('projects.')->group(function () {
                         Route::get('/', [ProjectController::class, 'show'])->name('show');
                         Route::patch('/pin', [ProjectController::class, 'togglePin'])->name('toggle-pin');
+                        Route::post('/leave', [ProjectSettingsController::class, 'leave'])->name('leave');
+
+                        Route::middleware('project.role:OWNER,ADMIN')->group(function () {
+                            Route::patch('/', [ProjectSettingsController::class, 'update'])->name('settings.update');
+                            Route::patch('/avatar', [ProjectSettingsController::class, 'updateAvatar'])->name('settings.avatar.update');
+                            Route::post('/avatar', [ProjectSettingsController::class, 'storeAvatarImage'])->name('settings.avatar.store');
+                            Route::delete('/avatar', [ProjectSettingsController::class, 'destroyAvatarImage'])->name('settings.avatar.destroy');
+                        });
+
+                        Route::middleware('project.role:OWNER')->group(function () {
+                            Route::delete('/', [ProjectSettingsController::class, 'destroy'])->name('settings.destroy');
+                        });
 
                         require __DIR__.'/kanban.php';
 
@@ -72,7 +87,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('projects.invitations.accept');
 
     Route::prefix('two-factor')->name('two-factor.')->group(function () {
-        Route::get('setup', [TwoFactorSetupController::class, 'show'])->name('setup');
         Route::post('generate', [TwoFactorSetupController::class, 'generate'])->name('generate');
         Route::post('verify', [TwoFactorSetupController::class, 'verify'])->name('verify');
         Route::post('disable', [TwoFactorSetupController::class, 'disable'])->name('disable');

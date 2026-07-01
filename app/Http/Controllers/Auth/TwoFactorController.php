@@ -68,8 +68,10 @@ class TwoFactorController extends Controller
         RateLimiter::clear($key);
         $user->update(['two_factor_last_counter' => $counter]);
 
-        $request->session()->forget(['auth.2fa_user_id', 'auth.2fa_expires_at']);
-        Auth::login($user);
+        $remember = (bool) $request->session()->get('auth.2fa_remember', false);
+        $request->session()->forget(['auth.2fa_user_id', 'auth.2fa_expires_at', 'auth.2fa_remember']);
+
+        Auth::login($user, $remember);
         $request->session()->regenerate();
         $accountIndex = AccountSessionService::addAccount($request, $user->id);
         $request->session()->forget('url.intended');

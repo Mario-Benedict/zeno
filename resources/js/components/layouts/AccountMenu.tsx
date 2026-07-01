@@ -1,4 +1,4 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { accountPath } from '@/lib/accountRoutes';
@@ -62,9 +62,10 @@ const Divider = () => <div className="my-1.5 h-px bg-dark-border" />;
 interface AccountMenuProps {
   open: boolean;
   onClose: () => void;
+  onSettingsOpen: () => void;
 }
 
-const AccountMenu = ({ open, onClose }: AccountMenuProps) => {
+const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
   const { auth, account, accountsList } = usePage().props;
   const [view, setView] = useState<'main' | 'manage'>('main');
   const user = auth.user;
@@ -142,13 +143,13 @@ const AccountMenu = ({ open, onClose }: AccountMenuProps) => {
 
         <Divider />
 
-        <Link
-          href={accountPath(account.index, '/account')}
-          onClick={onClose}
+        <button
+          type="button"
+          onClick={() => { onClose(); onSettingsOpen(); }}
           className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-small font-medium text-dark-primary transition-colors hover:bg-white/[0.07]"
         >
           Account settings
-        </Link>
+        </button>
 
         <Divider />
 

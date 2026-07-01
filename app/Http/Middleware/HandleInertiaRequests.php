@@ -7,7 +7,9 @@ use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
 use App\Services\AccountSessionService;
+use App\Support\Totp;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -66,6 +68,7 @@ class HandleInertiaRequests extends Middleware
             'projectRole' => $projectRole,
             'projectNavigation' => fn () => $this->resolveProjectNavigation($request),
             'projectShare' => fn () => $this->resolveProjectShare($request),
+            'twoFactor' => fn () => $this->resolveTwoFactor($request),
         ];
     }
 
@@ -106,6 +109,10 @@ class HandleInertiaRequests extends Middleware
             'project_id' => $project->project_id,
             'project_name' => $project->project_name,
             'project_slug' => $project->project_slug,
+            'avatar_color' => $project->avatar_color ?? 'accent-blue',
+            'avatar_url' => $project->avatar_url
+                ? Storage::disk('public')->url($project->avatar_url)
+                : null,
         ];
 
         $user = $request->user();
@@ -136,11 +143,15 @@ class HandleInertiaRequests extends Middleware
             ->orderByPivot('opened_at', 'desc')
             ->orderBy('projects.project_name')
             ->limit(8)
-            ->get(['projects.project_id', 'projects.project_name', 'projects.project_slug'])
+            ->get(['projects.project_id', 'projects.project_name', 'projects.project_slug', 'projects.avatar_color', 'projects.avatar_url'])
             ->map(fn (Project $project) => [
                 'project_id' => $project->project_id,
                 'project_name' => $project->project_name,
                 'project_slug' => $project->project_slug,
+                'avatar_color' => $project->avatar_color ?? 'accent-blue',
+                'avatar_url' => $project->avatar_url
+                    ? Storage::disk('public')->url($project->avatar_url)
+                    : null,
                 'is_pinned' => (bool) $project->pivot->is_pinned,
                 'role' => $project->pivot->role,
             ])
@@ -148,6 +159,31 @@ class HandleInertiaRequests extends Middleware
             ->all();
 
         return ['projects' => $projects];
+    }
+
+    /**
+     * @return array{enabled: bool, qrCodeUrl: string|null}
+     */
+    private function resolveTwoFactor(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            return ['enabled' => false, 'qrCodeUrl' => null];
+        }
+
+        $secret = $user->two_factor_secret;
+        $qrCodeUrl = null;
+
+        if ($secret !== null) {
+            $otpUrl = Totp::getQrCodeUrl(config('app.name'), $user->email, $secret);
+            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='.urlencode($otpUrl);
+        }
+
+        return [
+            'enabled' => $user->hasTwoFactorEnabled(),
+            'qrCodeUrl' => $qrCodeUrl,
+        ];
     }
 
     /**

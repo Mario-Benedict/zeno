@@ -4,6 +4,7 @@ import type { ChangeEvent, ReactNode } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
 import ProjectSwitcher from '@/components/layouts/ProjectSwitcher';
 import ProjectInvitationModal from '@/components/projects/ProjectInvitationModal';
+import ProjectSettingsModal from '@/components/projects/ProjectSettingsModal';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
 import Bell from '@public/icons/small/bell.svg';
 import Gear from '@public/icons/small/gear.svg';
@@ -52,6 +53,13 @@ const Header = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'general' | 'profile'>('general');
+
+  const openSettings = (tab: 'general' | 'profile' = 'general') => {
+    setSettingsInitialTab(tab);
+    setSettingsOpen(true);
+  };
   const projectMenuRef = useRef<HTMLDivElement>(null);
 
   // Close project menu on outside click
@@ -103,6 +111,7 @@ const Header = ({
             currentProject={project}
             projects={projectNavigation.projects}
             onClose={() => setProjectMenuOpen(false)}
+            onSettingsOpen={() => openSettings('general')}
           />
         </div>
       </div>
@@ -143,7 +152,10 @@ const Header = ({
         <div className="mx-1.5 h-5 w-px bg-dark-border" aria-hidden="true" />
 
         {/* AccountSwitcher manages its own open state + outside-click */}
-        <AccountSwitcher onOpen={() => setProjectMenuOpen(false)} />
+        <AccountSwitcher
+          onOpen={() => setProjectMenuOpen(false)}
+          onSettingsOpen={() => openSettings('profile')}
+        />
       </div>
 
       <ProjectInvitationModal
@@ -151,6 +163,12 @@ const Header = ({
         project={project}
         share={projectShare}
         onClose={() => setInviteOpen(false)}
+      />
+
+      <ProjectSettingsModal
+        open={settingsOpen}
+        initialTab={settingsInitialTab}
+        onClose={() => setSettingsOpen(false)}
       />
     </header>
   );

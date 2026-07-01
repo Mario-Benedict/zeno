@@ -27,9 +27,11 @@ const getInitials = (name: string): string =>
 interface AccountSwitcherProps {
   /** Called when the dropdown opens, so a parent can close other menus. */
   onOpen?: () => void;
+  /** Called when the user clicks "Account settings" — opens the settings modal. */
+  onSettingsOpen?: () => void;
 }
 
-const AccountSwitcher = ({ onOpen }: AccountSwitcherProps = {}) => {
+const AccountSwitcher = ({ onOpen, onSettingsOpen }: AccountSwitcherProps = {}) => {
   const { auth, account } = usePage().props;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -83,7 +85,7 @@ const AccountSwitcher = ({ onOpen }: AccountSwitcherProps = {}) => {
       </button>
 
       {/* ── Dropdown ───────────────────────────────────────────────────────── */}
-      <AccountMenu open={open} onClose={() => setOpen(false)} />
+      <AccountMenu open={open} onClose={() => setOpen(false)} onSettingsOpen={onSettingsOpen ?? (() => {})} />
     </div>
   );
 };
