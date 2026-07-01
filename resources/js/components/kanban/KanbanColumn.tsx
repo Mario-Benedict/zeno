@@ -63,7 +63,11 @@ export const KanbanColumn = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex h-fit max-h-[calc(100vh-10.5rem)] w-70 shrink-0 flex-col rounded-2xl transition-all ${
+          style={{
+            ...provided.draggableProps.style,
+            ...(snapshot.isDropAnimating && { transitionDuration: '0.001s' }),
+          }}
+          className={`flex h-fit max-h-[calc(100vh-10.5rem)] w-70 shrink-0 flex-col rounded-2xl ${
             snapshot.isDragging
               ? 'z-50 rotate-1 bg-dark-surface-1 shadow-2xl ring-1 ring-accent-blue/50'
               : 'bg-dark-surface-2'
