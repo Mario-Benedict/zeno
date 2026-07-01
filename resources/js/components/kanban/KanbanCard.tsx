@@ -66,6 +66,11 @@ export const KanbanCard = ({
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
+            data-card-id={card.kanban_board_card_id}
+            style={{
+              ...provided.draggableProps.style,
+              ...(snapshot.isDropAnimating && { transitionDuration: '0.001s' }),
+            }}
             onClick={onClick}
             className={`group cursor-pointer rounded-lg p-3 ${
               snapshot.isDragging
