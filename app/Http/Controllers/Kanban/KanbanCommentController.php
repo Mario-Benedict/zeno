@@ -21,7 +21,7 @@ class KanbanCommentController extends Controller
      * Post a new comment on a card. Accepts an optional client-generated
      * `kanban_board_card_comment_id` for optimistic UI.
      */
-    public function store(Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
+    public function store(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
@@ -51,7 +51,7 @@ class KanbanCommentController extends Controller
     /**
      * Delete a comment. Only the author may delete their own comments.
      */
-    public function destroy(Request $request, Project $project, KanbanBoardCardComment $comment): RedirectResponse
+    public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoardCardComment $comment): RedirectResponse
     {
         $owningProject = $comment->cardDetail->kanbanBoardCard->kanbanBoard->project;
         abort_unless($request->user()->can('view', $owningProject), 403);

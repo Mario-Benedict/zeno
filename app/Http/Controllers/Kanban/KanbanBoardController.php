@@ -17,7 +17,7 @@ class KanbanBoardController extends Controller
      * frontend can optimistically add the board before the round-trip — the
      * server simply uses the same id when persisting.
      */
-    public function store(Request $request, Project $project): RedirectResponse
+    public function store(int $accountIndex, Request $request, Project $project): RedirectResponse
     {
         abort_unless($request->user()->can('view', $project), 403);
 
@@ -50,7 +50,7 @@ class KanbanBoardController extends Controller
      * doesn't collide with `$board`. The project itself isn't used here
      * (we derive it from `$board->project` for authorization).
      */
-    public function update(Request $request, Project $project, KanbanBoard $board): RedirectResponse
+    public function update(int $accountIndex, Request $request, Project $project, KanbanBoard $board): RedirectResponse
     {
         abort_unless($request->user()->can('view', $board->project), 403);
 
@@ -77,7 +77,7 @@ class KanbanBoardController extends Controller
     /**
      * Remove the specified board (and its cards) from storage.
      */
-    public function destroy(Request $request, Project $project, KanbanBoard $board): RedirectResponse
+    public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoard $board): RedirectResponse
     {
         abort_unless($request->user()->can('view', $board->project), 403);
 

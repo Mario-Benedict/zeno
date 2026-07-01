@@ -9,6 +9,8 @@ export interface KanbanProject {
   project_id: string;
   project_name: string;
   project_slug: string;
+  avatar_color: string;
+  avatar_url: string | null;
 }
 
 export interface KanbanUser {

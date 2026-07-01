@@ -9,6 +9,7 @@ use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Services\ChatMessageService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,8 @@ use Illuminate\Support\Facades\Auth;
  * ----------------------
  * Handles CRUD for chat messages stored in MongoDB.
  *
- * All responses are JSON (consumed by the React frontend via fetch/axios).
+ * Message reads are exposed for lightweight pagination endpoints, while writes
+ * return redirects so Inertia can update the current page naturally.
  * Message reads go through cursor-based pagination for infinite scroll.
  *
  * Route prefix : /projects/{project}/chat/rooms/{room}/messages
@@ -46,7 +48,7 @@ class ChatMessageController extends Controller
      *  - before  : MongoDB ObjectId cursor (load messages older than this)
      *  - limit   : number of messages per page (default: 30, max: 50)
      */
-    public function index(Request $request, Project $project, ChatRoom $room): JsonResponse
+    public function index(int $accountIndex, Request $request, Project $project, ChatRoom $room): JsonResponse
     {
         $this->authorize('view', $room);
 
@@ -83,7 +85,7 @@ class ChatMessageController extends Controller
      * On success, the message document is returned so the frontend can
      * optimistically append it without re-fetching.
      */
-    public function store(SendMessageRequest $request, Project $project, ChatRoom $room): RedirectResponse
+    public function store(int $accountIndex, SendMessageRequest $request, Project $project, ChatRoom $room): RedirectResponse
     {
         $this->authorize('sendMessage', $room);
 
@@ -114,6 +116,7 @@ class ChatMessageController extends Controller
      * @param  string  $messageId  MongoDB ObjectId
      */
     public function destroy(
+        int $accountIndex,
         Project $project,
         ChatRoom $room,
         string $messageId,

@@ -16,7 +16,9 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     messages: serverMessages,
     nextCursor: serverNextCursor,
     hasMore: serverHasMore,
+    account,
   } = usePage<ChatPageProps>().props;
+  const accountIndex = account.index;
 
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -30,7 +32,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     isLoadingMoreRef.current = false;
 
     router.get(
-      chat.index.url({ project: projectSlug }),
+      chat.index.url({ accountIndex, project: projectSlug }),
       { room: roomId },
       {
         only: ['messages', 'nextCursor', 'hasMore'],
@@ -52,7 +54,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     return () => {
       echo.leave(`chat.${roomId}`);
     };
-  }, [projectSlug, roomId]);
+  }, [accountIndex, projectSlug, roomId]);
 
   useEffect(() => {
     if (serverMessages === undefined) return;
@@ -74,7 +76,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     setLoadingMore(true);
 
     router.get(
-      chat.index.url({ project: projectSlug }),
+      chat.index.url({ accountIndex, project: projectSlug }),
       { room: roomId, before: cursor },
       {
         only: ['messages', 'nextCursor', 'hasMore'],

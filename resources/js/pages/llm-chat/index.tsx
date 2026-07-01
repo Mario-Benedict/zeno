@@ -1,12 +1,12 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { SyntheticEvent } from 'react';
-import LlmChatController from '@/actions/App/Http/Controllers/LlmChatController';
 import LlmChatComposer from '@/components/llm-chat/LlmChatComposer';
 import LlmChatMessageList from '@/components/llm-chat/LlmChatMessageList';
 import LlmChatSidebar from '@/components/llm-chat/LlmChatSidebar';
 import { useProject } from '@/hooks/useProject';
 import AppLayout from '@/layouts/AppLayout';
+import { projectPath } from '@/lib/accountRoutes';
 import type { LlmMessage, LlmSession } from '@/types/llm-chat';
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
-  const { project } = useProject();
+  const { project, accountIndex } = useProject();
   const { data, setData, post, processing, reset } = useForm({ question: '' });
 
   // Optimistic user bubble shown while the API call is in flight.
@@ -45,11 +45,12 @@ const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
     setPendingQuestion(question);
 
     const url = session
-      ? LlmChatController.reply.url({
-          project: project.project_slug,
-          session: session.llm_chat_session_id,
-        })
-      : LlmChatController.ask.url({ project: project.project_slug });
+      ? projectPath(
+          accountIndex,
+          project.project_slug,
+          `/llm-chat/${session.llm_chat_session_id}/reply`,
+        )
+      : projectPath(accountIndex, project.project_slug, '/llm-chat');
 
     post(url, {
       onSuccess: (page) => {

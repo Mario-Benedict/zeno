@@ -144,7 +144,7 @@ export const KanbanColumn = ({
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="flex min-h-0 flex-col gap-2 overflow-y-auto px-3 pb-3 transition-colors [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent"
+                className="scrollbar-app flex min-h-0 flex-col gap-2 overflow-y-auto px-3 pb-3 transition-colors"
               >
                 {filteredCards.length === 0 && (
                   <div className="rounded-xl py-8 text-center text-xsmall text-white/20">

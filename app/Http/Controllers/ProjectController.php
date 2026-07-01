@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Services\AccountSessionService;
 use App\Services\ChatRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,15 +17,19 @@ class ProjectController extends Controller
     {
         $user = auth()->user();
 
+        $projectColumns = ['projects.project_id', 'projects.project_name', 'projects.project_slug', 'projects.avatar_color', 'projects.avatar_url'];
+
         $recentProjects = $user->projects()
             ->wherePivotNotNull('opened_at')
             ->orderByPivot('opened_at', 'desc')
             ->limit(4)
-            ->get(['projects.project_id', 'projects.project_name', 'projects.project_slug'])
+            ->get($projectColumns)
             ->map(fn ($p) => [
                 'project_id' => $p->project_id,
                 'project_name' => $p->project_name,
                 'project_slug' => $p->project_slug,
+                'avatar_color' => $p->avatar_color ?? 'accent-blue',
+                'avatar_url' => $p->avatar_url,
                 'is_pinned' => (bool) $p->pivot->is_pinned,
                 'role' => $p->pivot->role,
             ]);
@@ -33,12 +37,14 @@ class ProjectController extends Controller
         $paginated = $user->projects()
             ->orderByPivot('is_pinned', 'desc')
             ->orderBy('projects.project_name')
-            ->paginate(5, ['projects.project_id', 'projects.project_name', 'projects.project_slug']);
+            ->paginate(5, $projectColumns);
 
         $projects = $paginated->through(fn ($p) => [
             'project_id' => $p->project_id,
             'project_name' => $p->project_name,
             'project_slug' => $p->project_slug,
+            'avatar_color' => $p->avatar_color ?? 'accent-blue',
+            'avatar_url' => $p->avatar_url,
             'is_pinned' => (bool) $p->pivot->is_pinned,
             'role' => $p->pivot->role,
         ]);
@@ -53,12 +59,14 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'project_name' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\- ]+$/'],
-            'project_slug' => ['required', 'string', 'max:65', 'unique:projects,project_slug'],
+            'project_slug' => ['required', 'string', 'max:65', 'regex:/^[a-z0-9-]+$/'],
         ]);
+
+        $slug = Project::generateUniqueSlug($validated['project_slug']);
 
         $project = Project::create([
             'project_name' => trim($validated['project_name']),
-            'project_slug' => $validated['project_slug'],
+            'project_slug' => $slug,
         ]);
 
         auth()->user()->projects()->attach($project->project_id, [
@@ -69,7 +77,18 @@ class ProjectController extends Controller
         // Auto-create group chat room for the project
         app(ChatRoomService::class)->createProjectGroupRoom($project, auth()->id());
 
-        return redirect()->route('projects.show', $project->project_slug);
+        $accountIndex = max(
+            0,
+            (int) $request->route(
+                'accountIndex',
+                $request->attributes->get('account.index', AccountSessionService::getActiveIndex($request)),
+            ),
+        );
+
+        return redirect()->route('projects.show', [
+            'accountIndex' => $accountIndex,
+            'project' => $project->project_slug,
+        ]);
     }
 
     public function checkSlug(Request $request): JsonResponse
@@ -85,7 +104,7 @@ class ProjectController extends Controller
         return response()->json(['available' => ! $exists]);
     }
 
-    public function show(Project $project): Response
+    public function show(int $accountIndex, Project $project): Response
     {
         $user = auth()->user();
 
@@ -105,7 +124,7 @@ class ProjectController extends Controller
         return Inertia::render('projects/workspace');
     }
 
-    public function togglePin(Project $project): JsonResponse
+    public function togglePin(int $accountIndex, Project $project): RedirectResponse
     {
         $user = auth()->user();
 
@@ -121,21 +140,7 @@ class ProjectController extends Controller
             'is_pinned' => $newValue,
         ]);
 
-        return response()->json(['is_pinned' => $newValue]);
+        return back();
     }
 
-    private function generateUniqueSlug(string $base): string
-    {
-        $slug = Str::slug($base);
-
-        if (! Project::where('project_slug', $slug)->exists()) {
-            return $slug;
-        }
-
-        do {
-            $candidate = $slug.'-'.Str::lower(Str::random(5));
-        } while (Project::where('project_slug', $candidate)->exists());
-
-        return $candidate;
-    }
 }

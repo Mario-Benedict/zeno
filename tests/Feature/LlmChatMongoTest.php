@@ -97,13 +97,13 @@ beforeEach(function () {
     LlmChatMessage::truncate();
 });
 
-// ─── Index (GET /p/{slug}/llm-chat) ──────────────────────────────────────────
+// ─── Index (GET /u/{accountIndex}/p/{slug}/llm-chat) ─────────────────────────
 
 it('redirects guests to login when hitting the chat index', function () {
     $user = User::factory()->create();
     $project = makeProjectForUser($user);
 
-    $this->get("/p/{$project->project_slug}/llm-chat")
+    $this->get("/u/0/p/{$project->project_slug}/llm-chat")
         ->assertRedirect('/login');
 });
 
@@ -112,7 +112,7 @@ it('renders the chat index for an authenticated project member', function () {
     $project = makeProjectForUser($user);
 
     $this->actingAs($user)
-        ->get("/p/{$project->project_slug}/llm-chat")
+        ->get("/u/0/p/{$project->project_slug}/llm-chat")
         ->assertOk();
 });
 
@@ -122,11 +122,11 @@ it('blocks non-members of the project from the chat index', function () {
     $project = makeProjectForUser($owner);
 
     $this->actingAs($outsider)
-        ->get("/p/{$project->project_slug}/llm-chat")
+        ->get("/u/0/p/{$project->project_slug}/llm-chat")
         ->assertForbidden();
 });
 
-// ─── Ask (POST /p/{slug}/llm-chat) ───────────────────────────────────────────
+// ─── Ask (POST /u/{accountIndex}/p/{slug}/llm-chat) ──────────────────────────
 
 it('creates a new session and persists both turns to MongoDB on ask', function () {
     $user = User::factory()->create();
@@ -135,7 +135,7 @@ it('creates a new session and persists both turns to MongoDB on ask', function (
     fakeGemini('Halo, saya AI Gemini!');
 
     $response = $this->actingAs($user)->post(
-        "/p/{$project->project_slug}/llm-chat",
+        "/u/0/p/{$project->project_slug}/llm-chat",
         ['question' => 'Halo, apa kabar?'],
     );
 
@@ -144,7 +144,7 @@ it('creates a new session and persists both turns to MongoDB on ask', function (
     expect($session->llm_chat_session_name)->toBe('Halo, apa kabar?');
 
     $response->assertRedirect(
-        "/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}",
+        "/u/0/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}",
     );
 
     $messages = LlmChatMessage::where('llm_chat_session_id', $session->llm_chat_session_id)
@@ -163,7 +163,7 @@ it('rejects an ask request with no question', function () {
     seedDefaultLlmModel();
 
     $this->actingAs($user)
-        ->post("/p/{$project->project_slug}/llm-chat", ['question' => ''])
+        ->post("/u/0/p/{$project->project_slug}/llm-chat", ['question' => ''])
         ->assertSessionHasErrors('question');
 
     expect(LlmChatSession::count())->toBe(0);
@@ -178,7 +178,7 @@ it('truncates a long question down to a 40-char session name', function () {
     $longQuestion = str_repeat('a', 100);
 
     $this->actingAs($user)->post(
-        "/p/{$project->project_slug}/llm-chat",
+        "/u/0/p/{$project->project_slug}/llm-chat",
         ['question' => $longQuestion],
     );
 
@@ -187,7 +187,7 @@ it('truncates a long question down to a 40-char session name', function () {
     expect($session->llm_chat_session_name)->toEndWith('...');
 });
 
-// ─── Show (GET /p/{slug}/llm-chat/{session}) ─────────────────────────────────
+// ─── Show (GET /u/{accountIndex}/p/{slug}/llm-chat/{session}) ────────────────
 
 it('shows an existing session with its full message history to the owner', function () {
     $user = User::factory()->create();
@@ -198,7 +198,7 @@ it('shows an existing session with its full message history to the owner', funct
     addMessage($session, 'model', 'Jawaban pertama');
 
     $this->actingAs($user)
-        ->get("/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}")
+        ->get("/u/0/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}")
         ->assertOk();
 });
 
@@ -223,11 +223,11 @@ it('returns 403 when a user tries to open another user\'s session', function () 
     $session = makeSession($owner, $model);
 
     $this->actingAs($intruder)
-        ->get("/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}")
+        ->get("/u/0/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}")
         ->assertForbidden();
 });
 
-// ─── Reply (POST /p/{slug}/llm-chat/{session}/reply) ─────────────────────────
+// ─── Reply (POST /u/{accountIndex}/p/{slug}/llm-chat/{session}/reply) ────────
 
 it('appends a new turn pair when replying inside an existing session', function () {
     $user = User::factory()->create();
@@ -241,11 +241,11 @@ it('appends a new turn pair when replying inside an existing session', function 
 
     $this->actingAs($user)
         ->post(
-            "/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}/reply",
+            "/u/0/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}/reply",
             ['question' => 'Follow-up question'],
         )
         ->assertRedirect(
-            "/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}",
+            "/u/0/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}",
         );
 
     $messages = LlmChatMessage::where('llm_chat_session_id', $session->llm_chat_session_id)
@@ -274,7 +274,7 @@ it('forbids replying to a session you do not own', function () {
 
     $this->actingAs($intruder)
         ->post(
-            "/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}/reply",
+            "/u/0/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}/reply",
             ['question' => 'sneaky'],
         )
         ->assertForbidden();
@@ -282,7 +282,7 @@ it('forbids replying to a session you do not own', function () {
     expect(LlmChatMessage::count())->toBe(0);
 });
 
-// ─── Destroy (DELETE /p/{slug}/llm-chat/{session}) ───────────────────────────
+// ─── Destroy (DELETE /u/{accountIndex}/p/{slug}/llm-chat/{session}) ──────────
 
 it('deletes a session and all its messages', function () {
     $user = User::factory()->create();
@@ -293,8 +293,8 @@ it('deletes a session and all its messages', function () {
     addMessage($session, 'model', 'a');
 
     $this->actingAs($user)
-        ->delete("/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}")
-        ->assertRedirect("/p/{$project->project_slug}/llm-chat");
+        ->delete("/u/0/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}")
+        ->assertRedirect("/u/0/p/{$project->project_slug}/llm-chat");
 
     expect(LlmChatSession::find($session->llm_chat_session_id))->toBeNull();
     expect(LlmChatMessage::where('llm_chat_session_id', $session->llm_chat_session_id)->count())
@@ -319,7 +319,7 @@ it('forbids deleting a session you do not own', function () {
     addMessage($session, 'user', 'q');
 
     $this->actingAs($intruder)
-        ->delete("/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}")
+        ->delete("/u/0/p/{$project->project_slug}/llm-chat/{$session->llm_chat_session_id}")
         ->assertForbidden();
 
     expect(LlmChatSession::find($session->llm_chat_session_id))->not->toBeNull();

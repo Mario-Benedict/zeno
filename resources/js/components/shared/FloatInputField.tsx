@@ -13,10 +13,10 @@ const floatLabel = [
   'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2',
   'cursor-text text-sm text-dark-secondary',
   'transition-all duration-150',
-  'peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-[11px] peer-focus:text-dark-primary',
+  'peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-micro peer-focus:text-dark-primary',
   'peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0',
-  'peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-dark-primary',
-  'peer-autofill:top-2 peer-autofill:translate-y-0 peer-autofill:text-[11px] peer-autofill:text-dark-primary',
+  'peer-[:not(:placeholder-shown)]:text-micro peer-[:not(:placeholder-shown)]:text-dark-primary',
+  'peer-autofill:top-2 peer-autofill:translate-y-0 peer-autofill:text-micro peer-autofill:text-dark-primary',
 ].join(' ');
 
 const FloatInputField = ({

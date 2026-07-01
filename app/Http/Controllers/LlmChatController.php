@@ -69,7 +69,7 @@ PROMPT;
      * GET /p/{project}/llmchat
      * Renders the chat index with the user's session list and no active session.
      */
-    public function index(Project $project): Response
+    public function index(int $accountIndex, Project $project): Response
     {
         return Inertia::render('llm-chat/index', [
             'sessions' => $this->userSessions(),
@@ -80,7 +80,7 @@ PROMPT;
      * GET /p/{project}/llmchat/{session}
      * Renders the chat page with a specific session and its full message history.
      */
-    public function show(Project $project, LlmChatSession $session): Response
+    public function show(int $accountIndex, Project $project, LlmChatSession $session): Response
     {
         $this->authorizeSession($session);
 
@@ -101,7 +101,7 @@ PROMPT;
      * POST /p/{project}/llmchat
      * Creates a new session, sends the first question, and redirects to the session.
      */
-    public function ask(Request $request, Project $project): RedirectResponse
+    public function ask(int $accountIndex, Request $request, Project $project): RedirectResponse
     {
         $question = $this->validated($request);
         $model = $this->resolveModel();
@@ -124,7 +124,7 @@ PROMPT;
      * POST /p/{project}/llmchat/{session}/reply
      * Appends a follow-up turn using a sliding window of history for context.
      */
-    public function reply(Request $request, Project $project, LlmChatSession $session): RedirectResponse
+    public function reply(int $accountIndex, Request $request, Project $project, LlmChatSession $session): RedirectResponse
     {
         $this->authorizeSession($session);
 
@@ -144,14 +144,14 @@ PROMPT;
      * DELETE /p/{project}/llm-chat/{session}
      * Removes the session and all its messages (MySQL row + MongoDB messages).
      */
-    public function destroy(Project $project, LlmChatSession $session): RedirectResponse
+    public function destroy(int $accountIndex, Project $project, LlmChatSession $session): RedirectResponse
     {
         $this->authorizeSession($session);
 
         LlmChatMessage::where('llm_chat_session_id', $session->llm_chat_session_id)->delete();
         $session->delete();
 
-        return redirect()->route('llm-chat.index', ['project' => $project->project_slug]);
+        return redirect($this->llmChatPath($project));
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────
@@ -253,9 +253,16 @@ PROMPT;
     /** Consistent redirect to a session page. */
     private function redirectToSession(Project $project, string $sessionId): RedirectResponse
     {
-        return redirect()->route('llm-chat.show', [
-            'project' => $project->project_slug,
-            'session' => $sessionId,
-        ]);
+        return redirect($this->llmChatPath($project, $sessionId));
+    }
+
+    private function llmChatPath(Project $project, ?string $sessionId = null): string
+    {
+        $accountIndex = max(0, (int) request()->attributes->get('account.index', 0));
+        $base = request()->is('p/*')
+            ? "/p/{$project->project_slug}/llm-chat"
+            : "/u/{$accountIndex}/p/{$project->project_slug}/llm-chat";
+
+        return $sessionId === null ? $base : "{$base}/{$sessionId}";
     }
 }

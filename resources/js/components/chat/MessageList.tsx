@@ -186,7 +186,7 @@ const MessageList = ({
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-5 py-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent"
+      className="scrollbar-app flex-1 overflow-y-auto px-5 py-4"
     >
       <div ref={topSentinelRef} className="h-px" />
 

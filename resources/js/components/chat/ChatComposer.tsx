@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useCallback, useRef, useState } from 'react';
 import echo from '@/echo';
 import { formatFileSize } from '@/lib/utils';
@@ -142,6 +142,7 @@ const ChatComposer = ({
   onMessageSent,
   disabled = false,
 }: Props) => {
+  const accountIndex = usePage().props.account.index;
   const [body, setBody] = useState('');
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [sending, setSending] = useState(false);
@@ -206,7 +207,11 @@ const ChatComposer = ({
     });
 
     router.post(
-      chat.rooms.messages.store.url({ project: projectSlug, room: roomId }),
+      chat.rooms.messages.store.url({
+        accountIndex,
+        project: projectSlug,
+        room: roomId,
+      }),
       payload,
       {
         forceFormData: true,
@@ -242,6 +247,7 @@ const ChatComposer = ({
     pendingFiles,
     sending,
     disabled,
+    accountIndex,
     projectSlug,
     roomId,
     onMessageSent,

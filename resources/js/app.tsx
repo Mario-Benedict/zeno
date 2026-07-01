@@ -4,6 +4,15 @@ import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// Apply persisted colour-scheme preference before first paint
+try {
+  if (localStorage.getItem('theme') === 'light') {
+    document.documentElement.classList.add('light-mode');
+  }
+} catch {
+  // localStorage unavailable — stay in default dark mode
+}
+
 const pages = import.meta.glob('./pages/**/*.tsx');
 
 createInertiaApp({

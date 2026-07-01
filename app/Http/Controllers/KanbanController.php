@@ -11,7 +11,7 @@ use Inertia\Inertia;
 
 class KanbanController extends Controller
 {
-    public function show(Project $project)
+    public function show(int $accountIndex, Project $project)
     {
         // Eager load kanban boards with all related data
         $project->load([
