@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[Fillable([
+    'user_id',
+    'code',
+    'expires_at',
+])]
 class EmailOtp extends Model
 {
     public $timestamps = false;
-
-    protected $fillable = ['user_id', 'code', 'expires_at'];
 
     protected function casts(): array
     {
