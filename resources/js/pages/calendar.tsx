@@ -60,10 +60,11 @@ export default function Calendar({
   // Calculate view boundaries
   const viewBounds = useMemo(() => {
     const start = new Date(currentDate);
-    const end = new Date(currentDate);
+    let end: Date;
 
     if (viewMode === 'month') {
       start.setDate(1);
+      end = new Date(start);
       end.setMonth(end.getMonth() + 1);
       end.setDate(0);
 
@@ -72,7 +73,8 @@ export default function Calendar({
       end.setDate(end.getDate() + 7);
     } else {
       start.setDate(start.getDate() - start.getDay()); // Sunday
-      end.setDate(start.getDate() + 6); // Saturday
+      end = new Date(start);
+      end.setDate(end.getDate() + 6); // Saturday, derived from corrected start
     }
 
     start.setHours(0, 0, 0, 0);

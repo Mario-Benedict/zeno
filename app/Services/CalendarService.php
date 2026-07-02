@@ -77,11 +77,20 @@ class CalendarService
         Carbon $rangeStart,
         Carbon $rangeEnd
     ): array {
-        // Get non-recurring events in range
+        // Get events in range. Weekly recurring events only need to have
+        // started before the window ends — expandWeeklyOccurrences() is the
+        // single source of truth for which occurrences actually fall inside
+        // the requested window, so we don't pre-filter them by overlap here.
         $events = CalendarEvent::where('project_id', $projectId)
             ->where(function ($q) use ($rangeStart, $rangeEnd) {
-                $q->where('start_time', '<', $rangeEnd)
-                    ->where('end_time', '>', $rangeStart);
+                $q->where(function ($sub) use ($rangeStart, $rangeEnd) {
+                    $sub->where('recurrence', '!=', 'weekly')
+                        ->where('start_time', '<', $rangeEnd)
+                        ->where('end_time', '>', $rangeStart);
+                })->orWhere(function ($sub) use ($rangeEnd) {
+                    $sub->where('recurrence', 'weekly')
+                        ->where('start_time', '<', $rangeEnd);
+                });
             })
             ->whereHas('participants', function ($q) use ($userIds) {
                 $q->whereIn('user_id', $userIds);
@@ -113,23 +122,30 @@ class CalendarService
      * For events where the viewer is a participant, return full details instead.
      */
     private function getClassifiedEvents(
-        string $projectId,
-        int $viewerId,
-        array $userIds,
-        Carbon $rangeStart,
-        Carbon $rangeEnd
-    ): array {
-        // Get events from OTHER projects where any of the target users participate
-        $events = CalendarEvent::where('project_id', '!=', $projectId)
-            ->where(function ($q) use ($rangeStart, $rangeEnd) {
-                $q->where('start_time', '<', $rangeEnd)
-                    ->where('end_time', '>', $rangeStart);
-            })
-            ->whereHas('participants', function ($q) use ($userIds) {
-                $q->whereIn('user_id', $userIds);
-            })
-            ->with(['participants:id,name'])
-            ->get();
+      string $projectId,
+      int $viewerId,
+      array $userIds,
+      Carbon $rangeStart,
+      Carbon $rangeEnd
+  ): array {
+      // Get events from OTHER projects where any of the target users participate.
+      // Same weekly-recurrence handling as getProjectEvents() — see comment there.
+      $events = CalendarEvent::where('project_id', '!=', $projectId)
+          ->where(function ($q) use ($rangeStart, $rangeEnd) {
+              $q->where(function ($sub) use ($rangeStart, $rangeEnd) {
+                  $sub->where('recurrence', '!=', 'weekly')
+                      ->where('start_time', '<', $rangeEnd)
+                      ->where('end_time', '>', $rangeStart);
+              })->orWhere(function ($sub) use ($rangeEnd) {
+                  $sub->where('recurrence', 'weekly')
+                      ->where('start_time', '<', $rangeEnd);
+              });
+          })
+          ->whereHas('participants', function ($q) use ($userIds) {
+              $q->whereIn('user_id', $userIds);
+          })
+          ->with(['participants:id,name'])
+          ->get();
 
         $result = [];
 
