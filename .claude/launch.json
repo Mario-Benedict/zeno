@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "php",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "serve", "--port=8001"],
+      "port": 8001
+    },
+    {
+      "name": "vite",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    }
+  ]
+}

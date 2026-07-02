@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Note;
 use App\Models\Project;
+use App\Policies\NotePolicy;
 use App\Policies\ProjectPolicy;
 use App\Services\MongoDB\MongoConnection;
 use App\Services\StorageService;
@@ -18,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
 {
     protected $policies = [
         Project::class => ProjectPolicy::class,
+        Note::class => NotePolicy::class,
     ];
 
     /**

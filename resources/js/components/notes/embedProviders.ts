@@ -1,5 +1,12 @@
 import React from 'react';
-import type { EmbedProvider } from './types';
+
+export interface EmbedProvider {
+    id: string;
+    label: string;
+    matcher: (url: string) => boolean;
+    getEmbedUrl?: (url: string) => string;
+    renderIcon: () => React.ReactElement;
+}
 
 export const EMBED_PROVIDERS: EmbedProvider[] = [
     {

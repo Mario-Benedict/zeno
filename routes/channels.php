@@ -1,10 +1,9 @@
 <?php
 
 use App\Models\ChatRoom;
-use App\Models\User;
 use App\Models\Note;
+use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
-use Illuminate\Support\Facades\Auth;
 
 // ── CHANNEL CHAT TIM (SUDAH BERHASIL) ──
 Broadcast::channel('chat.{roomId}', function (User $user, string $roomId) {
@@ -15,18 +14,19 @@ Broadcast::channel('chat.{roomId}', function (User $user, string $roomId) {
 
 // ── CHANNEL NOTES (PRESENCE + SYNC KONTEN) ──
 Broadcast::channel('note.{noteId}', function ($user, $noteId) {
-    $note = Note::where('note_id', $noteId)->first();
+    $note = Note::with('project')->where('note_id', $noteId)->first();
 
-    if (!$note) {
+    if (! $note) {
         return false;
     }
 
-    // Shared note: semua anggota proyek yang login boleh join.
+    // Shared note: hanya anggota project yang sama yang boleh join.
     if ($note->is_shared) {
-        return [
-            'id'   => (int) $user->id, // INT, harus konsisten dgn CollaboratorUser.id di frontend
-            'name' => $user->name,
-        ];
+        $isProjectMember = $note->project->members()->where('users.id', $user->id)->exists();
+
+        return $isProjectMember
+            ? ['id' => (int) $user->id, 'name' => $user->name]
+            : false;
     }
 
     // Personal note: hanya pemilik asli.

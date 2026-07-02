@@ -1,139 +1,174 @@
-import { useCallback, useLayoutEffect, useEffect, useRef, useState } from 'react';
-import type { NoteItem } from './types';
+import type { Editor } from '@tiptap/core';
+import Placeholder from '@tiptap/extension-placeholder';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
+import { useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import axios from 'axios';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import notes from '@/routes/projects/notes';
+import type { NoteContent, NoteDetail, NoteSaveStatus } from '@/types/notes';
+import { AutoCloseBrackets } from './editor/extensions/autoCloseBrackets';
+import { CodeBlock } from './editor/extensions/codeBlock';
+import { Embed } from './editor/extensions/embed';
+import { NoteImage } from './editor/extensions/image';
+import { SlashCommand } from './editor/extensions/slashCommand';
 
-interface UseNoteEditorProps {
-    note: NoteItem | null;
-    onSave: (id: string, title: string, html: string) => void;
-    defaultTitle: string;
-    canEdit?: boolean; // default true, biar NoteEditorPanel (personal notes) gak perlu diubah
+const AUTOSAVE_DELAY_MS = 600;
+
+export const emptyNoteDocument = (): NoteContent => ({ type: 'doc', content: [{ type: 'paragraph' }] });
+
+interface UseNoteEditorOptions {
+  projectSlug: string;
+  note: NoteDetail | null;
+  canEdit: boolean;
+  onSaved: (note: NoteDetail) => void;
 }
 
-export const useNoteEditor = ({ note, onSave, defaultTitle, canEdit = true }: UseNoteEditorProps) => {
-    const [title, setTitle] = useState('');
-    const editorRef = useRef<HTMLDivElement>(null);
-    const savedHtmlRef = useRef<string>('');
-    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const latestTitleRef = useRef(title);
-    const canEditRef = useRef(canEdit);
+/**
+ * Owns the Tiptap instance for whichever note is open, plus the debounced
+ * autosave state machine (`idle -> dirty -> saving -> saved/error`).
+ *
+ * Callers must mount the consuming component with `key={note?.id}` (see
+ * `NotesPage`) — that fully remounts this hook per note switch, which is
+ * what resets `title`/`saveStatus`/etc. to the new note's values. That's
+ * simpler and more correct than manually resetting each piece of state in
+ * an effect, and it's why `noteId` below is a plain value rather than a
+ * ref: within one mounted instance it never changes.
+ */
+export const useNoteEditor = ({ projectSlug, note, canEdit, onSaved }: UseNoteEditorOptions) => {
+  const noteId = note?.id ?? null;
 
-    useEffect(() => {
-        latestTitleRef.current = title;
-    }, [title]);
+  const [title, setTitleState] = useState(note?.title ?? '');
+  const [saveStatus, setSaveStatus] = useState<NoteSaveStatus>('idle');
+  const [savedAt, setSavedAt] = useState<string | null>(note?.updatedAt ?? null);
 
-    useEffect(() => {
-        canEditRef.current = canEdit;
-    }, [canEdit]);
+  const dirtyRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleRef = useRef(title);
 
-    const saveCaretPosition = (element: HTMLDivElement): number => {
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return 0;
-        const range = selection.getRangeAt(0);
-        const preCaretRange = range.cloneRange();
-        preCaretRange.selectNodeContents(element);
-        preCaretRange.setEnd(range.startContainer, range.startOffset);
-        return preCaretRange.toString().length;
-    };
+  useEffect(() => {
+    titleRef.current = title;
+  }, [title]);
 
-    const restoreCaretPosition = (element: HTMLDivElement, chars: number) => {
-        if (chars < 0) return;
-        const selection = window.getSelection();
-        if (!selection) return;
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    },
+    [],
+  );
 
-        const range = document.createRange();
-        range.setStart(element, 0);
-        range.collapse(true);
+  const uploadImage = useCallback(
+    async (file: File): Promise<string> => {
+      if (!noteId) throw new Error('No note selected');
 
-        const nodeStack: Node[] = [element];
-        let currentChars = 0;
-        let found = false;
+      const form = new FormData();
+      form.append('image', file);
 
-        while (nodeStack.length > 0 && !found) {
-            const node = nodeStack.pop();
-            if (!node) continue;
+      const { data } = await axios.post<{ url: string }>(notes.images.store.url({ project: projectSlug, note: noteId }), form);
 
-            if (node.nodeType === Node.TEXT_NODE) {
-                const nextChars = currentChars + (node.textContent?.length ?? 0);
-                if (chars >= currentChars && chars <= nextChars) {
-                    range.setStart(node, chars - currentChars);
-                    range.collapse(true);
-                    found = true;
-                }
-                currentChars = nextChars;
-            } else {
-                let i = node.childNodes.length;
-                while (i--) {
-                    nodeStack.push(node.childNodes[i]);
-                }
-            }
-        }
+      return data.url;
+    },
+    [projectSlug, noteId],
+  );
 
-        selection.removeAllRanges();
-        selection.addRange(range);
-    };
+  const performSave = useCallback(
+    async (activeEditor: Editor) => {
+      if (!noteId) return;
 
-    useLayoutEffect(() => {
-        if (!note) {
-            savedHtmlRef.current = '';
-            if (editorRef.current) editorRef.current.innerHTML = '';
-            const timer = setTimeout(() => setTitle(''), 0);
-            return () => clearTimeout(timer);
-        }
+      setSaveStatus('saving');
 
-        const timer = setTimeout(() => {
-            setTitle(note.title === defaultTitle ? '' : note.title);
-        }, 0);
+      try {
+        const { data } = await axios.patch<{ note: NoteDetail }>(notes.update.url({ project: projectSlug, note: noteId }), {
+          title: titleRef.current.trim() || 'Untitled',
+          content: activeEditor.getJSON(),
+        });
 
-        const initialHtml = note.content?.html ?? note.content?.text ?? '';
+        dirtyRef.current = false;
+        setSaveStatus('saved');
+        setSavedAt(data.note.updatedAt);
+        onSaved(data.note);
+      } catch {
+        setSaveStatus('error');
+      }
+    },
+    [projectSlug, noteId, onSaved],
+  );
 
-        if (editorRef.current && editorRef.current.innerHTML !== initialHtml) {
-            const caretPos = saveCaretPosition(editorRef.current);
-            editorRef.current.innerHTML = initialHtml;
-            restoreCaretPosition(editorRef.current, caretPos);
-        }
+  const scheduleSave = useCallback(
+    (activeEditor: Editor) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => void performSave(activeEditor), AUTOSAVE_DELAY_MS);
+    },
+    [performSave],
+  );
 
-        savedHtmlRef.current = initialHtml;
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({
+          heading: { levels: [1, 2, 3] },
+          link: { openOnClick: false, autolink: true },
+          codeBlock: false,
+        }),
+        CodeBlock,
+        Placeholder.configure({ placeholder: "Write something, or press '/' for commands…" }),
+        TaskList,
+        TaskItem.configure({ nested: true }),
+        NoteImage.configure({ uploadImage }),
+        Embed,
+        SlashCommand,
+        AutoCloseBrackets,
+      ],
+      content: note?.content ?? emptyNoteDocument(),
+      editable: canEdit,
+      editorProps: {
+        attributes: { class: 'prose-note focus:outline-none' },
+      },
+      onUpdate: ({ editor: activeEditor }) => {
+        dirtyRef.current = true;
+        setSaveStatus('dirty');
+        scheduleSave(activeEditor);
+      },
+    },
+    [noteId],
+  );
 
-        return () => clearTimeout(timer);
-    }, [note, defaultTitle]);
+  useEffect(() => {
+    editor?.setEditable(canEdit);
+  }, [editor, canEdit]);
 
-    const triggerSave = useCallback(() => {
-        if (!note || !canEditRef.current) return; // ← guard
-        const currentTitle = latestTitleRef.current.trim() || defaultTitle;
-        const currentHtml = editorRef.current?.innerHTML ?? '';
+  const setTitle = useCallback(
+    (value: string) => {
+      setTitleState(value);
 
-        if (currentTitle !== note.title || currentHtml !== savedHtmlRef.current) {
-            savedHtmlRef.current = currentHtml;
-            onSave(note.id, currentTitle, currentHtml);
-        }
-    }, [note, onSave, defaultTitle]);
+      if (!editor || !canEdit) return;
 
-    const triggerDebounceSave = useCallback(() => {
-        if (!canEditRef.current) return; // ← guard
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = setTimeout(() => {
-            triggerSave();
-        }, 500);
-    }, [triggerSave]);
+      dirtyRef.current = true;
+      setSaveStatus('dirty');
+      scheduleSave(editor);
+    },
+    [editor, canEdit, scheduleSave],
+  );
 
-    useEffect(() => {
-        const currentEditor = editorRef.current;
+  const flushSave = useCallback(() => {
+    if (!editor || !dirtyRef.current) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    void performSave(editor);
+  }, [editor, performSave]);
 
-        return () => {
-            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-            if (!note || !canEditRef.current) return; // ← guard, ini yang bikin bug-nya
-            const currentTitle = latestTitleRef.current.trim() || defaultTitle;
-            const currentHtml = currentEditor?.innerHTML ?? '';
-            if (currentTitle !== note.title || currentHtml !== savedHtmlRef.current) {
-                onSave(note.id, currentTitle, currentHtml);
-            }
-        };
-    }, [note, onSave, defaultTitle]);
+  const isDirty = useCallback(() => dirtyRef.current, []);
 
-    return {
-        title,
-        setTitle,
-        editorRef,
-        triggerSave,
-        triggerDebounceSave
-    };
+  const applyRemoteContent = useCallback(
+    (remoteNote: NoteDetail) => {
+      if (!editor || remoteNote.id !== noteId) return;
+
+      editor.commands.setContent(remoteNote.content, { emitUpdate: false });
+      setTitleState(remoteNote.title);
+      setSavedAt(remoteNote.updatedAt);
+    },
+    [editor, noteId],
+  );
+
+  return { editor, title, setTitle, saveStatus, savedAt, isDirty, applyRemoteContent, flushSave };
 };

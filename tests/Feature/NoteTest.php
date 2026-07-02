@@ -1,228 +1,293 @@
 <?php
 
-use App\Models\User;
-use App\Models\Project;
-use App\Models\Note;
 use App\Events\NoteUpdated;
-use Illuminate\Support\Facades\Event;
+use App\Models\Note;
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     /** @var mixed $this */
+    $this->user1 = User::factory()->create(['name' => 'Mario']);
+    $this->user2 = User::factory()->create(['name' => 'Evan']);
+    $this->user3 = User::factory()->create(['name' => 'Kevin']);
 
-    // Membuat user testing
-    $this->user1 = new User();
-    $this->user1->name = 'Mario';
-    $this->user1->email = 'mario@example.com';
-    $this->user1->password = bcrypt('password123');
-    $this->user1->email_verified_at = now();
-    $this->user1->save();
+    $this->project = Project::create([
+        'project_name' => 'Project Zeno',
+        'project_slug' => 'zeno',
+    ]);
 
-    $this->user2 = new User();
-    $this->user2->name = 'Evan';
-    $this->user2->email = 'evan@example.com';
-    $this->user2->password = bcrypt('password123');
-    $this->user2->email_verified_at = now();
-    $this->user2->save();
-
-    $this->user3 = new User();
-    $this->user3->name = 'Kevin';
-    $this->user3->email = 'kevin@example.com';
-    $this->user3->password = bcrypt('password123');
-    $this->user3->email_verified_at = now();
-    $this->user3->save();
-
-    // Membuat project testing
-    $this->project = new Project();
-    $this->project->project_name = 'Project Zeno';
-    $this->project->project_slug = 'zeno';
-    $this->project->save();
-
-    // Daftarkan semua user ke dalam project scope
     $this->project->members()->attach($this->user1->id);
     $this->project->members()->attach($this->user2->id);
     $this->project->members()->attach($this->user3->id);
 });
 
+function noteDoc(string $text): array
+{
+    return [
+        'type' => 'doc',
+        'content' => [
+            ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => $text]]],
+        ],
+    ];
+}
+
 /* ==========================================================================
-   1. PERSONAL NOTES WORKSPACE TESTS
+   1. WORKSPACE PAGE
    ========================================================================== */
 
-it('loads the personal notes page with the correct unified Inertia structure', function () {
+it('loads the unified notes workspace with a lightweight note list', function () {
     /** @var mixed $this */
-
-    $note = Note::create([
-        'note_id'    => (string) Str::uuid(),
+    Note::create([
+        'note_id' => (string) Str::uuid(),
         'project_id' => $this->project->project_id,
-        'user_id'    => $this->user1->id,
-        'title'      => 'API Specs V2',
-        'content'    => ['html' => '<p>Specs v2 content</p>', 'text' => 'Specs v2 content'],
-        'is_shared'  => false,
+        'user_id' => $this->user1->id,
+        'title' => 'API Specs V2',
+        'content' => noteDoc('Specs v2 content'),
+        'excerpt' => 'Specs v2 content',
+        'is_shared' => false,
     ]);
 
     $this->actingAs($this->user1)
-        ->get("/p/{$this->project->project_slug}/notes/personal")
+        ->get("/p/{$this->project->project_slug}/notes")
         ->assertStatus(200)
         ->assertInertia(fn ($page) => $page
-            ->component('notes/NotesWorkspace')
-            ->where('type', 'personal')
-            ->has('initialNotes')
+            ->component('notes/index')
+            ->has('notes')
+            ->has('projectUsers')
+            ->where('currentUserId', $this->user1->id)
         );
 });
 
-it('can create a new personal note with default Untitled state', function () {
+it('only lists your own personal notes but every shared note in the project', function () {
     /** @var mixed $this */
-
-    $payload = [
-        'title'     => 'Untitled',
-        'content'   => ['html' => '', 'text' => ''],
-        'is_shared' => false
-    ];
-
-    $this->actingAs($this->user1)
-        ->post("/p/{$this->project->project_slug}/notes", $payload)
-        ->assertRedirect()
-        ->assertSessionHasNoErrors();
-
-    $this->assertDatabaseHas('notes', [
-        'project_id' => $this->project->project_id,
-        'title'      => 'Untitled',
-        'is_shared'  => false
+    Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Mine', 'content' => noteDoc('mine'),
+        'is_shared' => false,
     ]);
-});
-
-/* ==========================================================================
-   2. SHARED NOTES WORKSPACE TESTS (GOOGLE DOCS FLOW)
-   ========================================================================== */
-
-it('loads the shared collaborative notes page with correct Inertia structure', function () {
-    /** @var mixed $this */
-
-    $note = Note::create([
-        'note_id'    => (string) Str::uuid(),
-        'project_id' => $this->project->project_id,
-        'user_id'    => $this->user1->id,
-        'title'      => 'Team Sprint Backlog',
-        'content'    => ['html' => '<p>Backlog tasks</p>', 'text' => 'Backlog tasks'],
-        'is_shared'  => true,
+    Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user2->id, 'title' => 'Not mine', 'content' => noteDoc('nope'),
+        'is_shared' => false,
+    ]);
+    Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user2->id, 'title' => 'Shared by Evan', 'content' => noteDoc('shared'),
+        'is_shared' => true,
     ]);
 
     $this->actingAs($this->user1)
-        ->get("/p/{$this->project->project_slug}/notes/shared")
-        ->assertStatus(200)
+        ->get("/p/{$this->project->project_slug}/notes")
         ->assertInertia(fn ($page) => $page
-            ->component('notes/NotesWorkspace')
-            ->where('type', 'shared')
-            ->has('initialNotes')
+            ->component('notes/index')
+            ->has('notes', 2)
         );
 });
 
-it('can create a new collaborative shared note with default state', function () {
+/* ==========================================================================
+   2. CRUD (JSON endpoints)
+   ========================================================================== */
+
+it('can create a new personal note with default state', function () {
     /** @var mixed $this */
-
-    $payload = [
-        'title'     => 'Untitled Shared Page',
-        'content'   => ['html' => '', 'text' => ''],
-        'is_shared' => true
-    ];
-
     $this->actingAs($this->user1)
-        ->post("/p/{$this->project->project_slug}/notes", $payload)
-        ->assertRedirect();
+        ->postJson("/p/{$this->project->project_slug}/notes", [
+            'title' => 'Untitled',
+            'is_shared' => false,
+        ])
+        ->assertStatus(201)
+        ->assertJsonPath('note.title', 'Untitled')
+        ->assertJsonPath('note.isShared', false);
 
     $this->assertDatabaseHas('notes', [
         'project_id' => $this->project->project_id,
-        'title'      => 'Untitled Shared Page',
-        'is_shared'  => true
+        'title' => 'Untitled',
+        'is_shared' => false,
     ]);
 });
 
-/* ==========================================================================
-   3. REAL-TIME EVENT BROADCASTING TESTS
-   ========================================================================== */
+it('can create a new shared note', function () {
+    /** @var mixed $this */
+    $this->actingAs($this->user1)
+        ->postJson("/p/{$this->project->project_slug}/notes", [
+            'title' => 'Untitled Shared Page',
+            'is_shared' => true,
+        ])
+        ->assertStatus(201)
+        ->assertJsonPath('note.isShared', true);
 
-it('dispatches NoteUpdated event to queue when a shared note is modified', function () {
+    $this->assertDatabaseHas('notes', [
+        'project_id' => $this->project->project_id,
+        'title' => 'Untitled Shared Page',
+        'is_shared' => true,
+    ]);
+});
+
+it('fetches full note content on demand via the show endpoint', function () {
+    /** @var mixed $this */
+    $note = Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Doc', 'content' => noteDoc('hello world'),
+        'excerpt' => 'hello world', 'is_shared' => false,
+    ]);
+
+    $this->actingAs($this->user1)
+        ->getJson("/p/{$this->project->project_slug}/notes/{$note->note_id}")
+        ->assertStatus(200)
+        ->assertJsonPath('note.content.type', 'doc');
+});
+
+it('computes and stores a plain-text excerpt on update', function () {
+    /** @var mixed $this */
+    $note = Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Doc', 'content' => noteDoc('old'),
+        'is_shared' => true,
+    ]);
+
+    $this->actingAs($this->user1)
+        ->patchJson("/p/{$this->project->project_slug}/notes/{$note->note_id}", [
+            'title' => 'Doc',
+            'content' => noteDoc('a brand new excerpt'),
+        ])
+        ->assertStatus(200)
+        ->assertJsonPath('note.excerpt', 'a brand new excerpt');
+});
+
+it('does not garble the excerpt when a word is split across a mark boundary', function () {
+    /** @var mixed $this */
+    $note = Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Doc', 'content' => noteDoc('old'),
+        'is_shared' => false,
+    ]);
+
+    $splitWordDoc = [
+        'type' => 'doc',
+        'content' => [
+            ['type' => 'paragraph', 'content' => [
+                ['type' => 'text', 'text' => 'wor'],
+                ['type' => 'text', 'marks' => [['type' => 'bold']], 'text' => 'ld'],
+                ['type' => 'text', 'text' => ' says hello'],
+            ]],
+            ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Second block']]],
+        ],
+    ];
+
+    $this->actingAs($this->user1)
+        ->patchJson("/p/{$this->project->project_slug}/notes/{$note->note_id}", [
+            'title' => 'Doc',
+            'content' => $splitWordDoc,
+        ])
+        ->assertStatus(200)
+        ->assertJsonPath('note.excerpt', 'world says hello Second block');
+});
+
+it('dispatches NoteUpdated when a shared note is modified', function () {
     /** @var mixed $this */
     Event::fake();
 
     $note = Note::create([
-        'note_id'    => (string) Str::uuid(), // FIX KUNCI: Menjamin ketersediaan UUID unik di SQLite Memori
-        'project_id' => $this->project->project_id,
-        'user_id'    => $this->user1->id,
-        'title'      => 'Initial Shared Document',
-        'content'    => ['html' => '', 'text' => ''],
-        'is_shared'  => true,
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Initial Shared Document',
+        'content' => noteDoc(''), 'is_shared' => true,
     ]);
 
-    $payload = [
-        'title'   => 'Google Docs Live Collab Teks',
-        'content' => [
-            'html' => '<p>User Mario sedang mengetik teks ini secara live...</p>',
-            'text' => 'User Mario sedang mengetik teks ini secara live...'
-        ]
-    ];
-
     $this->actingAs($this->user1)
-        ->patch("/p/{$this->project->project_slug}/notes/{$note->note_id}", $payload)
-        ->assertRedirect();
+        ->patchJson("/p/{$this->project->project_slug}/notes/{$note->note_id}", [
+            'title' => 'Live Collab Text',
+            'content' => noteDoc('typing live...'),
+        ])
+        ->assertStatus(200);
 
     Event::assertDispatched(NoteUpdated::class, function ($event) use ($note) {
-        return (string) $event->note->note_id === (string) $note->note_id && 
-               $event->note->title === 'Google Docs Live Collab Teks';
+        return (string) $event->note->note_id === (string) $note->note_id
+            && $event->note->title === 'Live Collab Text';
     });
 });
 
-/* ==========================================================================
-   4. PROTECTION & SECURITY TESTS
-   ========================================================================== */
-
 it('prevents another user from updating a private note they do not own', function () {
     /** @var mixed $this */
-
     $note = Note::create([
-        'note_id'    => (string) Str::uuid(),
-        'project_id' => $this->project->project_id,
-        'user_id'    => $this->user1->id,
-        'title'      => 'Mario Private Secret',
-        'content'    => ['html' => '<p>Original</p>', 'text' => 'Original'],
-        'is_shared'  => false,
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Mario Private Secret',
+        'content' => noteDoc('Original'), 'is_shared' => false,
     ]);
 
-    $payload = [
-        'title'   => 'Hacked By Evan',
-        'content' => ['html' => '<p>Hack</p>', 'text' => 'Hack'],
-    ];
-
     $this->actingAs($this->user2)
-        ->patch("/p/{$this->project->project_slug}/notes/{$note->note_id}", $payload)
-        ->assertForbidden(); // Sekarang sukses menangkap kode 403 Forbidden!
+        ->patchJson("/p/{$this->project->project_slug}/notes/{$note->note_id}", [
+            'title' => 'Hacked By Evan',
+            'content' => noteDoc('Hack'),
+        ])
+        ->assertForbidden();
 
     $this->assertDatabaseHas('notes', [
         'note_id' => $note->note_id,
-        'title'   => 'Mario Private Secret',
+        'title' => 'Mario Private Secret',
     ]);
 });
 
-it('can soft delete a note safely from workspace', function () {
+it('can soft delete a note from the workspace', function () {
     /** @var mixed $this */
-
     $note = Note::create([
-        'note_id'    => (string) Str::uuid(),
-        'project_id' => $this->project->project_id,
-        'user_id'    => $this->user1->id,
-        'title'      => 'Temporary Note',
-        'content'    => ['html' => '<p>Trash</p>', 'text' => 'Trash'],
-        'is_shared'  => false,
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Temporary Note',
+        'content' => noteDoc('Trash'), 'is_shared' => false,
     ]);
 
     $this->actingAs($this->user1)
-        ->delete("/p/{$this->project->project_slug}/notes/{$note->note_id}")
-        ->assertRedirect();
+        ->deleteJson("/p/{$this->project->project_slug}/notes/{$note->note_id}")
+        ->assertStatus(200)
+        ->assertJson(['deleted' => true]);
 
-    $this->assertSoftDeleted('notes', [
-        'note_id' => $note->note_id
+    $this->assertSoftDeleted('notes', ['note_id' => $note->note_id]);
+});
+
+/* ==========================================================================
+   3. SHARING (personal → shared migration)
+   ========================================================================== */
+
+it('lets the owner promote a personal note to shared and seed collaborators', function () {
+    /** @var mixed $this */
+    Event::fake();
+
+    $note = Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Draft', 'content' => noteDoc('draft'),
+        'is_shared' => false,
     ]);
+
+    $this->actingAs($this->user1)
+        ->postJson("/p/{$this->project->project_slug}/notes/{$note->note_id}/share", [
+            'collaborators' => [
+                ['user_id' => $this->user2->id, 'can_edit' => true],
+            ],
+        ])
+        ->assertStatus(200)
+        ->assertJsonPath('note.isShared', true);
+
+    $this->assertDatabaseHas('notes', ['note_id' => $note->note_id, 'is_shared' => true]);
+    $this->assertDatabaseHas('note_collaborators', [
+        'note_id' => $note->note_id,
+        'user_id' => $this->user2->id,
+        'can_edit' => true,
+    ]);
+});
+
+it('prevents a non-owner from sharing someone else\'s note', function () {
+    /** @var mixed $this */
+    $note = Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Draft', 'content' => noteDoc('draft'),
+        'is_shared' => false,
+    ]);
+
+    $this->actingAs($this->user2)
+        ->postJson("/p/{$this->project->project_slug}/notes/{$note->note_id}/share")
+        ->assertForbidden();
 });

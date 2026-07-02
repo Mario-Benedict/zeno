@@ -2,11 +2,12 @@
 
 namespace App\Events;
 
+use App\Http\Controllers\Notes\NoteController;
 use App\Models\Note;
-use Illuminate\Broadcasting\Channel;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel; // Wajib import ini
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow; // Wajib import ini
+use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -16,28 +17,33 @@ class NoteUpdated implements ShouldBroadcastNow
 
     public function __construct(
         public readonly Note $note,
-        public readonly string $editedByAccountId,
+        public readonly string $editedByUserId,
     ) {}
 
     public function broadcastOn(): array
     {
-        // PASTIKAN INI ADALAH PresenceChannel, BUKAN Channel BIASA!
         return [
-            new PresenceChannel('note.' . $this->note->note_id),
+            new PresenceChannel('note.'.$this->note->note_id),
         ];
     }
 
     public function broadcastWith(): array
     {
         return [
-            'id'      => (string) $this->note->note_id,
-            'title'   => $this->note->title,
-            'content' => $this->note->content ?? ['html' => '', 'text' => ''],
+            'note' => NoteController::formatDetail($this->note),
+            'editedBy' => $this->editedBy(),
         ];
     }
 
     public function broadcastAs(): string
     {
         return 'NoteUpdated';
+    }
+
+    private function editedBy(): ?array
+    {
+        $user = User::find($this->editedByUserId);
+
+        return $user ? ['id' => (int) $user->id, 'name' => $user->name] : null;
     }
 }
