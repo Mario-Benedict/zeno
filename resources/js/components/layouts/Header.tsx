@@ -128,7 +128,7 @@ const Header = ({
             onChange={handleSearch}
             placeholder="Search"
             aria-label="Search"
-            className="text-regular flex-1 bg-transparent font-bold text-dark-primary outline-none placeholder:text-dark-secondary [&::-webkit-search-cancel-button]:hidden"
+            className="text-normal flex-1 bg-transparent font-bold text-dark-primary outline-none placeholder:text-dark-secondary [&::-webkit-search-cancel-button]:hidden"
           />
         </div>
       </div>
