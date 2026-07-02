@@ -72,6 +72,7 @@ class ProjectController extends Controller
         auth()->user()->projects()->attach($project->project_id, [
             'role' => 'OWNER',
             'opened_at' => now(),
+            'color' => \App\Services\CalendarService::assignMemberColor($project->project_id),
         ]);
 
         // Auto-create group chat room for the project
