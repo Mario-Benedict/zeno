@@ -16,7 +16,10 @@ import { SlashCommand } from './editor/extensions/slashCommand';
 
 const AUTOSAVE_DELAY_MS = 600;
 
-export const emptyNoteDocument = (): NoteContent => ({ type: 'doc', content: [{ type: 'paragraph' }] });
+export const emptyNoteDocument = (): NoteContent => ({
+  type: 'doc',
+  content: [{ type: 'paragraph' }],
+});
 
 interface UseNoteEditorOptions {
   accountIndex: number;
@@ -37,12 +40,20 @@ interface UseNoteEditorOptions {
  * an effect, and it's why `noteId` below is a plain value rather than a
  * ref: within one mounted instance it never changes.
  */
-export const useNoteEditor = ({ accountIndex, projectSlug, note, canEdit, onSaved }: UseNoteEditorOptions) => {
+export const useNoteEditor = ({
+  accountIndex,
+  projectSlug,
+  note,
+  canEdit,
+  onSaved,
+}: UseNoteEditorOptions) => {
   const noteId = note?.id ?? null;
 
   const [title, setTitleState] = useState(note?.title ?? '');
   const [saveStatus, setSaveStatus] = useState<NoteSaveStatus>('idle');
-  const [savedAt, setSavedAt] = useState<string | null>(note?.updatedAt ?? null);
+  const [savedAt, setSavedAt] = useState<string | null>(
+    note?.updatedAt ?? null,
+  );
 
   const dirtyRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -67,7 +78,11 @@ export const useNoteEditor = ({ accountIndex, projectSlug, note, canEdit, onSave
       form.append('image', file);
 
       const { data } = await axios.post<{ url: string }>(
-        notes.images.store.url({ accountIndex, project: projectSlug, note: noteId }),
+        notes.images.store.url({
+          accountIndex,
+          project: projectSlug,
+          note: noteId,
+        }),
         form,
       );
 
@@ -84,7 +99,11 @@ export const useNoteEditor = ({ accountIndex, projectSlug, note, canEdit, onSave
 
       try {
         const { data } = await axios.patch<{ note: NoteDetail }>(
-          notes.update.url({ accountIndex, project: projectSlug, note: noteId }),
+          notes.update.url({
+            accountIndex,
+            project: projectSlug,
+            note: noteId,
+          }),
           {
             title: titleRef.current.trim() || 'Untitled',
             content: activeEditor.getJSON(),
@@ -105,7 +124,10 @@ export const useNoteEditor = ({ accountIndex, projectSlug, note, canEdit, onSave
   const scheduleSave = useCallback(
     (activeEditor: Editor) => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => void performSave(activeEditor), AUTOSAVE_DELAY_MS);
+      timerRef.current = setTimeout(
+        () => void performSave(activeEditor),
+        AUTOSAVE_DELAY_MS,
+      );
     },
     [performSave],
   );
@@ -119,7 +141,9 @@ export const useNoteEditor = ({ accountIndex, projectSlug, note, canEdit, onSave
           codeBlock: false,
         }),
         CodeBlock,
-        Placeholder.configure({ placeholder: "Write something, or press '/' for commands…" }),
+        Placeholder.configure({
+          placeholder: "Write something, or press '/' for commands…",
+        }),
         TaskList,
         TaskItem.configure({ nested: true }),
         NoteImage.configure({ uploadImage }),
@@ -177,5 +201,14 @@ export const useNoteEditor = ({ accountIndex, projectSlug, note, canEdit, onSave
     [editor, noteId],
   );
 
-  return { editor, title, setTitle, saveStatus, savedAt, isDirty, applyRemoteContent, flushSave };
+  return {
+    editor,
+    title,
+    setTitle,
+    saveStatus,
+    savedAt,
+    isDirty,
+    applyRemoteContent,
+    flushSave,
+  };
 };

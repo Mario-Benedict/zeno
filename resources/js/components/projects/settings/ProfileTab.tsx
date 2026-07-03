@@ -5,7 +5,13 @@ import { accountPath } from '@/lib/accountRoutes';
 import type { User } from '@/types/auth';
 import { FieldLabel, SavedBadge, getInitials, inputClass } from './shared';
 
-const ProfileTab = ({ user, accountIndex }: { user: User | null; accountIndex: number }) => {
+const ProfileTab = ({
+  user,
+  accountIndex,
+}: {
+  user: User | null;
+  accountIndex: number;
+}) => {
   const [name, setName] = useState(user?.name ?? '');
   const [prevUserName, setPrevUserName] = useState(user?.name);
   const [saving, setSaving] = useState(false);
@@ -26,32 +32,46 @@ const ProfileTab = ({ user, accountIndex }: { user: User | null; accountIndex: n
     if (!hasChanged || saving) return;
     const trimmed = name.trim();
     if (!trimmed) {
- setError('Name is required.'); return; 
-}
+      setError('Name is required.');
+      return;
+    }
     setSaving(true);
     setError(null);
-    router.patch(accountPath(accountIndex, '/profile'), { name: trimmed }, {
-      preserveScroll: true,
-      onSuccess: () => {
- setSaved(true); setTimeout(() => setSaved(false), 2500); 
-},
-      onError: (errs) => {
- setError((errs.name as string | undefined) ?? 'Something went wrong.'); 
-},
-      onFinish: () => setSaving(false),
-    });
+    router.patch(
+      accountPath(accountIndex, '/profile'),
+      { name: trimmed },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setSaved(true);
+          setTimeout(() => setSaved(false), 2500);
+        },
+        onError: (errs) => {
+          setError(
+            (errs.name as string | undefined) ?? 'Something went wrong.',
+          );
+        },
+        onFinish: () => setSaving(false),
+      },
+    );
   };
 
   return (
     <div>
-      <h3 className="mb-5 text-normal font-semibold text-dark-primary">Profile</h3>
+      <h3 className="mb-5 text-normal font-semibold text-dark-primary">
+        Profile
+      </h3>
       <div className="mb-6 flex items-center gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-blue text-large font-bold text-white">
           {getInitials(name || user?.name || 'U')}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-small font-semibold text-dark-primary">{user?.name}</p>
-          <p className="truncate text-xsmall text-dark-secondary">{user?.email}</p>
+          <p className="truncate text-small font-semibold text-dark-primary">
+            {user?.name}
+          </p>
+          <p className="truncate text-xsmall text-dark-secondary">
+            {user?.email}
+          </p>
         </div>
       </div>
       <form onSubmit={handleSave} className="space-y-5">
@@ -61,18 +81,23 @@ const ProfileTab = ({ user, accountIndex }: { user: User | null; accountIndex: n
             type="text"
             value={name}
             onChange={(e) => {
- setName(e.target.value); setError(null); 
-}}
+              setName(e.target.value);
+              setError(null);
+            }}
             maxLength={255}
             placeholder="Your name"
             className={inputClass}
           />
-          {error && <p className="mt-1.5 text-xsmall text-status-error">{error}</p>}
+          {error && (
+            <p className="mt-1.5 text-xsmall text-status-error">{error}</p>
+          )}
         </div>
         <div>
           <FieldLabel>Email address</FieldLabel>
           <div className="flex items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-3 px-3 py-2.5">
-            <span className="flex-1 text-small text-dark-primary">{user?.email}</span>
+            <span className="flex-1 text-small text-dark-primary">
+              {user?.email}
+            </span>
             {user?.email_verified_at ? (
               <span className="rounded-full bg-status-success/15 px-2 py-0.5 text-micro font-semibold text-status-success">
                 Verified
@@ -83,7 +108,9 @@ const ProfileTab = ({ user, accountIndex }: { user: User | null; accountIndex: n
               </span>
             )}
           </div>
-          <p className="mt-1.5 text-xsmall text-dark-secondary">Email cannot be changed here.</p>
+          <p className="mt-1.5 text-xsmall text-dark-secondary">
+            Email cannot be changed here.
+          </p>
         </div>
         <div className="flex items-center gap-3 pt-1">
           <button

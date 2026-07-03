@@ -1,13 +1,16 @@
 import { Extension } from '@tiptap/core';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion from '@tiptap/suggestion';
-import type {SuggestionOptions} from '@tiptap/suggestion';
+import type { SuggestionOptions } from '@tiptap/suggestion';
 import tippy from 'tippy.js';
-import type {GetReferenceClientRect, Instance as TippyInstance} from 'tippy.js';
-import { filterSlashCommandItems  } from '../commandItems';
-import type {SlashCommandItem} from '../commandItems';
+import type {
+  GetReferenceClientRect,
+  Instance as TippyInstance,
+} from 'tippy.js';
+import { filterSlashCommandItems } from '../commandItems';
+import type { SlashCommandItem } from '../commandItems';
 import SlashCommandMenu from '../SlashCommandMenu';
-import type {SlashCommandMenuHandle} from '../SlashCommandMenu';
+import type { SlashCommandMenuHandle } from '../SlashCommandMenu';
 
 /**
  * Notion-style "/" block menu. Typing `/` opens a filtered list of block
@@ -40,7 +43,8 @@ export const SlashCommand = Extension.create({
               if (!props.clientRect) return;
 
               popup = tippy('body', {
-                getReferenceClientRect: props.clientRect as GetReferenceClientRect,
+                getReferenceClientRect:
+                  props.clientRect as GetReferenceClientRect,
                 appendTo: () => document.body,
                 content: component.element,
                 showOnCreate: true,
@@ -53,7 +57,10 @@ export const SlashCommand = Extension.create({
               component?.updateProps(props);
 
               if (!props.clientRect) return;
-              popup?.[0]?.setProps({ getReferenceClientRect: props.clientRect as GetReferenceClientRect });
+              popup?.[0]?.setProps({
+                getReferenceClientRect:
+                  props.clientRect as GetReferenceClientRect,
+              });
             },
             onKeyDown: (props) => {
               if (props.event.key === 'Escape') {

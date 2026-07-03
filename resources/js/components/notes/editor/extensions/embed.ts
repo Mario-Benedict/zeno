@@ -52,7 +52,10 @@ export const Embed = Node.create({
       insertEmbedPlaceholder:
         () =>
         ({ commands }) =>
-          commands.insertContent({ type: this.name, attrs: { url: null, provider: null } }),
+          commands.insertContent({
+            type: this.name,
+            attrs: { url: null, provider: null },
+          }),
     };
   },
 });

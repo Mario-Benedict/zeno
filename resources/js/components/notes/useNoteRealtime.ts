@@ -26,7 +26,12 @@ interface UseNoteRealtimeOptions {
  * unless the local user is mid-edit, in which case we just flag that the
  * note changed elsewhere rather than overwriting their in-progress typing.
  */
-export const useNoteRealtime = ({ noteId, isShared, isDirty, onRemoteUpdate }: UseNoteRealtimeOptions) => {
+export const useNoteRealtime = ({
+  noteId,
+  isShared,
+  isDirty,
+  onRemoteUpdate,
+}: UseNoteRealtimeOptions) => {
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
   const [hasStaleRemoteChange, setHasStaleRemoteChange] = useState(false);
 
@@ -38,8 +43,15 @@ export const useNoteRealtime = ({ noteId, isShared, isDirty, onRemoteUpdate }: U
 
     channel
       .here((users: PresenceUser[]) => setOnlineUsers(users))
-      .joining((user: PresenceUser) => setOnlineUsers((prev) => [...prev.filter((u) => u.id !== user.id), user]))
-      .leaving((user: PresenceUser) => setOnlineUsers((prev) => prev.filter((u) => u.id !== user.id)));
+      .joining((user: PresenceUser) =>
+        setOnlineUsers((prev) => [
+          ...prev.filter((u) => u.id !== user.id),
+          user,
+        ]),
+      )
+      .leaving((user: PresenceUser) =>
+        setOnlineUsers((prev) => prev.filter((u) => u.id !== user.id)),
+      );
 
     channel.listen('.NoteUpdated', (payload: RemoteNotePayload) => {
       if (isDirty()) {
@@ -60,5 +72,9 @@ export const useNoteRealtime = ({ noteId, isShared, isDirty, onRemoteUpdate }: U
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteId, isShared]);
 
-  return { onlineUsers, hasStaleRemoteChange, dismissStaleRemoteChange: () => setHasStaleRemoteChange(false) };
+  return {
+    onlineUsers,
+    hasStaleRemoteChange,
+    dismissStaleRemoteChange: () => setHasStaleRemoteChange(false),
+  };
 };

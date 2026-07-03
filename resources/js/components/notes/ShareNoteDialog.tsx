@@ -1,7 +1,12 @@
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import notes from '@/routes/notes';
-import type { NoteDetail, NoteProjectUser } from '@/types/notes';
+import type {
+  NoteCollaboratorRole,
+  NoteDetail,
+  NoteProjectUser,
+} from '@/types/notes';
+import CancelIcon from '@public/icons/small/cancel.svg';
 import MemberPicker from './MemberPicker';
 
 interface ShareNoteDialogProps {
@@ -18,17 +23,191 @@ interface PendingInvite {
   canEdit: boolean;
 }
 
+const ROLE_LABELS: Record<NoteCollaboratorRole, string> = {
+  Editor: 'Editor',
+  Viewer: 'Viewer',
+};
+
+const roleFromCanEdit = (canEdit: boolean): NoteCollaboratorRole =>
+  canEdit ? 'Editor' : 'Viewer';
+
+const ChevronDownIcon = () => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M19 6l-1 14H6L5 6" />
+  </svg>
+);
+
+const getInitials = (name: string): string =>
+  name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+/** Role dropdown for a collaborator row — mirrors ProjectInvitationModal's RoleSelect. */
+const RoleSelect = ({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: NoteCollaboratorRole;
+  disabled?: boolean;
+  onChange: (role: NoteCollaboratorRole) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex h-8 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {ROLE_LABELS[value]}
+        <span
+          className={`text-dark-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+        >
+          <ChevronDownIcon />
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute top-full right-0 z-50 mt-1 min-w-24 overflow-hidden rounded-lg border border-dark-border bg-dark-surface-2 py-1 shadow-2xl"
+        >
+          {(['Editor', 'Viewer'] as NoteCollaboratorRole[]).map((role) => (
+            <button
+              key={role}
+              type="button"
+              role="option"
+              aria-selected={role === value}
+              onClick={() => {
+                onChange(role);
+                setOpen(false);
+              }}
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
+                role === value ? 'text-dark-primary' : 'text-dark-secondary'
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${role === value ? 'bg-accent-blue' : ''}`}
+              />
+              {ROLE_LABELS[role]}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/** One collaborator (pending or already-shared) row — mirrors ProjectInvitationModal's MemberRow. */
+const CollaboratorRow = ({
+  name,
+  email,
+  role,
+  onRoleChange,
+  onRemove,
+}: {
+  name: string;
+  email: string;
+  role: NoteCollaboratorRole;
+  onRoleChange: (role: NoteCollaboratorRole) => void;
+  onRemove: () => void;
+}) => (
+  <div className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-white/[0.04]">
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-blue text-xsmall font-bold text-white">
+      {getInitials(name)}
+    </div>
+    <div className="min-w-0 flex-1">
+      <p className="truncate text-small font-semibold text-dark-primary">
+        {name}
+      </p>
+      <p className="truncate text-xsmall text-dark-secondary">{email}</p>
+    </div>
+    <RoleSelect value={role} onChange={onRoleChange} />
+    <button
+      type="button"
+      aria-label={`Remove ${name}`}
+      onClick={onRemove}
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
+    >
+      <TrashIcon />
+    </button>
+  </div>
+);
+
 /**
  * Doubles as the "migrate to shared" flow (personal notes) and the ongoing
  * collaborator manager (already-shared notes) — both are just "who can see
  * this note", so one dialog covers both instead of duplicating the UI.
  */
-const ShareNoteDialog = ({ accountIndex, projectSlug, note, projectUsers, onClose, onNoteUpdated }: ShareNoteDialogProps): React.ReactElement => {
+const ShareNoteDialog = ({
+  accountIndex,
+  projectSlug,
+  note,
+  projectUsers,
+  onClose,
+  onNoteUpdated,
+}: ShareNoteDialogProps): React.ReactElement => {
   const [pending, setPending] = useState<PendingInvite[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const excludeIds = [note.ownerId, ...note.collaborators.map((c) => c.id), ...pending.map((p) => p.user.id)];
+  const excludeIds = [
+    note.ownerId,
+    ...note.collaborators.map((c) => c.id),
+    ...pending.map((p) => p.user.id),
+  ];
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
 
   const submitShare = async (): Promise<void> => {
     setSubmitting(true);
@@ -36,7 +215,12 @@ const ShareNoteDialog = ({ accountIndex, projectSlug, note, projectUsers, onClos
     try {
       const { data } = await axios.post<{ note: NoteDetail }>(
         notes.share.url({ accountIndex, project: projectSlug, note: note.id }),
-        { collaborators: pending.map((p) => ({ user_id: p.user.id, can_edit: p.canEdit })) },
+        {
+          collaborators: pending.map((p) => ({
+            user_id: p.user.id,
+            can_edit: p.canEdit,
+          })),
+        },
       );
       onNoteUpdated(data.note);
       onClose();
@@ -51,7 +235,11 @@ const ShareNoteDialog = ({ accountIndex, projectSlug, note, projectUsers, onClos
     setError(null);
     try {
       const { data } = await axios.post<{ note: NoteDetail }>(
-        notes.collaborators.store.url({ accountIndex, project: projectSlug, note: note.id }),
+        notes.collaborators.store.url({
+          accountIndex,
+          project: projectSlug,
+          note: note.id,
+        }),
         { user_id: user.id, can_edit: true },
       );
       onNoteUpdated(data.note);
@@ -60,9 +248,17 @@ const ShareNoteDialog = ({ accountIndex, projectSlug, note, projectUsers, onClos
     }
   };
 
-  const updateRole = async (userId: number, canEdit: boolean): Promise<void> => {
+  const updateRole = async (
+    userId: number,
+    canEdit: boolean,
+  ): Promise<void> => {
     const { data } = await axios.patch<{ note: NoteDetail }>(
-      notes.collaborators.update.url({ accountIndex, project: projectSlug, note: note.id, user: userId }),
+      notes.collaborators.update.url({
+        accountIndex,
+        project: projectSlug,
+        note: note.id,
+        user: userId,
+      }),
       { can_edit: canEdit },
     );
     onNoteUpdated(data.note);
@@ -70,95 +266,119 @@ const ShareNoteDialog = ({ accountIndex, projectSlug, note, projectUsers, onClos
 
   const removeCollaborator = async (userId: number): Promise<void> => {
     const { data } = await axios.delete<{ note: NoteDetail }>(
-      notes.collaborators.destroy.url({ accountIndex, project: projectSlug, note: note.id, user: userId }),
+      notes.collaborators.destroy.url({
+        accountIndex,
+        project: projectSlug,
+        note: note.id,
+        user: userId,
+      }),
     );
     onNoteUpdated(data.note);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="flex w-[420px] flex-col gap-4 rounded-xl bg-dark-surface-2 p-6">
-        <div>
-          <h3 className="m-0 text-h5 font-bold text-dark-primary">{note.isShared ? 'Manage access' : 'Share this note'}</h3>
-          <p className="m-0 mt-1 text-small text-dark-secondary">
-            {note.isShared
-              ? 'Anyone added here can open this note from their own Shared section.'
-              : 'Sharing moves this note out of Private and into everyone’s Shared section.'}
-          </p>
-        </div>
-
-        <MemberPicker
-          projectUsers={projectUsers}
-          excludeUserIds={excludeIds}
-          onPick={(user) => (note.isShared ? void addCollaborator(user) : setPending((prev) => [...prev, { user, canEdit: true }]))}
-        />
-
-        {error && <p className="text-xsmall text-status-error">{error}</p>}
-
-        <div className="flex flex-col gap-2">
-          {!note.isShared &&
-            pending.map(({ user, canEdit }) => (
-              <div key={user.id} className="flex items-center justify-between rounded-md bg-dark-surface-3 px-3 py-2">
-                <span className="truncate text-small text-dark-primary">{user.name}</span>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={canEdit ? '1' : '0'}
-                    onChange={(e) =>
-                      setPending((prev) => prev.map((p) => (p.user.id === user.id ? { ...p, canEdit: e.target.value === '1' } : p)))
-                    }
-                    className="rounded bg-dark-surface-2 px-1.5 py-1 text-xsmall text-dark-secondary outline-none"
-                  >
-                    <option value="1">Editor</option>
-                    <option value="0">Viewer</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setPending((prev) => prev.filter((p) => p.user.id !== user.id))}
-                    className="text-xsmall text-status-error hover:opacity-70"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
-
-          {note.isShared &&
-            note.collaborators.map((c) => (
-              <div key={c.id} className="flex items-center justify-between rounded-md bg-dark-surface-3 px-3 py-2">
-                <span className="truncate text-small text-dark-primary">{c.name}</span>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={c.canEdit ? '1' : '0'}
-                    onChange={(e) => void updateRole(c.id, e.target.value === '1')}
-                    className="rounded bg-dark-surface-2 px-1.5 py-1 text-xsmall text-dark-secondary outline-none"
-                  >
-                    <option value="1">Editor</option>
-                    <option value="0">Viewer</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => void removeCollaborator(c.id)}
-                    className="text-xsmall text-status-error hover:opacity-70"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
-        </div>
-
-        <div className="flex justify-end gap-3">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={note.isShared ? 'Manage access' : 'Share this note'}
+        className="flex max-h-[88dvh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-dark-border bg-dark-surface-2 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-dark-border px-5">
+          <div className="min-w-0">
+            <h2 className="truncate text-small font-semibold text-dark-primary">
+              {note.isShared ? 'Manage access' : 'Share this note'}
+            </h2>
+            <p className="truncate text-xsmall text-dark-secondary">
+              {note.isShared
+                ? 'Anyone added here can open this note.'
+                : 'Moves this note into everyone’s Shared section.'}
+            </p>
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="cursor-pointer rounded-lg border border-dark-surface-3 bg-transparent px-4 py-2 text-small text-dark-primary"
+            aria-label="Close"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-white/[0.07] hover:text-dark-primary"
+          >
+            <CancelIcon />
+          </button>
+        </div>
+
+        <div className="scrollbar-app flex-1 overflow-y-auto p-5">
+          <MemberPicker
+            projectUsers={projectUsers}
+            excludeUserIds={excludeIds}
+            onPick={(user) =>
+              note.isShared
+                ? void addCollaborator(user)
+                : setPending((prev) => [...prev, { user, canEdit: true }])
+            }
+          />
+
+          {error && (
+            <p className="mt-2 text-xsmall text-status-error">{error}</p>
+          )}
+
+          <div className="mt-4 space-y-1">
+            {!note.isShared &&
+              pending.map(({ user, canEdit }) => (
+                <CollaboratorRow
+                  key={user.id}
+                  name={user.name}
+                  email={user.email}
+                  role={roleFromCanEdit(canEdit)}
+                  onRoleChange={(role) =>
+                    setPending((prev) =>
+                      prev.map((p) =>
+                        p.user.id === user.id
+                          ? { ...p, canEdit: role === 'Editor' }
+                          : p,
+                      ),
+                    )
+                  }
+                  onRemove={() =>
+                    setPending((prev) =>
+                      prev.filter((p) => p.user.id !== user.id),
+                    )
+                  }
+                />
+              ))}
+
+            {note.isShared &&
+              note.collaborators.map((c) => (
+                <CollaboratorRow
+                  key={c.id}
+                  name={c.name}
+                  email={c.email}
+                  role={roleFromCanEdit(c.canEdit)}
+                  onRoleChange={(role) =>
+                    void updateRole(c.id, role === 'Editor')
+                  }
+                  onRemove={() => void removeCollaborator(c.id)}
+                />
+              ))}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 justify-end gap-2 border-t border-dark-border px-5 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-10 rounded-md border border-dark-border px-4 text-small font-semibold text-dark-primary transition-colors hover:bg-white/[0.07]"
           >
             {note.isShared ? 'Done' : 'Cancel'}
           </button>
           {!note.isShared && (
             <button
+              type="button"
               onClick={() => void submitShare()}
               disabled={submitting}
-              className="cursor-pointer rounded-lg border-none bg-status-success px-4 py-2 text-small font-bold text-white disabled:opacity-60"
+              className="h-10 rounded-md bg-dark-primary px-4 text-small font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? 'Sharing…' : 'Share note'}
             </button>

@@ -2,9 +2,18 @@ import React, { useState } from 'react';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import type { NoteDetail, NoteSaveStatus } from '@/types/notes';
 
-const AVATAR_COLORS = ['bg-accent-red', 'bg-accent-orange', 'bg-accent-blue', 'bg-accent-purple', 'bg-status-success'];
+const AVATAR_COLORS = [
+  'bg-accent-red',
+  'bg-accent-orange',
+  'bg-accent-blue',
+  'bg-accent-purple',
+  'bg-status-success',
+];
 
-const saveStatusLabel = (status: NoteSaveStatus, savedAtLabel: string): string => {
+const saveStatusLabel = (
+  status: NoteSaveStatus,
+  savedAtLabel: string,
+): string => {
   switch (status) {
     case 'dirty':
       return 'Editing…';
@@ -47,7 +56,8 @@ const NoteEditorHeader = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const savedAtLabel = useRelativeTime(savedAt);
   const statusLabel = saveStatusLabel(saveStatus, savedAtLabel);
-  const statusColor = saveStatus === 'error' ? 'text-status-error' : 'text-dark-secondary';
+  const statusColor =
+    saveStatus === 'error' ? 'text-status-error' : 'text-dark-secondary';
 
   return (
     <div className="mb-4 flex items-start justify-between gap-3">
@@ -61,7 +71,9 @@ const NoteEditorHeader = ({
       />
 
       <div className="flex shrink-0 items-center gap-3 pt-2">
-        <span className={`text-xsmall whitespace-nowrap ${statusColor}`}>{statusLabel}</span>
+        <span className={`text-xsmall whitespace-nowrap ${statusColor}`}>
+          {statusLabel}
+        </span>
 
         {note.isShared && note.collaborators.length > 0 && (
           <div className="flex -space-x-2">
@@ -70,7 +82,9 @@ const NoteEditorHeader = ({
                 key={c.id}
                 title={`${c.name} · ${c.canEdit ? 'Editor' : 'Viewer'}`}
                 className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-xsmall font-bold text-white ${AVATAR_COLORS[index % AVATAR_COLORS.length]} ${
-                  onlineUserIds.includes(c.id) ? 'border-status-success' : 'border-dark-surface-2'
+                  onlineUserIds.includes(c.id)
+                    ? 'border-status-success'
+                    : 'border-dark-surface-2'
                 }`}
               >
                 {c.name.charAt(0).toUpperCase()}
@@ -105,7 +119,10 @@ const NoteEditorHeader = ({
 
           {menuOpen && (
             <>
-              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setMenuOpen(false)}
+              />
               <div className="absolute top-full right-0 z-20 mt-1 w-40 rounded-lg border border-dark-border bg-dark-surface-3 p-1 shadow-lg">
                 <button
                   onClick={() => {

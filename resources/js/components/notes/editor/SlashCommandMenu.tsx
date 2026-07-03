@@ -1,12 +1,24 @@
-import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import type {
+  SuggestionKeyDownProps,
+  SuggestionProps,
+} from '@tiptap/suggestion';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import type { SlashCommandItem } from './commandItems';
 
 export interface SlashCommandMenuHandle {
   onKeyDown: (props: SuggestionKeyDownProps) => boolean;
 }
 
-const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SuggestionProps<SlashCommandItem>>((props, ref) => {
+const SlashCommandMenu = forwardRef<
+  SlashCommandMenuHandle,
+  SuggestionProps<SlashCommandItem>
+>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -24,7 +36,9 @@ const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SuggestionProps<Slas
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }) => {
       if (event.key === 'ArrowUp') {
-        setSelectedIndex((i) => (i + props.items.length - 1) % props.items.length);
+        setSelectedIndex(
+          (i) => (i + props.items.length - 1) % props.items.length,
+        );
         return true;
       }
       if (event.key === 'ArrowDown') {
@@ -48,7 +62,7 @@ const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SuggestionProps<Slas
   }
 
   return (
-    <div className="max-h-80 w-72 overflow-y-auto rounded-lg border border-dark-border bg-dark-surface-2 p-1 shadow-lg scrollbar-app">
+    <div className="scrollbar-app max-h-80 w-72 overflow-y-auto rounded-lg border border-dark-border bg-dark-surface-2 p-1 shadow-lg">
       {props.items.map((item, index) => (
         <button
           key={item.key}
@@ -59,15 +73,21 @@ const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SuggestionProps<Slas
           onMouseEnter={() => setSelectedIndex(index)}
           onClick={() => select(index)}
           className={`flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left ${
-            index === selectedIndex ? 'bg-dark-surface-3' : 'hover:bg-dark-surface-3/60'
+            index === selectedIndex
+              ? 'bg-dark-surface-3'
+              : 'hover:bg-dark-surface-3/60'
           }`}
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-dark-surface-1 text-xsmall font-semibold text-dark-primary">
             {item.glyph}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-small text-dark-primary">{item.title}</span>
-            <span className="block truncate text-xsmall text-dark-secondary">{item.description}</span>
+            <span className="block truncate text-small text-dark-primary">
+              {item.title}
+            </span>
+            <span className="block truncate text-xsmall text-dark-secondary">
+              {item.description}
+            </span>
           </span>
         </button>
       ))}

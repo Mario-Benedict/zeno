@@ -21,7 +21,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Plain paragraph text',
     glyph: 'T',
     keywords: ['text', 'paragraph', 'p'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).setParagraph().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).setParagraph().run(),
   },
   {
     key: 'heading1',
@@ -29,7 +30,13 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Big section heading',
     glyph: 'H1',
     keywords: ['h1', 'heading', 'title'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run(),
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode('heading', { level: 1 })
+        .run(),
   },
   {
     key: 'heading2',
@@ -37,7 +44,13 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Medium section heading',
     glyph: 'H2',
     keywords: ['h2', 'heading', 'subtitle'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run(),
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode('heading', { level: 2 })
+        .run(),
   },
   {
     key: 'heading3',
@@ -45,7 +58,13 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Small section heading',
     glyph: 'H3',
     keywords: ['h3', 'heading'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run(),
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode('heading', { level: 3 })
+        .run(),
   },
   {
     key: 'bulletList',
@@ -53,7 +72,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Simple unordered list',
     glyph: '•',
     keywords: ['bullet', 'list', 'ul'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).toggleBulletList().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).toggleBulletList().run(),
   },
   {
     key: 'orderedList',
@@ -61,7 +81,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Ordered, numbered list',
     glyph: '1.',
     keywords: ['numbered', 'ordered', 'list', 'ol'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
   },
   {
     key: 'taskList',
@@ -69,7 +90,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Checkbox task list',
     glyph: '☑',
     keywords: ['todo', 'task', 'checkbox', 'check'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).toggleTaskList().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).toggleTaskList().run(),
   },
   {
     key: 'blockquote',
@@ -77,7 +99,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Capture a quote',
     glyph: '"',
     keywords: ['quote', 'blockquote', 'citation'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
   },
   {
     key: 'codeBlock',
@@ -85,7 +108,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Monospace code snippet',
     glyph: '</>',
     keywords: ['code', 'codeblock', 'snippet'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
   },
   {
     key: 'divider',
@@ -93,7 +117,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Horizontal rule',
     glyph: '—',
     keywords: ['divider', 'hr', 'rule', 'line'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
   },
   {
     key: 'image',
@@ -101,7 +126,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Upload or embed an image',
     glyph: '▣',
     keywords: ['image', 'picture', 'photo', 'upload'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).insertImagePlaceholder().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).insertImagePlaceholder().run(),
   },
   {
     key: 'embed',
@@ -109,7 +135,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     description: 'Paste a link, YouTube, Figma, or Drive URL',
     glyph: '⛓',
     keywords: ['link', 'embed', 'url', 'youtube', 'figma', 'drive'],
-    run: (editor, range) => editor.chain().focus().deleteRange(range).insertEmbedPlaceholder().run(),
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).insertEmbedPlaceholder().run(),
   },
 ];
 
@@ -119,6 +146,8 @@ export const filterSlashCommandItems = (query: string): SlashCommandItem[] => {
   if (!q) return SLASH_COMMAND_ITEMS;
 
   return SLASH_COMMAND_ITEMS.filter(
-    (item) => item.title.toLowerCase().includes(q) || item.keywords.some((k) => k.includes(q)),
+    (item) =>
+      item.title.toLowerCase().includes(q) ||
+      item.keywords.some((k) => k.includes(q)),
   );
 };

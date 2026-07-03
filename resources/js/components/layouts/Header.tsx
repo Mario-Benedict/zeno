@@ -54,7 +54,9 @@ const Header = ({
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsInitialTab, setSettingsInitialTab] = useState<'general' | 'profile'>('general');
+  const [settingsInitialTab, setSettingsInitialTab] = useState<
+    'general' | 'profile'
+  >('general');
 
   const openSettings = (tab: 'general' | 'profile' = 'general') => {
     setSettingsInitialTab(tab);
@@ -102,7 +104,9 @@ const Header = ({
             <span className="truncate text-sm font-bold whitespace-nowrap">
               {project?.project_name ?? 'Projects'}
             </span>
-            <span className="shrink-0 text-dark-secondary">
+            <span
+              className={`shrink-0 text-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
+            >
               <ArrowDown />
             </span>
           </button>
@@ -128,7 +132,7 @@ const Header = ({
             onChange={handleSearch}
             placeholder="Search"
             aria-label="Search"
-            className="text-normal flex-1 bg-transparent font-bold text-dark-primary outline-none placeholder:text-dark-secondary [&::-webkit-search-cancel-button]:hidden"
+            className="flex-1 bg-transparent text-normal font-bold text-dark-primary outline-none placeholder:text-dark-secondary [&::-webkit-search-cancel-button]:hidden"
           />
         </div>
       </div>

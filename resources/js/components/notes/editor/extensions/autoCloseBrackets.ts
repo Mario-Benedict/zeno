@@ -39,8 +39,13 @@ export const AutoCloseBrackets = Extension.create({
               return true;
             }
 
-            if (CLOSERS.has(text) && state.doc.textBetween(to, to + 1) === text) {
-              view.dispatch(state.tr.setSelection(TextSelection.create(state.doc, to + 1)));
+            if (
+              CLOSERS.has(text) &&
+              state.doc.textBetween(to, to + 1) === text
+            ) {
+              view.dispatch(
+                state.tr.setSelection(TextSelection.create(state.doc, to + 1)),
+              );
               return true;
             }
 

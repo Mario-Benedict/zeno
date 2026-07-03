@@ -1,10 +1,16 @@
-import { NodeViewWrapper  } from '@tiptap/react';
-import type {NodeViewProps} from '@tiptap/react';
+import { NodeViewWrapper } from '@tiptap/react';
+import type { NodeViewProps } from '@tiptap/react';
 import React, { useRef, useState } from 'react';
 
 type UploadImage = (file: File) => Promise<string>;
 
-const ImageBlock = ({ node, updateAttributes, deleteNode, editor, extension }: NodeViewProps): React.ReactElement => {
+const ImageBlock = ({
+  node,
+  updateAttributes,
+  deleteNode,
+  editor,
+  extension,
+}: NodeViewProps): React.ReactElement => {
   const { src, alt } = node.attrs as { src: string | null; alt: string | null };
   const [urlDraft, setUrlDraft] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -43,7 +49,9 @@ const ImageBlock = ({ node, updateAttributes, deleteNode, editor, extension }: N
                 >
                   Upload an image
                 </button>
-                <span className="text-xsmall text-dark-secondary">or paste an image URL</span>
+                <span className="text-xsmall text-dark-secondary">
+                  or paste an image URL
+                </span>
               </div>
               <input
                 type="url"
@@ -59,7 +67,9 @@ const ImageBlock = ({ node, updateAttributes, deleteNode, editor, extension }: N
                 }}
                 className="min-w-0 flex-1 rounded-md bg-dark-input px-2 py-1 text-small text-dark-primary placeholder:text-dark-secondary focus:bg-dark-input-focus focus:outline-none"
               />
-              {error && <div className="text-xsmall text-status-error">{error}</div>}
+              {error && (
+                <div className="text-xsmall text-status-error">{error}</div>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -80,12 +90,16 @@ const ImageBlock = ({ node, updateAttributes, deleteNode, editor, extension }: N
   return (
     <NodeViewWrapper data-type="image">
       <div className="group relative">
-        <img src={src} alt={alt ?? ''} className="max-h-[480px] w-full rounded-lg object-contain" />
+        <img
+          src={src}
+          alt={alt ?? ''}
+          className="max-h-[480px] w-full rounded-lg object-contain"
+        />
         {editable && (
           <button
             type="button"
             onClick={deleteNode}
-            className="absolute top-1.5 right-1.5 hidden rounded-md bg-dark-surface-1/80 px-2 py-1 text-xsmall text-dark-secondary hover:text-dark-primary group-hover:block"
+            className="absolute top-1.5 right-1.5 hidden rounded-md bg-dark-surface-1/80 px-2 py-1 text-xsmall text-dark-secondary group-hover:block hover:text-dark-primary"
           >
             Remove
           </button>

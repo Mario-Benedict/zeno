@@ -31,7 +31,10 @@ interface AccountSwitcherProps {
   onSettingsOpen?: () => void;
 }
 
-const AccountSwitcher = ({ onOpen, onSettingsOpen }: AccountSwitcherProps = {}) => {
+const AccountSwitcher = ({
+  onOpen,
+  onSettingsOpen,
+}: AccountSwitcherProps = {}) => {
   const { auth, account } = usePage().props;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -79,13 +82,19 @@ const AccountSwitcher = ({ onOpen, onSettingsOpen }: AccountSwitcherProps = {}) 
           {userName}
         </span>
 
-        <span className="shrink-0 text-dark-secondary">
+        <span
+          className={`shrink-0 text-dark-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+        >
           <ArrowDown />
         </span>
       </button>
 
       {/* ── Dropdown ───────────────────────────────────────────────────────── */}
-      <AccountMenu open={open} onClose={() => setOpen(false)} onSettingsOpen={onSettingsOpen ?? (() => {})} />
+      <AccountMenu
+        open={open}
+        onClose={() => setOpen(false)}
+        onSettingsOpen={onSettingsOpen ?? (() => {})}
+      />
     </div>
   );
 };

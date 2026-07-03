@@ -60,10 +60,12 @@ const ProjectSwitcher = ({
       </div> */}
 
       {currentProject && (
-        <div
-          className="flex items-center gap-3 rounded-lg bg-dark-surface-1 px-2 py-2"
-        >
-          <ProjectIcon name={currentProject.project_name} color={currentProject.avatar_color} avatarUrl={currentProject.avatar_url} />
+        <div className="flex items-center gap-3 rounded-lg bg-dark-surface-1 px-2 py-2">
+          <ProjectIcon
+            name={currentProject.project_name}
+            color={currentProject.avatar_color}
+            avatarUrl={currentProject.avatar_url}
+          />
           <div className="min-w-0">
             <p className="truncate text-small font-semibold text-dark-primary">
               {currentProject.project_name}
@@ -89,7 +91,11 @@ const ProjectSwitcher = ({
                 onClick={onClose}
                 className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-white/[0.07]"
               >
-                <ProjectIcon name={project.project_name} color={project.avatar_color} avatarUrl={project.avatar_url} />
+                <ProjectIcon
+                  name={project.project_name}
+                  color={project.avatar_color}
+                  avatarUrl={project.avatar_url}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-small font-medium text-dark-primary">
                     {project.project_name}

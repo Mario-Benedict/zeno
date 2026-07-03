@@ -32,7 +32,16 @@ const NoteEditor = ({
   onShareClick,
   onDeleteClick,
 }: NoteEditorProps): React.ReactElement => {
-  const { editor, title, setTitle, saveStatus, savedAt, isDirty, applyRemoteContent, flushSave } = useNoteEditor({
+  const {
+    editor,
+    title,
+    setTitle,
+    saveStatus,
+    savedAt,
+    isDirty,
+    applyRemoteContent,
+    flushSave,
+  } = useNoteEditor({
     accountIndex,
     projectSlug,
     note,
@@ -48,17 +57,18 @@ const NoteEditor = ({
     [applyRemoteContent, onSaved],
   );
 
-  const { onlineUsers, hasStaleRemoteChange, dismissStaleRemoteChange } = useNoteRealtime({
-    noteId: note?.id ?? null,
-    isShared: note?.isShared ?? false,
-    isDirty,
-    onRemoteUpdate: handleRemoteUpdate,
-  });
+  const { onlineUsers, hasStaleRemoteChange, dismissStaleRemoteChange } =
+    useNoteRealtime({
+      noteId: note?.id ?? null,
+      isShared: note?.isShared ?? false,
+      isDirty,
+      onRemoteUpdate: handleRemoteUpdate,
+    });
 
   if (!note) {
     return (
       <div className="flex min-h-0 flex-1 flex-col rounded-lg bg-dark-surface-2 p-4">
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-dark-surface-3 p-6 scrollbar-app">
+        <div className="scrollbar-app flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-dark-surface-3 p-6">
           <NoteEmptyState />
         </div>
       </div>
@@ -69,7 +79,7 @@ const NoteEditor = ({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-lg bg-dark-surface-2 p-4">
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-dark-surface-3 p-6 scrollbar-app">
+      <div className="scrollbar-app flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-dark-surface-3 p-6">
         <NoteEditorHeader
           note={note}
           title={title}
@@ -96,7 +106,8 @@ const NoteEditor = ({
             onClick={dismissStaleRemoteChange}
             className="mb-3 rounded-lg border border-status-warning/40 bg-dark-surface-2 px-3 py-2 text-left text-small font-medium text-status-warning"
           >
-            This note changed elsewhere while you were editing. Your changes are safe — dismiss to keep working.
+            This note changed elsewhere while you were editing. Your changes are
+            safe — dismiss to keep working.
           </button>
         )}
 

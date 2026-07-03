@@ -9,7 +9,12 @@ interface NoteListItemProps {
   onDeleteRequest: (id: string) => void;
 }
 
-const NoteListItem = ({ note, isActive, onSelect, onDeleteRequest }: NoteListItemProps): React.ReactElement => {
+const NoteListItem = ({
+  note,
+  isActive,
+  onSelect,
+  onDeleteRequest,
+}: NoteListItemProps): React.ReactElement => {
   const relativeTime = useRelativeTime(note.updatedAt);
 
   return (
@@ -24,9 +29,15 @@ const NoteListItem = ({ note, isActive, onSelect, onDeleteRequest }: NoteListIte
           : 'border-dark-surface-3 bg-dark-surface-3 hover:border-dark-surface-1 hover:bg-dark-surface-1'
       }`}
     >
-      <p className="m-0 truncate pr-6 text-small font-semibold text-dark-primary">{note.title || 'Untitled'}</p>
+      <p className="m-0 truncate pr-6 text-small font-semibold text-dark-primary">
+        {note.title || 'Untitled'}
+      </p>
 
-      {relativeTime && <span className="pr-6 text-xsmall text-dark-secondary">{relativeTime}</span>}
+      {relativeTime && (
+        <span className="pr-6 text-xsmall text-dark-secondary">
+          {relativeTime}
+        </span>
+      )}
 
       <button
         type="button"
@@ -37,7 +48,16 @@ const NoteListItem = ({ note, isActive, onSelect, onDeleteRequest }: NoteListIte
         title="Delete note"
         className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-dark-secondary opacity-0 transition-opacity group-hover:opacity-100 hover:text-dark-primary"
       >
-        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="13"
+          height="13"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
           <path d="M10 11v6" />
