@@ -22,7 +22,7 @@ export const getInitials = (name: string) =>
     .slice(0, 2);
 
 export const FieldLabel = ({ children }: { children: ReactNode }) => (
-  <p className="mb-1.5 text-xsmall font-semibold uppercase tracking-wide text-dark-secondary">
+  <p className="mb-1.5 text-xsmall font-semibold tracking-wide text-dark-secondary uppercase">
     {children}
   </p>
 );
@@ -72,7 +72,9 @@ export const RoleSelect = ({
         className="flex h-8 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus disabled:cursor-not-allowed disabled:opacity-40"
       >
         {ROLE_LABELS[value]}
-        <span className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
+        <span
+          className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+        >
           <ArrowDownIcon />
         </span>
       </button>

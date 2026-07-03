@@ -1,12 +1,20 @@
-import { NodeViewWrapper  } from '@tiptap/react';
-import type {NodeViewProps} from '@tiptap/react';
+import { NodeViewWrapper } from '@tiptap/react';
+import type { NodeViewProps } from '@tiptap/react';
 import React, { useState } from 'react';
 import { detectEmbedProvider } from '../embedProviders';
 
 const IFRAME_PROVIDERS = new Set(['youtube', 'google-drive']);
 
-const EmbedCard = ({ node, updateAttributes, deleteNode, editor }: NodeViewProps): React.ReactElement => {
-  const { url, provider } = node.attrs as { url: string | null; provider: string | null };
+const EmbedCard = ({
+  node,
+  updateAttributes,
+  deleteNode,
+  editor,
+}: NodeViewProps): React.ReactElement => {
+  const { url, provider } = node.attrs as {
+    url: string | null;
+    provider: string | null;
+  };
   const [draft, setDraft] = useState('');
   const editable = editor.isEditable;
 
@@ -64,7 +72,12 @@ const EmbedCard = ({ node, updateAttributes, deleteNode, editor }: NodeViewProps
       <div className="group relative overflow-hidden rounded-lg border border-dark-border bg-dark-surface-2">
         {showIframe ? (
           <div className="aspect-video w-full">
-            <iframe src={embedUrl} className="h-full w-full" allowFullScreen title={hostname} />
+            <iframe
+              src={embedUrl}
+              className="h-full w-full"
+              allowFullScreen
+              title={hostname}
+            />
           </div>
         ) : (
           <a
@@ -77,8 +90,12 @@ const EmbedCard = ({ node, updateAttributes, deleteNode, editor }: NodeViewProps
               🔗
             </div>
             <div className="min-w-0">
-              <div className="truncate text-small text-dark-primary">{hostname}</div>
-              <div className="truncate text-xsmall text-dark-secondary">{url}</div>
+              <div className="truncate text-small text-dark-primary">
+                {hostname}
+              </div>
+              <div className="truncate text-xsmall text-dark-secondary">
+                {url}
+              </div>
             </div>
           </a>
         )}
@@ -87,7 +104,7 @@ const EmbedCard = ({ node, updateAttributes, deleteNode, editor }: NodeViewProps
           <button
             type="button"
             onClick={deleteNode}
-            className="absolute top-1.5 right-1.5 hidden rounded-md bg-dark-surface-1/80 px-2 py-1 text-xsmall text-dark-secondary hover:text-dark-primary group-hover:block"
+            className="absolute top-1.5 right-1.5 hidden rounded-md bg-dark-surface-1/80 px-2 py-1 text-xsmall text-dark-secondary group-hover:block hover:text-dark-primary"
           >
             Remove
           </button>

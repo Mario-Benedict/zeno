@@ -18,7 +18,11 @@ import type { NoteDetail, NoteListItem, NotesPageProps } from '@/types/notes';
  * content; the list itself only ever carries the lightweight preview shape
  * from `NoteController::index`.
  */
-const NotesPage = ({ notes: initialNotes, projectUsers, currentUserId }: NotesPageProps): React.ReactElement => {
+const NotesPage = ({
+  notes: initialNotes,
+  projectUsers,
+  currentUserId,
+}: NotesPageProps): React.ReactElement => {
   const { project, accountIndex } = useProject();
   const projectSlug = project.project_slug;
 
@@ -31,7 +35,9 @@ const NotesPage = ({ notes: initialNotes, projectUsers, currentUserId }: NotesPa
   const isEditable = (note: NoteDetail | null): boolean => {
     if (!note) return false;
     if (note.ownerId === currentUserId) return true;
-    return note.collaborators.find((c) => c.id === currentUserId)?.canEdit ?? false;
+    return (
+      note.collaborators.find((c) => c.id === currentUserId)?.canEdit ?? false
+    );
   };
 
   const upsertListItem = useCallback((note: NoteDetail) => {
@@ -46,9 +52,13 @@ const NotesPage = ({ notes: initialNotes, projectUsers, currentUserId }: NotesPa
         collaboratorsCount: note.collaborators.length,
       };
 
-      const next = prev.some((n) => n.id === note.id) ? prev.map((n) => (n.id === note.id ? item : n)) : [item, ...prev];
+      const next = prev.some((n) => n.id === note.id)
+        ? prev.map((n) => (n.id === note.id ? item : n))
+        : [item, ...prev];
 
-      return [...next].sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
+      return [...next].sort((a, b) =>
+        (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''),
+      );
     });
   }, []);
 
@@ -72,10 +82,13 @@ const NotesPage = ({ notes: initialNotes, projectUsers, currentUserId }: NotesPa
 
   const handleCreate = useCallback(
     async (isShared: boolean) => {
-      const { data } = await axios.post<{ note: NoteDetail }>(notes.store.url({ accountIndex, project: projectSlug }), {
-        title: 'Untitled',
-        is_shared: isShared,
-      });
+      const { data } = await axios.post<{ note: NoteDetail }>(
+        notes.store.url({ accountIndex, project: projectSlug }),
+        {
+          title: 'Untitled',
+          is_shared: isShared,
+        },
+      );
       upsertListItem(data.note);
       setSelectedNote(data.note);
     },
@@ -85,7 +98,13 @@ const NotesPage = ({ notes: initialNotes, projectUsers, currentUserId }: NotesPa
   const handleDelete = useCallback(async () => {
     if (!deleteTargetId) return;
 
-    await axios.delete(notes.destroy.url({ accountIndex, project: projectSlug, note: deleteTargetId }));
+    await axios.delete(
+      notes.destroy.url({
+        accountIndex,
+        project: projectSlug,
+        note: deleteTargetId,
+      }),
+    );
     setNoteList((prev) => prev.filter((n) => n.id !== deleteTargetId));
     setSelectedNote((prev) => (prev?.id === deleteTargetId ? null : prev));
     setDeleteTargetId(null);
@@ -119,12 +138,19 @@ const NotesPage = ({ notes: initialNotes, projectUsers, currentUserId }: NotesPa
             currentUserId={currentUserId}
             onSaved={handleSaved}
             onShareClick={() => setIsShareDialogOpen(true)}
-            onDeleteClick={() => selectedNote && setDeleteTargetId(selectedNote.id)}
+            onDeleteClick={() =>
+              selectedNote && setDeleteTargetId(selectedNote.id)
+            }
           />
         </div>
       </div>
 
-      {deleteTargetId && <DeleteNoteDialog onConfirm={() => void handleDelete()} onCancel={() => setDeleteTargetId(null)} />}
+      {deleteTargetId && (
+        <DeleteNoteDialog
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setDeleteTargetId(null)}
+        />
+      )}
 
       {isShareDialogOpen && selectedNote && (
         <ShareNoteDialog

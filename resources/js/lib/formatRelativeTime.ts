@@ -9,7 +9,10 @@ const WEEK = 7 * DAY;
  * than "12s ago", since second-level precision isn't meaningful for
  * autosave status or note list timestamps.
  */
-export const formatRelativeTime = (iso: string | null | undefined, now: Date = new Date()): string => {
+export const formatRelativeTime = (
+  iso: string | null | undefined,
+  now: Date = new Date(),
+): string => {
   if (!iso) return '';
 
   const then = new Date(iso).getTime();
@@ -20,5 +23,8 @@ export const formatRelativeTime = (iso: string | null | undefined, now: Date = n
   if (diff < DAY) return `${Math.floor(diff / HOUR)}h ago`;
   if (diff < WEEK) return `${Math.floor(diff / DAY)}d ago`;
 
-  return new Date(then).toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return new Date(then).toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
+  });
 };

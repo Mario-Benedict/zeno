@@ -40,7 +40,11 @@ export const CodeBlock = CodeBlockLowlight.extend({
 
       if ($from.parent.type !== this.type) return false;
 
-      view.dispatch(state.tr.setSelection(TextSelection.create(state.doc, $from.start(), $from.end())));
+      view.dispatch(
+        state.tr.setSelection(
+          TextSelection.create(state.doc, $from.start(), $from.end()),
+        ),
+      );
       return true;
     };
 
@@ -102,6 +106,10 @@ export const CodeBlock = CodeBlockLowlight.extend({
       Backspace: dedentOnBackspace,
     };
   },
-}).configure({ lowlight, defaultLanguage: 'plaintext', enableTabIndentation: true });
+}).configure({
+  lowlight,
+  defaultLanguage: 'plaintext',
+  enableTabIndentation: true,
+});
 
 export default CodeBlock;

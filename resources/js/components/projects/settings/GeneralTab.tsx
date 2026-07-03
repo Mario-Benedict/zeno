@@ -12,7 +12,16 @@ import { SavedBadge } from './shared';
 // ── Inline icons (no existing SVG files for these) ───────────────────────
 
 const UploadIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
     <polyline points="17 8 12 3 7 8" />
     <line x1="12" y1="3" x2="12" y2="15" />
@@ -20,7 +29,16 @@ const UploadIcon = () => (
 );
 
 const ImageIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <rect x="3" y="3" width="18" height="18" rx="2" />
     <circle cx="8.5" cy="8.5" r="1.5" />
     <polyline points="21 15 16 10 5 21" />
@@ -43,7 +61,11 @@ const ProjectAvatarDisplay = ({
   const dim = size === 'lg' ? 'h-16 w-16 text-large' : 'h-9 w-9 text-xsmall';
   if (avatarUrl) {
     return (
-      <img src={avatarUrl} alt={name} className={`${dim} shrink-0 rounded-xl object-cover`} />
+      <img
+        src={avatarUrl}
+        alt={name}
+        className={`${dim} shrink-0 rounded-xl object-cover`}
+      />
     );
   }
   return (
@@ -68,7 +90,9 @@ const ColorPickerPopover = ({
   onUploadClick: () => void;
 }) => (
   <div className="absolute top-full right-0 z-50 mt-2 w-72 rounded-xl border border-dark-border bg-dark-surface-2 p-3 shadow-2xl">
-    <p className="mb-2 text-micro font-bold uppercase tracking-wider text-dark-secondary">Color</p>
+    <p className="mb-2 text-micro font-bold tracking-wider text-dark-secondary uppercase">
+      Color
+    </p>
     <div className="grid grid-cols-10 gap-1.5">
       {AVATAR_COLORS.map((color) => (
         <button
@@ -77,7 +101,9 @@ const ColorPickerPopover = ({
           title={color}
           onClick={() => onSelectColor(color)}
           className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${
-            current === color ? 'ring-2 ring-white ring-offset-1 ring-offset-dark-surface-2' : ''
+            current === color
+              ? 'ring-2 ring-white ring-offset-1 ring-offset-dark-surface-2'
+              : ''
           }`}
           style={{ backgroundColor: avatarHex(color) }}
         />
@@ -115,9 +141,12 @@ const AvatarUploadModal = ({
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => () => {
- if (preview) URL.revokeObjectURL(preview); 
-}, [preview]);
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
@@ -137,7 +166,9 @@ const AvatarUploadModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-dark-border px-6 py-4">
-          <p className="text-normal font-semibold text-dark-primary">Upload your image</p>
+          <p className="text-normal font-semibold text-dark-primary">
+            Upload your image
+          </p>
           <div className="flex items-center gap-2">
             {file && (
               <button
@@ -166,12 +197,18 @@ const AvatarUploadModal = ({
             className="relative flex h-72 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-dark-border bg-dark-surface-1 transition-colors hover:border-dark-border-focus"
           >
             {preview ? (
-              <img src={preview} alt="Preview" className="h-full w-full object-contain" />
+              <img
+                src={preview}
+                alt="Preview"
+                className="h-full w-full object-contain"
+              />
             ) : (
               <div className="flex flex-col items-center gap-3 text-dark-secondary">
                 <ImageIcon />
                 <p className="text-small">Click to select an image</p>
-                <p className="text-xsmall opacity-60">JPEG, PNG, WebP or GIF · max 2 MB</p>
+                <p className="text-xsmall opacity-60">
+                  JPEG, PNG, WebP or GIF · max 2 MB
+                </p>
               </div>
             )}
           </button>
@@ -244,39 +281,56 @@ const GeneralTab = ({
     if (!canEdit || !hasChanged || saving) return;
     const trimmed = name.trim();
     if (!trimmed) {
- setError('Project name is required.'); return; 
-}
+      setError('Project name is required.');
+      return;
+    }
     setSaving(true);
     setError(null);
-    router.patch(projectPath(accountIndex, project.project_slug), { project_name: trimmed }, {
-      preserveScroll: true,
-      onSuccess: () => {
- setSaved(true); setTimeout(() => setSaved(false), 2500); 
-},
-      onError: (errs) => {
- setError((errs.project_name as string | undefined) ?? 'Something went wrong.'); 
-},
-      onFinish: () => setSaving(false),
-    });
+    router.patch(
+      projectPath(accountIndex, project.project_slug),
+      { project_name: trimmed },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setSaved(true);
+          setTimeout(() => setSaved(false), 2500);
+        },
+        onError: (errs) => {
+          setError(
+            (errs.project_name as string | undefined) ??
+              'Something went wrong.',
+          );
+        },
+        onFinish: () => setSaving(false),
+      },
+    );
   };
 
   const handleColorSelect = (color: AvatarColor) => {
     setPickerOpen(false);
-    router.patch(projectPath(accountIndex, project.project_slug, '/avatar'), { avatar_color: color }, {
-      preserveScroll: true,
-    });
+    router.patch(
+      projectPath(accountIndex, project.project_slug, '/avatar'),
+      { avatar_color: color },
+      {
+        preserveScroll: true,
+      },
+    );
   };
 
   const handleUpload = (file: File) => {
     setUploading(true);
     const form = new FormData();
     form.append('avatar', file);
-    router.post(projectPath(accountIndex, project.project_slug, '/avatar'), form, {
-      preserveScroll: true,
-      forceFormData: true,
-      onSuccess: () => setUploadModalOpen(false),
-      onFinish: () => setUploading(false),
-    });
+    router.post(
+      projectPath(accountIndex, project.project_slug, '/avatar'),
+      form,
+      {
+        preserveScroll: true,
+        forceFormData: true,
+        onSuccess: () => setUploadModalOpen(false),
+        onFinish: () => setUploading(false),
+      },
+    );
   };
 
   const handleRemoveImage = () => {
@@ -289,13 +343,17 @@ const GeneralTab = ({
   return (
     <>
       <div>
-        <h3 className="mb-5 text-normal font-semibold text-dark-primary">General</h3>
+        <h3 className="mb-5 text-normal font-semibold text-dark-primary">
+          General
+        </h3>
 
         <form onSubmit={handleSave}>
-          <div className="rounded-xl border border-dark-border divide-y divide-dark-border">
+          <div className="divide-y divide-dark-border rounded-xl border border-dark-border">
             {/* Avatar row */}
             <div className="flex items-center justify-between px-4 py-3">
-              <p className="text-small font-semibold text-dark-primary">Avatar</p>
+              <p className="text-small font-semibold text-dark-primary">
+                Avatar
+              </p>
               <div ref={pickerRef} className="relative">
                 <button
                   type="button"
@@ -316,8 +374,9 @@ const GeneralTab = ({
                     current={project.avatar_color}
                     onSelectColor={handleColorSelect}
                     onUploadClick={() => {
- setPickerOpen(false); setUploadModalOpen(true); 
-}}
+                      setPickerOpen(false);
+                      setUploadModalOpen(true);
+                    }}
                   />
                 )}
               </div>
@@ -325,13 +384,16 @@ const GeneralTab = ({
 
             {/* Name row */}
             <div className="flex items-center justify-between gap-8 px-4 py-3">
-              <label className="shrink-0 text-small font-semibold text-dark-primary">Name</label>
+              <label className="shrink-0 text-small font-semibold text-dark-primary">
+                Name
+              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => {
- setName(e.target.value); setError(null); 
-}}
+                  setName(e.target.value);
+                  setError(null);
+                }}
                 disabled={!canEdit}
                 maxLength={50}
                 placeholder="Project name"
@@ -341,15 +403,21 @@ const GeneralTab = ({
 
             {/* URL slug row */}
             <div className="flex items-center justify-between gap-8 px-4 py-3">
-              <p className="shrink-0 text-small font-semibold text-dark-primary">URL slug</p>
+              <p className="shrink-0 text-small font-semibold text-dark-primary">
+                URL slug
+              </p>
               <div className="flex min-w-0 items-center gap-1 text-small text-dark-secondary">
                 <span>/p/</span>
-                <span className="truncate font-medium text-dark-primary">{derivedSlug}</span>
+                <span className="truncate font-medium text-dark-primary">
+                  {derivedSlug}
+                </span>
               </div>
             </div>
           </div>
 
-          {error && <p className="mt-2 text-xsmall text-status-error">{error}</p>}
+          {error && (
+            <p className="mt-2 text-xsmall text-status-error">{error}</p>
+          )}
           <p className="mt-2 text-xsmall text-dark-secondary">
             The URL slug updates automatically when you rename the project.
           </p>

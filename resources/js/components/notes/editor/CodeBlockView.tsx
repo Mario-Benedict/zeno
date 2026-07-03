@@ -12,20 +12,31 @@ interface LanguagePickerProps {
 /** Custom dropdown instead of a native `<select>` — matches the dark-theme
  * search+list pattern used by `MemberPicker`/`SlashCommandMenu`, since a
  * native select's popup can't be restyled (it renders with OS chrome). */
-const LanguagePicker = ({ language, editable, onChange }: LanguagePickerProps): React.ReactElement => {
+const LanguagePicker = ({
+  language,
+  editable,
+  onChange,
+}: LanguagePickerProps): React.ReactElement => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
-  const current = CODE_LANGUAGES.find((l) => l.value === language) ?? CODE_LANGUAGES[0];
+  const current =
+    CODE_LANGUAGES.find((l) => l.value === language) ?? CODE_LANGUAGES[0];
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    return q ? CODE_LANGUAGES.filter((l) => l.label.toLowerCase().includes(q)) : CODE_LANGUAGES;
+    return q
+      ? CODE_LANGUAGES.filter((l) => l.label.toLowerCase().includes(q))
+      : CODE_LANGUAGES;
   }, [query]);
 
   if (!editable) {
-    return <span className="px-1.5 py-0.5 text-xsmall font-medium text-dark-secondary">{current.label}</span>;
+    return (
+      <span className="px-1.5 py-0.5 text-xsmall font-medium text-dark-secondary">
+        {current.label}
+      </span>
+    );
   }
 
   return (
@@ -36,7 +47,16 @@ const LanguagePicker = ({ language, editable, onChange }: LanguagePickerProps): 
         className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xsmall font-medium text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary"
       >
         {current.label}
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
@@ -53,9 +73,11 @@ const LanguagePicker = ({ language, editable, onChange }: LanguagePickerProps): 
               placeholder="Search language…"
               className="w-full border-b border-dark-border bg-transparent px-2 py-1.5 text-xsmall text-dark-primary outline-none placeholder:text-dark-secondary"
             />
-            <div className="max-h-56 overflow-y-auto p-1 scrollbar-app">
+            <div className="scrollbar-app max-h-56 overflow-y-auto p-1">
               {filtered.length === 0 ? (
-                <p className="px-2 py-1.5 text-xsmall text-dark-secondary">No matches.</p>
+                <p className="px-2 py-1.5 text-xsmall text-dark-secondary">
+                  No matches.
+                </p>
               ) : (
                 filtered.map((l) => (
                   <button
@@ -84,7 +106,11 @@ const LanguagePicker = ({ language, editable, onChange }: LanguagePickerProps): 
   );
 };
 
-const CodeBlockView = ({ node, updateAttributes, editor }: NodeViewProps): React.ReactElement => {
+const CodeBlockView = ({
+  node,
+  updateAttributes,
+  editor,
+}: NodeViewProps): React.ReactElement => {
   const language = (node.attrs.language as string | null) ?? 'plaintext';
   const [copied, setCopied] = useState(false);
 
@@ -107,7 +133,11 @@ const CodeBlockView = ({ node, updateAttributes, editor }: NodeViewProps): React
         contentEditable={false}
         className="flex items-center justify-between rounded-t-lg border-b border-dark-border bg-dark-surface-2 px-2 py-1"
       >
-        <LanguagePicker language={language} editable={editor.isEditable} onChange={(value) => updateAttributes({ language: value })} />
+        <LanguagePicker
+          language={language}
+          editable={editor.isEditable}
+          onChange={(value) => updateAttributes({ language: value })}
+        />
 
         <button
           type="button"
@@ -119,7 +149,10 @@ const CodeBlockView = ({ node, updateAttributes, editor }: NodeViewProps): React
       </div>
 
       <pre className="overflow-x-auto p-3">
-        <NodeViewContent<'code'> as="code" className={`hljs language-${language}`} />
+        <NodeViewContent<'code'>
+          as="code"
+          className={`hljs language-${language}`}
+        />
       </pre>
     </NodeViewWrapper>
   );

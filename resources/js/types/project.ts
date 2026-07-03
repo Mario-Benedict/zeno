@@ -25,7 +25,13 @@ export type Project = CurrentProject & {
 
 export type ProjectSummary = Pick<
   Project,
-  'project_id' | 'project_name' | 'project_slug' | 'avatar_color' | 'avatar_url' | 'is_pinned' | 'role'
+  | 'project_id'
+  | 'project_name'
+  | 'project_slug'
+  | 'avatar_color'
+  | 'avatar_url'
+  | 'is_pinned'
+  | 'role'
 >;
 
 export type PaginatedProjects = {
