@@ -1,11 +1,27 @@
 import { router } from '@inertiajs/react';
 import { projectPath } from '@/lib/accountRoutes';
-import type { AssignableProjectRole, CurrentProject, ProjectMember, ProjectShare } from '@/types';
+import type {
+  AssignableProjectRole,
+  CurrentProject,
+  ProjectMember,
+  ProjectShare,
+} from '@/types';
 import { RoleSelect, getInitials } from './shared';
 
 const TrashIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" />
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M19 6l-1 14H6L5 6" />
   </svg>
 );
 
@@ -19,7 +35,9 @@ const MembersTab = ({
   accountIndex: number;
 }) => {
   const canManage = share?.can_manage_members ?? false;
-  const roles = share?.assignable_roles ?? (['ADMIN', 'MEMBER', 'VIEWER'] as AssignableProjectRole[]);
+  const roles =
+    share?.assignable_roles ??
+    (['ADMIN', 'MEMBER', 'VIEWER'] as AssignableProjectRole[]);
   const members: ProjectMember[] = share?.members ?? [];
 
   const changeRole = (member: ProjectMember, role: AssignableProjectRole) => {
@@ -66,10 +84,14 @@ const MembersTab = ({
                   <p className="truncate text-small font-semibold text-dark-primary">
                     {member.name}
                     {member.is_current_user && (
-                      <span className="ml-1.5 font-normal text-dark-secondary">(you)</span>
+                      <span className="ml-1.5 font-normal text-dark-secondary">
+                        (you)
+                      </span>
                     )}
                   </p>
-                  <p className="truncate text-xsmall text-dark-secondary">{member.email}</p>
+                  <p className="truncate text-xsmall text-dark-secondary">
+                    {member.email}
+                  </p>
                 </div>
                 {isOwner ? (
                   <span className="rounded-md border border-dark-border px-2.5 py-1.5 text-xsmall font-medium text-dark-secondary">
@@ -101,7 +123,8 @@ const MembersTab = ({
 
       <div className="mt-5 rounded-lg border border-dark-border bg-dark-surface-1 px-4 py-3 text-small text-dark-secondary">
         To invite new members, use the{' '}
-        <strong className="font-semibold text-dark-primary">People</strong> icon in the top bar.
+        <strong className="font-semibold text-dark-primary">People</strong> icon
+        in the top bar.
       </div>
     </div>
   );

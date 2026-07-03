@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OtpInput from '@/components/shared/OtpInput';
 
 const ShieldIcon = () => (
@@ -28,12 +28,16 @@ const SecurityTab = ({
   const [disabling, setDisabling] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Reset the OTP entry state whenever 2FA setup starts over or its status changes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  const twoFactorKey = `${twoFactor.qrCodeUrl ?? ''}:${twoFactor.enabled}`;
+  const [prevTwoFactorKey, setPrevTwoFactorKey] = useState(twoFactorKey);
+
+  // Adjusted during render instead of an effect — see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (twoFactorKey !== prevTwoFactorKey) {
+    setPrevTwoFactorKey(twoFactorKey);
     setOtpDigits(Array(6).fill(''));
     setError(null);
-  }, [twoFactor.qrCodeUrl, twoFactor.enabled]);
+  }
 
   const generate = () => {
     setGenerating(true);

@@ -126,7 +126,7 @@ const RoleSelect = ({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex h-8 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus hover:bg-dark-surface-3 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus hover:bg-dark-surface-3 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
       >
         {ROLE_LABELS[value]}
         <span
@@ -213,7 +213,7 @@ const MemberRow = ({
           type="button"
           aria-label={`Remove ${member.name}`}
           onClick={() => onRemove(member)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
         >
           <TrashIcon />
         </button>
@@ -384,7 +384,7 @@ const ProjectInvitationModal = ({
                   inviteForm.setData('invitee', event.target.value)
                 }
                 placeholder="Email address or name"
-                className="h-10 w-full rounded-md border border-dark-border bg-dark-input px-3 text-sm text-dark-primary outline-none placeholder:text-dark-secondary focus:border-dark-border-focus disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-9 w-full rounded-md border border-dark-border bg-dark-input px-3 text-sm text-dark-primary outline-none placeholder:text-dark-secondary focus:border-dark-border-focus disabled:cursor-not-allowed disabled:opacity-50"
               />
               {inviteForm.errors.invitee && (
                 <p className="mt-1 text-xs text-status-error">
@@ -401,7 +401,7 @@ const ProjectInvitationModal = ({
             <button
               type="submit"
               disabled={!canManage || inviteForm.processing}
-              className="h-10 rounded-md bg-dark-primary px-4 text-sm font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              className="h-9 rounded-md bg-dark-primary px-4 text-sm font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {inviteForm.processing ? 'Sharing' : 'Share'}
             </button>

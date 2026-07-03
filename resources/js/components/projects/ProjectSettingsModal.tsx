@@ -82,6 +82,23 @@ const ProjectSettingsModal = ({
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const accountIndex = account.index;
 
+  // Recompute the active tab whenever the modal opens (or its target
+  // project/initialTab changes) — adjusted during render instead of an
+  // effect, per https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const openKey = `${open}:${initialTab ?? ''}:${project?.project_id ?? ''}`;
+  const [prevOpenKey, setPrevOpenKey] = useState(openKey);
+
+  if (openKey !== prevOpenKey) {
+    setPrevOpenKey(openKey);
+
+    if (open) {
+      const desired = initialTab ?? (project ? 'general' : 'profile');
+      setActiveTab(
+        project || !PROJECT_TABS.includes(desired) ? desired : 'profile',
+      );
+    }
+  }
+
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -90,16 +107,6 @@ const ProjectSettingsModal = ({
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [open, onClose]);
-
-  useEffect(() => {
-    if (!open) return;
-    const desired = initialTab ?? (project ? 'general' : 'profile');
-    // Reset to the appropriate tab whenever the modal opens (or its target changes).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setActiveTab(
-      project || !PROJECT_TABS.includes(desired) ? desired : 'profile',
-    );
-  }, [open, initialTab, project]);
 
   if (!open) return null;
 

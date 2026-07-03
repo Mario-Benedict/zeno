@@ -16,6 +16,10 @@ use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
+    // NotePolicy/ChatRoomPolicy aren't listed here — Laravel auto-discovers
+    // policies from the `App\Models\{X}` → `App\Policies\{X}Policy` naming
+    // convention, same as every other policy in this codebase besides
+    // ProjectPolicy (kept explicit only because it predates auto-discovery).
     protected $policies = [
         Project::class => ProjectPolicy::class,
     ];

@@ -246,6 +246,7 @@ const GeneralTab = ({
   accountIndex: number;
 }) => {
   const [name, setName] = useState(project.project_name);
+  const [prevProjectName, setPrevProjectName] = useState(project.project_name);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -254,16 +255,17 @@ const GeneralTab = ({
   const [uploading, setUploading] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
+  // Reset the local draft when the project itself changes (not on every
+  // render) — adjusted during render instead of an effect, per
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (project.project_name !== prevProjectName) {
+    setPrevProjectName(project.project_name);
+    setName(project.project_name);
+  }
+
   const canEdit = role === 'OWNER' || role === 'ADMIN';
   const hasChanged = name.trim() !== '' && name.trim() !== project.project_name;
   const derivedSlug = toSlug(name || project.project_name);
-
-  useEffect(() => {
-    // Keep the input in sync when the project prop changes externally
-    // (e.g. after a save reloads it via Inertia).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setName(project.project_name);
-  }, [project.project_name]);
 
   useEffect(() => {
     if (!pickerOpen) return;

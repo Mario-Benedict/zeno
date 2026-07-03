@@ -29,6 +29,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'project.member' => EnsureProjectMember::class,
             'project.role' => EnsureProjectRole::class,
         ]);
+
+        // Note content is a Tiptap/ProseMirror JSON tree — whitespace inside
+        // its text nodes is meaningful document content, not incidental
+        // padding, so it must not be auto-trimmed like a normal form field
+        // (see NoteExcerptExtractor, which relies on that whitespace being
+        // preserved exactly as typed).
+        $middleware->trimStrings(except: ['content*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

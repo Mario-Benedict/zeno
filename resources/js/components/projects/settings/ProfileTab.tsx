@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { accountPath } from '@/lib/accountRoutes';
 import type { User } from '@/types/auth';
@@ -13,17 +13,19 @@ const ProfileTab = ({
   accountIndex: number;
 }) => {
   const [name, setName] = useState(user?.name ?? '');
+  const [prevUserName, setPrevUserName] = useState(user?.name);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const hasChanged = name.trim() !== '' && name.trim() !== user?.name;
 
-  useEffect(() => {
-    // Keep the input in sync when the user prop changes externally.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  // Adjusted during render instead of an effect — see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (user?.name !== prevUserName) {
+    setPrevUserName(user?.name);
     if (user?.name) setName(user.name);
-  }, [user?.name]);
+  }
 
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
