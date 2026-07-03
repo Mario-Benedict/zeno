@@ -1,12 +1,12 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import CancelIcon from '@public/icons/small/cancel.svg';
 import { projectPath } from '@/lib/accountRoutes';
 import { AVATAR_COLORS, avatarHex } from '@/lib/projectAvatar';
 import type { AvatarColor } from '@/lib/projectAvatar';
 import { toSlug } from '@/lib/projectSlug';
 import type { CurrentProject, ProjectRole } from '@/types';
+import CancelIcon from '@public/icons/small/cancel.svg';
 import { SavedBadge } from './shared';
 
 // ── Inline icons (no existing SVG files for these) ───────────────────────
@@ -115,7 +115,9 @@ const AvatarUploadModal = ({
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  useEffect(() => () => {
+ if (preview) URL.revokeObjectURL(preview); 
+}, [preview]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
@@ -207,6 +209,7 @@ const GeneralTab = ({
   accountIndex: number;
 }) => {
   const [name, setName] = useState(project.project_name);
+  const [prevProjectName, setPrevProjectName] = useState(project.project_name);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -215,11 +218,17 @@ const GeneralTab = ({
   const [uploading, setUploading] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
+  // Reset the local draft when the project itself changes (not on every
+  // render) — adjusted during render instead of an effect, per
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (project.project_name !== prevProjectName) {
+    setPrevProjectName(project.project_name);
+    setName(project.project_name);
+  }
+
   const canEdit = role === 'OWNER' || role === 'ADMIN';
   const hasChanged = name.trim() !== '' && name.trim() !== project.project_name;
   const derivedSlug = toSlug(name || project.project_name);
-
-  useEffect(() => { setName(project.project_name); }, [project.project_name]);
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -234,13 +243,19 @@ const GeneralTab = ({
     e.preventDefault();
     if (!canEdit || !hasChanged || saving) return;
     const trimmed = name.trim();
-    if (!trimmed) { setError('Project name is required.'); return; }
+    if (!trimmed) {
+ setError('Project name is required.'); return; 
+}
     setSaving(true);
     setError(null);
     router.patch(projectPath(accountIndex, project.project_slug), { project_name: trimmed }, {
       preserveScroll: true,
-      onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2500); },
-      onError: (errs) => { setError((errs.project_name as string | undefined) ?? 'Something went wrong.'); },
+      onSuccess: () => {
+ setSaved(true); setTimeout(() => setSaved(false), 2500); 
+},
+      onError: (errs) => {
+ setError((errs.project_name as string | undefined) ?? 'Something went wrong.'); 
+},
       onFinish: () => setSaving(false),
     });
   };
@@ -300,7 +315,9 @@ const GeneralTab = ({
                   <ColorPickerPopover
                     current={project.avatar_color}
                     onSelectColor={handleColorSelect}
-                    onUploadClick={() => { setPickerOpen(false); setUploadModalOpen(true); }}
+                    onUploadClick={() => {
+ setPickerOpen(false); setUploadModalOpen(true); 
+}}
                   />
                 )}
               </div>
@@ -312,7 +329,9 @@ const GeneralTab = ({
               <input
                 type="text"
                 value={name}
-                onChange={(e) => { setName(e.target.value); setError(null); }}
+                onChange={(e) => {
+ setName(e.target.value); setError(null); 
+}}
                 disabled={!canEdit}
                 maxLength={50}
                 placeholder="Project name"

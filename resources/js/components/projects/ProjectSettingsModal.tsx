@@ -65,18 +65,29 @@ const ProjectSettingsModal = ({ open, initialTab, onClose }: ProjectSettingsModa
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const accountIndex = account.index;
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
+  // Recompute the active tab whenever the modal opens (or its target
+  // project/initialTab changes) — adjusted during render instead of an
+  // effect, per https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const openKey = `${open}:${initialTab ?? ''}:${project?.project_id ?? ''}`;
+  const [prevOpenKey, setPrevOpenKey] = useState(openKey);
+
+  if (openKey !== prevOpenKey) {
+    setPrevOpenKey(openKey);
+
+    if (open) {
+      const desired = initialTab ?? (project ? 'general' : 'profile');
+      setActiveTab(project || !PROJECT_TABS.includes(desired) ? desired : 'profile');
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
-    const desired = initialTab ?? (project ? 'general' : 'profile');
-    setActiveTab(project || !PROJECT_TABS.includes(desired) ? desired : 'profile');
-  }, [open, initialTab, project]);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
 
   if (!open) return null;
 

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\ChatRoom;
+use App\Models\Note;
 use App\Models\Project;
 use Closure;
 use Illuminate\Http\Request;
@@ -27,6 +28,12 @@ class EnsureProjectMember
         $room = $request->route('room');
 
         if ($room instanceof ChatRoom && $room->project_id !== $project->project_id) {
+            abort(404);
+        }
+
+        $note = $request->route('note');
+
+        if ($note instanceof Note && $note->project_id !== $project->project_id) {
             abort(404);
         }
 

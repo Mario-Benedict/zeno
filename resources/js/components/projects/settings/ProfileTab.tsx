@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { accountPath } from '@/lib/accountRoutes';
 import type { User } from '@/types/auth';
@@ -7,27 +7,37 @@ import { FieldLabel, SavedBadge, getInitials, inputClass } from './shared';
 
 const ProfileTab = ({ user, accountIndex }: { user: User | null; accountIndex: number }) => {
   const [name, setName] = useState(user?.name ?? '');
+  const [prevUserName, setPrevUserName] = useState(user?.name);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const hasChanged = name.trim() !== '' && name.trim() !== user?.name;
 
-  useEffect(() => {
+  // Adjusted during render instead of an effect — see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (user?.name !== prevUserName) {
+    setPrevUserName(user?.name);
     if (user?.name) setName(user.name);
-  }, [user?.name]);
+  }
 
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
     if (!hasChanged || saving) return;
     const trimmed = name.trim();
-    if (!trimmed) { setError('Name is required.'); return; }
+    if (!trimmed) {
+ setError('Name is required.'); return; 
+}
     setSaving(true);
     setError(null);
     router.patch(accountPath(accountIndex, '/profile'), { name: trimmed }, {
       preserveScroll: true,
-      onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2500); },
-      onError: (errs) => { setError((errs.name as string | undefined) ?? 'Something went wrong.'); },
+      onSuccess: () => {
+ setSaved(true); setTimeout(() => setSaved(false), 2500); 
+},
+      onError: (errs) => {
+ setError((errs.name as string | undefined) ?? 'Something went wrong.'); 
+},
       onFinish: () => setSaving(false),
     });
   };
@@ -50,7 +60,9 @@ const ProfileTab = ({ user, accountIndex }: { user: User | null; accountIndex: n
           <input
             type="text"
             value={name}
-            onChange={(e) => { setName(e.target.value); setError(null); }}
+            onChange={(e) => {
+ setName(e.target.value); setError(null); 
+}}
             maxLength={255}
             placeholder="Your name"
             className={inputClass}

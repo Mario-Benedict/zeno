@@ -1,4 +1,3 @@
-import React from 'react';
 import { formatFileSize } from '@/lib/utils';
 import type { KanbanBoardCardDetail, KanbanUser } from '@/types/kanban';
 import type { LocalAttachment } from '@/utils/attachmentStorage';

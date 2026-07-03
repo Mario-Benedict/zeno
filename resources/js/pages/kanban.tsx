@@ -1,6 +1,6 @@
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 import {
   KanbanColumn,
@@ -100,6 +100,7 @@ export default function Kanban({
           ctrls.push(ctrl);
           silentPatch(
             projects.kanban.boards.board.update.url({
+              accountIndex,
               project: project.project_slug,
               board: board.kanban_board_id,
             }),
