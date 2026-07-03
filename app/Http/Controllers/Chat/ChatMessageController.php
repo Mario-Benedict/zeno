@@ -85,7 +85,7 @@ class ChatMessageController extends Controller
      * On success, the message document is returned so the frontend can
      * optimistically append it without re-fetching.
      */
-    public function store(int $accountIndex, SendMessageRequest $request, Project $project, ChatRoom $room): RedirectResponse
+    public function store(int $accountIndex, SendMessageRequest $request, Project $project, ChatRoom $room): RedirectResponse|JsonResponse
     {
         $this->authorize('sendMessage', $room);
 
@@ -96,8 +96,13 @@ class ChatMessageController extends Controller
         );
 
         // Push to all OTHER room participants via WebSocket.
-        // The sender receives their own message through the Inertia flash prop.
+        // The sender receives their own message through the Inertia flash prop
+        // (or, for API-style callers like the dashboard chat widget, the JSON body below).
         broadcast(new MessageSent($message))->toOthers();
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => $message]);
+        }
 
         return redirect()->back()->with('chat.newMessage', $message);
     }

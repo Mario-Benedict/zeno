@@ -49,20 +49,18 @@ export const KanbanWidgetCard = ({ card, onToggleDone, onClick }: Props) => {
 
         {hasMeta && (
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {detail.labels
-              ?.slice(0, 4)
-              .map((label) =>
-                label.color ? (
-                  <span
-                    key={label.card_label_id}
-                    title={label.card_label_name}
-                    className="h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{
-                      backgroundColor: label.color.card_label_color_hex,
-                    }}
-                  />
-                ) : null,
-              )}
+            {detail.labels?.slice(0, 4).map((label) =>
+              label.color ? (
+                <span
+                  key={label.card_label_id}
+                  title={label.card_label_name}
+                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: label.color.card_label_color_hex,
+                  }}
+                />
+              ) : null,
+            )}
             {checklistProgress.total > 0 && (
               <span className="text-micro text-white/40">
                 {checklistProgress.done}/{checklistProgress.total}

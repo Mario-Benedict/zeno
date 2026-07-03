@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import type { AssignableProjectRole } from '@/types';
 import ArrowDownIcon from '@public/icons/small/arrow_down.svg';
 import CheckIcon from '@public/icons/small/check.svg';
-import type { AssignableProjectRole } from '@/types';
 
 export const ROLE_LABELS: Record<AssignableProjectRole, string> = {
   ADMIN: 'Admin',

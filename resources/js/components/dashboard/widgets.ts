@@ -19,7 +19,7 @@ export interface WidgetDefinition {
  */
 export const WIDGETS: WidgetDefinition[] = [
   { id: 'kanban', name: 'Kanban Board', available: true },
-  { id: 'chat', name: 'Chat', available: false },
+  { id: 'chat', name: 'Chat', available: true },
   { id: 'notes', name: 'Notes', available: false },
   { id: 'calendar', name: 'Calendar', available: false },
   { id: 'reminders', name: 'Reminders', available: false },

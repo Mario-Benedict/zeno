@@ -7,6 +7,7 @@ import type { WidgetId } from '@/components/dashboard/widgets';
 import { useProject } from '@/hooks/useProject';
 import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
+import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
 
 interface DashboardSetting {
@@ -18,12 +19,22 @@ interface KanbanWidgetData {
   kanbanBoards: KanbanBoard[];
 }
 
+interface ChatWidgetData {
+  rooms: ChatRoom[];
+  currentUser: ChatParticipant;
+}
+
 interface Props {
   setting: DashboardSetting;
   kanbanWidgetData?: KanbanWidgetData;
+  chatWidgetData?: ChatWidgetData;
 }
 
-export default function Dashboard({ setting, kanbanWidgetData }: Props) {
+export default function Dashboard({
+  setting,
+  kanbanWidgetData,
+  chatWidgetData,
+}: Props) {
   const { project, accountIndex } = useProject();
 
   // Local state mirrors the server setting so the picker→grid transition is
@@ -87,6 +98,7 @@ export default function Dashboard({ setting, kanbanWidgetData }: Props) {
             onChangeLayout={handleChangeLayout}
             onAssignWidget={handleAssignWidget}
             kanbanWidgetData={kanbanWidgetData}
+            chatWidgetData={chatWidgetData}
           />
         )}
       </div>

@@ -89,7 +89,9 @@ const DangerTab = ({
           description="This will permanently delete the project and all its data. This action cannot be undone."
           confirmLabel="Delete project"
           tone="danger"
-          onConfirm={() => { setConfirm(null); deleteProject(); }}
+          onConfirm={() => {
+ setConfirm(null); deleteProject(); 
+}}
           onCancel={() => setConfirm(null)}
         />
       )}
@@ -99,7 +101,9 @@ const DangerTab = ({
           description={`You will lose access to "${project.project_name}". You can only rejoin if invited again.`}
           confirmLabel="Leave project"
           tone="danger"
-          onConfirm={() => { setConfirm(null); leaveProject(); }}
+          onConfirm={() => {
+ setConfirm(null); leaveProject(); 
+}}
           onCancel={() => setConfirm(null)}
         />
       )}

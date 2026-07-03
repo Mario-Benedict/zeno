@@ -1,14 +1,21 @@
 import { useState } from 'react';
+import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import { getTemplate } from './templates';
 import type { TemplateId } from './templates';
 import { WidgetPicker } from './WidgetPicker';
 import type { WidgetId } from './widgets';
+import { ChatWidget } from './widgets/ChatWidget';
 import { KanbanWidget } from './widgets/KanbanWidget';
 
 interface KanbanWidgetData {
   kanbanBoards: KanbanBoard[];
+}
+
+interface ChatWidgetData {
+  rooms: ChatRoom[];
+  currentUser: ChatParticipant;
 }
 
 interface Props {
@@ -17,6 +24,7 @@ interface Props {
   onChangeLayout: () => void;
   onAssignWidget: (index: number, widgetId: WidgetId | null) => void;
   kanbanWidgetData?: KanbanWidgetData;
+  chatWidgetData?: ChatWidgetData;
 }
 
 const PlusIcon = () => (
@@ -65,12 +73,28 @@ const EmptySlot = ({
   </div>
 );
 
+const renderWidget = (
+  widgetId: WidgetId,
+  kanbanWidgetData?: KanbanWidgetData,
+  chatWidgetData?: ChatWidgetData,
+) => {
+  if (widgetId === 'kanban' && kanbanWidgetData) {
+    return <KanbanWidget {...kanbanWidgetData} />;
+  }
+  if (widgetId === 'chat' && chatWidgetData) {
+    return <ChatWidget {...chatWidgetData} />;
+  }
+
+  return null;
+};
+
 export const DashboardGrid = ({
   templateId,
   slots,
   onChangeLayout,
   onAssignWidget,
   kanbanWidgetData,
+  chatWidgetData,
 }: Props) => {
   const template = getTemplate(templateId);
   const [pickerOpenIndex, setPickerOpenIndex] = useState<number | null>(null);
@@ -101,12 +125,15 @@ export const DashboardGrid = ({
       <div className={`grid min-h-0 flex-1 gap-3 ${template.gridClass}`}>
         {template.slotClasses.map((cls, i) => {
           const widgetId = slots[i] ?? null;
+          const content = widgetId
+            ? renderWidget(widgetId, kanbanWidgetData, chatWidgetData)
+            : null;
 
           return (
             <div key={i} className={`group relative min-h-0 ${cls}`}>
-              {widgetId === 'kanban' && kanbanWidgetData ? (
+              {widgetId && content ? (
                 <>
-                  <KanbanWidget {...kanbanWidgetData} />
+                  {content}
                   <button
                     type="button"
                     onClick={() => onAssignWidget(i, null)}
@@ -116,9 +143,9 @@ export const DashboardGrid = ({
                     <CloseIcon className="h-3.5 w-3.5" />
                   </button>
                 </>
-              ) : widgetId === 'kanban' ? (
-                // Assigned but the server hasn't sent kanbanWidgetData back yet
-                // (it's only included once a slot actually references it).
+              ) : widgetId ? (
+                // Assigned but the server hasn't sent that widget's data back
+                // yet (it's only included once a slot actually references it).
                 <div className="flex h-full min-h-0 items-center justify-center rounded-xl bg-dark-surface-2 text-xsmall text-dark-secondary">
                   Loading widget…
                 </div>

@@ -11,7 +11,13 @@ import SecurityTab from './settings/SecurityTab';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type Tab = 'general' | 'members' | 'profile' | 'preferences' | 'security' | 'danger';
+type Tab =
+  | 'general'
+  | 'members'
+  | 'profile'
+  | 'preferences'
+  | 'security'
+  | 'danger';
 
 interface ProjectSettingsModalProps {
   open: boolean;
@@ -21,9 +27,15 @@ interface ProjectSettingsModalProps {
 
 // ── Sidebar nav ────────────────────────────────────────────────────────────
 
-const NavGroup = ({ label, children }: { label: string; children: ReactNode }) => (
+const NavGroup = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) => (
   <div className="mb-3">
-    <p className="mb-1 px-3 text-micro font-bold uppercase tracking-wider text-dark-secondary">
+    <p className="mb-1 px-3 text-micro font-bold tracking-wider text-dark-secondary uppercase">
       {label}
     </p>
     <div className="space-y-0.5">{children}</div>
@@ -60,14 +72,21 @@ const NavItem = ({
 
 const PROJECT_TABS: Tab[] = ['general', 'members', 'danger'];
 
-const ProjectSettingsModal = ({ open, initialTab, onClose }: ProjectSettingsModalProps) => {
-  const { project, projectRole, projectShare, auth, account, twoFactor } = usePage().props;
+const ProjectSettingsModal = ({
+  open,
+  initialTab,
+  onClose,
+}: ProjectSettingsModalProps) => {
+  const { project, projectRole, projectShare, auth, account, twoFactor } =
+    usePage().props;
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const accountIndex = account.index;
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [open, onClose]);
@@ -75,7 +94,11 @@ const ProjectSettingsModal = ({ open, initialTab, onClose }: ProjectSettingsModa
   useEffect(() => {
     if (!open) return;
     const desired = initialTab ?? (project ? 'general' : 'profile');
-    setActiveTab(project || !PROJECT_TABS.includes(desired) ? desired : 'profile');
+    // Reset to the appropriate tab whenever the modal opens (or its target changes).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveTab(
+      project || !PROJECT_TABS.includes(desired) ? desired : 'profile',
+    );
   }, [open, initialTab, project]);
 
   if (!open) return null;
@@ -89,13 +112,15 @@ const ProjectSettingsModal = ({ open, initialTab, onClose }: ProjectSettingsModa
         role="dialog"
         aria-modal="true"
         aria-label="Settings"
-        className="flex h-[88dvh] w-full max-w-3xl max-h-[640px] overflow-hidden rounded-xl border border-dark-border bg-dark-surface-2 shadow-2xl"
+        className="flex h-[88dvh] max-h-[640px] w-full max-w-3xl overflow-hidden rounded-xl border border-dark-border bg-dark-surface-2 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Sidebar ─────────────────────────────── */}
         <div className="flex w-52 shrink-0 flex-col border-r border-dark-border bg-dark-surface-1 p-2">
           <div className="mb-4 flex items-center justify-between px-1 pt-1">
-            <p className="text-small font-semibold text-dark-primary">Settings</p>
+            <p className="text-small font-semibold text-dark-primary">
+              Settings
+            </p>
             <button
               type="button"
               onClick={onClose}
@@ -109,18 +134,43 @@ const ProjectSettingsModal = ({ open, initialTab, onClose }: ProjectSettingsModa
           <div className="flex flex-1 flex-col">
             {project && (
               <NavGroup label="Project">
-                <NavItem label="General" active={activeTab === 'general'} onClick={() => setActiveTab('general')} />
-                <NavItem label="Members" active={activeTab === 'members'} onClick={() => setActiveTab('members')} />
+                <NavItem
+                  label="General"
+                  active={activeTab === 'general'}
+                  onClick={() => setActiveTab('general')}
+                />
+                <NavItem
+                  label="Members"
+                  active={activeTab === 'members'}
+                  onClick={() => setActiveTab('members')}
+                />
               </NavGroup>
             )}
             <NavGroup label="Your Account">
-              <NavItem label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
-              <NavItem label="Preferences" active={activeTab === 'preferences'} onClick={() => setActiveTab('preferences')} />
-              <NavItem label="Security" active={activeTab === 'security'} onClick={() => setActiveTab('security')} />
+              <NavItem
+                label="Profile"
+                active={activeTab === 'profile'}
+                onClick={() => setActiveTab('profile')}
+              />
+              <NavItem
+                label="Preferences"
+                active={activeTab === 'preferences'}
+                onClick={() => setActiveTab('preferences')}
+              />
+              <NavItem
+                label="Security"
+                active={activeTab === 'security'}
+                onClick={() => setActiveTab('security')}
+              />
             </NavGroup>
             {project && (
               <div className="mt-auto border-t border-dark-border pt-2">
-                <NavItem label="Danger Zone" active={activeTab === 'danger'} danger onClick={() => setActiveTab('danger')} />
+                <NavItem
+                  label="Danger Zone"
+                  active={activeTab === 'danger'}
+                  danger
+                  onClick={() => setActiveTab('danger')}
+                />
               </div>
             )}
           </div>
@@ -129,10 +179,18 @@ const ProjectSettingsModal = ({ open, initialTab, onClose }: ProjectSettingsModa
         {/* ── Content ─────────────────────────────── */}
         <div className="scrollbar-app flex-1 overflow-y-auto p-6">
           {activeTab === 'general' && project && (
-            <GeneralTab project={project} role={projectRole} accountIndex={accountIndex} />
+            <GeneralTab
+              project={project}
+              role={projectRole}
+              accountIndex={accountIndex}
+            />
           )}
           {activeTab === 'members' && project && (
-            <MembersTab share={projectShare} project={project} accountIndex={accountIndex} />
+            <MembersTab
+              share={projectShare}
+              project={project}
+              accountIndex={accountIndex}
+            />
           )}
           {activeTab === 'profile' && (
             <ProfileTab user={auth.user} accountIndex={accountIndex} />
@@ -140,7 +198,11 @@ const ProjectSettingsModal = ({ open, initialTab, onClose }: ProjectSettingsModa
           {activeTab === 'preferences' && <PreferencesTab />}
           {activeTab === 'security' && <SecurityTab twoFactor={twoFactor} />}
           {activeTab === 'danger' && project && (
-            <DangerTab project={project} role={projectRole} accountIndex={accountIndex} />
+            <DangerTab
+              project={project}
+              role={projectRole}
+              accountIndex={accountIndex}
+            />
           )}
         </div>
       </div>

@@ -53,6 +53,7 @@ const MembersTab = ({
           {members.map((member) => {
             const isOwner = member.role === 'OWNER';
             const canEdit = canManage && !isOwner && !member.is_current_user;
+
             return (
               <div
                 key={member.id}

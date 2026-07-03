@@ -2,8 +2,8 @@ import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { accountPath } from '@/lib/accountRoutes';
-import CheckIcon from '@public/icons/small/check.svg';
 import RightArrow from '@public/icons/small/arrow_down.svg';
+import CheckIcon from '@public/icons/small/check.svg';
 import PersonIcon from '@public/icons/small/person.svg';
 import PersonAddIcon from '@public/icons/small/person_add.svg';
 import PersonDeleteIcon from '@public/icons/small/person_delete.svg';
@@ -145,7 +145,9 @@ const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
 
         <button
           type="button"
-          onClick={() => { onClose(); onSettingsOpen(); }}
+          onClick={() => {
+ onClose(); onSettingsOpen(); 
+}}
           className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-small font-medium text-dark-primary transition-colors hover:bg-white/[0.07]"
         >
           Account settings

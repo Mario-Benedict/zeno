@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChatRoom;
 use App\Models\Project;
+use App\Models\User;
 use App\Models\UserDashboardSetting;
+use App\Services\ChatMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +20,11 @@ class DashboardController extends Controller
 
     // Widgets with a working implementation. Others are surfaced in the
     // widget picker as "coming soon" and can't be assigned to a slot yet.
-    private const VALID_WIDGETS = ['kanban'];
+    private const VALID_WIDGETS = ['kanban', 'chat'];
+
+    public function __construct(
+        private readonly ChatMessageService $messageService,
+    ) {}
 
     public function show(int $accountIndex, Project $project): Response
     {
@@ -42,6 +50,10 @@ class DashboardController extends Controller
         // so visiting the dashboard doesn't pay for widgets nobody placed.
         if (in_array('kanban', $setting->slots ?? [], true)) {
             $props['kanbanWidgetData'] = $this->loadKanbanWidgetData($project);
+        }
+
+        if (in_array('chat', $setting->slots ?? [], true)) {
+            $props['chatWidgetData'] = $this->loadChatWidgetData($project);
         }
 
         return Inertia::render('dashboard', $props);
@@ -72,6 +84,47 @@ class DashboardController extends Controller
 
         return [
             'kanbanBoards' => $project->kanbanBoards,
+        ];
+    }
+
+    private function loadChatWidgetData(Project $project): array
+    {
+        // Mirrors ChatRoomController::index()'s rooms + last-message-preview
+        // shape (trimmed to what the compact room list/conversation view needs).
+        $user = Auth::user();
+
+        $rooms = ChatRoom::query()
+            ->where('project_id', $project->project_id)
+            ->whereHas('participants', fn ($q) => $q->where('user_id', $user->id))
+            ->with(['participants'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $lastMessageMap = $this->messageService
+            ->getLastMessagePreviewsForRooms($rooms->pluck('id')->all());
+
+        return [
+            'rooms' => $rooms->map(fn (ChatRoom $room) => [
+                'id' => $room->id,
+                'projectId' => $room->project_id,
+                'type' => $room->type,
+                'name' => $room->name,
+                'participants' => $room->participants->map(fn (User $p) => [
+                    'id' => (string) $p->id,
+                    'name' => $p->name,
+                    'email' => $p->email,
+                    'avatarUrl' => null,
+                ])->values()->all(),
+                'lastMessage' => $lastMessageMap[$room->id] ?? null,
+                'createdAt' => $room->created_at?->toIso8601String(),
+                'updatedAt' => $room->updated_at?->toIso8601String(),
+            ])->values()->all(),
+            'currentUser' => [
+                'id' => (string) $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatarUrl' => null,
+            ],
         ];
     }
 
