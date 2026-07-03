@@ -24,8 +24,8 @@ export const TEMPLATES: DashboardTemplate[] = [
     gridClass: 'grid-cols-3 grid-rows-2',
     slotClasses: [
       'col-span-2 row-span-2', // large left
-      '',                       // top-right
-      '',                       // bottom-right
+      '', // top-right
+      '', // bottom-right
     ],
   },
   {
@@ -44,9 +44,9 @@ export const TEMPLATES: DashboardTemplate[] = [
     gridClass: 'grid-cols-3 grid-rows-2',
     slotClasses: [
       'col-span-3', // full-width top
-      '',           // bottom-left
-      '',           // bottom-center
-      '',           // bottom-right
+      '', // bottom-left
+      '', // bottom-center
+      '', // bottom-right
     ],
   },
   {
@@ -57,10 +57,10 @@ export const TEMPLATES: DashboardTemplate[] = [
     gridClass: 'grid-cols-3 grid-rows-2',
     slotClasses: [
       'col-span-1 row-span-2', // tall left
-      '',                       // top-center
-      '',                       // top-right
-      '',                       // bottom-center
-      '',                       // bottom-right
+      '', // top-center
+      '', // top-right
+      '', // bottom-center
+      '', // bottom-right
     ],
   },
   {

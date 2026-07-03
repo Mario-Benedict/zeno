@@ -8,10 +8,7 @@ interface Props {
 const TemplatePreview = ({ template }: { template: DashboardTemplate }) => (
   <div className={`grid h-full w-full gap-1 ${template.gridClass}`}>
     {template.slotClasses.map((cls, i) => (
-      <div
-        key={i}
-        className={`rounded-sm bg-accent-blue/25 ${cls}`}
-      />
+      <div key={i} className={`rounded-sm bg-accent-blue/25 ${cls}`} />
     ))}
   </div>
 );
@@ -33,7 +30,9 @@ const TemplateCard = ({
     </div>
 
     <div>
-      <p className="text-medium font-semibold text-dark-primary">{template.name}</p>
+      <p className="text-medium font-semibold text-dark-primary">
+        {template.name}
+      </p>
       <p className="text-xsmall text-dark-secondary">{template.description}</p>
     </div>
   </button>

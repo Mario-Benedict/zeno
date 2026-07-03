@@ -16,4 +16,5 @@ use Illuminate\Support\Facades\Route;
 Route::name('projects.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
     Route::patch('/dashboard', [DashboardController::class, 'update'])->name('dashboard.update');
+    Route::patch('/dashboard/slots', [DashboardController::class, 'updateSlot'])->name('dashboard.slots.update');
 });
