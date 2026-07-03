@@ -98,7 +98,7 @@ const buildNavItems = (
 ): NavItem[] => [
   {
     name: 'Dashboard',
-    href: projectPath(accountIndex, projectSlug),
+    href: projectPath(accountIndex, projectSlug, '/dashboard'),
     icon: DashboardIcon,
   },
   {
