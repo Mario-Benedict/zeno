@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AccountSessionService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +16,7 @@ class EmailVerificationController extends Controller
     public function notice(Request $request): Response|RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('projects.index'));
+            return $this->redirectToProjects($request);
         }
 
         return Inertia::render('auth/verify-email', [
@@ -30,17 +31,31 @@ class EmailVerificationController extends Controller
             event(new Verified($request->user()));
         }
 
-        return redirect()->intended(route('projects.index').'?verified=1');
+        $request->session()->forget('url.intended');
+
+        return redirect()->route('projects.index', [
+            'accountIndex' => AccountSessionService::getActiveIndex($request),
+            'verified' => 1,
+        ]);
     }
 
     public function resend(Request $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('projects.index'));
+            return $this->redirectToProjects($request);
         }
 
         $request->user()->sendEmailVerificationNotification();
 
         return back()->with('status', 'verification-link-sent');
+    }
+
+    private function redirectToProjects(Request $request): RedirectResponse
+    {
+        $request->session()->forget('url.intended');
+
+        return redirect()->route('projects.index', [
+            'accountIndex' => AccountSessionService::getActiveIndex($request),
+        ]);
     }
 }

@@ -7,33 +7,12 @@ use App\Support\Totp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class TwoFactorSetupController extends Controller
 {
     private const MAX_ATTEMPTS = 5;
 
     private const DECAY_SECONDS = 600;
-
-    public function show(Request $request): Response
-    {
-        $user = $request->user();
-        $secret = $user->two_factor_secret;
-        $qrCodeUrl = null;
-
-        if ($secret) {
-            $otpUrl = Totp::getQrCodeUrl(config('app.name'), $user->email, $secret);
-            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='.urlencode($otpUrl);
-        }
-
-        return Inertia::render('auth/two-factor-setup', [
-            'enabled' => $user->hasTwoFactorEnabled(),
-            'secret' => $secret,
-            'qrCodeUrl' => $qrCodeUrl,
-            'status' => session('status'),
-        ]);
-    }
 
     public function generate(Request $request): RedirectResponse
     {

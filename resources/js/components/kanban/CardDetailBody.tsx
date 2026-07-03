@@ -1,4 +1,3 @@
-import React from 'react';
 import { formatFileSize } from '@/lib/utils';
 import type { KanbanBoardCardDetail, KanbanUser } from '@/types/kanban';
 import type { LocalAttachment } from '@/utils/attachmentStorage';
@@ -143,7 +142,7 @@ export const CardDetailBody = ({
     attachmentsLocal.length + (detail.attachments?.length || 0);
 
   return (
-    <div className="min-w-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+    <div className="scrollbar-app min-w-0 flex-1 space-y-4 overflow-y-auto px-3 py-4">
       {/* Labels row */}
       {!!detail.labels?.length && (
         <div className="flex flex-wrap gap-1.5">
@@ -241,7 +240,7 @@ export const CardDetailBody = ({
               onChange={(e) => descOnChange(e.target.value)}
               rows={5}
               placeholder="Add a more detailed description..."
-              className="w-full resize-none rounded-xl border border-dark-border-focus bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed text-dark-primary placeholder-white/20 focus:outline-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent"
+              className="scrollbar-app w-full resize-none rounded-xl border border-dark-border-focus bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed text-dark-primary placeholder-white/20 focus:outline-none"
             />
             <div className="mt-2 flex gap-2">
               <button

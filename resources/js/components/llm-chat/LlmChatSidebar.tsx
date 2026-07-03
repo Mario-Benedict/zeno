@@ -1,8 +1,8 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import LlmChatController from '@/actions/App/Http/Controllers/LlmChatController';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import { useProject } from '@/hooks/useProject';
+import { projectPath } from '@/lib/accountRoutes';
 import type { LlmSession } from '@/types/llm-chat';
 import MoreIcon from '@public/icons/large/more.svg';
 import PlusIcon from '@public/icons/small/plus.svg';
@@ -17,6 +17,7 @@ interface Props {
 interface SessionItemProps {
   session: LlmSession;
   isActive: boolean;
+  accountIndex: number;
   projectSlug: string;
   menuOpen: boolean;
   onOpenMenu: () => void;
@@ -27,6 +28,7 @@ interface SessionItemProps {
 const SessionItem = ({
   session,
   isActive,
+  accountIndex,
   projectSlug,
   menuOpen,
   onOpenMenu,
@@ -52,10 +54,11 @@ const SessionItem = ({
 
   const navigate = () => {
     router.get(
-      LlmChatController.show.url({
-        project: projectSlug,
-        session: session.llm_chat_session_id,
-      }),
+      projectPath(
+        accountIndex,
+        projectSlug,
+        `/llm-chat/${session.llm_chat_session_id}`,
+      ),
     );
   };
 
@@ -132,7 +135,7 @@ const SessionItem = ({
 // ─── Sidebar ───
 
 const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
-  const { project } = useProject();
+  const { project, accountIndex } = useProject();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LlmSession | null>(null);
 
@@ -143,11 +146,10 @@ const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
     setDeleteTarget(null);
 
     router.delete(
-      LlmChatController.destroy.url({
-        project: project.project_slug,
-        session: targetId,
-      }),
-      { preserveScroll: true },
+      projectPath(accountIndex, project.project_slug, `/llm-chat/${targetId}`),
+      {
+        preserveScroll: true,
+      },
     );
   };
 
@@ -160,7 +162,7 @@ const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
             type="button"
             onClick={() =>
               router.get(
-                LlmChatController.index.url({ project: project.project_slug }),
+                projectPath(accountIndex, project.project_slug, '/llm-chat'),
               )
             }
             className="flex w-full items-center gap-2 rounded-lg bg-dark-surface-3 px-3 py-2 text-sm text-dark-secondary transition-colors hover:bg-status-info hover:text-white"
@@ -177,7 +179,7 @@ const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
         </p>
 
         {/* ── Session list ── */}
-        <nav className="flex-1 overflow-y-auto px-2 pb-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+        <nav className="scrollbar-app flex-1 overflow-y-auto px-2 pb-3">
           {sessions.length === 0 ? (
             <p className="px-2 py-6 text-center text-xs text-dark-secondary">
               No chats yet.
@@ -189,6 +191,7 @@ const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
                   key={s.llm_chat_session_id}
                   session={s}
                   isActive={s.llm_chat_session_id === activeSessionId}
+                  accountIndex={accountIndex}
                   projectSlug={project.project_slug}
                   menuOpen={openMenuId === s.llm_chat_session_id}
                   onOpenMenu={() => setOpenMenuId(s.llm_chat_session_id)}

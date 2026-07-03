@@ -69,7 +69,7 @@ export const LabelPopover = ({
             </button>
           </div>
 
-          <div className="max-h-52 space-y-0.5 overflow-y-auto p-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+          <div className="scrollbar-app max-h-52 space-y-0.5 overflow-y-auto p-2">
             {cardLabels.length === 0 && (
               <p className="py-4 text-center text-xsmall text-white/20">
                 No labels yet

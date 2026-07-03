@@ -63,7 +63,11 @@ export const KanbanColumn = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex h-fit max-h-[calc(100vh-10.5rem)] w-70 shrink-0 flex-col rounded-2xl transition-all ${
+          style={{
+            ...provided.draggableProps.style,
+            ...(snapshot.isDropAnimating && { transitionDuration: '0.001s' }),
+          }}
+          className={`flex h-fit max-h-[calc(100vh-10.5rem)] w-70 shrink-0 flex-col rounded-2xl ${
             snapshot.isDragging
               ? 'z-50 rotate-1 bg-dark-surface-1 shadow-2xl ring-1 ring-accent-blue/50'
               : 'bg-dark-surface-2'
@@ -140,7 +144,7 @@ export const KanbanColumn = ({
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="flex min-h-0 flex-col gap-2 overflow-y-auto px-3 pb-3 transition-colors [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent"
+                className="scrollbar-app flex min-h-0 flex-col gap-2 overflow-y-auto px-3 pb-3 transition-colors"
               >
                 {filteredCards.length === 0 && (
                   <div className="rounded-xl py-8 text-center text-xsmall text-white/20">

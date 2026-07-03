@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Middleware\EnsureProjectMember;
+use App\Http\Middleware\EnsureProjectRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetAccountRouteDefaults;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,12 +20,22 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             SecurityHeaders::class,
+            SetAccountRouteDefaults::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        $middleware->alias(['project.member' => EnsureProjectMember::class,
+        $middleware->alias([
+            'project.member' => EnsureProjectMember::class,
+            'project.role' => EnsureProjectRole::class,
         ]);
+
+        // Note content is a Tiptap/ProseMirror JSON tree — whitespace inside
+        // its text nodes is meaningful document content, not incidental
+        // padding, so it must not be auto-trimmed like a normal form field
+        // (see NoteExcerptExtractor, which relies on that whitespace being
+        // preserved exactly as typed).
+        $middleware->trimStrings(except: ['content*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

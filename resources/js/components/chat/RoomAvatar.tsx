@@ -30,7 +30,7 @@ const UsersIcon = ({ size }: { size: number }) => (
 const RoomAvatar = ({ room, currentUser, size = 36 }: Props) => {
   const dim = { width: size, height: size };
   const style = { ...dim, minWidth: size };
-  const textClass = size >= 36 ? 'text-xsmall' : 'text-[10px]';
+  const textClass = size >= 36 ? 'text-xsmall' : 'text-micro';
 
   if (room.type === 'group') {
     if (room.avatarUrl) {

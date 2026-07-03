@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AccountSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -67,17 +68,61 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('projects.index'));
+        // Register the user in the multi-account session array.
+        $accountIndex = AccountSessionService::addAccount($request, $user->id);
+        $request->session()->forget('url.intended');
+
+        return redirect()->route('projects.index', ['accountIndex' => $accountIndex]);
     }
 
     public function destroy(Request $request): RedirectResponse
     {
+        $redirectTo = $request->validate([
+            'redirect_to' => ['nullable', 'string', 'in:home,login,register,add_account,signout_all'],
+        ])['redirect_to'] ?? 'home';
+
+        $activeIndex = AccountSessionService::getActiveIndex($request);
+
+        // ── Add another account ───────────────────────────────────────────
+        // Drop the standard Laravel auth token so the guest middleware lets the
+        // user through to /login, but keep the accounts array intact so existing
+        // sessions remain accessible.
+        if ($redirectTo === 'add_account') {
+            Auth::logout();
+            $request->session()->forget('url.intended');
+
+            return redirect()->route('login');
+        }
+
+        // ── Sign out of all accounts ──────────────────────────────────────
+        if ($redirectTo === 'signout_all') {
+            AccountSessionService::clearAll($request);
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('home');
+        }
+
+        // ── Sign out of current account only ─────────────────────────────
+        $nextIndex = AccountSessionService::removeAccount($request, $activeIndex);
+
         Auth::logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($nextIndex === null) {
+            // No more accounts — full sign-out
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
-        return redirect()->route('home');
+            return match ($redirectTo) {
+                'login' => redirect()->route('login'),
+                'register' => redirect()->route('register'),
+                default => redirect()->route('home'),
+            };
+        }
+
+        // Switch to the next remaining account
+        return redirect()->route('projects.index', ['accountIndex' => $nextIndex]);
     }
 
     private function throttleKey(Request $request): string

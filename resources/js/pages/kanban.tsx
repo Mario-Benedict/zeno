@@ -1,7 +1,7 @@
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useRef, useState } from 'react';
 import {
   KanbanColumn,
   CardDetailModalWrapper,
@@ -23,6 +23,31 @@ const inertiaWriteOptions = {
   preserveState: true,
 } as const;
 
+// Sends a PATCH directly via fetch, bypassing Inertia's page lifecycle so
+// the response never triggers a re-render. Used for drag moves where any
+// extra render during the drop animation causes a visible flinch.
+const silentPatch = (
+  url: string,
+  data: Record<string, unknown>,
+  signal?: AbortSignal,
+) =>
+  fetch(url, {
+    method: 'PATCH',
+    redirect: 'manual',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN':
+        document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+          ?.content ?? '',
+    },
+    body: JSON.stringify(data),
+    signal,
+  }).catch((err: unknown) => {
+    if ((err as Error).name !== 'AbortError') {
+      console.error('Failed to persist move:', err);
+    }
+  });
+
 export default function Kanban({
   project,
   kanbanBoards,
@@ -30,6 +55,7 @@ export default function Kanban({
   currentUser,
   cardLabels,
 }: KanbanProps) {
+  const accountIndex = usePage().props.account.index;
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [searchQuery, setSearchQuery] = useState('');
   const [modalBoardId, setModalBoardId] = useState<string | null>(null);
@@ -38,6 +64,11 @@ export default function Kanban({
     card: KanbanBoardCard;
     boardId: string;
   } | null>(null);
+
+  // One abort controller per drag type — cancels the previous in-flight
+  // request when a new move arrives, so only the latest position persists.
+  const cardMoveAbortRef = useRef<AbortController | null>(null);
+  const boardMoveAbortsRef = useRef<AbortController[]>([]);
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
@@ -52,65 +83,66 @@ export default function Kanban({
 
     // Handle column reordering
     if (type === 'BOARD') {
-      setBoards((prev) => {
-        const next = [...prev];
-        const [movedBoard] = next.splice(source.index, 1);
-        next.splice(destination.index, 0, movedBoard);
-        return next;
-      });
+      const next = [...boards];
+      const [movedBoard] = next.splice(source.index, 1);
+      next.splice(destination.index, 0, movedBoard);
+      setBoards(next);
 
-      // Persist every board's new position
-      setBoards((prev) => {
-        prev.forEach((board, idx) => {
-          if (board.kanban_board_position !== idx) {
-            router.patch(
-              projects.kanban.boards.board.update.url({
-                project: project.project_slug,
-                board: board.kanban_board_id,
-              }),
-              { position: idx },
-              {
-                ...inertiaWriteOptions,
-                onError: () => console.error('Failed to persist board move'),
-              },
-            );
-          }
-        });
-        return prev;
+      // Cancel previous board-move requests and queue fresh ones
+      boardMoveAbortsRef.current.forEach((c) => c.abort());
+      const ctrls: AbortController[] = [];
+      const oldPositions = new Map(
+        boards.map((b, i) => [b.kanban_board_id, i]),
+      );
+      next.forEach((board, idx) => {
+        if (oldPositions.get(board.kanban_board_id) !== idx) {
+          const ctrl = new AbortController();
+          ctrls.push(ctrl);
+          silentPatch(
+            projects.kanban.boards.board.update.url({
+              accountIndex,
+              project: project.project_slug,
+              board: board.kanban_board_id,
+            }),
+            { position: idx },
+            ctrl.signal,
+          );
+        }
       });
+      boardMoveAbortsRef.current = ctrls;
       return;
     }
 
     // Handle card reordering
-    setBoards((prev) => {
-      const next = prev.map((board) => ({
-        ...board,
-        cards: board.cards ? [...board.cards] : [],
-      }));
-      const fromBoard = next.find(
-        (b) => String(b.kanban_board_id) === source.droppableId,
-      );
-      const toBoard = next.find(
-        (b) => String(b.kanban_board_id) === destination.droppableId,
-      );
-      if (!fromBoard || !toBoard || !fromBoard.cards) return prev;
-      const [movedCard] = fromBoard.cards.splice(source.index, 1);
-      if (!toBoard.cards) toBoard.cards = [];
-      toBoard.cards.splice(destination.index, 0, movedCard);
-      return next;
-    });
+    const next = boards.map((board) => ({
+      ...board,
+      cards: board.cards ? [...board.cards] : [],
+    }));
+    const fromBoard = next.find(
+      (b) => String(b.kanban_board_id) === source.droppableId,
+    );
+    const toBoard = next.find(
+      (b) => String(b.kanban_board_id) === destination.droppableId,
+    );
+    if (!fromBoard || !toBoard || !fromBoard.cards) return;
+    const [movedCard] = fromBoard.cards.splice(source.index, 1);
+    if (!toBoard.cards) toBoard.cards = [];
+    toBoard.cards.splice(destination.index, 0, movedCard);
+    setBoards(next);
 
-    router.patch(
+    // Cancel any previous card-move request and send the new position
+    cardMoveAbortRef.current?.abort();
+    const ctrl = new AbortController();
+    cardMoveAbortRef.current = ctrl;
+    silentPatch(
       projects.kanban.boards.board.cards.move.url({
+        accountIndex,
         project: project.project_slug,
         board: source.droppableId,
         card: draggableId,
       }),
       { board_id: destination.droppableId, position: destination.index },
-      {
-        ...inertiaWriteOptions,
-        onError: () => console.error('Failed to persist card move'),
-      },
+      ctrl.signal,
     );
   };
 
@@ -152,6 +184,7 @@ export default function Kanban({
     // Persist to backend
     router.patch(
       projects.kanban.cards.detail.update.url({
+        accountIndex,
         project: project.project_slug,
         card: cardId,
       }),
@@ -211,6 +244,7 @@ export default function Kanban({
 
     router.post(
       projects.kanban.boards.board.cards.store.url({
+        accountIndex,
         project: project.project_slug,
         board: boardId,
       }),
@@ -261,7 +295,10 @@ export default function Kanban({
     setAddingBoard(false);
 
     router.post(
-      projects.kanban.boards.store.url({ project: project.project_slug }),
+      projects.kanban.boards.store.url({
+        accountIndex,
+        project: project.project_slug,
+      }),
       { kanban_board_id: boardId, name, position: boards.length },
       {
         ...inertiaWriteOptions,
@@ -287,6 +324,7 @@ export default function Kanban({
 
     router.patch(
       projects.kanban.boards.board.update.url({
+        accountIndex,
         project: project.project_slug,
         board: boardId,
       }),
@@ -303,6 +341,7 @@ export default function Kanban({
 
     router.delete(
       projects.kanban.boards.board.destroy.url({
+        accountIndex,
         project: project.project_slug,
         board: boardId,
       }),
@@ -328,6 +367,7 @@ export default function Kanban({
 
     router.delete(
       projects.kanban.boards.board.cards.destroy.url({
+        accountIndex,
         project: project.project_slug,
         board: boardId,
         card: cardId,
@@ -412,7 +452,7 @@ export default function Kanban({
             </div>
           </header>
 
-          <main className="m-2 mr-4 flex w-full flex-1 items-start gap-4 overflow-x-auto pr-4 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+          <main className="scrollbar-app m-2 mr-4 flex w-full flex-1 items-start gap-4 overflow-x-auto pr-4">
             <Droppable droppableId="boards" type="BOARD" direction="horizontal">
               {(provided) => (
                 <div
@@ -440,9 +480,26 @@ export default function Kanban({
                         onDeleteBoard={handleDeleteBoard}
                         onDeleteCard={handleDeleteCard}
                         searchQuery={searchQuery}
-                        onCardClick={(card, boardId) =>
-                          setOpenCard({ card, boardId })
-                        }
+                        onCardClick={(card, boardId) => {
+                          const alreadyOpen = openCard !== null;
+                          setOpenCard({ card, boardId });
+                          const scrollToCard = () => {
+                            document
+                              .querySelector(
+                                `[data-card-id="${card.kanban_board_card_id}"]`,
+                              )
+                              ?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'nearest',
+                                inline: 'nearest',
+                              });
+                          };
+                          if (alreadyOpen) {
+                            requestAnimationFrame(scrollToCard);
+                          } else {
+                            setTimeout(scrollToCard, 320);
+                          }
+                        }}
                       />
                     ))}
 

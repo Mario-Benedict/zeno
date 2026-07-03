@@ -48,7 +48,7 @@ const ChatSidebar = ({
       </div>
 
       {/* ── Room list ── */}
-      <nav className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+      <nav className="scrollbar-app flex-1 overflow-y-auto">
         {filtered.map((room) => (
           <ChatRoomItem
             key={room.id}

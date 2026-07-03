@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Chat;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Chat\StoreChatRoomRequest;
+use App\Http\Resources\ChatRoomResource;
 use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Models\User;
@@ -46,7 +47,7 @@ class ChatRoomController extends Controller
      * belongs to within this project, including last-message previews
      * fetched from MongoDB.
      */
-    public function index(Request $request, Project $project): InertiaResponse
+    public function index(int $accountIndex, Request $request, Project $project): InertiaResponse
     {
         $request->validate([
             'room' => ['nullable', 'string', 'uuid'],
@@ -143,7 +144,7 @@ class ChatRoomController extends Controller
      * Returns a redirect to the Inertia chat page — the frontend will
      * highlight the new/existing room via the `activeRoomId` flash prop.
      */
-    public function store(StoreChatRoomRequest $request, Project $project): RedirectResponse
+    public function store(int $accountIndex, StoreChatRoomRequest $request, Project $project): RedirectResponse
     {
         /** @var User $user */
         $user = Auth::user();
@@ -160,7 +161,10 @@ class ChatRoomController extends Controller
         $room = $this->roomService->findOrCreateDmRoom($project, $user, $recipient);
 
         return redirect()
-            ->route('chat.index', ['project' => $project->project_slug])
+            ->route('chat.index', [
+                'accountIndex' => $accountIndex,
+                'project' => $project->project_slug,
+            ])
             ->with('activeRoomId', $room->id);
     }
 
@@ -171,7 +175,7 @@ class ChatRoomController extends Controller
      * via a direct URL or notification deep-link).
      * The Inertia page handles the full render; this is a lightweight API endpoint.
      */
-    public function show(Project $project, ChatRoom $room): ChatRoomResource
+    public function show(int $accountIndex, Project $project, ChatRoom $room): ChatRoomResource
     {
         $this->authorize('view', $room);
 

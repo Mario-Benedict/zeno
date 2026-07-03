@@ -9,20 +9,14 @@ use Illuminate\Support\Facades\Route;
  * ============================================================
  *
  * File location: routes/llm-chat.php
- * Include in:    routes/web.php  →  require __DIR__.'/llm-chat.php';
+ * Include in:    routes/web.php inside /u/{accountIndex}/p/{project:project_slug}.
  *
  * Naming convention:
- *   llm-chat.index    GET    /p/{project}/llm-chat
- *   llm-chat.show     GET    /p/{project}/llm-chat/{session}
- *   llm-chat.ask      POST   /p/{project}/llm-chat
- *   llm-chat.reply    POST   /p/{project}/llm-chat/{session}/reply
- *   llm-chat.destroy  DELETE /p/{project}/llm-chat/{session}
- *
- * Middleware stack (applied at group level):
- *   - auth           : user must be logged in
- *   - verified       : email must be verified
- *   - project.member : ensures the authenticated user is a member
- *                      of the {project} route parameter
+ *   llm-chat.index    GET    /u/{accountIndex}/p/{project}/llm-chat
+ *   llm-chat.show     GET    /u/{accountIndex}/p/{project}/llm-chat/{session}
+ *   llm-chat.ask      POST   /u/{accountIndex}/p/{project}/llm-chat
+ *   llm-chat.reply    POST   /u/{accountIndex}/p/{project}/llm-chat/{session}/reply
+ *   llm-chat.destroy  DELETE /u/{accountIndex}/p/{project}/llm-chat/{session}
  *
  * Route model binding:
  *   - {project} → App\Models\Project              (uses project_slug column)
@@ -30,8 +24,7 @@ use Illuminate\Support\Facades\Route;
  *
  * ============================================================
  */
-Route::middleware(['auth', 'verified', 'project.member'])
-    ->prefix('p/{project:project_slug}/llm-chat')
+Route::prefix('llm-chat')
     ->name('llm-chat.')
     ->group(function () {
 

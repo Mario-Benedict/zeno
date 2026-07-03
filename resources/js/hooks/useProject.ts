@@ -5,7 +5,7 @@ import type { CurrentProject, ProjectRole } from '@/types/project';
  * Read the current project context from Inertia's shared page props.
  *
  * The project + role are auto-shared by `HandleInertiaRequests` whenever the
- * route is scoped to a project (`/p/{slug}/...`). This hook is a typed
+ * route is scoped to a project (`/u/{accountIndex}/p/{slug}/...`). This hook is a typed
  * convenience around `usePage().props.project` so pages don't have to
  * declare their own props interface — just call:
  *
@@ -17,17 +17,18 @@ import type { CurrentProject, ProjectRole } from '@/types/project';
 export const useProject = (): {
   project: CurrentProject;
   projectRole: ProjectRole | null;
+  accountIndex: number;
 } => {
-  const { project, projectRole } = usePage().props;
+  const { project, projectRole, account } = usePage().props;
 
   if (project === null) {
     throw new Error(
       'useProject() was called on a page without a project context. ' +
-        'Make sure the route is under `/p/{slug}/...`.',
+        'Make sure the route is under `/u/{accountIndex}/p/{slug}/...`.',
     );
   }
 
-  return { project, projectRole };
+  return { project, projectRole, accountIndex: account.index };
 };
 
 /**
@@ -38,8 +39,9 @@ export const useProject = (): {
 export const useOptionalProject = (): {
   project: CurrentProject | null;
   projectRole: ProjectRole | null;
+  accountIndex: number;
 } => {
-  const { project, projectRole } = usePage().props;
+  const { project, projectRole, account } = usePage().props;
 
-  return { project, projectRole };
+  return { project, projectRole, accountIndex: account.index };
 };

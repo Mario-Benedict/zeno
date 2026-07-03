@@ -55,7 +55,7 @@ export const CardDetailSidebar = ({
   onToggleMember,
 }: CardDetailSidebarProps) => {
   return (
-    <div className="w-52 shrink-0 space-y-4 overflow-y-auto border-l border-dark-border px-4 py-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-dark-surface-3 hover:[&::-webkit-scrollbar-thumb]:bg-dark-secondary [&::-webkit-scrollbar-track]:bg-transparent">
+    <div className="scrollbar-app w-52 shrink-0 space-y-4 overflow-y-auto border-l border-dark-border px-4 py-4">
       {/* Dates */}
       <div>
         <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">

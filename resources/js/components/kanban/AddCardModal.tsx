@@ -71,7 +71,7 @@ export const AddCardModal = ({
                     <button
                       key={label.card_label_id}
                       onClick={() => toggleLabel(label.card_label_id)}
-                      className="rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition"
+                      className="rounded-lg border px-2.5 py-1 text-micro font-semibold transition"
                       style={
                         active
                           ? {

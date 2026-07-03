@@ -1,11 +1,12 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import AccountSwitcher from '@/components/layouts/AccountSwitcher';
 import CreateProjectPanel from '@/components/projects/CreateProjectPanel';
-import type { Auth, PaginatedProjects, ProjectSummary } from '@/types';
+import { accountPath, projectPath } from '@/lib/accountRoutes';
+import type { PaginatedProjects, ProjectSummary } from '@/types';
 import Zeno from '@public/logos/logo.svg';
 
 interface ProjectsPageProps {
-  auth: Auth;
   recentProjects: ProjectSummary[];
   projects: PaginatedProjects;
   [key: string]: unknown;
@@ -63,38 +64,23 @@ const ChevronIcon = ({ dir }: { dir: 'left' | 'right' }) => (
   </svg>
 );
 
-const ChevronDown = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
-
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
 interface ProjectRowProps {
   project: ProjectSummary;
+  accountIndex: number;
   onPin: (slug: string, current: boolean) => void;
+  pinning?: boolean;
   showPin?: boolean;
 }
 
-const ProjectRow = ({ project, onPin, showPin = true }: ProjectRowProps) => (
+const ProjectRow = ({
+  project,
+  accountIndex,
+  onPin,
+  pinning = false,
+  showPin = true,
+}: ProjectRowProps) => (
   <Link
-    href={`/p/${project.project_slug}`}
+    href={projectPath(accountIndex, project.project_slug)}
     className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-white/4"
   >
     <div className="min-w-0">
@@ -108,12 +94,13 @@ const ProjectRow = ({ project, onPin, showPin = true }: ProjectRowProps) => (
     {showPin && (
       <button
         type="button"
+        disabled={pinning}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           onPin(project.project_slug, project.is_pinned);
         }}
-        className="ml-3 shrink-0 rounded p-1 transition-colors hover:bg-white/[0.07]"
+        className="ml-3 shrink-0 rounded p-1 transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-70"
         aria-label={project.is_pinned ? 'Unpin project' : 'Pin project'}
       >
         <StarIcon filled={project.is_pinned} />
@@ -122,39 +109,97 @@ const ProjectRow = ({ project, onPin, showPin = true }: ProjectRowProps) => (
   </Link>
 );
 
+const sortProjects = (items: ProjectSummary[]) => {
+  return [...items].sort((a, b) => {
+    if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+
+    return a.project_name.localeCompare(b.project_name);
+  });
+};
+
 const ProjectsPage = () => {
-  const { auth, recentProjects, projects } = usePage<ProjectsPageProps>().props;
-  const [panelOpen, setPanelOpen] = useState(false);
+  const page = usePage<ProjectsPageProps>();
+  const { recentProjects, projects, account } = page.props;
+  const accountIndex = account.index;
+  const [panelOpen, setPanelOpen] = useState(
+    () =>
+      new URLSearchParams(page.url.split('?')[1] ?? '').get('create') === '1',
+  );
   const [search, setSearch] = useState('');
+  const [pinOverrides, setPinOverrides] = useState<Record<string, boolean>>({});
+  const [pinningSlugs, setPinningSlugs] = useState<Record<string, boolean>>({});
 
   const hasProjects = projects.total > 0;
   const pageTitle = hasProjects ? 'All Projects' : 'Get Started';
 
-  const handlePin = (slug: string) => {
+  const clearPinState = (slug: string) => {
+    setPinOverrides((current) => {
+      const next = { ...current };
+      delete next[slug];
+
+      return next;
+    });
+
+    setPinningSlugs((current) => {
+      const next = { ...current };
+      delete next[slug];
+
+      return next;
+    });
+  };
+
+  const handlePin = (slug: string, current: boolean) => {
+    setPinOverrides((state) => ({ ...state, [slug]: !current }));
+    setPinningSlugs((state) => ({ ...state, [slug]: true }));
+
     router.patch(
-      `/p/${slug}/pin`,
+      projectPath(accountIndex, slug, '/pin'),
       {},
       {
         preserveScroll: true,
-        onSuccess: () =>
-          router.reload({ only: ['projects', 'recentProjects'] }),
+        onCancel: () => clearPinState(slug),
+        onError: () => clearPinState(slug),
+        onSuccess: () => clearPinState(slug),
       },
     );
   };
 
+  const projectsWithPinState = projects.data.map((project) => ({
+    ...project,
+    is_pinned: pinOverrides[project.project_slug] ?? project.is_pinned,
+  }));
+
   const filteredProjects = search.trim()
-    ? projects.data.filter(
+    ? projectsWithPinState.filter(
         (p) =>
           p.project_name.toLowerCase().includes(search.toLowerCase()) ||
           p.project_slug.toLowerCase().includes(search.toLowerCase()),
       )
-    : projects.data;
+    : sortProjects(projectsWithPinState);
 
   const canGoPrev = projects.current_page > 1;
   const canGoNext = projects.current_page < projects.last_page;
 
   const goToPage = (page: number) => {
-    router.get('/projects', { page }, { preserveScroll: true, replace: true });
+    router.get(
+      accountPath(accountIndex, '/projects'),
+      { page },
+      { preserveScroll: true, replace: true },
+    );
+  };
+
+  const closePanel = () => {
+    setPanelOpen(false);
+
+    if (
+      new URLSearchParams(page.url.split('?')[1] ?? '').get('create') === '1'
+    ) {
+      router.get(
+        accountPath(accountIndex, '/projects'),
+        {},
+        { preserveScroll: true, preserveState: true, replace: true },
+      );
+    }
   };
 
   return (
@@ -167,13 +212,7 @@ const ProjectsPage = () => {
           <span className="text-sm font-semibold text-dark-primary">
             {pageTitle}
           </span>
-          <button className="flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-dark-primary transition-colors hover:bg-white/[0.07]">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-dark-surface-3 text-[10px] font-semibold text-dark-primary">
-              {getInitials(auth.user?.name ?? 'U')}
-            </div>
-            <span>{auth.user?.name}</span>
-            <ChevronDown />
-          </button>
+          <AccountSwitcher />
         </div>
 
         {/* Main content */}
@@ -216,6 +255,7 @@ const ProjectsPage = () => {
                     <ProjectRow
                       key={project.project_id}
                       project={project}
+                      accountIndex={accountIndex}
                       onPin={handlePin}
                       showPin={false}
                     />
@@ -257,7 +297,9 @@ const ProjectsPage = () => {
                     <ProjectRow
                       key={project.project_id}
                       project={project}
+                      accountIndex={accountIndex}
                       onPin={handlePin}
+                      pinning={pinningSlugs[project.project_slug] ?? false}
                     />
                   ))}
                 </div>
@@ -297,10 +339,7 @@ const ProjectsPage = () => {
         </div>
       </div>
 
-      <CreateProjectPanel
-        open={panelOpen}
-        onClose={() => setPanelOpen(false)}
-      />
+      <CreateProjectPanel open={panelOpen} onClose={closePanel} />
     </>
   );
 };

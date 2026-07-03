@@ -1,4 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
+import { projectPath } from '@/lib/accountRoutes';
+
 import BoardIcon from '@public/icons/large/board.svg';
 import CalendarIcon from '@public/icons/large/calendar.svg';
 import DashboardIcon from '@public/icons/large/dashboard.svg';
@@ -90,16 +92,43 @@ const SettingsIcon: React.FC = () => (
   </svg>
 );
 
-const buildNavItems = (projectSlug: string): NavItem[] => [
-  { name: 'Dashboard', href: `/p/${projectSlug}`, icon: DashboardIcon },
-  { name: 'Board', href: `/p/${projectSlug}/kanban`, icon: BoardIcon },
-  { name: 'Calendar', href: `/p/${projectSlug}/calendar`, icon: CalendarIcon },
-  { name: 'Chat', href: `/p/${projectSlug}/chat`, icon: ChatIcon },
-  { name: 'LLM', href: `/p/${projectSlug}/llm-chat`, icon: LLMIcon },
-  { name: 'Notes', href: `/p/${projectSlug}/notes`, icon: NotesIcon },
+const buildNavItems = (
+  accountIndex: number,
+  projectSlug: string,
+): NavItem[] => [
+  {
+    name: 'Dashboard',
+    href: projectPath(accountIndex, projectSlug),
+    icon: DashboardIcon,
+  },
+  {
+    name: 'Board',
+    href: projectPath(accountIndex, projectSlug, '/kanban'),
+    icon: BoardIcon,
+  },
+  {
+    name: 'Calendar',
+    href: projectPath(accountIndex, projectSlug, '/calendar'),
+    icon: CalendarIcon,
+  },
+  {
+    name: 'Chat',
+    href: projectPath(accountIndex, projectSlug, '/chat'),
+    icon: ChatIcon,
+  },
+  {
+    name: 'LLM',
+    href: projectPath(accountIndex, projectSlug, '/llm-chat'),
+    icon: LLMIcon,
+  },
+  {
+    name: 'Notes',
+    href: projectPath(accountIndex, projectSlug, '/notes'),
+    icon: NotesIcon,
+  },
   {
     name: 'Reminders',
-    href: `/p/${projectSlug}/reminders`,
+    href: projectPath(accountIndex, projectSlug, '/reminders'),
     icon: RemindersIcon,
   },
 ];
@@ -109,18 +138,22 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ projectSlug }: SidebarProps) => {
-  const { url } = usePage();
-  const navItems = buildNavItems(projectSlug);
+  const page = usePage();
+  const { url } = page;
+  const accountIndex = page.props.account.index;
+  const navItems = buildNavItems(accountIndex, projectSlug);
+  const projectHome = projectPath(accountIndex, projectSlug);
+  const settingsPath = projectPath(accountIndex, projectSlug, '/settings');
 
   const isActive = (href: string) => {
-    if (href === `/p/${projectSlug}`) return url === href;
+    if (href === projectHome) return url === href;
     return url.startsWith(href);
   };
 
   return (
-    <aside className="flex h-[calc(100dvh-48px)] flex-col bg-dark-surface-1 px-2 pb-2">
+    <aside className="flex h-[calc(100dvh-var(--header-height))] flex-col bg-dark-surface-1 px-2 pb-2">
       <nav className="flex h-full flex-col justify-between rounded-lg bg-dark-surface-2 p-2">
-        <div className="flex flex-1 scrollbar-none flex-col items-center gap-0.5 overflow-x-hidden overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-1 [scrollbar-width:none] flex-col items-center gap-0.5 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [&::-webkit-scrollbar]:hidden">
           {navItems.map(({ name, href, icon: Icon }) => {
             const active = isActive(href);
 
@@ -129,7 +162,7 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
                 key={name}
                 href={href}
                 // Container utama (teks akan ikut warna ini)
-                className={`group flex w-full flex-col items-center justify-center gap-2 py-2 text-[10px] leading-none font-medium transition-colors duration-150 ${
+                className={`group flex w-full flex-col items-center justify-center gap-2 py-2 text-micro leading-none font-medium transition-colors duration-150 ${
                   active
                     ? 'text-dark-primary'
                     : 'text-dark-secondary hover:text-dark-primary'
@@ -153,16 +186,16 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
         <div className="flex flex-col items-center pb-1">
           <div className="my-2 h-px w-10 bg-dark-secondary" />
           <Link
-            className={`group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-[10px] leading-none font-medium transition-colors duration-150 ${
-              isActive('/settings')
+            className={`group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-micro leading-none font-medium transition-colors duration-150 ${
+              isActive(settingsPath)
                 ? 'text-white'
                 : 'text-dark-secondary hover:text-dark-primary'
             }`}
-            href={`/p/${projectSlug}/settings`}
+            href={settingsPath}
           >
             <div
               className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-150 ${
-                isActive('/settings')
+                isActive(settingsPath)
                   ? 'bg-accent-blue text-white'
                   : 'bg-transparent group-hover:bg-white/[0.07]'
               }`}

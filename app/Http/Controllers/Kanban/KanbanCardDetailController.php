@@ -29,7 +29,7 @@ class KanbanCardDetailController extends Controller
     /**
      * Update card detail (title / description / completion).
      */
-    public function update(Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
+    public function update(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
@@ -56,7 +56,7 @@ class KanbanCardDetailController extends Controller
     /**
      * Attach an existing project label to this card.
      */
-    public function addLabel(Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
+    public function addLabel(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
         $cardProject = $card->kanbanBoard->project;
         abort_unless($request->user()->can('view', $cardProject), 403);
@@ -84,7 +84,7 @@ class KanbanCardDetailController extends Controller
     /**
      * Detach a label from this card (label still exists at the project level).
      */
-    public function removeLabel(Request $request, Project $project, KanbanBoardCard $card, string $labelId): RedirectResponse
+    public function removeLabel(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card, string $labelId): RedirectResponse
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
@@ -99,7 +99,7 @@ class KanbanCardDetailController extends Controller
     /**
      * Delete a label entirely from the project (and from every card using it).
      */
-    public function deleteLabel(Request $request, Project $project, KanbanBoardCard $card, string $labelId): RedirectResponse
+    public function deleteLabel(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card, string $labelId): RedirectResponse
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
@@ -114,7 +114,7 @@ class KanbanCardDetailController extends Controller
      * Accepts an optional client-generated `card_label_id` (UUID) so the
      * frontend can render the label instantly and stay in sync.
      */
-    public function createLabel(Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
+    public function createLabel(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
         $cardProject = $card->kanbanBoard->project;
         abort_unless($request->user()->can('view', $cardProject), 403);
@@ -158,7 +158,7 @@ class KanbanCardDetailController extends Controller
     /**
      * Add a project user as a member of this card.
      */
-    public function addMember(Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
+    public function addMember(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
         $cardProject = $card->kanbanBoard->project;
         abort_unless($request->user()->can('view', $cardProject), 403);
@@ -183,7 +183,7 @@ class KanbanCardDetailController extends Controller
     /**
      * Remove a user from the card's member list.
      */
-    public function removeMember(Request $request, Project $project, KanbanBoardCard $card, int $memberId): RedirectResponse
+    public function removeMember(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card, int $memberId): RedirectResponse
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
@@ -198,7 +198,7 @@ class KanbanCardDetailController extends Controller
     /**
      * Update the card's start and / or due date.
      */
-    public function updateDates(Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
+    public function updateDates(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 

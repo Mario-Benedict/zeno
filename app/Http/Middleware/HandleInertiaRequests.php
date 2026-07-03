@@ -2,8 +2,14 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ProjectRole;
 use App\Models\Project;
+use App\Models\ProjectInvitation;
+use App\Models\User;
+use App\Services\AccountSessionService;
+use App\Support\Totp;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -50,13 +56,32 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'account' => $this->resolveAccount($request),
+            'accountsList' => fn () => AccountSessionService::accountsList($request),
             'flash' => [
                 'chat' => [
                     'newMessage' => $request->session()->get('chat.newMessage'),
                 ],
+                'status' => $request->session()->get('status'),
             ],
             'project' => $project,
             'projectRole' => $projectRole,
+            'projectNavigation' => fn () => $this->resolveProjectNavigation($request),
+            'projectShare' => fn () => $this->resolveProjectShare($request),
+            'twoFactor' => fn () => $this->resolveTwoFactor($request),
+        ];
+    }
+
+    /**
+     * @return array{index: int, baseUrl: string}
+     */
+    private function resolveAccount(Request $request): array
+    {
+        $accountIndex = max(0, (int) $request->attributes->get('account.index', 0));
+
+        return [
+            'index' => $accountIndex,
+            'baseUrl' => '/u/'.$accountIndex,
         ];
     }
 
@@ -84,6 +109,10 @@ class HandleInertiaRequests extends Middleware
             'project_id' => $project->project_id,
             'project_name' => $project->project_name,
             'project_slug' => $project->project_slug,
+            'avatar_color' => $project->avatar_color ?? 'accent-blue',
+            'avatar_url' => $project->avatar_url
+                ? Storage::disk('public')->url($project->avatar_url)
+                : null,
         ];
 
         $user = $request->user();
@@ -96,5 +125,127 @@ class HandleInertiaRequests extends Middleware
             ->first();
 
         return [$payload, $membership?->pivot->role];
+    }
+
+    /**
+     * @return array{projects: list<array<string, mixed>>}
+     */
+    private function resolveProjectNavigation(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            return ['projects' => []];
+        }
+
+        $projects = $user->projects()
+            ->orderByPivot('is_pinned', 'desc')
+            ->orderByPivot('opened_at', 'desc')
+            ->orderBy('projects.project_name')
+            ->limit(8)
+            ->get(['projects.project_id', 'projects.project_name', 'projects.project_slug', 'projects.avatar_color', 'projects.avatar_url'])
+            ->map(fn (Project $project) => [
+                'project_id' => $project->project_id,
+                'project_name' => $project->project_name,
+                'project_slug' => $project->project_slug,
+                'avatar_color' => $project->avatar_color ?? 'accent-blue',
+                'avatar_url' => $project->avatar_url
+                    ? Storage::disk('public')->url($project->avatar_url)
+                    : null,
+                'is_pinned' => (bool) $project->pivot->is_pinned,
+                'role' => $project->pivot->role,
+            ])
+            ->values()
+            ->all();
+
+        return ['projects' => $projects];
+    }
+
+    /**
+     * @return array{enabled: bool, qrCodeUrl: string|null}
+     */
+    private function resolveTwoFactor(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            return ['enabled' => false, 'qrCodeUrl' => null];
+        }
+
+        $secret = $user->two_factor_secret;
+        $qrCodeUrl = null;
+
+        if ($secret !== null) {
+            $otpUrl = Totp::getQrCodeUrl(config('app.name'), $user->email, $secret);
+            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='.urlencode($otpUrl);
+        }
+
+        return [
+            'enabled' => $user->hasTwoFactorEnabled(),
+            'qrCodeUrl' => $qrCodeUrl,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveProjectShare(Request $request): ?array
+    {
+        $route = $request->route();
+        $project = $route?->parameter('project');
+
+        if (! $project instanceof Project) {
+            return null;
+        }
+
+        $user = $request->user();
+        $role = $user instanceof User ? $project->roleFor($user) : null;
+        $canManageMembers = $role?->canManageMembers() ?? false;
+
+        $members = $project->members()
+            ->select(['users.id', 'users.name', 'users.email'])
+            ->orderByRaw("CASE project_user.role WHEN 'OWNER' THEN 0 WHEN 'ADMIN' THEN 1 WHEN 'MEMBER' THEN 2 ELSE 3 END")
+            ->orderBy('users.name')
+            ->get()
+            ->map(fn (User $member) => [
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'role' => $member->pivot->role,
+                'is_current_user' => $user instanceof User && (int) $member->id === (int) $user->id,
+            ])
+            ->values()
+            ->all();
+
+        $pendingInvitations = $canManageMembers
+            ? $project->invitations()
+                ->whereNull('accepted_at')
+                ->latest()
+                ->limit(8)
+                ->get()
+                ->map(fn (ProjectInvitation $invitation) => [
+                    'id' => $invitation->id,
+                    'email' => $invitation->email,
+                    'name' => $invitation->name,
+                    'role' => $invitation->role,
+                    'url' => route('projects.invitations.accept', $invitation->token),
+                    'expires_at' => $invitation->expires_at?->toIso8601String(),
+                ])
+                ->values()
+                ->all()
+            : [];
+
+        return [
+            'can_manage_members' => $canManageMembers,
+            'assignable_roles' => ProjectRole::assignableValues(),
+            'invitation_link' => $project->invitation_link === null
+                ? null
+                : [
+                    'url' => route('projects.invitations.accept', $project->invitation_link),
+                    'role' => $project->invitation_role ?? ProjectRole::Member->value,
+                ],
+            'members' => $members,
+            'pending_invitations' => $pendingInvitations,
+        ];
     }
 }

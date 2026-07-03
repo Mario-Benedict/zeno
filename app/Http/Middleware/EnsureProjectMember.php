@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\ChatRoom;
+use App\Models\Note;
 use App\Models\Project;
 use Closure;
 use Illuminate\Http\Request;
@@ -20,22 +21,19 @@ class EnsureProjectMember
             abort(404);
         }
 
-        $userId = Auth::id();
-
-        $isMember = ChatRoom::query()
-            ->where('project_id', $project->project_id)
-            ->where('type', 'group')
-            ->whereHas('participants', fn ($q) => $q->where('user_id', $userId))
-            ->exists();
-
-        if (! $isMember) {
+        if (! $project->isMember(Auth::id())) {
             abort(403, 'You are not a member of this project.');
         }
 
-        /** @var ChatRoom|null $room */
         $room = $request->route('room');
 
         if ($room instanceof ChatRoom && $room->project_id !== $project->project_id) {
+            abort(404);
+        }
+
+        $note = $request->route('note');
+
+        if ($note instanceof Note && $note->project_id !== $project->project_id) {
             abort(404);
         }
 

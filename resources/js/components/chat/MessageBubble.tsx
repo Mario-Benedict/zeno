@@ -86,7 +86,7 @@ const ImageAttachment = ({
       className="block max-h-80 min-h-30 max-w-70 min-w-45 object-cover transition-opacity hover:opacity-90"
     />
     {timestamp && !withCaption && (
-      <span className="pointer-events-none absolute right-2 bottom-2 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
+      <span className="pointer-events-none absolute right-2 bottom-2 rounded-md bg-black/55 px-1.5 py-0.5 text-micro font-medium text-white/90 backdrop-blur-sm">
         {timestamp}
       </span>
     )}

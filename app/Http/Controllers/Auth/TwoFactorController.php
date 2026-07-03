@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AccountSessionService;
 use App\Support\Totp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -67,11 +68,15 @@ class TwoFactorController extends Controller
         RateLimiter::clear($key);
         $user->update(['two_factor_last_counter' => $counter]);
 
-        $request->session()->forget(['auth.2fa_user_id', 'auth.2fa_expires_at']);
-        Auth::login($user);
-        $request->session()->regenerate();
+        $remember = (bool) $request->session()->get('auth.2fa_remember', false);
+        $request->session()->forget(['auth.2fa_user_id', 'auth.2fa_expires_at', 'auth.2fa_remember']);
 
-        return redirect()->intended(route('projects.index'));
+        Auth::login($user, $remember);
+        $request->session()->regenerate();
+        $accountIndex = AccountSessionService::addAccount($request, $user->id);
+        $request->session()->forget('url.intended');
+
+        return redirect()->route('projects.index', ['accountIndex' => $accountIndex]);
     }
 
     private function challengeIsValid(Request $request): bool
