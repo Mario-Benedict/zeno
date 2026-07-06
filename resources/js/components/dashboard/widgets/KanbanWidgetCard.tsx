@@ -1,5 +1,5 @@
 import type { KanbanBoardCard } from '@/types/kanban';
-import { calculateChecklistProgress } from '@/utils/kanban';
+import { calculateChecklistProgress, getContrastColor } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 
 interface Props {
@@ -48,17 +48,19 @@ export const KanbanWidgetCard = ({ card, onToggleDone, onClick }: Props) => {
         </p>
 
         {hasMeta && (
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {detail.labels?.slice(0, 4).map((label) =>
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            {detail.labels?.map((label) =>
               label.color ? (
                 <span
                   key={label.card_label_id}
-                  title={label.card_label_name}
-                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                  className="rounded-full px-1.5 py-0.5 text-micro font-semibold"
                   style={{
                     backgroundColor: label.color.card_label_color_hex,
+                    color: getContrastColor(label.color.card_label_color_hex),
                   }}
-                />
+                >
+                  {label.card_label_name}
+                </span>
               ) : null,
             )}
             {checklistProgress.total > 0 && (

@@ -66,9 +66,9 @@ class DashboardController extends Controller
 
     private function loadKanbanWidgetData(Project $project): array
     {
-        // Trimmed compared to KanbanController::show() — the widget is
-        // read-only (view boards/cards, view detail, mark as done), so it
-        // skips members/attachments/comments the full page needs for editing.
+        // The widget's card detail view is read-only (no editing
+        // affordances) but shows everything the full page's detail panel
+        // does, so this mirrors KanbanController::show()'s full eager load.
         $project->load([
             'kanbanBoards' => function ($query) {
                 $query->orderBy('kanban_board_position');
@@ -79,8 +79,11 @@ class DashboardController extends Controller
                         'detail' => function ($q) {
                             $q->with([
                                 'labels.color',
+                                'members',
                                 'checklists.items',
                                 'dates',
+                                'attachments',
+                                'comments.user',
                             ]);
                         },
                     ]);
