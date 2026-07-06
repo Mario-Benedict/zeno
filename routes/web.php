@@ -67,6 +67,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     require __DIR__.'/chat.php';
 
                     require __DIR__.'/llm-chat.php';
+
+                    require __DIR__.'/notes.php';
                 });
         });
 

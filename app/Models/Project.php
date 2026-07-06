@@ -3,11 +3,20 @@
 namespace App\Models;
 
 use App\Enums\ProjectRole;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
+#[Fillable([
+    'project_name',
+    'project_slug',
+    'avatar_color',
+    'avatar_url',
+    'invitation_link',
+    'invitation_role',
+])]
 class Project extends Model
 {
     protected $primaryKey = 'project_id';
@@ -15,15 +24,6 @@ class Project extends Model
     public $incrementing = false;
 
     protected $keyType = 'string';
-
-    protected $fillable = [
-        'project_name',
-        'project_slug',
-        'avatar_color',
-        'avatar_url',
-        'invitation_link',
-        'invitation_role',
-    ];
 
     protected function casts(): array
     {
@@ -60,6 +60,9 @@ class Project extends Model
     public function calendarEvents(): HasMany
     {
         return $this->hasMany(CalendarEvent::class, 'project_id', 'project_id');
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class, 'project_id', 'project_id');
     }
 
     public static function generateUniqueSlug(string $name, ?string $excludeId = null): string

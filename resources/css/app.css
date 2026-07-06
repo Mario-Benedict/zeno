@@ -275,6 +275,208 @@ html.light-mode input:-webkit-autofill:focus {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* ─── Notes — Tiptap block editor typography ────────────────────────────────
+   Applied to the note editor's `EditorContent` wrapper. The editor's own
+   surface (NoteEditor.tsx) always renders with the dark-surface-* palette —
+   Tailwind's legacy `@config`-sourced utilities bake literal hex per class
+   rather than emitting `var(--color-*)`, so they don't respond to the
+   `html.light-mode` variable overrides above. Colors here are hardcoded to
+   match that same always-dark surface instead of chasing a CSS variable
+   the surrounding chrome ignores, which previously produced near-black text
+   on the still-dark editor background whenever light mode was toggled on.
+   ─────────────────────────────────────────────────────────────────────────── */
+.prose-note {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: #f0f0f0;
+  min-height: 450px;
+}
+.prose-note p {
+  margin: 0.4em 0;
+}
+.prose-note h1,
+.prose-note h2,
+.prose-note h3 {
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.prose-note h1 {
+  font-size: 1.9em;
+  margin: 1em 0 0.3em;
+}
+.prose-note h2 {
+  font-size: 1.5em;
+  margin: 0.9em 0 0.3em;
+}
+.prose-note h3 {
+  font-size: 1.25em;
+  margin: 0.8em 0 0.3em;
+}
+.prose-note > :first-child {
+  margin-top: 0;
+}
+.prose-note strong {
+  font-weight: 700;
+}
+.prose-note em {
+  font-style: italic;
+}
+.prose-note u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-note s {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.prose-note ul,
+.prose-note ol {
+  padding-left: 1.4em;
+  margin: 0.4em 0;
+}
+.prose-note ul {
+  list-style: disc;
+}
+.prose-note ol {
+  list-style: decimal;
+}
+.prose-note li {
+  margin: 0.2em 0;
+}
+.prose-note li::marker {
+  color: rgba(255, 255, 255, 0.5);
+}
+/* Task lists render their own checkbox — no bullet marker. */
+.prose-note ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0;
+}
+.prose-note ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.prose-note ul[data-type='taskList'] li > label {
+  margin-top: 0.35em;
+  user-select: none;
+}
+.prose-note ul[data-type='taskList'] li > div {
+  flex: 1;
+  min-width: 0;
+}
+.prose-note ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: line-through;
+}
+.prose-note blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  padding-left: 0.9em;
+  margin: 0.6em 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+/* Box chrome (background/border/toolbar) for code blocks now lives on
+   CodeBlockView's NodeView wrapper via Tailwind classes — this just
+   handles text layout inside it. */
+.prose-note pre {
+  overflow-x: auto;
+  margin: 0;
+}
+.prose-note pre code {
+  background: none;
+  padding: 0;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85em;
+  line-height: 1.6;
+}
+/* Inline code spans (the Code mark) — excludes code blocks, which have
+   their own box chrome from CodeBlockView. */
+.prose-note code:not(pre code) {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85em;
+}
+/* ─── Code block syntax highlighting (lowlight/highlight.js token classes) ──
+   Mapped onto the existing accent palette instead of new hardcoded colors,
+   for an IDE-like, Notion-style rainbow of token types.
+   ─────────────────────────────────────────────────────────────────────────── */
+.prose-note .hljs-comment,
+.prose-note .hljs-quote {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+.prose-note .hljs-keyword,
+.prose-note .hljs-selector-tag,
+.prose-note .hljs-subst,
+.prose-note .hljs-operator {
+  color: #8e24aa;
+}
+.prose-note .hljs-number,
+.prose-note .hljs-literal,
+.prose-note .hljs-variable,
+.prose-note .hljs-template-variable,
+.prose-note .hljs-attr {
+  color: #f57c00;
+}
+.prose-note .hljs-string,
+.prose-note .hljs-doctag,
+.prose-note .hljs-addition {
+  color: #7cb342;
+}
+.prose-note .hljs-title,
+.prose-note .hljs-section,
+.prose-note .hljs-selector-id,
+.prose-note .hljs-function_ {
+  color: #3949ab;
+}
+.prose-note .hljs-type,
+.prose-note .hljs-class .hljs-title,
+.prose-note .hljs-built_in,
+.prose-note .hljs-builtin-name {
+  color: #0288d1;
+}
+.prose-note .hljs-tag,
+.prose-note .hljs-name,
+.prose-note .hljs-attribute,
+.prose-note .hljs-regexp,
+.prose-note .hljs-link,
+.prose-note .hljs-deletion {
+  color: #c2185b;
+}
+.prose-note .hljs-symbol,
+.prose-note .hljs-bullet,
+.prose-note .hljs-meta {
+  color: #fbc02d;
+}
+.prose-note .hljs-emphasis {
+  font-style: italic;
+}
+.prose-note .hljs-strong {
+  font-weight: 700;
+}
+.prose-note hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 1.2em 0;
+}
+.prose-note a {
+  color: #3949ab;
+  text-decoration: underline;
+}
+/* Tiptap Placeholder extension: only the empty document's first node shows it. */
+.prose-note p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.4);
+}
+/* Muted, Notion-style text selection instead of the browser's saturated blue default. */
+.prose-note ::selection {
+  background-color: color-mix(in srgb, #3949ab 30%, transparent);
+}
+
 /* ─── LLM Chat — Thinking indicator (three bouncing dots) ───────────────────
    Classic chat-app typing animation used by Gemini, ChatGPT, Claude, etc.
    ─────────────────────────────────────────────────────────────────────────── */

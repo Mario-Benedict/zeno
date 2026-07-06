@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\StorageService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,16 +28,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
+#[Fillable([
+    'project_id',
+    'type',
+    'name',
+    'avatar_path',
+])]
 class ChatRoom extends Model
 {
     use HasFactory, HasUuids;
-
-    protected $fillable = [
-        'project_id',
-        'type',
-        'name',
-        'avatar_path',
-    ];
 
     protected $casts = [
         'type' => 'string',
