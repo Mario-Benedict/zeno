@@ -9,6 +9,7 @@ import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
+import type { NoteListItem } from '@/types/notes';
 
 interface DashboardSetting {
   template_id: TemplateId | null;
@@ -24,16 +25,22 @@ interface ChatWidgetData {
   currentUser: ChatParticipant;
 }
 
+interface NotesWidgetData {
+  notes: NoteListItem[];
+}
+
 interface Props {
   setting: DashboardSetting;
   kanbanWidgetData?: KanbanWidgetData;
   chatWidgetData?: ChatWidgetData;
+  notesWidgetData?: NotesWidgetData;
 }
 
 export default function Dashboard({
   setting,
   kanbanWidgetData,
   chatWidgetData,
+  notesWidgetData,
 }: Props) {
   const { project, accountIndex } = useProject();
 
@@ -99,6 +106,7 @@ export default function Dashboard({
             onAssignWidget={handleAssignWidget}
             kanbanWidgetData={kanbanWidgetData}
             chatWidgetData={chatWidgetData}
+            notesWidgetData={notesWidgetData}
           />
         )}
       </div>

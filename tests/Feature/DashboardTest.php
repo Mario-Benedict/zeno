@@ -3,6 +3,7 @@
 use App\Enums\ProjectRole;
 use App\Models\ChatRoom;
 use App\Models\KanbanBoard;
+use App\Models\Note;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\UserDashboardSetting;
@@ -169,6 +170,55 @@ it('assigns the chat widget to a slot and returns room data once assigned', func
         );
 });
 
+it('assigns the notes widget to a slot and returns the note list once assigned', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'project_name' => 'Test Project',
+        'project_slug' => Project::generateUniqueSlug('Test Project'),
+        'avatar_color' => 'accent-blue',
+    ]);
+    $project->members()->attach($user->id, ['role' => ProjectRole::Owner->value]);
+
+    Note::create([
+        'user_id' => $user->id,
+        'project_id' => $project->project_id,
+        'title' => 'My note',
+        'content' => ['type' => 'doc', 'content' => [['type' => 'paragraph']]],
+        'excerpt' => null,
+        'is_shared' => false,
+    ]);
+
+    $session = [
+        'accounts' => [['user_id' => $user->id]],
+        'account_active_index' => 0,
+    ];
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->patch("/u/0/p/{$project->project_slug}/dashboard/slots", [
+            'index' => 0,
+            'widget' => 'notes',
+        ])
+        ->assertRedirect();
+
+    $setting = UserDashboardSetting::where('user_id', $user->id)
+        ->where('project_id', $project->project_id)
+        ->first();
+
+    expect($setting->slots)->toBe(['notes']);
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->get("/u/0/p/{$project->project_slug}/dashboard")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('setting.slots', ['notes'])
+            ->has('notesWidgetData.notes', 1)
+            ->where('notesWidgetData.notes.0.title', 'My note')
+        );
+});
+
 it('rejects an unimplemented widget for a slot', function () {
     $user = User::factory()->create();
     $project = Project::create([
@@ -185,7 +235,7 @@ it('rejects an unimplemented widget for a slot', function () {
         ])
         ->patch("/u/0/p/{$project->project_slug}/dashboard/slots", [
             'index' => 0,
-            'widget' => 'notes',
+            'widget' => 'calendar',
         ])
         ->assertSessionHasErrors('widget');
 });

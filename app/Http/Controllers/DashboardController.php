@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChatRoom;
+use App\Models\Note;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\UserDashboardSetting;
@@ -20,7 +21,7 @@ class DashboardController extends Controller
 
     // Widgets with a working implementation. Others are surfaced in the
     // widget picker as "coming soon" and can't be assigned to a slot yet.
-    private const VALID_WIDGETS = ['kanban', 'chat'];
+    private const VALID_WIDGETS = ['kanban', 'chat', 'notes'];
 
     public function __construct(
         private readonly ChatMessageService $messageService,
@@ -54,6 +55,10 @@ class DashboardController extends Controller
 
         if (in_array('chat', $setting->slots ?? [], true)) {
             $props['chatWidgetData'] = $this->loadChatWidgetData($project);
+        }
+
+        if (in_array('notes', $setting->slots ?? [], true)) {
+            $props['notesWidgetData'] = $this->loadNotesWidgetData($project);
         }
 
         return Inertia::render('dashboard', $props);
@@ -125,6 +130,35 @@ class DashboardController extends Controller
                 'email' => $user->email,
                 'avatarUrl' => null,
             ],
+        ];
+    }
+
+    private function loadNotesWidgetData(Project $project): array
+    {
+        // Mirrors NoteController::index()'s lightweight list shape (no
+        // `content` column) — the widget only shows title/excerpt/metadata
+        // and fetches a note's full content on demand via the existing
+        // notes.show endpoint when one is actually opened.
+        $notes = Note::query()
+            ->where('project_id', $project->project_id)
+            ->where(function ($query) {
+                $query->where('user_id', Auth::id())->orWhere('is_shared', true);
+            })
+            ->select(['note_id', 'title', 'excerpt', 'is_shared', 'user_id', 'updated_at'])
+            ->withCount('collaborators')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        return [
+            'notes' => $notes->map(fn (Note $note) => [
+                'id' => (string) $note->note_id,
+                'title' => $note->title,
+                'excerpt' => $note->excerpt,
+                'isShared' => (bool) $note->is_shared,
+                'ownerId' => (int) $note->user_id,
+                'updatedAt' => $note->updated_at?->toISOString(),
+                'collaboratorsCount' => (int) $note->collaborators_count,
+            ])->values()->all(),
         ];
     }
 

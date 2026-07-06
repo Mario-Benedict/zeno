@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
+import type { NoteListItem } from '@/types/notes';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import { getTemplate } from './templates';
 import type { TemplateId } from './templates';
@@ -8,6 +9,7 @@ import { WidgetPicker } from './WidgetPicker';
 import type { WidgetId } from './widgets';
 import { ChatWidget } from './widgets/ChatWidget';
 import { KanbanWidget } from './widgets/KanbanWidget';
+import { NotesWidget } from './widgets/NotesWidget';
 
 interface KanbanWidgetData {
   kanbanBoards: KanbanBoard[];
@@ -18,6 +20,10 @@ interface ChatWidgetData {
   currentUser: ChatParticipant;
 }
 
+interface NotesWidgetData {
+  notes: NoteListItem[];
+}
+
 interface Props {
   templateId: TemplateId;
   slots: (WidgetId | null)[];
@@ -25,6 +31,7 @@ interface Props {
   onAssignWidget: (index: number, widgetId: WidgetId | null) => void;
   kanbanWidgetData?: KanbanWidgetData;
   chatWidgetData?: ChatWidgetData;
+  notesWidgetData?: NotesWidgetData;
 }
 
 const PlusIcon = () => (
@@ -75,14 +82,19 @@ const EmptySlot = ({
 
 const renderWidget = (
   widgetId: WidgetId,
+  slotIndex: number,
   kanbanWidgetData?: KanbanWidgetData,
   chatWidgetData?: ChatWidgetData,
+  notesWidgetData?: NotesWidgetData,
 ) => {
   if (widgetId === 'kanban' && kanbanWidgetData) {
     return <KanbanWidget {...kanbanWidgetData} />;
   }
   if (widgetId === 'chat' && chatWidgetData) {
     return <ChatWidget {...chatWidgetData} />;
+  }
+  if (widgetId === 'notes' && notesWidgetData) {
+    return <NotesWidget {...notesWidgetData} slotIndex={slotIndex} />;
   }
 
   return null;
@@ -95,6 +107,7 @@ export const DashboardGrid = ({
   onAssignWidget,
   kanbanWidgetData,
   chatWidgetData,
+  notesWidgetData,
 }: Props) => {
   const template = getTemplate(templateId);
   const [pickerOpenIndex, setPickerOpenIndex] = useState<number | null>(null);
@@ -126,7 +139,13 @@ export const DashboardGrid = ({
         {template.slotClasses.map((cls, i) => {
           const widgetId = slots[i] ?? null;
           const content = widgetId
-            ? renderWidget(widgetId, kanbanWidgetData, chatWidgetData)
+            ? renderWidget(
+                widgetId,
+                i,
+                kanbanWidgetData,
+                chatWidgetData,
+                notesWidgetData,
+              )
             : null;
 
           return (
