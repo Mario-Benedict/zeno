@@ -30,11 +30,8 @@ class KanbanCommentController extends Controller
             'kanban_board_card_comment_message' => 'required|string',
         ]);
 
-        $detail = $card->detail;
-        abort_if($detail === null, 404);
-
         $comment = new KanbanBoardCardComment([
-            'kanban_board_card_detail_id' => $detail->kanban_board_card_detail_id,
+            'kanban_board_card_id' => $card->kanban_board_card_id,
             'kanban_board_card_comment_from' => $request->user()->id,
             'kanban_board_card_comment_message' => $validated['kanban_board_card_comment_message'],
         ]);
@@ -53,7 +50,7 @@ class KanbanCommentController extends Controller
      */
     public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoardCardComment $comment): RedirectResponse
     {
-        $owningProject = $comment->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        $owningProject = $comment->card->kanbanBoard->project;
         abort_unless($request->user()->can('view', $owningProject), 403);
         abort_unless($comment->kanban_board_card_comment_from === $request->user()->id, 403);
 

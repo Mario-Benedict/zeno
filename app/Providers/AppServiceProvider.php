@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\KanbanBoardCard;
 use App\Models\Project;
+use App\Observers\KanbanBoardCardObserver;
 use App\Policies\ProjectPolicy;
 use App\Services\MongoDB\MongoConnection;
 use App\Services\StorageService;
@@ -37,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
         $this->configureDefaults();
+
+        KanbanBoardCard::observe(KanbanBoardCardObserver::class);
     }
 
     /**

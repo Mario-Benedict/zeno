@@ -51,7 +51,7 @@ export const KanbanColumn = ({
   const filteredCards = useMemo(() => {
     if (!board.cards) return [];
     return board.cards.filter((card) =>
-      (card.detail?.kanban_board_card_title || '')
+      (card.kanban_board_card_title || '')
         .toLowerCase()
         .includes(searchQuery.toLowerCase()),
     );

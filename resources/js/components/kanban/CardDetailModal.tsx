@@ -6,8 +6,6 @@ import type {
   CardLabel,
   KanbanUser,
   KanbanProject,
-  KanbanBoardCardDetail,
-  KanbanBoardCardDate,
   KanbanBoardCardChecklist,
   KanbanBoardCardChecklistItem,
   KanbanBoardCardComment,
@@ -58,29 +56,16 @@ const CardDetailModal = ({
   onUpdate,
 }: CardDetailPanelProps) => {
   const accountIndex = usePage().props.account.index;
-  const [detail, setDetail] = useState<KanbanBoardCardDetail>(
-    card.detail || {
-      kanban_board_card_detail_id: '',
-      kanban_board_card_id: card.kanban_board_card_id,
-      kanban_board_card_title: '',
-      kanban_board_card_description: null,
-      is_completed: false,
-      labels: [],
-      members: [],
-      checklists: [],
-      attachments: [],
-      comments: [],
-      created_at: '',
-      updated_at: '',
-    },
-  );
+  const [localCard, setLocalCard] = useState<KanbanBoardCard>(card);
 
   const [mounted, setMounted] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
-  const [titleValue, setTitleValue] = useState(detail.kanban_board_card_title);
+  const [titleValue, setTitleValue] = useState(
+    localCard.kanban_board_card_title,
+  );
   const [editingDesc, setEditingDesc] = useState(false);
   const [descValue, setDescValue] = useState(
-    detail.kanban_board_card_description || '',
+    localCard.kanban_board_card_description || '',
   );
   const [newComment, setNewComment] = useState('');
   const [addingChecklist, setAddingChecklist] = useState(false);
@@ -137,39 +122,35 @@ const CardDetailModal = ({
   }, [handleClose]);
 
   useEffect(() => {
-    if (card.detail) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDetail(card.detail);
-      setTitleValue(card.detail.kanban_board_card_title);
-      setDescValue(card.detail.kanban_board_card_description || '');
-      setEditingTitle(false);
-      setEditingDesc(false);
-      setNewComment('');
-      setAddingChecklist(false);
-      setAddingAttachment(false);
-      setNewChecklistName('');
-      setNewChecklistItems({});
-      setNewLabelName('');
-      setNewLabelColor(null);
-      setCreatingLabel(false);
-      setSavingLabel(false);
-      setSaving(false);
-      setUploadingFile(false);
-      setDragOver(false);
-      setLabelPopoverOpen(false);
-    }
-    // Only reset when the card itself switches, not on every detail update
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocalCard(card);
+    setTitleValue(card.kanban_board_card_title);
+    setDescValue(card.kanban_board_card_description || '');
+    setEditingTitle(false);
+    setEditingDesc(false);
+    setNewComment('');
+    setAddingChecklist(false);
+    setAddingAttachment(false);
+    setNewChecklistName('');
+    setNewChecklistItems({});
+    setNewLabelName('');
+    setNewLabelColor(null);
+    setCreatingLabel(false);
+    setSavingLabel(false);
+    setSaving(false);
+    setUploadingFile(false);
+    setDragOver(false);
+    setLabelPopoverOpen(false);
+    // Only reset when the card itself switches, not on every card update
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.kanban_board_card_id]);
 
   // Sync is_completed from the card prop so toggling done from the card list
   // while the detail panel is open reflects immediately in the panel too.
-  const cardIsCompleted = card.detail?.is_completed;
+  const cardIsCompleted = card.is_completed;
   useEffect(() => {
-    if (cardIsCompleted !== undefined) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDetail((prev) => ({ ...prev, is_completed: cardIsCompleted }));
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocalCard((prev) => ({ ...prev, is_completed: cardIsCompleted }));
   }, [cardIsCompleted]);
 
   useEffect(() => {
@@ -187,16 +168,16 @@ const CardDetailModal = ({
     }
   }, [addingAttachment]);
 
-  type DetailScalarPatch = {
+  type CardScalarPatch = {
     kanban_board_card_title?: string;
     kanban_board_card_description?: string | null;
     is_completed?: boolean;
   };
 
-  const patchDetail = (patch: DetailScalarPatch) => {
-    const updated = { ...detail, ...patch };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+  const patchCard = (patch: CardScalarPatch) => {
+    const updated = { ...localCard, ...patch };
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
 
     router.patch(
       projects.kanban.cards.detail.update.url({
@@ -215,16 +196,16 @@ const CardDetailModal = ({
   const commitTitle = () => {
     setEditingTitle(false);
     const trimmed = titleValue.trim();
-    if (trimmed && trimmed !== detail.kanban_board_card_title) {
-      patchDetail({ kanban_board_card_title: trimmed });
+    if (trimmed && trimmed !== localCard.kanban_board_card_title) {
+      patchCard({ kanban_board_card_title: trimmed });
     } else {
-      setTitleValue(detail.kanban_board_card_title);
+      setTitleValue(localCard.kanban_board_card_title);
     }
   };
 
   const commitDesc = () => {
     setEditingDesc(false);
-    patchDetail({ kanban_board_card_description: descValue || null });
+    patchCard({ kanban_board_card_description: descValue || null });
   };
 
   const createLabel = () => {
@@ -238,23 +219,16 @@ const CardDetailModal = ({
     const optimisticLabel: CardLabel = {
       card_label_id: labelId,
       card_label_project_id: project.project_id,
-      card_label_category_id: '',
-      card_label_color_id: '',
+      card_label_color_hex: newLabelColor,
       card_label_name: newLabelName.trim(),
-      color: {
-        card_label_color_id: '',
-        card_label_color_hex: newLabelColor,
-        created_at: now,
-        updated_at: now,
-      },
       created_at: now,
       updated_at: now,
     };
 
-    const updatedLabels = [...(detail.labels || []), optimisticLabel];
-    const updatedDetail = { ...detail, labels: updatedLabels };
-    setDetail(updatedDetail);
-    onUpdate({ ...card, detail: updatedDetail }, boardId);
+    const updatedLabels = [...(localCard.labels || []), optimisticLabel];
+    const updated = { ...localCard, labels: updatedLabels };
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
     setNewLabelName('');
     setNewLabelColor(null);
     setCreatingLabel(false);
@@ -283,7 +257,7 @@ const CardDetailModal = ({
   };
 
   const deleteLabel = (labelId: string) => {
-    const isActive = (detail.labels || []).some(
+    const isActive = (localCard.labels || []).some(
       (l) => l.card_label_id === labelId,
     );
     if (isActive) {
@@ -307,16 +281,16 @@ const CardDetailModal = ({
   };
 
   const toggleLabel = (label: CardLabel) => {
-    const currentLabels = detail.labels || [];
+    const currentLabels = localCard.labels || [];
     const hasLabel = currentLabels.some(
       (l) => l.card_label_id === label.card_label_id,
     );
     const updatedLabels = hasLabel
       ? currentLabels.filter((l) => l.card_label_id !== label.card_label_id)
       : [...currentLabels, label];
-    const updated = { ...detail, labels: updatedLabels };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    const updated = { ...localCard, labels: updatedLabels };
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
 
     if (hasLabel) {
       router.delete(
@@ -348,14 +322,14 @@ const CardDetailModal = ({
   };
 
   const toggleMember = (user: KanbanUser) => {
-    const currentMembers = detail.members || [];
+    const currentMembers = localCard.members || [];
     const hasMember = currentMembers.some((m) => m.id === user.id);
     const updatedMembers = hasMember
       ? currentMembers.filter((m) => m.id !== user.id)
       : [...currentMembers, user];
-    const updated = { ...detail, members: updatedMembers };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    const updated = { ...localCard, members: updatedMembers };
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
 
     if (hasMember) {
       router.delete(
@@ -390,20 +364,9 @@ const CardDetailModal = ({
     field: 'kanban_board_card_start_date' | 'kanban_board_card_due_date',
     value: string,
   ) => {
-    const updatedDates = {
-      ...(detail.dates || {
-        kanban_board_card_date_id: '',
-        kanban_board_card_detail_id: detail.kanban_board_card_detail_id,
-        kanban_board_card_start_date: null,
-        kanban_board_card_due_date: null,
-        created_at: '',
-        updated_at: '',
-      }),
-      [field]: value || null,
-    } as KanbanBoardCardDate;
-    const updated = { ...detail, dates: updatedDates };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    const updated = { ...localCard, [field]: value || null };
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
 
     router.patch(
       projects.kanban.cards.dates.update.url({
@@ -428,7 +391,7 @@ const CardDetailModal = ({
 
     const optimisticChecklist: KanbanBoardCardChecklist = {
       kanban_board_card_checklist_id: checklistId,
-      kanban_board_card_checklist_detail_id: detail.kanban_board_card_detail_id,
+      kanban_board_card_id: localCard.kanban_board_card_id,
       kanban_board_card_checklist_name: newChecklistName.trim(),
       created_at: now,
       updated_at: now,
@@ -436,11 +399,11 @@ const CardDetailModal = ({
     };
 
     const updated = {
-      ...detail,
-      checklists: [...(detail.checklists || []), optimisticChecklist],
+      ...localCard,
+      checklists: [...(localCard.checklists || []), optimisticChecklist],
     };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
     setNewChecklistName('');
     setAddingChecklist(false);
 
@@ -480,15 +443,15 @@ const CardDetailModal = ({
     };
 
     const updated = {
-      ...detail,
-      checklists: (detail.checklists || []).map((cl) =>
+      ...localCard,
+      checklists: (localCard.checklists || []).map((cl) =>
         cl.kanban_board_card_checklist_id !== checklistId
           ? cl
           : { ...cl, items: [...(cl.items || []), optimisticItem] },
       ),
     };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
     setNewChecklistItems((prev) => ({ ...prev, [checklistId]: '' }));
 
     router.post(
@@ -514,8 +477,8 @@ const CardDetailModal = ({
     current: boolean,
   ) => {
     const updated = {
-      ...detail,
-      checklists: (detail.checklists || []).map((cl) =>
+      ...localCard,
+      checklists: (localCard.checklists || []).map((cl) =>
         cl.kanban_board_card_checklist_id !== checklistId
           ? cl
           : {
@@ -528,8 +491,8 @@ const CardDetailModal = ({
             },
       ),
     };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
 
     router.patch(
       projects.kanban.checklist.items.update.url({
@@ -547,8 +510,8 @@ const CardDetailModal = ({
 
   const deleteChecklistItem = (checklistId: string, itemId: string) => {
     const updated = {
-      ...detail,
-      checklists: (detail.checklists || []).map((cl) =>
+      ...localCard,
+      checklists: (localCard.checklists || []).map((cl) =>
         cl.kanban_board_card_checklist_id !== checklistId
           ? cl
           : {
@@ -559,8 +522,8 @@ const CardDetailModal = ({
             },
       ),
     };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
 
     router.delete(
       projects.kanban.checklist.items.destroy.url({
@@ -577,13 +540,13 @@ const CardDetailModal = ({
 
   const deleteChecklist = (checklistId: string) => {
     const updated = {
-      ...detail,
-      checklists: (detail.checklists || []).filter(
+      ...localCard,
+      checklists: (localCard.checklists || []).filter(
         (cl) => cl.kanban_board_card_checklist_id !== checklistId,
       ),
     };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
 
     router.delete(
       projects.kanban.checklists.destroy.url({
@@ -606,7 +569,7 @@ const CardDetailModal = ({
 
     const optimisticComment: KanbanBoardCardComment = {
       kanban_board_card_comment_id: commentId,
-      kanban_board_card_detail_id: detail.kanban_board_card_detail_id,
+      kanban_board_card_id: localCard.kanban_board_card_id,
       kanban_board_card_comment_from: currentUser.id,
       kanban_board_card_comment_message: newComment.trim(),
       user: currentUser,
@@ -615,11 +578,11 @@ const CardDetailModal = ({
     };
 
     const updated = {
-      ...detail,
-      comments: [...(detail.comments || []), optimisticComment],
+      ...localCard,
+      comments: [...(localCard.comments || []), optimisticComment],
     };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
     setNewComment('');
 
     router.post(
@@ -642,13 +605,13 @@ const CardDetailModal = ({
 
   const deleteComment = (commentId: string) => {
     const updated = {
-      ...detail,
-      comments: (detail.comments || []).filter(
+      ...localCard,
+      comments: (localCard.comments || []).filter(
         (c) => c.kanban_board_card_comment_id !== commentId,
       ),
     };
-    setDetail(updated);
-    onUpdate({ ...card, detail: updated }, boardId);
+    setLocalCard(updated);
+    onUpdate(updated, boardId);
 
     router.delete(
       projects.kanban.comments.destroy.url({
@@ -708,14 +671,12 @@ const CardDetailModal = ({
     a.click();
   };
 
-  const dueDate = detail.dates?.kanban_board_card_due_date;
+  const dueDate = localCard.kanban_board_card_due_date;
   // Use a memoized current time to avoid impure function calls during render
   const isDueSoon = dueDate
     ? new Date(dueDate).getTime() - new Date().getTime() < 86400000 * 2
     : false;
   const isOverdue = dueDate ? new Date(dueDate) < new Date() : false;
-
-  if (!card.detail) return null;
 
   return (
     <div
@@ -727,14 +688,14 @@ const CardDetailModal = ({
         {/* Header */}
         <div className="flex shrink-0 items-center gap-4 border-b-2 border-dark-secondary px-4 py-3">
           <button
-            onClick={() => patchDetail({ is_completed: !detail.is_completed })}
+            onClick={() => patchCard({ is_completed: !localCard.is_completed })}
             className={`flex min-h-6 min-w-6 items-center justify-center rounded-full border-2 transition-all ${
-              detail.is_completed
+              localCard.is_completed
                 ? 'border-transparent bg-accent-blue text-dark-primary'
                 : 'border-dark-secondary bg-dark-surface-2 hover:bg-dark-surface-3'
             }`}
           >
-            {detail.is_completed && <CheckIcon className="h-3 w-3" />}
+            {localCard.is_completed && <CheckIcon className="h-3 w-3" />}
           </button>
 
           <div className="min-w-0 flex-1">
@@ -750,7 +711,7 @@ const CardDetailModal = ({
                     commitTitle();
                   }
                   if (e.key === 'Escape') {
-                    setTitleValue(detail.kanban_board_card_title);
+                    setTitleValue(localCard.kanban_board_card_title);
                     setEditingTitle(false);
                   }
                 }}
@@ -763,7 +724,7 @@ const CardDetailModal = ({
                 onClick={() => setEditingTitle(true)}
                 title="Click to edit title"
               >
-                {detail.kanban_board_card_title}
+                {localCard.kanban_board_card_title}
               </h2>
             )}
           </div>
@@ -779,7 +740,7 @@ const CardDetailModal = ({
 
         <div className="scrollbar-app flex flex-1 overflow-y-auto">
           <CardDetailBody
-            detail={detail}
+            card={localCard}
             currentUser={currentUser}
             isDueSoon={isDueSoon}
             isOverdue={isOverdue}
@@ -791,7 +752,7 @@ const CardDetailModal = ({
               onChange: setDescValue,
               onCommit: commitDesc,
               onDiscard: () => {
-                setDescValue(detail.kanban_board_card_description || '');
+                setDescValue(localCard.kanban_board_card_description || '');
                 setEditingDesc(false);
               },
             }}
@@ -836,7 +797,7 @@ const CardDetailModal = ({
           />
 
           <CardDetailSidebar
-            detail={detail}
+            card={localCard}
             cardLabels={cardLabels}
             projectUsers={projectUsers}
             addingChecklist={addingChecklist}

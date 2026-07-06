@@ -31,12 +31,9 @@ export const KanbanCard = ({
 }: KanbanCardProps) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const detail = card.detail;
-  if (!detail) return null;
-
-  const checklistProgress = calculateChecklistProgress(detail.checklists);
-  const commentsCount = detail.comments?.length || 0;
-  const hasDueDate = !!detail.dates?.kanban_board_card_due_date;
+  const checklistProgress = calculateChecklistProgress(card.checklists);
+  const commentsCount = card.comments?.length || 0;
+  const hasDueDate = !!card.kanban_board_card_due_date;
 
   return (
     <>
@@ -47,7 +44,7 @@ export const KanbanCard = ({
             <>
               Are you sure you want to delete{' '}
               <strong className="font-semibold text-white">
-                "{detail.kanban_board_card_title}"
+                "{card.kanban_board_card_title}"
               </strong>
               ? This action cannot be undone.
             </>
@@ -87,23 +84,23 @@ export const KanbanCard = ({
                     onToggleDone(boardId, card.kanban_board_card_id);
                   }}
                   className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                    detail.is_completed
+                    card.is_completed
                       ? 'border-accent-blue bg-accent-blue'
                       : 'border-dark-secondary hover:border-dark-primary'
                   }`}
                 >
-                  {detail.is_completed && (
+                  {card.is_completed && (
                     <CheckIcon className="h-2 w-2 text-dark-primary" />
                   )}
                 </button>
                 <span
                   className={`text-small leading-snug font-medium ${
-                    detail.is_completed
+                    card.is_completed
                       ? 'text-white/30 line-through'
                       : 'text-white/90'
                   }`}
                 >
-                  {detail.kanban_board_card_title}
+                  {card.kanban_board_card_title}
                 </span>
               </div>
 
@@ -121,7 +118,7 @@ export const KanbanCard = ({
 
             {/* Meta badges */}
             <div className="mb-2 flex flex-wrap items-center gap-2 text-xsmall font-medium text-dark-primary">
-              {detail.kanban_board_card_description && (
+              {card.kanban_board_card_description && (
                 <span
                   className="flex items-center gap-1"
                   title="Has description"
@@ -129,7 +126,7 @@ export const KanbanCard = ({
                   <DescIcon className="h-4 w-4" />
                 </span>
               )}
-              {!!detail.attachments?.length && (
+              {!!card.attachments?.length && (
                 <span
                   className="flex items-center gap-1"
                   title="Has attachments"
@@ -140,7 +137,7 @@ export const KanbanCard = ({
               {hasDueDate && (
                 <span className="flex items-center gap-1">
                   <ClockIcon className="h-4 w-4" />
-                  {formatDate(detail.dates!.kanban_board_card_due_date)}
+                  {formatDate(card.kanban_board_card_due_date)}
                 </span>
               )}
               {checklistProgress.total > 0 && (
@@ -158,21 +155,19 @@ export const KanbanCard = ({
             </div>
 
             {/* Labels */}
-            {!!detail.labels?.length && (
+            {!!card.labels?.length && (
               <div className="mb-2 flex flex-wrap gap-1.5">
-                {detail.labels.map((label) =>
-                  label.color ? (
-                    <TagBadge
-                      key={label.card_label_id}
-                      label={label.card_label_name}
-                      color={label.color}
-                    />
-                  ) : null,
-                )}
+                {card.labels.map((label) => (
+                  <TagBadge
+                    key={label.card_label_id}
+                    label={label.card_label_name}
+                    colorHex={label.card_label_color_hex}
+                  />
+                ))}
               </div>
             )}
 
-            <AvatarStack members={detail.members} />
+            <AvatarStack members={card.members} />
           </div>
         )}
       </Draggable>

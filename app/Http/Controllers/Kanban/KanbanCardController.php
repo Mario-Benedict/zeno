@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Kanban;
 use App\Http\Controllers\Controller;
 use App\Models\KanbanBoard;
 use App\Models\KanbanBoardCard;
-use App\Models\KanbanBoardCardDetail;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,10 +15,9 @@ class KanbanCardController extends Controller
     /**
      * Store a newly created card in storage.
      *
-     * Accepts optional client-generated `kanban_board_card_id` and
-     * `kanban_board_card_detail_id` so the frontend can optimistically
-     * render the card immediately and have it line up with the persisted
-     * record after the request resolves.
+     * Accepts an optional client-generated `kanban_board_card_id` so the
+     * frontend can optimistically render the card immediately and have it
+     * line up with the persisted record after the request resolves.
      */
     public function store(int $accountIndex, Request $request, Project $project, KanbanBoard $board): RedirectResponse
     {
@@ -27,7 +25,6 @@ class KanbanCardController extends Controller
 
         $validated = $request->validate([
             'kanban_board_card_id' => ['nullable', 'string', 'uuid'],
-            'kanban_board_card_detail_id' => ['nullable', 'string', 'uuid'],
             'title' => 'required|string|max:20',
             'label_ids' => 'array',
             'label_ids.*' => 'string',
@@ -39,6 +36,9 @@ class KanbanCardController extends Controller
             $card = new KanbanBoardCard([
                 'kanban_board_id' => $board->kanban_board_id,
                 'position' => $lastPosition + 1,
+                'kanban_board_card_title' => $validated['title'],
+                'kanban_board_card_description' => null,
+                'is_completed' => false,
             ]);
 
             if (! empty($validated['kanban_board_card_id'])) {
@@ -47,21 +47,8 @@ class KanbanCardController extends Controller
 
             $card->save();
 
-            $detail = new KanbanBoardCardDetail([
-                'kanban_board_card_id' => $card->kanban_board_card_id,
-                'kanban_board_card_title' => $validated['title'],
-                'kanban_board_card_description' => null,
-                'is_completed' => false,
-            ]);
-
-            if (! empty($validated['kanban_board_card_detail_id'])) {
-                $detail->kanban_board_card_detail_id = $validated['kanban_board_card_detail_id'];
-            }
-
-            $detail->save();
-
             if (! empty($validated['label_ids'])) {
-                $detail->labels()->attach($validated['label_ids']);
+                $card->labels()->attach($validated['label_ids']);
             }
         });
 
