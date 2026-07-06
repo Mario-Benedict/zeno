@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useProject } from '@/hooks/useProject';
 import type { NoteListItem } from '@/types/notes';
-import CloseIcon from '@public/icons/small/cancel.svg';
-import SearchIcon from '@public/icons/small/search.svg';
 import { NotesWidgetDetail } from './NotesWidgetDetail';
 import { NotesWidgetList } from './NotesWidgetList';
+import { WidgetSearchHeader } from './WidgetSearchHeader';
 
 interface Props {
   notes: NoteListItem[];
@@ -91,49 +90,20 @@ export const NotesWidget = ({ notes, slotIndex }: Props) => {
         />
       ) : (
         <>
-          <div className="flex shrink-0 items-center gap-2 px-3 pt-3 pb-2">
-            {searchOpen ? (
-              <>
-                <SearchIcon className="h-3.5 w-3.5 shrink-0 text-white/40" />
-                <input
-                  autoFocus
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search notes…"
-                  className="min-w-0 flex-1 bg-transparent text-xsmall text-white placeholder-white/30 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchOpen(false);
-                    setSearchQuery('');
-                  }}
-                  aria-label="Close search"
-                  className="shrink-0 rounded p-1 text-white/40 transition hover:bg-white/10 hover:text-white"
-                >
-                  <CloseIcon className="h-3.5 w-3.5" />
-                </button>
-              </>
-            ) : (
-              <>
-                <span className="flex-1 text-small font-semibold text-dark-primary">
-                  Notes
-                </span>
-                <span className="text-xsmall text-white/30">
-                  {notes.length} note{notes.length === 1 ? '' : 's'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSearchOpen(true)}
-                  aria-label="Search notes"
-                  className="shrink-0 rounded p-1 text-white/40 transition hover:bg-white/10 hover:text-white"
-                >
-                  <SearchIcon className="h-3.5 w-3.5" />
-                </button>
-              </>
-            )}
-          </div>
+          <WidgetSearchHeader
+            title="Notes"
+            countLabel={`${notes.length} note${notes.length === 1 ? '' : 's'}`}
+            searchOpen={searchOpen}
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            onOpenSearch={() => setSearchOpen(true)}
+            onCloseSearch={() => {
+              setSearchOpen(false);
+              setSearchQuery('');
+            }}
+            searchLabel="Search notes"
+            placeholder="Search notes…"
+          />
 
           <NotesWidgetList notes={filteredNotes} onSelectNote={selectNote} />
         </>

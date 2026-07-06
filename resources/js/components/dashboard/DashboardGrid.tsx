@@ -91,7 +91,7 @@ const renderWidget = (
     return <KanbanWidget {...kanbanWidgetData} />;
   }
   if (widgetId === 'chat' && chatWidgetData) {
-    return <ChatWidget {...chatWidgetData} />;
+    return <ChatWidget {...chatWidgetData} slotIndex={slotIndex} />;
   }
   if (widgetId === 'notes' && notesWidgetData) {
     return <NotesWidget {...notesWidgetData} slotIndex={slotIndex} />;
