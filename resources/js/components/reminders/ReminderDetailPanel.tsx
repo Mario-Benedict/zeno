@@ -212,12 +212,17 @@ export const ReminderDetailPanel = ({
                 onClear={() => onUpdateDueAt(null)}
                 placeholder="Set due date"
               />
-              <TimePicker
-                label="Time"
-                value={dueTime}
-                onChange={(v) => onUpdateDueAt(combineDueAt(dueDate, v))}
-                disabled={!dueDate}
-              />
+              <div>
+                <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
+                  Time
+                </label>
+                <TimePicker
+                  ariaLabel="Time"
+                  value={dueTime}
+                  onChange={(v) => onUpdateDueAt(combineDueAt(dueDate, v))}
+                  disabled={!dueDate}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setEditingDate(false)}

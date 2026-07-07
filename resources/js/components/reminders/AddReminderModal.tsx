@@ -51,12 +51,17 @@ export const AddReminderModal = ({
               onClear={() => setDate(null)}
               placeholder="Optional"
             />
-            <TimePicker
-              label="Time"
-              value={time}
-              onChange={setTime}
-              disabled={!date}
-            />
+            <div>
+              <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
+                Time
+              </label>
+              <TimePicker
+                ariaLabel="Time"
+                value={time}
+                onChange={setTime}
+                disabled={!date}
+              />
+            </div>
           </div>
         </div>
         <div className="mt-5 flex gap-2">
