@@ -31,11 +31,8 @@ class KanbanChecklistController extends Controller
             'kanban_board_card_checklist_name' => 'required|string|max:255',
         ]);
 
-        $detail = $card->detail;
-        abort_if($detail === null, 404);
-
         $checklist = new KanbanBoardCardChecklist([
-            'kanban_board_card_checklist_detail_id' => $detail->kanban_board_card_detail_id,
+            'kanban_board_card_id' => $card->kanban_board_card_id,
             'kanban_board_card_checklist_name' => $validated['kanban_board_card_checklist_name'],
         ]);
 
@@ -54,7 +51,7 @@ class KanbanChecklistController extends Controller
      */
     public function addItem(int $accountIndex, Request $request, Project $project, KanbanBoardCardChecklist $checklist): RedirectResponse
     {
-        $owningProject = $checklist->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        $owningProject = $checklist->card->kanbanBoard->project;
         abort_unless($request->user()->can('view', $owningProject), 403);
 
         $validated = $request->validate([
@@ -82,7 +79,7 @@ class KanbanChecklistController extends Controller
      */
     public function updateItem(int $accountIndex, Request $request, Project $project, KanbanBoardCardChecklistItem $item): RedirectResponse
     {
-        $owningProject = $item->checklist->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        $owningProject = $item->checklist->card->kanbanBoard->project;
         abort_unless($request->user()->can('view', $owningProject), 403);
 
         $validated = $request->validate([
@@ -100,7 +97,7 @@ class KanbanChecklistController extends Controller
      */
     public function destroyItem(int $accountIndex, Request $request, Project $project, KanbanBoardCardChecklistItem $item): RedirectResponse
     {
-        $owningProject = $item->checklist->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        $owningProject = $item->checklist->card->kanbanBoard->project;
         abort_unless($request->user()->can('view', $owningProject), 403);
 
         $item->delete();
@@ -113,7 +110,7 @@ class KanbanChecklistController extends Controller
      */
     public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoardCardChecklist $checklist): RedirectResponse
     {
-        $owningProject = $checklist->cardDetail->kanbanBoardCard->kanbanBoard->project;
+        $owningProject = $checklist->card->kanbanBoard->project;
         abort_unless($request->user()->can('view', $owningProject), 403);
 
         $checklist->items()->delete();

@@ -79,7 +79,7 @@ export const LabelPopover = ({
               const active = activeLabels.some(
                 (l) => l.card_label_id === label.card_label_id,
               );
-              const hex = label.color?.card_label_color_hex || '#7B7B7B';
+              const hex = label.card_label_color_hex || '#7B7B7B';
 
               return (
                 <div

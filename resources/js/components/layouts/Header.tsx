@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
+import NotificationPanel from '@/components/layouts/NotificationPanel';
 import ProjectSwitcher from '@/components/layouts/ProjectSwitcher';
 import ProjectInvitationModal from '@/components/projects/ProjectInvitationModal';
 import ProjectSettingsModal from '@/components/projects/ProjectSettingsModal';
@@ -49,11 +50,12 @@ const Header = ({
   onNotificationClick,
   onSettingsClick,
 }: AppHeaderProps) => {
-  const { project, projectNavigation, projectShare } = usePage().props;
+  const { project, projectNavigation, projectShare, account } = usePage().props;
   const [searchQuery, setSearchQuery] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<
     'general' | 'profile'
   >('general');
@@ -139,9 +141,24 @@ const Header = ({
 
       {/* ── Right: Actions + Account switcher ── */}
       <div className="flex w-100 shrink-0 items-center justify-end gap-2">
-        <IconButton label="Notifications" onClick={onNotificationClick}>
-          <Bell />
-        </IconButton>
+        <div className="relative">
+          <IconButton
+            label="Notifications"
+            disabled={project === null}
+            onClick={() => {
+              onNotificationClick?.();
+              setNotificationsOpen((v) => !v);
+            }}
+          >
+            <Bell />
+          </IconButton>
+          <NotificationPanel
+            open={notificationsOpen}
+            onClose={() => setNotificationsOpen(false)}
+            project={project}
+            accountIndex={account.index}
+          />
+        </div>
         <IconButton
           label="Invite members"
           disabled={project === null}

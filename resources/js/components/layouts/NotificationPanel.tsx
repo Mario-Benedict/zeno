@@ -1,0 +1,170 @@
+import { Link } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
+import { projectPath } from '@/lib/accountRoutes';
+import notifications from '@/routes/notifications';
+import type { CurrentProject, NotificationInboxResponse } from '@/types';
+import { initials } from '@/utils/chat';
+import { formatReminderListDate } from '@/utils/reminders';
+
+interface NotificationPanelProps {
+  open: boolean;
+  onClose: () => void;
+  project: CurrentProject | null;
+  accountIndex: number;
+}
+
+type Tab = 'inbox' | 'chat';
+
+const NotificationPanel = ({
+  open,
+  onClose,
+  project,
+  accountIndex,
+}: NotificationPanelProps) => {
+  const [tab, setTab] = useState<Tab>('inbox');
+  const [data, setData] = useState<NotificationInboxResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (!open || !project) return;
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true);
+    fetch(
+      notifications.index.url({ accountIndex, project: project.project_slug }),
+      {
+        headers: { Accept: 'application/json' },
+      },
+    )
+      .then((res) => res.json())
+      .then((json: NotificationInboxResponse) => setData(json))
+      .catch((err: unknown) =>
+        console.error('Failed to load notifications', err),
+      )
+      .finally(() => setLoading(false));
+  }, [open, project, accountIndex]);
+
+  if (!open || !project) return null;
+
+  return (
+    <div
+      ref={ref}
+      className="absolute top-full right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl"
+    >
+      <div className="flex border-b border-dark-border">
+        <button
+          type="button"
+          onClick={() => setTab('inbox')}
+          className={`flex-1 py-3 text-small font-semibold transition-colors ${
+            tab === 'inbox'
+              ? 'border-b-2 border-accent-blue text-dark-primary'
+              : 'text-dark-secondary hover:text-dark-primary'
+          }`}
+        >
+          Inbox
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('chat')}
+          className={`flex-1 py-3 text-small font-semibold transition-colors ${
+            tab === 'chat'
+              ? 'border-b-2 border-accent-blue text-dark-primary'
+              : 'text-dark-secondary hover:text-dark-primary'
+          }`}
+        >
+          Chat
+        </button>
+      </div>
+
+      <div className="scrollbar-app max-h-96 overflow-y-auto p-2">
+        {loading && (
+          <p className="py-8 text-center text-xsmall text-white/20">
+            Loading...
+          </p>
+        )}
+
+        {!loading && tab === 'inbox' && (
+          <>
+            {(data?.inbox.length ?? 0) === 0 && (
+              <p className="py-8 text-center text-xsmall text-white/20">
+                Nothing due soon.
+              </p>
+            )}
+            {data?.inbox.map((item) => (
+              <Link
+                key={item.reminder_id}
+                href={`${projectPath(accountIndex, project.project_slug, '/reminders')}?reminder=${item.reminder_id}`}
+                onClick={onClose}
+                className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition hover:bg-white/4"
+              >
+                <span
+                  className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.is_overdue ? 'bg-accent-red' : 'bg-accent-yellow'}`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-small text-dark-primary">
+                    {item.title}
+                  </p>
+                  <p
+                    className={`text-xsmall ${item.is_overdue ? 'text-accent-red' : 'text-dark-secondary'}`}
+                  >
+                    {item.is_overdue ? 'Overdue · ' : 'Due '}
+                    {formatReminderListDate(item.due_at)}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </>
+        )}
+
+        {!loading && tab === 'chat' && (
+          <>
+            {(data?.chat.length ?? 0) === 0 && (
+              <p className="py-8 text-center text-xsmall text-white/20">
+                No unread messages.
+              </p>
+            )}
+            {data?.chat.map((room) => {
+              const label =
+                room.type === 'group'
+                  ? (room.name ?? 'Group')
+                  : (room.participants[0]?.name ?? 'Direct Message');
+
+              return (
+                <Link
+                  key={room.id}
+                  href={`${projectPath(accountIndex, project.project_slug, '/chat')}?room=${room.id}`}
+                  onClick={onClose}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-white/4"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-blue text-xsmall font-bold text-white">
+                    {initials(label)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-small text-dark-primary">
+                      {label}
+                    </p>
+                  </div>
+                  <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent-blue px-1.5 text-micro font-semibold text-white">
+                    {room.unread_count}
+                  </span>
+                </Link>
+              );
+            })}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default NotificationPanel;

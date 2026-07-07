@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Kanban;
 
 use App\Http\Controllers\Controller;
 use App\Models\CardLabel;
-use App\Models\CardLabelCategory;
-use App\Models\CardLabelColor;
 use App\Models\KanbanBoardCard;
-use App\Models\KanbanBoardCardDate;
 use App\Models\Project;
+use App\Observers\KanbanBoardCardObserver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -39,16 +37,7 @@ class KanbanCardDetailController extends Controller
             'is_completed' => 'boolean',
         ]);
 
-        $detail = $card->detail;
-        if (! $detail) {
-            $detail = $card->detail()->create([
-                'kanban_board_card_id' => $card->kanban_board_card_id,
-                'kanban_board_card_title' => $card->detail->kanban_board_card_title ?? '',
-                'is_completed' => false,
-            ]);
-        }
-
-        $detail->update($validated);
+        $card->update($validated);
 
         return back();
     }
@@ -71,11 +60,8 @@ class KanbanCardDetailController extends Controller
 
         abort_if($label === null, 404);
 
-        $detail = $card->detail;
-        abort_if($detail === null, 404);
-
-        if (! $detail->labels()->where('card_label_id', $validated['label_id'])->exists()) {
-            $detail->labels()->attach($validated['label_id']);
+        if (! $card->labels()->where('card_label_id', $validated['label_id'])->exists()) {
+            $card->labels()->attach($validated['label_id']);
         }
 
         return back();
@@ -88,10 +74,7 @@ class KanbanCardDetailController extends Controller
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
-        $detail = $card->detail;
-        abort_if($detail === null, 404);
-
-        $detail->labels()->detach($labelId);
+        $card->labels()->detach($labelId);
 
         return back();
     }
@@ -125,22 +108,9 @@ class KanbanCardDetailController extends Controller
             'card_label_color_hex' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
         ]);
 
-        $detail = $card->detail;
-        abort_if($detail === null, 404);
-
-        $color = CardLabelColor::firstOrCreate(
-            ['card_label_color_hex' => strtoupper($validated['card_label_color_hex'])],
-            ['card_label_color_hex' => strtoupper($validated['card_label_color_hex'])]
-        );
-
-        $category = CardLabelCategory::first() ?? CardLabelCategory::create([
-            'card_label_category_name' => 'General',
-        ]);
-
         $label = new CardLabel([
             'card_label_project_id' => $cardProject->project_id,
-            'card_label_category_id' => $category->card_label_category_id,
-            'card_label_color_id' => $color->card_label_color_id,
+            'card_label_color_hex' => strtoupper($validated['card_label_color_hex']),
             'card_label_name' => $validated['card_label_name'],
         ]);
 
@@ -150,7 +120,7 @@ class KanbanCardDetailController extends Controller
 
         $label->save();
 
-        $detail->labels()->attach($label->card_label_id);
+        $card->labels()->attach($label->card_label_id);
 
         return back();
     }
@@ -167,14 +137,12 @@ class KanbanCardDetailController extends Controller
             'user_id' => 'required|integer',
         ]);
 
-        $detail = $card->detail;
-        abort_if($detail === null, 404);
-
         $isMember = $cardProject->members()->where('user_id', $validated['user_id'])->exists();
         abort_unless($isMember, 404);
 
-        if (! $detail->members()->where('kanban_board_card_account_id', $validated['user_id'])->exists()) {
-            $detail->members()->attach($validated['user_id']);
+        if (! $card->members()->where('kanban_board_card_account_id', $validated['user_id'])->exists()) {
+            $card->members()->attach($validated['user_id']);
+            KanbanBoardCardObserver::syncReminders($card);
         }
 
         return back();
@@ -187,10 +155,8 @@ class KanbanCardDetailController extends Controller
     {
         abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
 
-        $detail = $card->detail;
-        abort_if($detail === null, 404);
-
-        $detail->members()->detach($memberId);
+        $card->members()->detach($memberId);
+        KanbanBoardCardObserver::syncReminders($card);
 
         return back();
     }
@@ -207,14 +173,7 @@ class KanbanCardDetailController extends Controller
             'kanban_board_card_due_date' => 'nullable|date',
         ]);
 
-        $detail = $card->detail;
-        abort_if($detail === null, 404);
-
-        $dates = $detail->dates ?? KanbanBoardCardDate::create([
-            'kanban_board_card_detail_id' => $detail->kanban_board_card_detail_id,
-        ]);
-
-        $dates->update($validated);
+        $card->update($validated);
 
         return back();
     }

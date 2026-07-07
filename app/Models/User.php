@@ -19,6 +19,7 @@ use Illuminate\Notifications\Notifiable;
     'name', 'email', 'password',
     'email_verified_at',
     'two_factor_secret', 'two_factor_enabled_at', 'two_factor_last_counter',
+    'pomodoro_settings',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
@@ -34,7 +35,13 @@ class User extends Authenticatable implements MustVerifyEmail
             'two_factor_last_counter' => 'integer',
             'password' => 'hashed',
             'two_factor_secret' => 'encrypted',
+            'pomodoro_settings' => 'array',
         ];
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class, 'reminder_user_id', 'id');
     }
 
     public function llmChatSessions()

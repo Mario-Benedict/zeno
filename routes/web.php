@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\TwoFactorSetupController;
+use App\Http\Controllers\PomodoroSettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectInvitationController;
@@ -24,6 +25,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::inertia('account', 'account/show')->name('account.show');
             Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+            Route::patch('profile/pomodoro-settings', [PomodoroSettingsController::class, 'update'])
+                ->name('pomodoro.settings.update');
 
             Route::prefix('p/{project:project_slug}')
                 ->middleware('project.member')
@@ -68,6 +71,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     require __DIR__.'/llm-chat.php';
 
                     require __DIR__.'/notes.php';
+
+                    require __DIR__.'/reminders.php';
                 });
         });
 

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 #[Fillable([
-    'kanban_board_card_checklist_detail_id',
+    'kanban_board_card_id',
     'kanban_board_card_checklist_name',
 ])]
 class KanbanBoardCardChecklist extends Model
@@ -29,9 +29,9 @@ class KanbanBoardCardChecklist extends Model
         });
     }
 
-    public function cardDetail(): BelongsTo
+    public function card(): BelongsTo
     {
-        return $this->belongsTo(KanbanBoardCardDetail::class, 'kanban_board_card_checklist_detail_id', 'kanban_board_card_detail_id');
+        return $this->belongsTo(KanbanBoardCard::class, 'kanban_board_card_id', 'kanban_board_card_id');
     }
 
     public function items(): HasMany

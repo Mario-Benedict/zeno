@@ -1,9 +1,5 @@
 import { DatePicker } from '@/components/shared/DatePicker';
-import type {
-  KanbanBoardCardDetail,
-  CardLabel,
-  KanbanUser,
-} from '@/types/kanban';
+import type { KanbanBoardCard, CardLabel, KanbanUser } from '@/types/kanban';
 import { generateInitials, MEMBER_COLORS } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 import ChecklistIcon from '@public/icons/small/checkbox.svg';
@@ -27,7 +23,7 @@ interface LabelState {
 }
 
 interface CardDetailSidebarProps {
-  detail: KanbanBoardCardDetail;
+  card: KanbanBoardCard;
   cardLabels: CardLabel[];
   projectUsers: KanbanUser[];
   addingChecklist: boolean;
@@ -43,7 +39,7 @@ interface CardDetailSidebarProps {
 }
 
 export const CardDetailSidebar = ({
-  detail,
+  card,
   cardLabels,
   projectUsers,
   addingChecklist,
@@ -64,18 +60,14 @@ export const CardDetailSidebar = ({
         <div className="space-y-2">
           <DatePicker
             label="Start date"
-            value={
-              detail.dates?.kanban_board_card_start_date?.slice(0, 10) || null
-            }
+            value={card.kanban_board_card_start_date?.slice(0, 10) || null}
             onChange={(v) => onUpdateDates('kanban_board_card_start_date', v)}
             onClear={() => onUpdateDates('kanban_board_card_start_date', '')}
             placeholder="Set start date"
           />
           <DatePicker
             label="Due date"
-            value={
-              detail.dates?.kanban_board_card_due_date?.slice(0, 10) || null
-            }
+            value={card.kanban_board_card_due_date?.slice(0, 10) || null}
             onChange={(v) => onUpdateDates('kanban_board_card_due_date', v)}
             onClear={() => onUpdateDates('kanban_board_card_due_date', '')}
             placeholder="Set due date"
@@ -124,12 +116,12 @@ export const CardDetailSidebar = ({
         <div className="mb-2 space-y-1">
           {cardLabels
             .filter((label) =>
-              (detail.labels || []).some(
+              (card.labels || []).some(
                 (l) => l.card_label_id === label.card_label_id,
               ),
             )
             .map((label) => {
-              const hex = label.color?.card_label_color_hex || '#7B7B7B';
+              const hex = label.card_label_color_hex || '#7B7B7B';
 
               return (
                 <div
@@ -175,7 +167,7 @@ export const CardDetailSidebar = ({
           {labels.popoverOpen && (
             <LabelPopover
               cardLabels={cardLabels}
-              activeLabels={detail.labels || []}
+              activeLabels={card.labels || []}
               onToggle={labels.onToggle}
               onDelete={labels.onDelete}
               onClose={() => {
@@ -204,9 +196,7 @@ export const CardDetailSidebar = ({
         </p>
         <div className="space-y-1">
           {projectUsers?.map((user, i) => {
-            const isMember = (detail.members || []).some(
-              (m) => m.id === user.id,
-            );
+            const isMember = (card.members || []).some((m) => m.id === user.id);
 
             return (
               <button

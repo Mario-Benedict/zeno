@@ -1,5 +1,5 @@
 import { formatFileSize } from '@/lib/utils';
-import type { KanbanBoardCardDetail, KanbanUser } from '@/types/kanban';
+import type { KanbanBoardCard, KanbanUser } from '@/types/kanban';
 import type { LocalAttachment } from '@/utils/attachmentStorage';
 import { getFileEmoji } from '@/utils/attachmentStorage';
 import {
@@ -67,7 +67,7 @@ export interface CommentState {
 }
 
 interface CardDetailBodyProps {
-  detail: KanbanBoardCardDetail;
+  card: KanbanBoardCard;
   currentUser: KanbanUser;
   isDueSoon: boolean;
   isOverdue: boolean;
@@ -78,7 +78,7 @@ interface CardDetailBodyProps {
 }
 
 export const CardDetailBody = ({
-  detail,
+  card,
   currentUser,
   isDueSoon,
   isOverdue,
@@ -139,55 +139,54 @@ export const CardDetailBody = ({
   } = comments;
 
   const totalAttachments =
-    attachmentsLocal.length + (detail.attachments?.length || 0);
+    attachmentsLocal.length + (card.attachments?.length || 0);
 
   return (
     <div className="scrollbar-app min-w-0 flex-1 space-y-4 overflow-y-auto px-3 py-4">
       {/* Labels row */}
-      {!!detail.labels?.length && (
+      {!!card.labels?.length && (
         <div className="flex flex-wrap gap-1.5">
-          {detail.labels.map((label) =>
-            label.color ? (
-              <TagBadge
-                key={label.card_label_id}
-                label={label.card_label_name}
-                color={label.color}
-              />
-            ) : null,
-          )}
+          {card.labels.map((label) => (
+            <TagBadge
+              key={label.card_label_id}
+              label={label.card_label_name}
+              colorHex={label.card_label_color_hex}
+            />
+          ))}
         </div>
       )}
 
       {/* Members row */}
-      {!!detail.members?.length && (
+      {!!card.members?.length && (
         <div className="flex items-center gap-2">
-          <AvatarStack members={detail.members} />
+          <AvatarStack members={card.members} />
           <span className="text-xsmall text-white/30">
-            {detail.members.length} member
-            {detail.members.length !== 1 ? 's' : ''}
+            {card.members.length} member
+            {card.members.length !== 1 ? 's' : ''}
           </span>
         </div>
       )}
 
       {/* Dates summary */}
-      {(detail.dates?.kanban_board_card_start_date ||
-        detail.dates?.kanban_board_card_due_date) && (
+      {(card.kanban_board_card_start_date ||
+        card.kanban_board_card_due_date) && (
         <div className="flex items-center gap-4">
-          {detail.dates?.kanban_board_card_start_date && (
+          {card.kanban_board_card_start_date && (
             <div className="flex items-center gap-1.5">
               <CalendarIcon className="h-3.5 w-3.5 text-white/30" />
               <span className="text-xsmall text-white/40">Start</span>
               <span className="text-xsmall font-medium text-white/60">
-                {new Date(
-                  detail.dates.kanban_board_card_start_date,
-                ).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
+                {new Date(card.kanban_board_card_start_date).toLocaleDateString(
+                  'en-US',
+                  {
+                    month: 'short',
+                    day: 'numeric',
+                  },
+                )}
               </span>
             </div>
           )}
-          {detail.dates?.kanban_board_card_due_date && (
+          {card.kanban_board_card_due_date && (
             <div
               className={`flex items-center gap-1.5 rounded-md px-2 py-0.5 ${
                 isOverdue
@@ -204,12 +203,13 @@ export const CardDetailBody = ({
                 className={`text-xsmall font-medium ${isOverdue ? 'text-accent-red' : isDueSoon ? 'text-accent-yellow' : 'text-white/60'}`}
               >
                 {isOverdue ? 'Overdue · ' : isDueSoon ? 'Due soon · ' : ''}
-                {new Date(
-                  detail.dates.kanban_board_card_due_date,
-                ).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
+                {new Date(card.kanban_board_card_due_date).toLocaleDateString(
+                  'en-US',
+                  {
+                    month: 'short',
+                    day: 'numeric',
+                  },
+                )}
               </span>
             </div>
           )}
@@ -262,9 +262,9 @@ export const CardDetailBody = ({
             onClick={descOnEdit}
             className="min-h-15 cursor-pointer rounded-xl bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed transition hover:bg-dark-surface-3"
           >
-            {detail.kanban_board_card_description ? (
+            {card.kanban_board_card_description ? (
               <span className="whitespace-pre-wrap text-white/70">
-                {detail.kanban_board_card_description}
+                {card.kanban_board_card_description}
               </span>
             ) : (
               <span className="text-white/20">
@@ -283,7 +283,7 @@ export const CardDetailBody = ({
             label={`Attachments (${totalAttachments})`}
           />
           <div className="space-y-2">
-            {detail.attachments?.map((att) => (
+            {card.attachments?.map((att) => (
               <a
                 key={att.kanban_board_card_attachment_id}
                 href={att.kanban_board_card_attachment_url}
@@ -404,7 +404,7 @@ export const CardDetailBody = ({
       )}
 
       {/* Checklists */}
-      {(detail.checklists || []).map((checklist) => {
+      {(card.checklists || []).map((checklist) => {
         const prog = calculateChecklistProgress([checklist]);
         const pct =
           prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
@@ -616,7 +616,7 @@ export const CardDetailBody = ({
         </div>
 
         <div className="space-y-4">
-          {(detail.comments || []).map((comment, i) => (
+          {(card.comments || []).map((comment, i) => (
             <div
               key={comment.kanban_board_card_comment_id}
               className="group/comment flex gap-3"
@@ -665,7 +665,7 @@ export const CardDetailBody = ({
               )}
             </div>
           ))}
-          {!detail.comments?.length && (
+          {!card.comments?.length && (
             <p className="py-4 text-center text-xsmall text-white/15">
               No activity yet
             </p>

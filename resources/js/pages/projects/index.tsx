@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
 import CreateProjectPanel from '@/components/projects/CreateProjectPanel';
+import { PinButton } from '@/components/shared/PinButton';
 import { accountPath, projectPath } from '@/lib/accountRoutes';
 import type { PaginatedProjects, ProjectSummary } from '@/types';
 import Zeno from '@public/logos/logo.svg';
@@ -11,22 +12,6 @@ interface ProjectsPageProps {
   projects: PaginatedProjects;
   [key: string]: unknown;
 }
-
-const StarIcon = ({ filled }: { filled: boolean }) => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill={filled ? 'currentColor' : 'none'}
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={filled ? 'text-accent-yellow' : 'text-dark-secondary'}
-  >
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
 
 const SearchIcon = () => (
   <svg
@@ -92,19 +77,12 @@ const ProjectRow = ({
       </p>
     </div>
     {showPin && (
-      <button
-        type="button"
+      <PinButton
+        pinned={project.is_pinned}
+        onToggle={() => onPin(project.project_slug, project.is_pinned)}
         disabled={pinning}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onPin(project.project_slug, project.is_pinned);
-        }}
-        className="ml-3 shrink-0 rounded p-1 transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-70"
-        aria-label={project.is_pinned ? 'Unpin project' : 'Pin project'}
-      >
-        <StarIcon filled={project.is_pinned} />
-      </button>
+        className="ml-3"
+      />
     )}
   </Link>
 );
