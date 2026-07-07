@@ -173,7 +173,7 @@ export const WeekGrid = ({
       {/* Scrollable time grid */}
       <div
         ref={scrollRef}
-        className="flex min-h-0 flex-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-y-auto"
+        className="flex min-h-0 flex-1 [scrollbar-width:none] overflow-y-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {/* Time axis */}
         <div

@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
 use App\Services\AccountSessionService;
+use App\Services\CalendarService;
 use App\Services\ChatRoomService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -151,7 +152,7 @@ class ProjectInvitationController extends Controller
                 $project->members()->attach($user->id, [
                     'role' => $role,
                     'opened_at' => now(),
-                    'color' => \App\Services\CalendarService::assignMemberColor($project->project_id),
+                    'color' => CalendarService::assignMemberColor($project->project_id),
                 ]);
                 $roomService->addMemberToGroupRoom($project, $user, $role);
             } else {
@@ -211,7 +212,7 @@ class ProjectInvitationController extends Controller
             $project->members()->attach($user->id, [
                 'role' => $role,
                 'opened_at' => null,
-                'color' => \App\Services\CalendarService::assignMemberColor($project->project_id),
+                'color' => CalendarService::assignMemberColor($project->project_id),
             ]);
 
             $roomService->addMemberToGroupRoom($project, $user, $role);

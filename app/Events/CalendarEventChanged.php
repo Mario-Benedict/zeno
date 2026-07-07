@@ -13,8 +13,6 @@ class CalendarEventChanged implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * @param  string  $projectId
-     * @param  array  $participantIds
      * @param  string  $action  'created', 'updated', 'deleted'
      */
     public function __construct(

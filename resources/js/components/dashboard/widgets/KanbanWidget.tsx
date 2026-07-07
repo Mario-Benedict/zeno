@@ -44,9 +44,7 @@ export const KanbanWidget = ({ kanbanBoards }: Props) => {
 
     return boards.filter((board) =>
       board.cards?.some((card) =>
-        (card.detail?.kanban_board_card_title ?? '')
-          .toLowerCase()
-          .includes(query),
+        card.kanban_board_card_title.toLowerCase().includes(query),
       ),
     );
   }, [boards, searchQuery]);
@@ -58,14 +56,11 @@ export const KanbanWidget = ({ kanbanBoards }: Props) => {
       prev.map((board) => ({
         ...board,
         cards: board.cards?.map((card) => {
-          if (card.kanban_board_card_id !== cardId || !card.detail) {
+          if (card.kanban_board_card_id !== cardId) {
             return card;
           }
-          newValue = !card.detail.is_completed;
-          return {
-            ...card,
-            detail: { ...card.detail, is_completed: newValue },
-          };
+          newValue = !card.is_completed;
+          return { ...card, is_completed: newValue };
         }),
       })),
     );

@@ -65,7 +65,7 @@ class CalendarController extends Controller
 
         $viewerId = Auth::id();
         $userIds = $request->input('users', []);
-        
+
         $start = Carbon::parse($request->input('start'))->utc();
         $end = Carbon::parse($request->input('end'))->utc();
 

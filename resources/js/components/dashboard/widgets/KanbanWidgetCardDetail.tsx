@@ -31,11 +31,8 @@ export const KanbanWidgetCardDetail = ({
   onClose,
   onToggleDone,
 }: Props) => {
-  const detail = card.detail;
-  if (!detail) return null;
-
-  const startDate = detail.dates?.kanban_board_card_start_date;
-  const dueDate = detail.dates?.kanban_board_card_due_date;
+  const startDate = card.kanban_board_card_start_date;
+  const dueDate = card.kanban_board_card_due_date;
 
   return (
     <div
@@ -50,26 +47,24 @@ export const KanbanWidgetCardDetail = ({
           <button
             type="button"
             onClick={() => onToggleDone(card.kanban_board_card_id)}
-            aria-label={
-              detail.is_completed ? 'Mark as not done' : 'Mark as done'
-            }
+            aria-label={card.is_completed ? 'Mark as not done' : 'Mark as done'}
             className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-              detail.is_completed
+              card.is_completed
                 ? 'border-accent-blue bg-accent-blue'
                 : 'border-dark-secondary hover:border-dark-primary'
             }`}
           >
-            {detail.is_completed && (
+            {card.is_completed && (
               <CheckIcon className="h-2 w-2 text-dark-primary" />
             )}
           </button>
 
           <p
             className={`flex-1 text-small leading-snug font-semibold ${
-              detail.is_completed ? 'text-white/40 line-through' : 'text-white'
+              card.is_completed ? 'text-white/40 line-through' : 'text-white'
             }`}
           >
-            {detail.kanban_board_card_title}
+            {card.kanban_board_card_title}
           </p>
 
           <button
@@ -83,30 +78,28 @@ export const KanbanWidgetCardDetail = ({
         </div>
 
         {/* Labels */}
-        {!!detail.labels?.length && (
+        {!!card.labels?.length && (
           <div className="mb-3 flex flex-wrap gap-1.5">
-            {detail.labels.map((label) =>
-              label.color ? (
-                <span
-                  key={label.card_label_id}
-                  className="rounded-full px-2 py-0.5 text-micro font-semibold"
-                  style={{
-                    backgroundColor: label.color.card_label_color_hex,
-                    color: getContrastColor(label.color.card_label_color_hex),
-                  }}
-                >
-                  {label.card_label_name}
-                </span>
-              ) : null,
-            )}
+            {card.labels.map((label) => (
+              <span
+                key={label.card_label_id}
+                className="rounded-full px-2 py-0.5 text-micro font-semibold"
+                style={{
+                  backgroundColor: label.card_label_color_hex,
+                  color: getContrastColor(label.card_label_color_hex),
+                }}
+              >
+                {label.card_label_name}
+              </span>
+            ))}
           </div>
         )}
 
         {/* Members */}
-        {!!detail.members?.length && (
+        {!!card.members?.length && (
           <div className="mb-3 flex items-center gap-2">
             <div className="flex -space-x-1.5">
-              {detail.members.map((member, i) => (
+              {card.members.map((member, i) => (
                 <div
                   key={member.id}
                   title={member.name}
@@ -120,7 +113,7 @@ export const KanbanWidgetCardDetail = ({
               ))}
             </div>
             <span className="text-micro text-white/40">
-              {detail.members.map((m) => m.name).join(', ')}
+              {card.members.map((m) => m.name).join(', ')}
             </span>
           </div>
         )}
@@ -144,15 +137,15 @@ export const KanbanWidgetCardDetail = ({
         )}
 
         {/* Description */}
-        {detail.kanban_board_card_description && (
+        {card.kanban_board_card_description && (
           <p className="mb-3 text-xsmall whitespace-pre-wrap text-white/60">
-            {detail.kanban_board_card_description}
+            {card.kanban_board_card_description}
           </p>
         )}
 
         {/* Checklists */}
-        {!!detail.checklists?.length &&
-          detail.checklists.map((checklist) => {
+        {!!card.checklists?.length &&
+          card.checklists.map((checklist) => {
             const progress = calculateChecklistProgress([checklist]);
 
             return (
@@ -217,14 +210,14 @@ export const KanbanWidgetCardDetail = ({
           })}
 
         {/* Attachments */}
-        {!!detail.attachments?.length && (
+        {!!card.attachments?.length && (
           <div className="mb-3">
             <p className="mb-1.5 flex items-center gap-1 text-micro text-white/40">
               <PaperclipIcon className="h-3 w-3" />
-              Attachments ({detail.attachments.length})
+              Attachments ({card.attachments.length})
             </p>
             <div className="space-y-1">
-              {detail.attachments.map((att) => (
+              {card.attachments.map((att) => (
                 <p
                   key={att.kanban_board_card_attachment_id}
                   className="truncate rounded-lg bg-dark-surface-3 px-2.5 py-1.5 text-xsmall text-white/60"
@@ -238,14 +231,14 @@ export const KanbanWidgetCardDetail = ({
         )}
 
         {/* Comments */}
-        {!!detail.comments?.length && (
+        {!!card.comments?.length && (
           <div>
             <p className="mb-1.5 flex items-center gap-1 text-micro text-white/40">
               <CommentIcon className="h-3 w-3" />
-              Comments ({detail.comments.length})
+              Comments ({card.comments.length})
             </p>
             <div className="space-y-2">
-              {detail.comments.map((comment) => (
+              {card.comments.map((comment) => (
                 <div
                   key={comment.kanban_board_card_comment_id}
                   className="rounded-lg bg-dark-surface-3 px-2.5 py-1.5"

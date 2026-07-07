@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -35,7 +36,7 @@ return new class extends Migration
         });
 
         // Seed existing memberships with random unique-per-project colors.
-        $rows = \Illuminate\Support\Facades\DB::table('project_user')
+        $rows = DB::table('project_user')
             ->orderBy('project_id')
             ->get(['project_id', 'user_id']);
 
@@ -48,7 +49,7 @@ return new class extends Migration
             foreach ($members as $i => $member) {
                 $color = $available[$i % count($available)];
 
-                \Illuminate\Support\Facades\DB::table('project_user')
+                DB::table('project_user')
                     ->where('project_id', $projectId)
                     ->where('user_id', $member->user_id)
                     ->update(['color' => $color]);
