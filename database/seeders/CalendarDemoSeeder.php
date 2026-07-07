@@ -27,17 +27,17 @@ class CalendarDemoSeeder extends Seeder
      * the reference mockup and are drawn from tailwind accent.*.light tokens.
      */
     private const MEMBERS = [
-        'Mario'  => ['mario@zeno.test',  '#D7CCC8'],
-        'Kevin'  => ['kevin@zeno.test',  '#F8BBD0'],
+        'Mario' => ['mario@zeno.test',  '#D7CCC8'],
+        'Kevin' => ['kevin@zeno.test',  '#F8BBD0'],
         'Rachma' => ['rachma@zeno.test', '#FFD1A1'],
-        'Evan'   => ['evan@zeno.test',   '#FFF0B3'],
-        'Abel'   => ['abel@zeno.test',   '#DCEDC8'],
-        'Jin'    => ['jin@zeno.test',    '#B3E5FC'],
+        'Evan' => ['evan@zeno.test',   '#FFF0B3'],
+        'Abel' => ['abel@zeno.test',   '#DCEDC8'],
+        'Jin' => ['jin@zeno.test',    '#B3E5FC'],
         'Kazuya' => ['kazuya@zeno.test', '#C5CAE9'],
         'Xiaoyu' => ['xiaoyu@zeno.test', '#E1BEE7'],
-        'Alisa'  => ['alisa@zeno.test',  '#F8BBD0'],
-        'Eddy'   => ['eddy@zeno.test',   '#E0E0E0'],
-        'Raven'  => ['raven@zeno.test',  '#B2DFDB'],
+        'Alisa' => ['alisa@zeno.test',  '#F8BBD0'],
+        'Eddy' => ['eddy@zeno.test',   '#E0E0E0'],
+        'Raven' => ['raven@zeno.test',  '#B2DFDB'],
         'Victor' => ['victor@zeno.test', '#D7CCC8'],
     ];
 
@@ -56,6 +56,7 @@ class CalendarDemoSeeder extends Seeder
                 $existing = User::where('email', self::REAL_ABEL_EMAIL)->first();
                 if ($existing) {
                     $users[$name] = $existing;
+
                     continue;
                 }
             }
@@ -182,7 +183,7 @@ class CalendarDemoSeeder extends Seeder
         Carbon $end,
         string $recurrence = 'none',
     ): CalendarEvent {
-        $event = new CalendarEvent();
+        $event = new CalendarEvent;
         $event->id = Str::uuid()->toString();
         $event->project_id = $project->project_id;
         $event->title = $title;

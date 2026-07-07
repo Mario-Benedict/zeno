@@ -76,16 +76,11 @@ class DashboardController extends Controller
             'kanbanBoards.cards' => function ($query) {
                 $query->orderBy('position', 'asc')
                     ->with([
-                        'detail' => function ($q) {
-                            $q->with([
-                                'labels.color',
-                                'members',
-                                'checklists.items',
-                                'dates',
-                                'attachments',
-                                'comments.user',
-                            ]);
-                        },
+                        'labels',
+                        'members',
+                        'checklists.items',
+                        'attachments',
+                        'comments.user',
                     ]);
             },
         ]);

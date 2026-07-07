@@ -60,6 +60,8 @@ class Project extends Model
     public function calendarEvents(): HasMany
     {
         return $this->hasMany(CalendarEvent::class, 'project_id', 'project_id');
+    }
+
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class, 'project_id', 'project_id');

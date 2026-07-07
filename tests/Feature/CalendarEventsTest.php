@@ -25,7 +25,7 @@ function seedCalendarScenario(): array
     $atlas->members()->attach($mario->id, ['role' => 'OWNER', 'color' => '#D7CCC8']);
 
     $start = CarbonImmutable::now('UTC')->addDay()->setTime(9, 0);
-    $secret = new CalendarEvent();
+    $secret = new CalendarEvent;
     $secret->project_id = $atlas->project_id;
     $secret->title = 'Review Kontrak Klien X';
     $secret->description = 'Top secret negotiation';

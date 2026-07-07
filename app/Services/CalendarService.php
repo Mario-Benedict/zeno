@@ -6,7 +6,6 @@ use App\Models\CalendarEvent;
 use App\Models\Project;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -46,7 +45,7 @@ class CalendarService
      * @param  array  $userIds  Members whose events to show
      * @param  Carbon  $rangeStart  Query window start (UTC)
      * @param  Carbon  $rangeEnd  Query window end (UTC)
-     * @return array  Array of event data (full detail + classified)
+     * @return array Array of event data (full detail + classified)
      */
     public function getEventsForView(
         string $projectId,
@@ -122,30 +121,30 @@ class CalendarService
      * For events where the viewer is a participant, return full details instead.
      */
     private function getClassifiedEvents(
-      string $projectId,
-      int $viewerId,
-      array $userIds,
-      Carbon $rangeStart,
-      Carbon $rangeEnd
-  ): array {
-      // Get events from OTHER projects where any of the target users participate.
-      // Same weekly-recurrence handling as getProjectEvents() — see comment there.
-      $events = CalendarEvent::where('project_id', '!=', $projectId)
-          ->where(function ($q) use ($rangeStart, $rangeEnd) {
-              $q->where(function ($sub) use ($rangeStart, $rangeEnd) {
-                  $sub->where('recurrence', '!=', 'weekly')
-                      ->where('start_time', '<', $rangeEnd)
-                      ->where('end_time', '>', $rangeStart);
-              })->orWhere(function ($sub) use ($rangeEnd) {
-                  $sub->where('recurrence', 'weekly')
-                      ->where('start_time', '<', $rangeEnd);
-              });
-          })
-          ->whereHas('participants', function ($q) use ($userIds) {
-              $q->whereIn('user_id', $userIds);
-          })
-          ->with(['participants:id,name'])
-          ->get();
+        string $projectId,
+        int $viewerId,
+        array $userIds,
+        Carbon $rangeStart,
+        Carbon $rangeEnd
+    ): array {
+        // Get events from OTHER projects where any of the target users participate.
+        // Same weekly-recurrence handling as getProjectEvents() — see comment there.
+        $events = CalendarEvent::where('project_id', '!=', $projectId)
+            ->where(function ($q) use ($rangeStart, $rangeEnd) {
+                $q->where(function ($sub) use ($rangeStart, $rangeEnd) {
+                    $sub->where('recurrence', '!=', 'weekly')
+                        ->where('start_time', '<', $rangeEnd)
+                        ->where('end_time', '>', $rangeStart);
+                })->orWhere(function ($sub) use ($rangeEnd) {
+                    $sub->where('recurrence', 'weekly')
+                        ->where('start_time', '<', $rangeEnd);
+                });
+            })
+            ->whereHas('participants', function ($q) use ($userIds) {
+                $q->whereIn('user_id', $userIds);
+            })
+            ->with(['participants:id,name'])
+            ->get();
 
         $result = [];
 
@@ -203,7 +202,7 @@ class CalendarService
     private function formatClassifiedEvent(CalendarEvent $event): array
     {
         return [
-            'id' => 'classified-' . $event->id,
+            'id' => 'classified-'.$event->id,
             'start_time' => $event->start_time->toIso8601String(),
             'end_time' => $event->end_time->toIso8601String(),
             'participants' => $event->participants->map(fn ($u) => [
@@ -241,7 +240,7 @@ class CalendarService
 
             if ($occEnd->gt($rangeStart) && $current->lt($effectiveEnd) && ! in_array($occurrenceDate, $excludedDates, true)) {
                 $occ = $this->formatFullEvent($event);
-                $occ['id'] = $event->id . '-' . $current->format('Y-m-d');
+                $occ['id'] = $event->id.'-'.$current->format('Y-m-d');
                 $occ['original_event_id'] = $event->id;
                 $occ['start_time'] = $current->toIso8601String();
                 $occ['end_time'] = $occEnd->toIso8601String();
@@ -282,7 +281,7 @@ class CalendarService
 
             if ($occEnd->gt($rangeStart) && $current->lt($effectiveEnd) && ! in_array($occurrenceDate, $excludedDates, true)) {
                 $occ = $this->formatClassifiedEvent($event);
-                $occ['id'] = 'classified-' . $event->id . '-' . $current->format('Y-m-d');
+                $occ['id'] = 'classified-'.$event->id.'-'.$current->format('Y-m-d');
                 $occ['start_time'] = $current->toIso8601String();
                 $occ['end_time'] = $occEnd->toIso8601String();
                 $occurrences[] = $occ;
@@ -304,7 +303,7 @@ class CalendarService
         $startTime = Carbon::parse($data['start_time'])->utc();
         $endTime = Carbon::parse($data['end_time'])->utc();
 
-        $event = new CalendarEvent();
+        $event = new CalendarEvent;
         $event->id = Str::uuid()->toString();
         $event->project_id = $data['project_id'];
         $event->title = $data['title'];

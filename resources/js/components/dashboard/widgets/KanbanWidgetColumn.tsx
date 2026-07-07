@@ -21,9 +21,7 @@ export const KanbanWidgetColumn = ({
     if (!query) return board.cards;
 
     return board.cards.filter((card) =>
-      (card.detail?.kanban_board_card_title ?? '')
-        .toLowerCase()
-        .includes(query),
+      card.kanban_board_card_title.toLowerCase().includes(query),
     );
   }, [board.cards, searchQuery]);
 

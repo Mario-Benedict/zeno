@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Services\AccountSessionService;
+use App\Services\CalendarService;
 use App\Services\ChatRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -72,7 +73,7 @@ class ProjectController extends Controller
         auth()->user()->projects()->attach($project->project_id, [
             'role' => 'OWNER',
             'opened_at' => now(),
-            'color' => \App\Services\CalendarService::assignMemberColor($project->project_id),
+            'color' => CalendarService::assignMemberColor($project->project_id),
         ]);
 
         // Auto-create group chat room for the project
