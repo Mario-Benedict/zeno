@@ -4,6 +4,7 @@ import { projectPath } from '@/lib/accountRoutes';
 import BoardIcon from '@public/icons/large/board.svg';
 import CalendarIcon from '@public/icons/large/calendar.svg';
 import DashboardIcon from '@public/icons/large/dashboard.svg';
+import TimelineIcon from '@public/icons/large/timeline.svg';
 
 interface NavItem {
   name: string;
@@ -105,6 +106,11 @@ const buildNavItems = (
     name: 'Board',
     href: projectPath(accountIndex, projectSlug, '/kanban'),
     icon: BoardIcon,
+  },
+  {
+    name: 'Timeline',
+    href: projectPath(accountIndex, projectSlug, '/timeline'),
+    icon: TimelineIcon,
   },
   {
     name: 'Calendar',

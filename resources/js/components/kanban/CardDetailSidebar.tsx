@@ -1,4 +1,5 @@
 import { DatePicker } from '@/components/shared/DatePicker';
+import { TimePicker } from '@/components/shared/TimePicker';
 import type {
   KanbanBoardCardDetail,
   CardLabel,
@@ -54,6 +55,16 @@ export const CardDetailSidebar = ({
   labels,
   onToggleMember,
 }: CardDetailSidebarProps) => {
+  const startDt = detail.dates?.kanban_board_card_start_date ?? null;
+  const dueDt = detail.dates?.kanban_board_card_due_date ?? null;
+
+  // Dates are stored as timestamps: the picker edits the calendar day and the
+  // time input edits the wall-clock time, recombined into one datetime string.
+  const datePart = (dt: string | null) => (dt ? dt.slice(0, 10) : null);
+  const timePart = (dt: string | null) => (dt ? dt.slice(11, 16) : '');
+  const combine = (date: string | null, time: string) =>
+    date ? `${date}T${time || '00:00'}` : '';
+
   return (
     <div className="scrollbar-app w-52 shrink-0 space-y-4 overflow-y-auto border-l border-dark-border px-4 py-4">
       {/* Dates */}
@@ -61,26 +72,58 @@ export const CardDetailSidebar = ({
         <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
           Dates
         </p>
-        <div className="space-y-2">
-          <DatePicker
-            label="Start date"
-            value={
-              detail.dates?.kanban_board_card_start_date?.slice(0, 10) || null
-            }
-            onChange={(v) => onUpdateDates('kanban_board_card_start_date', v)}
-            onClear={() => onUpdateDates('kanban_board_card_start_date', '')}
-            placeholder="Set start date"
-          />
-          <DatePicker
-            label="Due date"
-            value={
-              detail.dates?.kanban_board_card_due_date?.slice(0, 10) || null
-            }
-            onChange={(v) => onUpdateDates('kanban_board_card_due_date', v)}
-            onClear={() => onUpdateDates('kanban_board_card_due_date', '')}
-            placeholder="Set due date"
-            highlightOverdue
-          />
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <DatePicker
+              label="Start date"
+              value={datePart(startDt)}
+              onChange={(v) =>
+                onUpdateDates(
+                  'kanban_board_card_start_date',
+                  combine(v, timePart(startDt)),
+                )
+              }
+              onClear={() => onUpdateDates('kanban_board_card_start_date', '')}
+              placeholder="Set start date"
+            />
+            <TimePicker
+              ariaLabel="Start time"
+              value={timePart(startDt) || null}
+              disabled={!startDt}
+              onChange={(t) =>
+                onUpdateDates(
+                  'kanban_board_card_start_date',
+                  combine(datePart(startDt), t),
+                )
+              }
+            />
+          </div>
+          <div className="space-y-1.5">
+            <DatePicker
+              label="Due date"
+              value={datePart(dueDt)}
+              onChange={(v) =>
+                onUpdateDates(
+                  'kanban_board_card_due_date',
+                  combine(v, timePart(dueDt)),
+                )
+              }
+              onClear={() => onUpdateDates('kanban_board_card_due_date', '')}
+              placeholder="Set due date"
+              highlightOverdue
+            />
+            <TimePicker
+              ariaLabel="Due time"
+              value={timePart(dueDt) || null}
+              disabled={!dueDt}
+              onChange={(t) =>
+                onUpdateDates(
+                  'kanban_board_card_due_date',
+                  combine(datePart(dueDt), t),
+                )
+              }
+            />
+          </div>
         </div>
       </div>
 
