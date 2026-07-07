@@ -10,8 +10,7 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'card_label_project_id',
-    'card_label_category_id',
-    'card_label_color_id',
+    'card_label_color_hex',
     'card_label_name',
 ])]
 class CardLabel extends Model
@@ -36,23 +35,13 @@ class CardLabel extends Model
         return $this->belongsTo(Project::class, 'card_label_project_id', 'project_id');
     }
 
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(CardLabelCategory::class, 'card_label_category_id', 'card_label_category_id');
-    }
-
-    public function color(): BelongsTo
-    {
-        return $this->belongsTo(CardLabelColor::class, 'card_label_color_id', 'card_label_color_id');
-    }
-
-    public function kanbanBoardCardDetails(): BelongsToMany
+    public function kanbanBoardCards(): BelongsToMany
     {
         return $this->belongsToMany(
-            KanbanBoardCardDetail::class,
+            KanbanBoardCard::class,
             'kanban_board_card_labels',
             'kanban_board_card_label_id',
-            'kanban_board_card_detail_id'
+            'kanban_board_card_id'
         );
     }
 }

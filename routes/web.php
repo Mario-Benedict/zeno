@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\TwoFactorSetupController;
+use App\Http\Controllers\PomodoroSettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectInvitationController;
@@ -24,6 +25,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::inertia('account', 'account/show')->name('account.show');
             Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+            Route::patch('profile/pomodoro-settings', [PomodoroSettingsController::class, 'update'])
+                ->name('pomodoro.settings.update');
 
             Route::prefix('p/{project:project_slug}')
                 ->middleware('project.member')
@@ -45,6 +48,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         });
 
                         require __DIR__.'/kanban.php';
+                        require __DIR__.'/calendar.php';
+
+                        require __DIR__.'/timeline.php';
 
                         Route::middleware('project.role:OWNER,ADMIN')->group(function () {
                             Route::post('/invitations', [ProjectInvitationController::class, 'store'])
@@ -63,11 +69,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         });
                     });
 
+                    require __DIR__.'/dashboard.php';
+
                     require __DIR__.'/chat.php';
 
                     require __DIR__.'/llm-chat.php';
 
                     require __DIR__.'/notes.php';
+
+                    require __DIR__.'/reminders.php';
                 });
         });
 

@@ -64,8 +64,7 @@ export const AddCardModal = ({
               <div className="flex flex-wrap gap-2">
                 {cardLabels.map((label) => {
                   const active = selectedLabelIds.includes(label.card_label_id);
-                  const hexColor =
-                    label.color?.card_label_color_hex || '#7B7B7B';
+                  const hexColor = label.card_label_color_hex || '#7B7B7B';
 
                   return (
                     <button

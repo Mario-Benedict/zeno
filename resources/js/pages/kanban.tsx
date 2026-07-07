@@ -152,16 +152,13 @@ export default function Kanban({
     if (!board) return;
 
     const card = board.cards?.find((c) => c.kanban_board_card_id === cardId);
-    if (!card || !card.detail) return;
+    if (!card) return;
 
     // Calculate new completion state
-    const newValue = !card.detail.is_completed;
+    const newValue = !card.is_completed;
 
-    // Create updated card with new detail
-    const updatedCard: KanbanBoardCard = {
-      ...card,
-      detail: { ...card.detail, is_completed: newValue },
-    };
+    // Create updated card with new completion state
+    const updatedCard: KanbanBoardCard = { ...card, is_completed: newValue };
 
     // Update boards state
     setBoards((prevBoards) =>
@@ -201,11 +198,10 @@ export default function Kanban({
     title: string,
     labelIds: string[],
   ) => {
-    // Pre-generate the UUIDs on the client so we can optimistically render
+    // Pre-generate the UUID on the client so we can optimistically render
     // the new card before the server round-trip completes — the server
-    // will persist with these exact IDs.
+    // will persist with this exact ID.
     const cardId = crypto.randomUUID();
-    const detailId = crypto.randomUUID();
     const now = new Date().toISOString();
 
     const selectedLabels = (cardLabels || []).filter((l) =>
@@ -215,22 +211,18 @@ export default function Kanban({
     const optimisticCard: KanbanBoardCard = {
       kanban_board_card_id: cardId,
       kanban_board_id: boardId,
+      kanban_board_card_title: title,
+      kanban_board_card_description: null,
+      is_completed: false,
+      kanban_board_card_start_date: null,
+      kanban_board_card_due_date: null,
+      labels: selectedLabels,
+      members: [],
+      checklists: [],
+      attachments: [],
+      comments: [],
       created_at: now,
       updated_at: now,
-      detail: {
-        kanban_board_card_detail_id: detailId,
-        kanban_board_card_id: cardId,
-        kanban_board_card_title: title,
-        kanban_board_card_description: null,
-        is_completed: false,
-        labels: selectedLabels,
-        members: [],
-        checklists: [],
-        attachments: [],
-        comments: [],
-        created_at: now,
-        updated_at: now,
-      },
     };
 
     setBoards((prev) =>
@@ -250,7 +242,6 @@ export default function Kanban({
       }),
       {
         kanban_board_card_id: cardId,
-        kanban_board_card_detail_id: detailId,
         title,
         label_ids: labelIds,
       },
@@ -464,7 +455,7 @@ export default function Kanban({
                     .filter((board) => {
                       if (!searchQuery.trim()) return true;
                       return board.cards?.some((card) =>
-                        card.detail?.kanban_board_card_title
+                        card.kanban_board_card_title
                           .toLowerCase()
                           .includes(searchQuery.toLowerCase()),
                       );

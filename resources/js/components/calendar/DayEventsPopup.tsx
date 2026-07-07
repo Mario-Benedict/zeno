@@ -1,0 +1,151 @@
+import { useEffect, useRef } from 'react';
+import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
+
+interface DayEventsPopupProps {
+  date: Date;
+  events: AnyCalendarEvent[];
+  members: CalendarMember[];
+  onClose: () => void;
+  onEventClick: (event: AnyCalendarEvent) => void;
+}
+
+export const DayEventsPopup = ({
+  date,
+  events,
+  members,
+  onClose,
+  onEventClick,
+}: DayEventsPopupProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onClose]);
+
+  const displayDate = date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'low':
+        return 'bg-status-success';
+      case 'high':
+        return 'bg-status-error';
+      default:
+        return 'bg-status-warning';
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'low':
+        return 'Low';
+      case 'high':
+        return 'High';
+      default:
+        return 'Mid';
+    }
+  };
+
+  const getEventOwnerColor = (ev: AnyCalendarEvent) => {
+    if (!ev.participants || ev.participants.length === 0) return '#7B7B7B';
+    const owner = members.find((m) => m.id === ev.participants[0].id);
+
+    return owner?.color || '#7B7B7B';
+  };
+
+  return (
+    <div
+      ref={ref}
+      className="absolute top-4 left-1/2 z-50 w-64 -translate-x-1/2 rounded-xl border border-dark-border bg-dark-surface-2 p-3 shadow-2xl"
+      onClick={(e) => e.stopPropagation()} // prevent clicking through to cell
+    >
+      <div className="mb-3 flex items-center justify-between border-b border-dark-border pb-2">
+        <h3 className="text-small font-semibold text-dark-primary">
+          {displayDate}
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-dark-secondary hover:text-dark-primary"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="flex max-h-[300px] scrollbar-thin scrollbar-thumb-dark-surface-3 scrollbar-track-transparent flex-col gap-1 overflow-y-auto pr-1">
+        {events.map((ev) => {
+          const startTime = new Date(ev.start_time).toLocaleTimeString(
+            'en-US',
+            {
+              hour: 'numeric',
+              minute: '2-digit',
+            },
+          );
+
+          if (ev.is_classified) {
+            return (
+              <div
+                key={ev.id}
+                onClick={() => {
+                  onClose();
+                  onEventClick(ev);
+                }}
+                className="flex cursor-pointer items-center gap-2 rounded-lg bg-dark-surface-3 px-2 py-1.5 hover:bg-dark-border"
+              >
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-dark-surface-1 text-[8px] font-bold text-dark-secondary">
+                  {ev.participants[0]?.name.charAt(0)}
+                </div>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="truncate text-xsmall font-medium text-dark-secondary">
+                    CLASSIFIED
+                  </span>
+                  <span className="text-[10px] text-dark-secondary/70">
+                    {startTime} · {ev.participants[0]?.name}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={ev.id}
+              onClick={() => {
+                onClose();
+                onEventClick(ev);
+              }}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 ring-1 ring-white/5 transition-colors hover:opacity-90"
+              style={{ backgroundColor: `${getEventOwnerColor(ev)}15` }}
+            >
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${getPriorityColor(ev.priority)}`}
+              >
+                <span className="h-2 w-2 rounded-full bg-white/90" />
+              </span>
+              <div className="flex flex-col overflow-hidden">
+                <span className="truncate text-xsmall font-medium text-dark-primary">
+                  {ev.title}
+                </span>
+                <span className="flex items-center gap-2 text-[10px] text-dark-secondary">
+                  <span>{startTime}</span>
+                  <span className="rounded-full bg-dark-surface-1/70 px-1.5 py-0.5 text-[8px] font-semibold tracking-wide text-dark-primary uppercase">
+                    {getPriorityLabel(ev.priority)}
+                  </span>
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};

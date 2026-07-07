@@ -476,6 +476,15 @@ html.light-mode input:-webkit-autofill:focus {
 .prose-note ::selection {
   background-color: color-mix(in srgb, #3949ab 30%, transparent);
 }
+/* The dashboard notes widget renders this same `.prose-note` styling inside
+   a much smaller box (see NotesWidgetDetail.tsx) — drop the full editor's
+   450px min-height and scale text down to match the widget's compact scale
+   instead of forcing every widget slot to be at least that tall. */
+.notes-widget-detail .prose-note {
+  min-height: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
 
 /* ─── LLM Chat — Thinking indicator (three bouncing dots) ───────────────────
    Classic chat-app typing animation used by Gemini, ChatGPT, Claude, etc.
