@@ -151,6 +151,7 @@ class ProjectInvitationController extends Controller
                 $project->members()->attach($user->id, [
                     'role' => $role,
                     'opened_at' => now(),
+                    'color' => \App\Services\CalendarService::assignMemberColor($project->project_id),
                 ]);
                 $roomService->addMemberToGroupRoom($project, $user, $role);
             } else {
@@ -210,6 +211,7 @@ class ProjectInvitationController extends Controller
             $project->members()->attach($user->id, [
                 'role' => $role,
                 'opened_at' => null,
+                'color' => \App\Services\CalendarService::assignMemberColor($project->project_id),
             ]);
 
             $roomService->addMemberToGroupRoom($project, $user, $role);

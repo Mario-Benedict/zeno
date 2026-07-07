@@ -12,6 +12,12 @@ Broadcast::channel('chat.{roomId}', function (User $user, string $roomId) {
         ->exists();
 });
 
+Broadcast::channel('calendar.user.{userId}', function (User $user, int $userId) {
+    return $user->id === $userId;
+});
+
+Broadcast::channel('calendar.project.{projectId}', function (User $user, string $projectId) {
+    return $user->projects()->where('projects.project_id', $projectId)->exists();
 // ── Notes presence channel (real-time content sync) ──
 Broadcast::channel('note.{noteId}', function (User $user, string $noteId) {
     $note = Note::with('project')->where('note_id', $noteId)->first();

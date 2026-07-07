@@ -44,7 +44,7 @@ class Project extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id', 'user_id')
-            ->withPivot(['role', 'is_pinned', 'opened_at']);
+            ->withPivot(['role', 'is_pinned', 'opened_at', 'color']);
     }
 
     public function invitations(): HasMany
@@ -57,6 +57,9 @@ class Project extends Model
         return $this->hasMany(KanbanBoard::class, 'kanban_board_project_id', 'project_id');
     }
 
+    public function calendarEvents(): HasMany
+    {
+        return $this->hasMany(CalendarEvent::class, 'project_id', 'project_id');
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class, 'project_id', 'project_id');

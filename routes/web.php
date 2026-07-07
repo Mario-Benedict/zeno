@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         });
 
                         require __DIR__.'/kanban.php';
+                        require __DIR__.'/calendar.php';
 
                         Route::middleware('project.role:OWNER,ADMIN')->group(function () {
                             Route::post('/invitations', [ProjectInvitationController::class, 'store'])

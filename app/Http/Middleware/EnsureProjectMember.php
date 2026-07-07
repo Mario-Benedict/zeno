@@ -17,6 +17,10 @@ class EnsureProjectMember
         /** @var Project|null $project */
         $project = $request->route('project');
 
+        if (is_string($project)) {
+            $project = Project::where('project_slug', $project)->first();
+        }
+
         if (! $project instanceof Project) {
             abort(404);
         }
