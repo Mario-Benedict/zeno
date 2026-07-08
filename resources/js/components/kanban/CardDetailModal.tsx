@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import projects from '@/routes/projects';
 import type {
   KanbanBoardCard,
@@ -55,6 +56,7 @@ const CardDetailModal = ({
   onClose,
   onUpdate,
 }: CardDetailPanelProps) => {
+  const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
   const [localCard, setLocalCard] = useState<KanbanBoardCard>(card);
 
@@ -249,7 +251,7 @@ const CardDetailModal = ({
         onSuccess: () => router.reload({ only: ['cardLabels'] }),
         onError: (errors) => {
           console.error('Create label failed:', errors);
-          alert('Failed to create label.');
+          alert(t('kanban.failedToCreateLabel'));
         },
         onFinish: () => setSavingLabel(false),
       },
@@ -629,7 +631,7 @@ const CardDetailModal = ({
   const processFiles = async (files: FileList | File[]) => {
     for (const file of Array.from(files)) {
       if (file.size > 20 * 1024 * 1024) {
-        alert(`${file.name} is too large. Max 20 MB.`);
+        alert(t('kanban.fileTooLarge', { name: file.name }));
         continue;
       }
       setUploadingFile(true);
@@ -722,7 +724,7 @@ const CardDetailModal = ({
               <h2
                 className="line-clamp-2 cursor-pointer text-medium leading-snug font-bold text-dark-primary transition hover:text-dark-secondary"
                 onClick={() => setEditingTitle(true)}
-                title="Click to edit title"
+                title={t('kanban.clickToEditTitle')}
               >
                 {localCard.kanban_board_card_title}
               </h2>
@@ -732,7 +734,7 @@ const CardDetailModal = ({
           <button
             onClick={handleClose}
             className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/10 hover:text-white"
-            title="Close (Esc)"
+            title={t('kanban.closeEsc')}
           >
             <CloseIcon className="h-6 w-6" />
           </button>

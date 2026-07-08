@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
 import type { NoteListItem } from '@/types/notes';
@@ -10,6 +12,14 @@ import type { WidgetId } from './widgets';
 import { ChatWidget } from './widgets/ChatWidget';
 import { KanbanWidget } from './widgets/KanbanWidget';
 import { NotesWidget } from './widgets/NotesWidget';
+
+const TEMPLATE_NAME_KEYS: Record<TemplateId, TranslationKey> = {
+  '3a': 'dashboard.templateFocusName',
+  '4a': 'dashboard.templateGridName',
+  '4b': 'dashboard.templateOverviewName',
+  '5a': 'dashboard.templateCommandName',
+  '5b': 'dashboard.templateSpreadName',
+};
 
 interface KanbanWidgetData {
   kanbanBoards: KanbanBoard[];
@@ -62,23 +72,29 @@ const EmptySlot = ({
   onOpenPicker: () => void;
   onClosePicker: () => void;
   onSelect: (widgetId: WidgetId) => void;
-}) => (
-  <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-surface-3 bg-dark-surface-2 transition-colors hover:border-dark-secondary/40 hover:bg-dark-surface-3">
-    {pickerOpen ? (
-      <WidgetPicker onSelect={onSelect} onClose={onClosePicker} />
-    ) : (
-      <button
-        type="button"
-        onClick={onOpenPicker}
-        className="flex flex-col items-center gap-2 rounded-xl p-6 text-dark-secondary transition hover:text-dark-primary"
-        aria-label={`Add widget to slot ${index + 1}`}
-      >
-        <PlusIcon />
-        <span className="text-xsmall font-medium">Add widget</span>
-      </button>
-    )}
-  </div>
-);
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-surface-3 bg-dark-surface-2 transition-colors hover:border-dark-secondary/40 hover:bg-dark-surface-3">
+      {pickerOpen ? (
+        <WidgetPicker onSelect={onSelect} onClose={onClosePicker} />
+      ) : (
+        <button
+          type="button"
+          onClick={onOpenPicker}
+          className="flex flex-col items-center gap-2 rounded-xl p-6 text-dark-secondary transition hover:text-dark-primary"
+          aria-label={t('dashboard.addWidget', { index: index + 1 })}
+        >
+          <PlusIcon />
+          <span className="text-xsmall font-medium">
+            {t('dashboard.addWidgetLabel')}
+          </span>
+        </button>
+      )}
+    </div>
+  );
+};
 
 const renderWidget = (
   widgetId: WidgetId,
@@ -111,6 +127,7 @@ export const DashboardGrid = ({
 }: Props) => {
   const template = getTemplate(templateId);
   const [pickerOpenIndex, setPickerOpenIndex] = useState<number | null>(null);
+  const { t } = useTranslation();
 
   return (
     <div className="flex h-full flex-col gap-3 p-3">
@@ -118,10 +135,10 @@ export const DashboardGrid = ({
       <div className="flex shrink-0 items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-small font-semibold text-dark-primary">
-            Dashboard
+            {t('dashboard.title')}
           </span>
           <span className="rounded-full bg-dark-surface-3 px-2 py-0.5 text-xsmall text-dark-secondary">
-            {template.name}
+            {t(TEMPLATE_NAME_KEYS[template.id])}
           </span>
         </div>
 
@@ -130,7 +147,7 @@ export const DashboardGrid = ({
           onClick={onChangeLayout}
           className="rounded-lg px-3 py-1.5 text-xsmall font-medium text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
         >
-          Change layout
+          {t('dashboard.changeLayout')}
         </button>
       </div>
 
@@ -157,7 +174,7 @@ export const DashboardGrid = ({
                     type="button"
                     onClick={() => onAssignWidget(i, null)}
                     className="absolute top-2 right-2 z-10 rounded-lg bg-dark-surface-1/80 p-1.5 text-dark-secondary opacity-0 transition group-hover:opacity-100 hover:bg-dark-surface-3 hover:text-accent-red"
-                    aria-label="Remove widget"
+                    aria-label={t('dashboard.removeWidget')}
                   >
                     <CloseIcon className="h-3.5 w-3.5" />
                   </button>
@@ -166,7 +183,7 @@ export const DashboardGrid = ({
                 // Assigned but the server hasn't sent that widget's data back
                 // yet (it's only included once a slot actually references it).
                 <div className="flex h-full min-h-0 items-center justify-center rounded-xl bg-dark-surface-2 text-xsmall text-dark-secondary">
-                  Loading widget…
+                  {t('dashboard.loadingWidget')}
                 </div>
               ) : (
                 <EmptySlot

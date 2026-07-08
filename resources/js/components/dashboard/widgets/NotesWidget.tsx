@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteListItem } from '@/types/notes';
 import { NotesWidgetDetail } from './NotesWidgetDetail';
 import { NotesWidgetList } from './NotesWidgetList';
@@ -39,6 +40,7 @@ const persistNoteId = (key: string, noteId: string | null) => {
  */
 export const NotesWidget = ({ notes, slotIndex }: Props) => {
   const { project } = useProject();
+  const { t } = useTranslation();
   // Scoped per project + slot so switching projects or having more than one
   // notes widget on a dashboard don't stomp on each other's open note.
   const storageKey = `dashboard-notes-widget:${project.project_id}:${slotIndex}`;
@@ -91,8 +93,13 @@ export const NotesWidget = ({ notes, slotIndex }: Props) => {
       ) : (
         <>
           <WidgetSearchHeader
-            title="Notes"
-            countLabel={`${notes.length} note${notes.length === 1 ? '' : 's'}`}
+            title={t('dashboard.notesTitle')}
+            countLabel={t(
+              notes.length === 1
+                ? 'dashboard.noteCount'
+                : 'dashboard.noteCountPlural',
+              { count: notes.length },
+            )}
             searchOpen={searchOpen}
             query={searchQuery}
             onQueryChange={setSearchQuery}
@@ -101,8 +108,8 @@ export const NotesWidget = ({ notes, slotIndex }: Props) => {
               setSearchOpen(false);
               setSearchQuery('');
             }}
-            searchLabel="Search notes"
-            placeholder="Search notes…"
+            searchLabel={t('dashboard.searchNotes')}
+            placeholder={t('dashboard.searchNotesPlaceholder')}
           />
 
           <NotesWidgetList notes={filteredNotes} onSelectNote={selectNote} />

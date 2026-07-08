@@ -5,6 +5,7 @@ import LlmChatComposer from '@/components/llm-chat/LlmChatComposer';
 import LlmChatMessageList from '@/components/llm-chat/LlmChatMessageList';
 import LlmChatSidebar from '@/components/llm-chat/LlmChatSidebar';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
 import type { LlmMessage, LlmSession } from '@/types/llm-chat';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
+  const { t } = useTranslation();
   const { project, accountIndex } = useProject();
   const { data, setData, post, processing, reset } = useForm({ question: '' });
 
@@ -75,7 +77,9 @@ const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
 
   return (
     <>
-      <Head title={session?.llm_chat_session_name ?? 'LLM Chat'} />
+      <Head
+        title={session?.llm_chat_session_name ?? t('llmChat.defaultTitle')}
+      />
 
       <AppLayout project={project}>
         <div className="flex h-full w-full gap-2 overflow-hidden">
@@ -110,10 +114,10 @@ const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
             ) : (
               <div className="flex min-h-0 flex-1 flex-col items-center justify-center select-none">
                 <p className="mb-1 text-sm font-medium text-dark-secondary">
-                  Where should we start?
+                  {t('llmChat.whereShouldWeStart')}
                 </p>
                 <p className="text-4xl font-bold text-dark-primary">
-                  Ask me anything
+                  {t('llmChat.askMeAnything')}
                 </p>
               </div>
             )}

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import notes from '@/routes/notes';
 import type {
   NoteCollaboratorRole,
@@ -22,11 +23,6 @@ interface PendingInvite {
   user: NoteProjectUser;
   canEdit: boolean;
 }
-
-const ROLE_LABELS: Record<NoteCollaboratorRole, string> = {
-  Editor: 'Editor',
-  Viewer: 'Viewer',
-};
 
 const roleFromCanEdit = (canEdit: boolean): NoteCollaboratorRole =>
   canEdit ? 'Editor' : 'Viewer';
@@ -76,10 +72,12 @@ const RoleSelect = ({
   value,
   disabled,
   onChange,
+  roleLabels,
 }: {
   value: NoteCollaboratorRole;
   disabled?: boolean;
   onChange: (role: NoteCollaboratorRole) => void;
+  roleLabels: Record<NoteCollaboratorRole, string>;
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -103,7 +101,7 @@ const RoleSelect = ({
         aria-expanded={open}
         className="flex h-8 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {ROLE_LABELS[value]}
+        {roleLabels[value]}
         <span
           className={`text-dark-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
         >
@@ -133,7 +131,7 @@ const RoleSelect = ({
               <span
                 className={`h-1.5 w-1.5 shrink-0 rounded-full ${role === value ? 'bg-accent-blue' : ''}`}
               />
-              {ROLE_LABELS[role]}
+              {roleLabels[role]}
             </button>
           ))}
         </div>
@@ -149,12 +147,16 @@ const CollaboratorRow = ({
   role,
   onRoleChange,
   onRemove,
+  roleLabels,
+  removeLabel,
 }: {
   name: string;
   email: string;
   role: NoteCollaboratorRole;
   onRoleChange: (role: NoteCollaboratorRole) => void;
   onRemove: () => void;
+  roleLabels: Record<NoteCollaboratorRole, string>;
+  removeLabel: string;
 }) => (
   <div className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-white/[0.04]">
     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-blue text-xsmall font-bold text-white">
@@ -166,10 +168,10 @@ const CollaboratorRow = ({
       </p>
       <p className="truncate text-xsmall text-dark-secondary">{email}</p>
     </div>
-    <RoleSelect value={role} onChange={onRoleChange} />
+    <RoleSelect value={role} onChange={onRoleChange} roleLabels={roleLabels} />
     <button
       type="button"
-      aria-label={`Remove ${name}`}
+      aria-label={removeLabel}
       onClick={onRemove}
       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
     >
@@ -191,9 +193,15 @@ const ShareNoteDialog = ({
   onClose,
   onNoteUpdated,
 }: ShareNoteDialogProps): React.ReactElement => {
+  const { t } = useTranslation();
   const [pending, setPending] = useState<PendingInvite[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const roleLabels: Record<NoteCollaboratorRole, string> = {
+    Editor: t('notes.editorRole'),
+    Viewer: t('notes.viewerRole'),
+  };
 
   const excludeIds = [
     note.ownerId,
@@ -225,7 +233,7 @@ const ShareNoteDialog = ({
       onNoteUpdated(data.note);
       onClose();
     } catch {
-      setError('Could not share this note — try again.');
+      setError(t('notes.shareError'));
     } finally {
       setSubmitting(false);
     }
@@ -244,7 +252,7 @@ const ShareNoteDialog = ({
       );
       onNoteUpdated(data.note);
     } catch {
-      setError('Could not add that collaborator.');
+      setError(t('notes.addCollaboratorError'));
     }
   };
 
@@ -284,25 +292,29 @@ const ShareNoteDialog = ({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={note.isShared ? 'Manage access' : 'Share this note'}
+        aria-label={
+          note.isShared ? t('notes.manageAccess') : t('notes.shareThisNote')
+        }
         className="flex max-h-[88dvh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-dark-border bg-dark-surface-2 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-dark-border px-5">
           <div className="min-w-0">
             <h2 className="truncate text-small font-semibold text-dark-primary">
-              {note.isShared ? 'Manage access' : 'Share this note'}
+              {note.isShared
+                ? t('notes.manageAccess')
+                : t('notes.shareThisNote')}
             </h2>
             <p className="truncate text-xsmall text-dark-secondary">
               {note.isShared
-                ? 'Anyone added here can open this note.'
-                : 'Moves this note into everyone’s Shared section.'}
+                ? t('notes.manageAccessDescription')
+                : t('notes.shareThisNoteDescription')}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('notes.close')}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-white/[0.07] hover:text-dark-primary"
           >
             <CancelIcon />
@@ -346,6 +358,10 @@ const ShareNoteDialog = ({
                       prev.filter((p) => p.user.id !== user.id),
                     )
                   }
+                  roleLabels={roleLabels}
+                  removeLabel={t('notes.removeCollaborator', {
+                    name: user.name,
+                  })}
                 />
               ))}
 
@@ -360,6 +376,8 @@ const ShareNoteDialog = ({
                     void updateRole(c.id, role === 'Editor')
                   }
                   onRemove={() => void removeCollaborator(c.id)}
+                  roleLabels={roleLabels}
+                  removeLabel={t('notes.removeCollaborator', { name: c.name })}
                 />
               ))}
           </div>
@@ -371,7 +389,7 @@ const ShareNoteDialog = ({
             onClick={onClose}
             className="h-10 rounded-md border border-dark-border px-4 text-small font-semibold text-dark-primary transition-colors hover:bg-white/[0.07]"
           >
-            {note.isShared ? 'Done' : 'Cancel'}
+            {note.isShared ? t('notes.done') : t('notes.cancel')}
           </button>
           {!note.isShared && (
             <button
@@ -380,7 +398,7 @@ const ShareNoteDialog = ({
               disabled={submitting}
               className="h-10 rounded-md bg-dark-primary px-4 text-small font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {submitting ? 'Sharing…' : 'Share note'}
+              {submitting ? t('notes.sharing') : t('notes.shareNote')}
             </button>
           )}
         </div>

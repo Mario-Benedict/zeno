@@ -8,6 +8,7 @@ import NoteEditor from '@/components/notes/NoteEditor';
 import NotesSidebarPanel from '@/components/notes/NotesSidebarPanel';
 import ShareNoteDialog from '@/components/notes/ShareNoteDialog';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import notes from '@/routes/notes';
 import type { NoteDetail, NoteListItem, NotesPageProps } from '@/types/notes';
 
@@ -23,6 +24,7 @@ const NotesPage = ({
   projectUsers,
   currentUserId,
 }: NotesPageProps): React.ReactElement => {
+  const { t } = useTranslation();
   const { project, accountIndex } = useProject();
   const projectSlug = project.project_slug;
 
@@ -85,7 +87,7 @@ const NotesPage = ({
       const { data } = await axios.post<{ note: NoteDetail }>(
         notes.store.url({ accountIndex, project: projectSlug }),
         {
-          title: 'Untitled',
+          title: t('notes.untitled'),
           is_shared: isShared,
         },
       );
@@ -112,7 +114,7 @@ const NotesPage = ({
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-dark-surface-1 font-sans">
-      <Head title="Notes" />
+      <Head title={t('notes.title')} />
       <Header />
 
       <div className="flex min-h-0 flex-1">

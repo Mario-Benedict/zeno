@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import echo from '@/echo';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import chat from '@/routes/chat';
 import type { ChatMessage, ChatParticipant, ChatRoom } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
@@ -73,6 +74,7 @@ export const ChatWidgetConversation = ({
   onBack,
 }: Props) => {
   const { project, accountIndex } = useProject();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
@@ -175,7 +177,7 @@ export const ChatWidgetConversation = ({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back to chats"
+          aria-label={t('dashboard.backToChats')}
           className="rounded-lg p-1 text-white/50 transition hover:bg-white/10 hover:text-white"
         >
           <BackIcon className="h-4 w-4" />
@@ -190,10 +192,12 @@ export const ChatWidgetConversation = ({
         className="scrollbar-app flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-2"
       >
         {loading ? (
-          <p className="py-6 text-center text-xsmall text-white/30">Loading…</p>
+          <p className="py-6 text-center text-xsmall text-white/30">
+            {t('dashboard.loadingMessages')}
+          </p>
         ) : ordered.length === 0 ? (
           <p className="py-6 text-center text-xsmall text-white/30">
-            No messages yet. Say hi!
+            {t('dashboard.noMessagesYet')}
           </p>
         ) : (
           ordered.map((msg) => {
@@ -206,7 +210,7 @@ export const ChatWidgetConversation = ({
               >
                 {!isMine && room.type === 'group' && (
                   <span className="mb-0.5 px-1 text-micro text-white/30">
-                    {msg.sender?.name ?? 'Unknown'}
+                    {msg.sender?.name ?? t('dashboard.unknownSender')}
                   </span>
                 )}
                 <div
@@ -218,12 +222,16 @@ export const ChatWidgetConversation = ({
                 >
                   {msg.isDeleted ? (
                     <span className="text-white/50 italic">
-                      Message deleted
+                      {t('dashboard.messageDeleted')}
                     </span>
                   ) : msg.type === 'text' ? (
                     msg.body
                   ) : (
-                    `📎 ${msg.type === 'image' ? 'Image' : 'File'}`
+                    `📎 ${
+                      msg.type === 'image'
+                        ? t('dashboard.attachmentImage')
+                        : t('dashboard.attachmentFile')
+                    }`
                   )}
                 </div>
               </div>
@@ -242,14 +250,14 @@ export const ChatWidgetConversation = ({
               void handleSend();
             }
           }}
-          placeholder="Message…"
+          placeholder={t('dashboard.messagePlaceholder')}
           className="min-w-0 flex-1 rounded-full bg-dark-surface-3 px-3 py-1.5 text-xsmall text-white placeholder-white/30 focus:outline-none"
         />
         <button
           type="button"
           onClick={() => void handleSend()}
           disabled={!body.trim() || sending}
-          aria-label="Send message"
+          aria-label={t('dashboard.sendMessage')}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-blue text-white transition disabled:opacity-30"
         >
           <SendIcon />

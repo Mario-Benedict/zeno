@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CardLabel, KanbanBoard, KanbanUser } from '@/types/kanban';
 import type { TimelineFilters, TimelineSortKey } from '@/types/timeline';
 import FilterIcon from '@public/icons/large/filter.svg';
@@ -37,6 +38,7 @@ export const TimelineHeader = ({
   canAddTask,
   onAddTask,
 }: TimelineHeaderProps) => {
+  const { t } = useTranslation();
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +65,7 @@ export const TimelineHeader = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           type="text"
-          placeholder="Search"
+          placeholder={t('timeline.search')}
           className="w-64 rounded-full border-2 border-dark-surface-3 bg-dark-surface-2 px-4 py-2 pl-9 text-small font-semibold text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
         />
         <span className="absolute top-1/2 left-3 -translate-y-1/2 text-dark-secondary">
@@ -85,7 +87,7 @@ export const TimelineHeader = ({
             }`}
           >
             <FilterIcon className="h-4 w-4" />
-            <span>Filter</span>
+            <span>{t('timeline.filter')}</span>
             {activeFilterCount > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-blue px-1 text-micro font-bold text-white">
                 {activeFilterCount}
@@ -114,7 +116,7 @@ export const TimelineHeader = ({
             }`}
           >
             <SortIcon className="h-4 w-4" />
-            <span>Sort</span>
+            <span>{t('timeline.sort')}</span>
           </button>
           {openMenu === 'sort' && (
             <TimelineSortMenu sortKey={sortKey} onChange={onSortChange} />
@@ -125,11 +127,11 @@ export const TimelineHeader = ({
           type="button"
           onClick={onAddTask}
           disabled={!canAddTask}
-          title={canAddTask ? undefined : 'Create a board first'}
+          title={canAddTask ? undefined : t('timeline.createBoardFirst')}
           className="hover:bg-opacity-90 flex items-center gap-2 rounded-lg bg-accent-blue px-3 py-2 text-small font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
         >
           <PlusIcon className="h-4 w-4" />
-          <span>Add new task</span>
+          <span>{t('timeline.addNewTask')}</span>
         </button>
       </div>
     </header>

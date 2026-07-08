@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
 import { ChatWidgetConversation } from './ChatWidgetConversation';
@@ -42,6 +43,7 @@ const persistRoomId = (key: string, roomId: string | null) => {
  */
 export const ChatWidget = ({ rooms, currentUser, slotIndex }: Props) => {
   const { project } = useProject();
+  const { t } = useTranslation();
   // Scoped per project + slot so switching projects or having more than one
   // chat widget on a dashboard don't stomp on each other's open conversation.
   const storageKey = `dashboard-chat-widget:${project.project_id}:${slotIndex}`;
@@ -93,8 +95,13 @@ export const ChatWidget = ({ rooms, currentUser, slotIndex }: Props) => {
       ) : (
         <>
           <WidgetSearchHeader
-            title="Chat"
-            countLabel={`${rooms.length} chat${rooms.length === 1 ? '' : 's'}`}
+            title={t('dashboard.chatTitle')}
+            countLabel={t(
+              rooms.length === 1
+                ? 'dashboard.chatCount'
+                : 'dashboard.chatCountPlural',
+              { count: rooms.length },
+            )}
             searchOpen={searchOpen}
             query={searchQuery}
             onQueryChange={setSearchQuery}
@@ -103,8 +110,8 @@ export const ChatWidget = ({ rooms, currentUser, slotIndex }: Props) => {
               setSearchOpen(false);
               setSearchQuery('');
             }}
-            searchLabel="Search chats"
-            placeholder="Search chats…"
+            searchLabel={t('dashboard.searchChats')}
+            placeholder={t('dashboard.searchChatsPlaceholder')}
           />
 
           <ChatWidgetRoomList

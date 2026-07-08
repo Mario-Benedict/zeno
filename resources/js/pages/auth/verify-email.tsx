@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { SyntheticEvent } from 'react';
 import Button from '@/components/shared/Button';
 import OtpInput from '@/components/shared/OtpInput';
+import { useTranslation } from '@/hooks/useTranslation';
 import AuthLayout from '@/layouts/AuthLayout';
 
 interface VerifyEmailProps {
@@ -10,6 +11,7 @@ interface VerifyEmailProps {
 }
 
 const VerifyEmail = ({ status }: VerifyEmailProps) => {
+  const { t } = useTranslation();
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const { post, processing, errors, setData } = useForm({ code: '' });
   const { post: resendPost, processing: resending } = useForm({});
@@ -33,14 +35,14 @@ const VerifyEmail = ({ status }: VerifyEmailProps) => {
 
   return (
     <AuthLayout
-      title="Verify Your Email"
-      description="Enter 6-digit code from email to verify your identity."
+      title={t('auth.verifyEmail.title')}
+      description={t('auth.verifyEmail.description')}
     >
-      <Head title="Email Verification" />
+      <Head title={t('auth.verifyEmail.headTitle')} />
 
       {sent && (
         <div className="mb-4 rounded-lg bg-status-success/10 px-4 py-3 text-sm text-status-success">
-          A new verification code has been sent to your email.
+          {t('auth.verifyEmail.codeSent')}
         </div>
       )}
 
@@ -52,19 +54,21 @@ const VerifyEmail = ({ status }: VerifyEmailProps) => {
         )}
 
         <Button type="submit" loading={processing} className="w-full">
-          {processing ? 'Verifying…' : 'Verify'}
+          {processing
+            ? t('auth.verifyEmail.verifying')
+            : t('auth.verifyEmail.verify')}
         </Button>
       </form>
 
       <p className="mt-4 text-center text-sm text-dark-secondary">
-        Didn't get the code?{' '}
+        {t('auth.verifyEmail.noCode')}{' '}
         <button
           type="button"
           onClick={resend}
           disabled={resending}
           className="font-semibold text-dark-primary transition-colors hover:text-dark-primary/80 disabled:opacity-50"
         >
-          Resend Code
+          {t('auth.verifyEmail.resendCode')}
         </button>
       </p>
     </AuthLayout>

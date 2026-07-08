@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CardLabel } from '@/types/kanban';
 import { LABEL_COLORS, getContrastColor } from '@/utils/kanban';
 import CloseIcon from '@public/icons/small/cancel.svg';
@@ -35,6 +36,7 @@ export const LabelPopover = ({
   saving,
   onCreate,
 }: LabelPopoverProps) => {
+  const { t } = useTranslation();
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +61,7 @@ export const LabelPopover = ({
         <>
           <div className="flex items-center justify-between border-b border-dark-border px-4 py-3">
             <span className="text-xsmall font-semibold text-white/60">
-              Labels
+              {t('kanban.labelsLabel')}
             </span>
             <button
               onClick={onClose}
@@ -72,7 +74,7 @@ export const LabelPopover = ({
           <div className="scrollbar-app max-h-52 space-y-0.5 overflow-y-auto p-2">
             {cardLabels.length === 0 && (
               <p className="py-4 text-center text-xsmall text-white/20">
-                No labels yet
+                {t('kanban.noLabelsYet')}
               </p>
             )}
             {cardLabels.map((label) => {
@@ -115,7 +117,7 @@ export const LabelPopover = ({
                       onDelete(label.card_label_id);
                     }}
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xsmall text-white/20 opacity-0 transition group-hover/lbl:opacity-100 hover:bg-accent-red/10 hover:text-accent-red"
-                    title="Delete label"
+                    title={t('kanban.deleteLabel')}
                   >
                     <CloseIcon />
                   </button>
@@ -130,7 +132,7 @@ export const LabelPopover = ({
               className="flex w-full items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-2 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/60"
             >
               <span className="text-normal leading-none">+</span>
-              <span>Create new label</span>
+              <span>{t('kanban.createNewLabel')}</span>
             </button>
           </div>
         </>
@@ -148,7 +150,7 @@ export const LabelPopover = ({
               ←
             </button>
             <span className="text-xsmall font-semibold text-white/60">
-              Create label
+              {t('kanban.createLabel')}
             </span>
           </div>
 
@@ -169,13 +171,13 @@ export const LabelPopover = ({
                     : 'rgba(255,255,255,0.3)',
                 }}
               >
-                {newName || 'Label preview'}
+                {newName || t('kanban.labelPreview')}
               </span>
             </div>
 
             <div>
               <label className="mb-1.5 block text-xsmall tracking-wider text-white/30 uppercase">
-                Name
+                {t('kanban.nameLabel')}
               </label>
               <input
                 autoFocus
@@ -184,14 +186,14 @@ export const LabelPopover = ({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') onCreate();
                 }}
-                placeholder="Label name..."
+                placeholder={t('kanban.labelNamePlaceholder')}
                 className="w-full rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-2 text-small text-white placeholder-white/20 transition focus:border-dark-border-focus focus:outline-none"
               />
             </div>
 
             <div>
               <label className="mb-1.5 block text-xsmall tracking-wider text-white/30 uppercase">
-                Color
+                {t('kanban.colorLabel')}
               </label>
               <div className="grid grid-cols-5 gap-1.5">
                 {LABEL_COLORS.map((c) => (
@@ -218,7 +220,7 @@ export const LabelPopover = ({
                 disabled={!newName.trim() || !newColor || saving}
                 className="hover:bg-opacity-90 flex-1 rounded-lg bg-accent-blue px-3 py-2 text-xsmall font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-30"
               >
-                {saving ? 'Creating...' : 'Create'}
+                {saving ? t('kanban.creating') : t('kanban.create')}
               </button>
               <button
                 onClick={() => {
@@ -228,7 +230,7 @@ export const LabelPopover = ({
                 }}
                 className="rounded-lg border border-dark-border px-3 py-2 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteListItem as NoteListItemType } from '@/types/notes';
 
 interface NoteListItemProps {
@@ -15,6 +16,7 @@ const NoteListItem = ({
   onSelect,
   onDeleteRequest,
 }: NoteListItemProps): React.ReactElement => {
+  const { t } = useTranslation();
   const relativeTime = useRelativeTime(note.updatedAt);
 
   return (
@@ -30,7 +32,7 @@ const NoteListItem = ({
       }`}
     >
       <p className="m-0 truncate pr-6 text-small font-semibold text-dark-primary">
-        {note.title || 'Untitled'}
+        {note.title || t('notes.untitled')}
       </p>
 
       {relativeTime && (
@@ -45,7 +47,7 @@ const NoteListItem = ({
           e.stopPropagation();
           onDeleteRequest(note.id);
         }}
-        title="Delete note"
+        title={t('notes.deleteNote')}
         className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-dark-secondary opacity-0 transition-opacity group-hover:opacity-100 hover:text-dark-primary"
       >
         <svg

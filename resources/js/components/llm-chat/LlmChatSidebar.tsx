@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
 import type { LlmSession } from '@/types/llm-chat';
 import MoreIcon from '@public/icons/large/more.svg';
@@ -35,6 +36,7 @@ const SessionItem = ({
   onCloseMenu,
   onRequestDelete,
 }: SessionItemProps) => {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close menu when clicking outside.
@@ -124,7 +126,7 @@ const SessionItem = ({
             onClick={handleDeleteClick}
             className="block w-full px-3 py-1.5 text-left text-xs text-status-error transition-colors hover:bg-status-error/10"
           >
-            Delete chat
+            {t('llmChat.deleteChat')}
           </button>
         </div>
       )}
@@ -135,6 +137,7 @@ const SessionItem = ({
 // ─── Sidebar ───
 
 const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
+  const { t } = useTranslation();
   const { project, accountIndex } = useProject();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LlmSession | null>(null);
@@ -168,21 +171,21 @@ const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
             className="flex w-full items-center gap-2 rounded-lg bg-dark-surface-3 px-3 py-2 text-sm text-dark-secondary transition-colors hover:bg-status-info hover:text-white"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0" />
-            New Chat
+            {t('llmChat.newChat')}
           </button>
         </div>
 
         <div className="mx-3 h-px bg-dark-border" />
 
         <p className="px-3 pt-2.5 pb-1.5 text-xs font-semibold tracking-wider text-dark-secondary uppercase">
-          Chats
+          {t('llmChat.chats')}
         </p>
 
         {/* ── Session list ── */}
         <nav className="scrollbar-app flex-1 overflow-y-auto px-2 pb-3">
           {sessions.length === 0 ? (
             <p className="px-2 py-6 text-center text-xs text-dark-secondary">
-              No chats yet.
+              {t('llmChat.noChatsYet')}
             </p>
           ) : (
             <div className="flex flex-col gap-0.5">
@@ -206,17 +209,11 @@ const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
 
       {deleteTarget && (
         <ConfirmModal
-          title="Delete Chat"
-          description={
-            <>
-              Are you sure you want to delete{' '}
-              <strong className="font-semibold text-white">
-                "{deleteTarget.llm_chat_session_name}"
-              </strong>
-              ? All messages inside it will be permanently removed.
-            </>
-          }
-          confirmLabel="Yes, delete it"
+          title={t('llmChat.deleteChatTitle')}
+          description={t('llmChat.deleteChatDescription', {
+            name: deleteTarget.llm_chat_session_name,
+          })}
+          confirmLabel={t('llmChat.deleteChatConfirmLabel')}
           onCancel={() => setDeleteTarget(null)}
           onConfirm={confirmDelete}
         />

@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { AddCardModal, CardDetailModalWrapper } from '@/components/kanban';
 import { TimelineChart, TimelineHeader } from '@/components/timeline';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import projects from '@/routes/projects';
 import type { KanbanBoard, KanbanBoardCard } from '@/types/kanban';
@@ -40,6 +41,7 @@ const Timeline = ({
   currentUser,
 }: TimelineProps) => {
   const accountIndex = usePage().props.account.index;
+  const { t } = useTranslation();
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<TimelineFilters>(EMPTY_FILTERS);
@@ -139,7 +141,7 @@ const Timeline = ({
           );
           setOpenCard(null);
           console.error('Failed to add card', errors);
-          alert('Failed to create task.');
+          alert(t('timeline.failedToCreateTask'));
         },
       },
     );
@@ -179,7 +181,7 @@ const Timeline = ({
 
   return (
     <AppLayout project={project}>
-      <Head title={`Timeline - ${project.project_name}`} />
+      <Head title={`${t('nav.timeline')} - ${project.project_name}`} />
 
       {openCard && (
         <CardDetailModalWrapper
@@ -223,8 +225,8 @@ const Timeline = ({
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 text-center">
               <p className="max-w-xs text-small text-dark-secondary">
                 {hasAnyScheduled
-                  ? 'No tasks match your search or filters.'
-                  : 'No scheduled tasks yet. Add a task and set its start / due dates to see it here.'}
+                  ? t('timeline.noTasksMatchFilters')
+                  : t('timeline.noScheduledTasks')}
               </p>
             </div>
           )}

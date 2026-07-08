@@ -4,6 +4,7 @@ import ChatComposer from '@/components/chat/ChatComposer';
 import MessageList from '@/components/chat/MessageList';
 import RoomAvatar from '@/components/chat/RoomAvatar';
 import { useMessages } from '@/hooks/useMessages';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatMessage, ChatParticipant, ChatRoom } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
 import MoreIcon from '@public/icons/large/more.svg';
@@ -21,35 +22,39 @@ interface PageProps {
   [key: string]: unknown;
 }
 
-const EmptyState = () => (
-  <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 rounded-lg bg-dark-surface-2 select-none">
-    <span className="text-dark-secondary opacity-30">
-      <svg
-        width="36"
-        height="36"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M3 6a3 3 0 0 1 3-3h2" />
-        <path d="M11 3h2" />
-        <path d="M16 3h2a3 3 0 0 1 3 3" />
-        <path d="M21 10v2" />
-        <path d="M21 15v1a3 3 0 0 1-3 3h-1" />
-        <path d="M14 19h-2" />
-        <path d="M9 19H8a3 3 0 0 1-3-3v-1" />
-        <path d="M3 12v-2" />
-        <path d="M3 17v2l3-2" />
-      </svg>
-    </span>
-    <p className="text-normal font-medium text-dark-secondary opacity-40">
-      Send a message
-    </p>
-  </div>
-);
+const EmptyState = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 rounded-lg bg-dark-surface-2 select-none">
+      <span className="text-dark-secondary opacity-30">
+        <svg
+          width="36"
+          height="36"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 6a3 3 0 0 1 3-3h2" />
+          <path d="M11 3h2" />
+          <path d="M16 3h2a3 3 0 0 1 3 3" />
+          <path d="M21 10v2" />
+          <path d="M21 15v1a3 3 0 0 1-3 3h-1" />
+          <path d="M14 19h-2" />
+          <path d="M9 19H8a3 3 0 0 1-3-3v-1" />
+          <path d="M3 12v-2" />
+          <path d="M3 17v2l3-2" />
+        </svg>
+      </span>
+      <p className="text-normal font-medium text-dark-secondary opacity-40">
+        {t('chat.sendAMessage')}
+      </p>
+    </div>
+  );
+};
 
 const RoomHeader = ({
   room,
@@ -62,6 +67,7 @@ const RoomHeader = ({
   searchActive: boolean;
   onSearchToggle: () => void;
 }) => {
+  const { t } = useTranslation();
   const displayName = getRoomDisplayName(room, currentUser);
   const btnBase = 'p-2 rounded-lg transition-colors';
   const btnIdle =
@@ -77,7 +83,7 @@ const RoomHeader = ({
         <button
           type="button"
           onClick={onSearchToggle}
-          title="Search messages"
+          title={t('chat.searchMessages')}
           className={[
             btnBase,
             searchActive ? 'bg-dark-surface-2 text-dark-primary' : btnIdle,
@@ -87,7 +93,7 @@ const RoomHeader = ({
         </button>
         <button
           type="button"
-          title="More options"
+          title={t('chat.moreOptions')}
           className={`${btnBase} ${btnIdle}`}
         >
           <MoreIcon className="h-4 w-4" />
@@ -109,6 +115,7 @@ const SearchOverlay = ({
   onClose: () => void;
   onSelectResult: (msgId: string) => void;
 }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -134,7 +141,7 @@ const SearchOverlay = ({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search messages…"
+          placeholder={t('chat.searchMessagesPlaceholder')}
           className="flex-1 bg-transparent text-small text-dark-primary placeholder:text-dark-secondary focus:outline-none"
         />
         <button
@@ -149,12 +156,12 @@ const SearchOverlay = ({
       <div className="scrollbar-app max-h-72 overflow-y-auto">
         {query.trim() === '' && (
           <p className="px-4 py-5 text-center text-xsmall text-dark-secondary">
-            Start typing to search…
+            {t('chat.startTypingToSearch')}
           </p>
         )}
         {query.trim() !== '' && results.length === 0 && (
           <p className="px-4 py-5 text-center text-xsmall text-dark-secondary">
-            No messages found
+            {t('chat.noMessagesFound')}
           </p>
         )}
         {results.map((msg) => (
@@ -165,7 +172,7 @@ const SearchOverlay = ({
             className="w-full border-b border-dark-border/40 px-3 py-2.5 text-left transition-colors last:border-0 hover:bg-dark-surface-3"
           >
             <p className="mb-0.5 truncate text-xsmall text-dark-secondary">
-              {msg.sender?.name ?? 'Unknown'} ·{' '}
+              {msg.sender?.name ?? t('common.unknown')} ·{' '}
               {formatSearchTime(msg.createdAt)}
             </p>
             <p className="truncate text-small text-dark-primary">{msg.body}</p>

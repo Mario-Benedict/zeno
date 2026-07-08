@@ -1,10 +1,13 @@
 import { createInertiaApp } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { LocaleProvider } from '@/i18n/LocaleContext';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-// Apply persisted colour-scheme preference before first paint
+// Apply persisted colour-scheme + language preference before first paint.
+// LocaleProvider reads the same localStorage key synchronously on mount, so
+// this block only needs to handle the CSS class swap for theme.
 try {
   if (localStorage.getItem('theme') === 'light') {
     document.documentElement.classList.add('light-mode');
@@ -23,7 +26,9 @@ createInertiaApp({
   setup({ el, App, props }) {
     createRoot(el).render(
       <StrictMode>
-        <App {...props} />
+        <LocaleProvider>
+          <App {...props} />
+        </LocaleProvider>
       </StrictMode>,
     );
   },

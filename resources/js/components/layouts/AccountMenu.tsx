@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath } from '@/lib/accountRoutes';
 import RightArrow from '@public/icons/small/arrow_down.svg';
 import CheckIcon from '@public/icons/small/check.svg';
@@ -66,6 +67,7 @@ interface AccountMenuProps {
 
 const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
   const { auth, accountsList } = usePage().props;
+  const { t } = useTranslation();
   const user = auth.user;
 
   if (!open || user === null) return null;
@@ -89,7 +91,7 @@ const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
       {/* ── Signed-in accounts ─────────────────────────────────────── */}
       <div className="px-2 pt-2 pb-1">
         <p className="text-xsmall font-semibold tracking-wide text-dark-primary uppercase">
-          Signed-in accounts
+          {t('account.signedInAccounts')}
         </p>
       </div>
 
@@ -154,25 +156,25 @@ const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
         }}
       >
         <PersonIcon />
-        Manage account
+        {t('account.manageAccount')}
       </MenuButton>
 
       <MenuButton onClick={() => logout('add_account')}>
         <PersonAddIcon />
-        Add another account
+        {t('account.addAnotherAccount')}
       </MenuButton>
 
       <Divider />
 
       <MenuButton tone="danger" onClick={() => logout('home')}>
         <SignOutIcon />
-        Sign out
+        {t('account.signOut')}
       </MenuButton>
 
       {accountsList.length > 1 && (
         <MenuButton tone="danger" onClick={() => logout('signout_all')}>
           <PersonDeleteIcon />
-          Sign out of all accounts
+          {t('account.signOutOfAllAccounts')}
         </MenuButton>
       )}
     </div>

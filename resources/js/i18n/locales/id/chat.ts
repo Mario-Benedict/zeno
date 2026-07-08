@@ -1,0 +1,23 @@
+import type { chat as en } from '../en/chat';
+
+export const chat: typeof en = {
+  noMessagesInRoom: 'Belum ada pesan',
+  sendAMessage: 'Kirim pesan',
+  searchMessages: 'Cari pesan',
+  searchMessagesPlaceholder: 'Cari pesan…',
+  searchChatPlaceholder: 'Cari chat',
+  noChatsFound: 'Chat tidak ditemukan',
+  moreOptions: 'Opsi lainnya',
+  startTypingToSearch: 'Mulai mengetik untuk mencari…',
+  noMessagesFound: 'Pesan tidak ditemukan',
+  messageDeleted: 'Pesan ini telah dihapus.',
+  messageFromSender: 'Pesan untuk {{name}}',
+  typeAMessage: 'Ketik pesan',
+  attachFile: 'Lampirkan file',
+  send: 'Kirim',
+  noMessagesYet: 'Belum ada pesan. Sapa duluan!',
+  fileExceedsSizeLimit: '"{{name}}" melebihi batas 50 MB.',
+  failedToSendMessage: 'Gagal mengirim pesan.',
+  today: 'Hari ini',
+  yesterday: 'Kemarin',
+};

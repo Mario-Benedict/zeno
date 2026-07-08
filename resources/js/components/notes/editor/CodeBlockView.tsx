@@ -1,6 +1,7 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { CODE_LANGUAGES } from './codeLanguages';
 
 interface LanguagePickerProps {
@@ -17,6 +18,7 @@ const LanguagePicker = ({
   editable,
   onChange,
 }: LanguagePickerProps): React.ReactElement => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -70,13 +72,13 @@ const LanguagePicker = ({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search language…"
+              placeholder={t('notes.searchLanguagePlaceholder')}
               className="w-full border-b border-dark-border bg-transparent px-2 py-1.5 text-xsmall text-dark-primary outline-none placeholder:text-dark-secondary"
             />
             <div className="scrollbar-app max-h-56 overflow-y-auto p-1">
               {filtered.length === 0 ? (
                 <p className="px-2 py-1.5 text-xsmall text-dark-secondary">
-                  No matches.
+                  {t('notes.noLanguageMatches')}
                 </p>
               ) : (
                 filtered.map((l) => (
@@ -111,6 +113,7 @@ const CodeBlockView = ({
   updateAttributes,
   editor,
 }: NodeViewProps): React.ReactElement => {
+  const { t } = useTranslation();
   const language = (node.attrs.language as string | null) ?? 'plaintext';
   const [copied, setCopied] = useState(false);
 
@@ -144,7 +147,7 @@ const CodeBlockView = ({
           onClick={() => void copy()}
           className="rounded px-1.5 py-0.5 text-xsmall font-medium text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary"
         >
-          {copied ? 'Copied!' : 'Copy'}
+          {copied ? t('notes.copied') : t('notes.copy')}
         </button>
       </div>
 

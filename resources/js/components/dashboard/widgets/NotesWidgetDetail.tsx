@@ -7,6 +7,7 @@ import { CodeBlock } from '@/components/notes/editor/extensions/codeBlock';
 import { Embed } from '@/components/notes/editor/extensions/embed';
 import { NoteImage } from '@/components/notes/editor/extensions/image';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import notes from '@/routes/notes';
 import type { NoteDetail, NoteListItem } from '@/types/notes';
 import BackIcon from '@public/icons/small/arrow_left.svg';
@@ -23,6 +24,7 @@ const emptyDocument = () => ({
 
 export const NotesWidgetDetail = ({ note, onBack }: Props) => {
   const { project, accountIndex } = useProject();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
 
   // Read-only Tiptap instance with the same node extensions as the real
@@ -88,19 +90,21 @@ export const NotesWidgetDetail = ({ note, onBack }: Props) => {
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back to notes"
+          aria-label={t('dashboard.backToNotes')}
           className="rounded-lg p-1 text-white/50 transition hover:bg-white/10 hover:text-white"
         >
           <BackIcon className="h-4 w-4" />
         </button>
         <p className="min-w-0 flex-1 truncate text-small font-semibold text-dark-primary">
-          {note.title || 'Untitled'}
+          {note.title || t('dashboard.untitled')}
         </p>
       </div>
 
       <div className="scrollbar-app notes-widget-detail min-h-0 flex-1 overflow-y-auto px-3 pb-3">
         {loading ? (
-          <p className="py-6 text-center text-xsmall text-white/30">Loading…</p>
+          <p className="py-6 text-center text-xsmall text-white/30">
+            {t('dashboard.loadingMessages')}
+          </p>
         ) : (
           <EditorContent editor={editor} />
         )}

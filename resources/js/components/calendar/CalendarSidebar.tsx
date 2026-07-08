@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import type {
   CalendarMember,
   AnyCalendarEvent,
@@ -24,10 +26,14 @@ interface CalendarSidebarProps {
   onTogglePriority: (priority: CalendarPriority) => void;
 }
 
-const PRIORITIES: { key: CalendarPriority; label: string; dot: string }[] = [
-  { key: 'low', label: 'Low', dot: 'bg-status-success' },
-  { key: 'mid', label: 'Mid', dot: 'bg-status-warning' },
-  { key: 'high', label: 'High', dot: 'bg-status-error' },
+const PRIORITIES: {
+  key: CalendarPriority;
+  labelKey: TranslationKey;
+  dot: string;
+}[] = [
+  { key: 'low', labelKey: 'calendar.priorityLow', dot: 'bg-status-success' },
+  { key: 'mid', labelKey: 'calendar.priorityMid', dot: 'bg-status-warning' },
+  { key: 'high', labelKey: 'calendar.priorityHigh', dot: 'bg-status-error' },
 ];
 
 const PlusIcon = () => (
@@ -94,6 +100,7 @@ export const CalendarSidebar = ({
   hiddenPriorities,
   onTogglePriority,
 }: CalendarSidebarProps) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
 
   const filteredMembers = members.filter((m) =>
@@ -110,16 +117,16 @@ export const CalendarSidebar = ({
             className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-dark-primary px-4 py-2 text-small font-semibold text-dark-surface-1 transition hover:opacity-90"
           >
             <PlusIcon />
-            Create
+            {t('calendar.create')}
           </button>
           <button
             onClick={() =>
               onViewModeChange(viewMode === 'month' ? 'week' : 'month')
             }
-            title="Switch month / week view"
+            title={t('calendar.switchView')}
             className="flex items-center gap-2 rounded-full border border-dark-border bg-dark-surface-3 px-3 py-2 text-small font-semibold text-dark-primary transition hover:bg-dark-border"
           >
-            {viewMode === 'month' ? 'Month' : 'Week'}
+            {viewMode === 'month' ? t('calendar.month') : t('calendar.week')}
             <span
               role="button"
               tabIndex={-1}
@@ -127,7 +134,7 @@ export const CalendarSidebar = ({
                 e.stopPropagation();
                 if (!isLoading) onRefresh();
               }}
-              title="Refresh"
+              title={t('calendar.refresh')}
               className="text-dark-secondary transition hover:text-dark-primary"
             >
               <RefreshIcon spinning={isLoading} />
@@ -146,6 +153,7 @@ export const CalendarSidebar = ({
         <div className="mt-3 flex items-center justify-center gap-2 border-t border-dark-border pt-3">
           {PRIORITIES.map((p) => {
             const active = !hiddenPriorities.has(p.key);
+            const label = t(p.labelKey);
 
             return (
               <button
@@ -153,8 +161,8 @@ export const CalendarSidebar = ({
                 onClick={() => onTogglePriority(p.key)}
                 title={
                   active
-                    ? `Hide ${p.label} priority`
-                    : `Show ${p.label} priority`
+                    ? t('calendar.hidePriority', { priority: label })
+                    : t('calendar.showPriority', { priority: label })
                 }
                 className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xsmall font-medium transition ${
                   active
@@ -163,7 +171,7 @@ export const CalendarSidebar = ({
                 }`}
               >
                 <span className={`h-2.5 w-2.5 rounded-full ${p.dot}`} />
-                {p.label}
+                {label}
               </button>
             );
           })}
@@ -178,7 +186,7 @@ export const CalendarSidebar = ({
           </span>
           <input
             type="text"
-            placeholder="Search for people"
+            placeholder={t('calendar.searchForPeople')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-full border border-dark-border bg-dark-surface-1 py-2 pr-9 pl-10 text-small text-dark-primary transition outline-none placeholder:text-dark-secondary focus:border-dark-border-focus"
@@ -253,7 +261,7 @@ export const CalendarSidebar = ({
             ))}
             {filteredMembers.length === 0 && (
               <p className="py-4 text-center text-small text-dark-secondary">
-                No members found.
+                {t('calendar.noMembersFound')}
               </p>
             )}
           </div>

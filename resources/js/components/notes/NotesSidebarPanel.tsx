@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteListItem as NoteListItemType } from '@/types/notes';
 import NoteListItem from './NoteListItem';
 
@@ -61,6 +62,7 @@ const NotesSidebarPanel = ({
   onCreateNote,
   onDeleteRequest,
 }: NotesSidebarPanelProps): React.ReactElement => {
+  const { t } = useTranslation();
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
 
   const filtered = useMemo(() => {
@@ -81,12 +83,14 @@ const NotesSidebarPanel = ({
     <section className="flex min-h-0 w-[401px] shrink-0 flex-col overflow-hidden rounded-lg border border-dark-border/10 bg-dark-surface-2">
       <div className="px-4 pt-4">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="m-0 text-h4 font-bold text-dark-primary">Notes</h2>
+          <h2 className="m-0 text-h4 font-bold text-dark-primary">
+            {t('notes.title')}
+          </h2>
 
           <div className="relative">
             <button
               onClick={() => setIsCreateMenuOpen((v) => !v)}
-              title="New note"
+              title={t('notes.newNote')}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-none bg-dark-surface-3 text-dark-secondary transition-colors duration-150 hover:bg-dark-surface-1 hover:text-dark-primary"
             >
               <svg
@@ -118,7 +122,7 @@ const NotesSidebarPanel = ({
                     }}
                     className="block w-full rounded-md px-2.5 py-1.5 text-left text-small text-dark-primary hover:bg-dark-surface-1"
                   >
-                    New private note
+                    {t('notes.newPrivateNote')}
                   </button>
                   <button
                     onClick={() => {
@@ -127,7 +131,7 @@ const NotesSidebarPanel = ({
                     }}
                     className="block w-full rounded-md px-2.5 py-1.5 text-left text-small text-dark-primary hover:bg-dark-surface-1"
                   >
-                    New shared note
+                    {t('notes.newSharedNote')}
                   </button>
                 </div>
               </>
@@ -138,7 +142,7 @@ const NotesSidebarPanel = ({
         <div className="mb-4 flex h-9 items-center rounded-lg border border-dark-border/40 bg-dark-surface-3">
           <input
             type="text"
-            placeholder="Search notes…"
+            placeholder={t('notes.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-full flex-1 border-none bg-transparent pl-3 text-small font-medium text-dark-secondary outline-none placeholder:text-dark-secondary/40"
@@ -163,19 +167,19 @@ const NotesSidebarPanel = ({
       <div className="scrollbar-app flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
         {filtered.length === 0 ? (
           <p className="mt-4 text-center text-small text-dark-secondary">
-            No notes found.
+            {t('notes.noNotesFound')}
           </p>
         ) : (
           <>
             <Section
-              label="Private"
+              label={t('notes.private')}
               notes={privateNotes}
               selectedNoteId={selectedNoteId}
               onSelectNote={onSelectNote}
               onDeleteRequest={onDeleteRequest}
             />
             <Section
-              label="Shared"
+              label={t('notes.shared')}
               notes={sharedNotes}
               selectedNoteId={selectedNoteId}
               onSelectNote={onSelectNote}

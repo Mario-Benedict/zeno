@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import OtpInput from '@/components/shared/OtpInput';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const ShieldIcon = () => (
   <svg
@@ -22,6 +23,7 @@ const SecurityTab = ({
 }: {
   twoFactor: { enabled: boolean; qrCodeUrl: string | null };
 }) => {
+  const { t } = useTranslation();
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(6).fill(''));
   const [generating, setGenerating] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -62,7 +64,10 @@ const SecurityTab = ({
       {
         preserveScroll: true,
         onError: (errs) => {
-          setError((errs.code as string | undefined) ?? 'Invalid code.');
+          setError(
+            (errs.code as string | undefined) ??
+              t('projectSettingsTabs.invalidCode'),
+          );
         },
         onFinish: () => setVerifying(false),
       },
@@ -84,7 +89,7 @@ const SecurityTab = ({
   return (
     <div>
       <h3 className="mb-5 text-normal font-semibold text-dark-primary">
-        Security
+        {t('projectSettingsTabs.security')}
       </h3>
 
       <div className="rounded-lg border border-dark-border bg-dark-surface-1 p-5">
@@ -95,21 +100,20 @@ const SecurityTab = ({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-small font-semibold text-dark-primary">
-                Two-factor authentication
+                {t('projectSettingsTabs.twoFactorAuthentication')}
               </p>
               {twoFactor.enabled ? (
                 <span className="rounded-full bg-status-success/15 px-2 py-0.5 text-micro font-semibold text-status-success">
-                  Enabled
+                  {t('projectSettingsTabs.enabled')}
                 </span>
               ) : (
                 <span className="rounded-full bg-dark-surface-3 px-2 py-0.5 text-micro font-semibold text-dark-secondary">
-                  Disabled
+                  {t('projectSettingsTabs.disabled')}
                 </span>
               )}
             </div>
             <p className="mt-1 text-xsmall leading-relaxed text-dark-secondary">
-              Protect your account with a time-based one-time password (TOTP)
-              from an authenticator app.
+              {t('projectSettingsTabs.twoFactorDescription')}
             </p>
           </div>
         </div>
@@ -121,7 +125,9 @@ const SecurityTab = ({
             disabled={disabling}
             className="rounded-lg border border-status-error/30 bg-status-error/10 px-4 py-2 text-small font-semibold text-status-error transition-colors hover:bg-status-error/20 disabled:opacity-40"
           >
-            {disabling ? 'Disabling…' : 'Disable 2FA'}
+            {disabling
+              ? t('projectSettingsTabs.disabling')
+              : t('projectSettingsTabs.disable2fa')}
           </button>
         )}
 
@@ -129,17 +135,16 @@ const SecurityTab = ({
           <div className="space-y-5">
             <div>
               <p className="mb-1 text-small font-semibold text-dark-primary">
-                Step 1 — Scan the QR code
+                {t('projectSettingsTabs.step1ScanQrCode')}
               </p>
               <p className="mb-4 text-xsmall text-dark-secondary">
-                Open your authenticator app (Google Authenticator, Authy,
-                1Password, etc.) and scan the code below.
+                {t('projectSettingsTabs.step1Description')}
               </p>
               <div className="flex justify-center">
                 <div className="rounded-xl border border-dark-border bg-white p-3">
                   <img
                     src={twoFactor.qrCodeUrl}
-                    alt="2FA QR code"
+                    alt={t('projectSettingsTabs.qrCodeAlt')}
                     className="h-40 w-40 rounded-md"
                   />
                 </div>
@@ -147,11 +152,10 @@ const SecurityTab = ({
             </div>
             <div>
               <p className="mb-1 text-small font-semibold text-dark-primary">
-                Step 2 — Enter the 6-digit code
+                {t('projectSettingsTabs.step2EnterCode')}
               </p>
               <p className="mb-4 text-xsmall text-dark-secondary">
-                Enter the code shown in your authenticator app to confirm the
-                setup.
+                {t('projectSettingsTabs.step2Description')}
               </p>
               <OtpInput
                 value={otpDigits}
@@ -170,7 +174,9 @@ const SecurityTab = ({
                   disabled={verifying || otpDigits.join('').length < 6}
                   className="rounded-lg bg-dark-primary px-6 py-2.5 text-small font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
-                  {verifying ? 'Verifying…' : 'Verify & enable'}
+                  {verifying
+                    ? t('projectSettingsTabs.verifying')
+                    : t('projectSettingsTabs.verifyAndEnable')}
                 </button>
               </div>
             </div>
@@ -184,7 +190,9 @@ const SecurityTab = ({
             disabled={generating}
             className="rounded-lg bg-dark-primary px-4 py-2 text-small font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {generating ? 'Generating…' : 'Set up 2FA'}
+            {generating
+              ? t('projectSettingsTabs.generating')
+              : t('projectSettingsTabs.setUp2fa')}
           </button>
         )}
       </div>

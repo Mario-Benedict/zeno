@@ -1,4 +1,7 @@
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+import preferences from '@/routes/preferences';
 import { FieldLabel } from './shared';
 
 // ── Icons (stroke="currentColor" so they inherit the wrapper text color) ─
@@ -41,6 +44,23 @@ const SunIcon = () => (
   </svg>
 );
 
+const GlobeIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+);
+
 // ── Theme helpers ─────────────────────────────────────────────────────────
 
 const getStoredTheme = (): 'dark' | 'light' => {
@@ -66,24 +86,34 @@ const applyTheme = (theme: 'dark' | 'light') => {
 
 // ── PreferencesTab ────────────────────────────────────────────────────────
 
-const PreferencesTab = () => {
+interface PreferencesTabProps {
+  accountIndex: number;
+}
+
+const PreferencesTab = ({ accountIndex }: PreferencesTabProps) => {
+  const { t, locale, setLocale } = useTranslation();
   const [theme, setTheme] = useState<'dark' | 'light'>(getStoredTheme);
 
   const handleTheme = (next: 'dark' | 'light') => {
     setTheme(next);
     applyTheme(next);
+    router.patch(
+      preferences.update.url({ accountIndex }),
+      { theme: next },
+      { preserveScroll: true, preserveState: true },
+    );
   };
 
   return (
     <div>
       <h3 className="mb-5 text-normal font-semibold text-dark-primary">
-        Preferences
+        {t('projectSettings.preferencesTitle')}
       </h3>
       <div className="space-y-5">
         <div>
-          <FieldLabel>Appearance</FieldLabel>
+          <FieldLabel>{t('projectSettings.appearance')}</FieldLabel>
           <p className="mb-3 text-xsmall text-dark-secondary">
-            Choose how Zeno looks on this device.
+            {t('projectSettings.appearanceHint')}
           </p>
           <div className="grid grid-cols-2 gap-3">
             {/* Dark option */}
@@ -106,7 +136,9 @@ const PreferencesTab = () => {
                 className={`flex items-center gap-2 ${theme === 'dark' ? 'text-accent-blue' : 'text-dark-primary'}`}
               >
                 <MoonIcon />
-                <span className="text-small font-semibold">Dark</span>
+                <span className="text-small font-semibold">
+                  {t('projectSettings.dark')}
+                </span>
               </div>
             </button>
 
@@ -129,7 +161,57 @@ const PreferencesTab = () => {
                 className={`flex items-center gap-2 ${theme === 'light' ? 'text-accent-blue' : 'text-dark-primary'}`}
               >
                 <SunIcon />
-                <span className="text-small font-semibold">Light</span>
+                <span className="text-small font-semibold">
+                  {t('projectSettings.light')}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <FieldLabel>{t('projectSettings.language')}</FieldLabel>
+          <p className="mb-3 text-xsmall text-dark-secondary">
+            {t('projectSettings.languageHint')}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {/* English option */}
+            <button
+              type="button"
+              onClick={() => setLocale('en')}
+              className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
+                locale === 'en'
+                  ? 'border-accent-blue bg-accent-blue/10'
+                  : 'border-dark-border bg-dark-surface-1 hover:border-dark-border-focus'
+              }`}
+            >
+              <div
+                className={`flex items-center gap-2 ${locale === 'en' ? 'text-accent-blue' : 'text-dark-primary'}`}
+              >
+                <GlobeIcon />
+                <span className="text-small font-semibold">
+                  {t('projectSettings.english')}
+                </span>
+              </div>
+            </button>
+
+            {/* Indonesian option */}
+            <button
+              type="button"
+              onClick={() => setLocale('id')}
+              className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
+                locale === 'id'
+                  ? 'border-accent-blue bg-accent-blue/10'
+                  : 'border-dark-border bg-dark-surface-1 hover:border-dark-border-focus'
+              }`}
+            >
+              <div
+                className={`flex items-center gap-2 ${locale === 'id' ? 'text-accent-blue' : 'text-dark-primary'}`}
+              >
+                <GlobeIcon />
+                <span className="text-small font-semibold">
+                  {t('projectSettings.indonesian')}
+                </span>
               </div>
             </button>
           </div>

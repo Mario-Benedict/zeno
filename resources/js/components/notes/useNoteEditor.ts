@@ -6,6 +6,7 @@ import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import notes from '@/routes/notes';
 import type { NoteContent, NoteDetail, NoteSaveStatus } from '@/types/notes';
 import { AutoCloseBrackets } from './editor/extensions/autoCloseBrackets';
@@ -47,6 +48,7 @@ export const useNoteEditor = ({
   canEdit,
   onSaved,
 }: UseNoteEditorOptions) => {
+  const { t } = useTranslation();
   const noteId = note?.id ?? null;
 
   const [title, setTitleState] = useState(note?.title ?? '');
@@ -105,7 +107,7 @@ export const useNoteEditor = ({
             note: noteId,
           }),
           {
-            title: titleRef.current.trim() || 'Untitled',
+            title: titleRef.current.trim() || t('notes.untitled'),
             content: activeEditor.getJSON(),
           },
         );
@@ -142,7 +144,7 @@ export const useNoteEditor = ({
         }),
         CodeBlock,
         Placeholder.configure({
-          placeholder: "Write something, or press '/' for commands…",
+          placeholder: t('notes.editorContentPlaceholder'),
         }),
         TaskList,
         TaskItem.configure({ nested: true }),

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoardCard } from '@/types/kanban';
 import { calculateChecklistProgress, getContrastColor } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const KanbanWidgetCard = ({ card, onToggleDone, onClick }: Props) => {
+  const { t } = useTranslation();
   const checklistProgress = calculateChecklistProgress(card.checklists);
   const hasMeta = !!card.labels?.length || checklistProgress.total > 0;
 
@@ -23,7 +25,11 @@ export const KanbanWidgetCard = ({ card, onToggleDone, onClick }: Props) => {
           e.stopPropagation();
           onToggleDone(card.kanban_board_card_id);
         }}
-        aria-label={card.is_completed ? 'Mark as not done' : 'Mark as done'}
+        aria-label={
+          card.is_completed
+            ? t('dashboard.markAsNotDone')
+            : t('dashboard.markAsDone')
+        }
         className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
           card.is_completed
             ? 'border-accent-blue bg-accent-blue'

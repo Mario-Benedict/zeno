@@ -1,4 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath } from '@/lib/accountRoutes';
 import type { Auth } from '@/types';
 import Zeno from '@public/logos/logo.svg';
@@ -18,6 +19,7 @@ const getInitials = (name: string): string => {
 };
 
 const AccountPage = () => {
+  const { t } = useTranslation();
   const { auth, account } = usePage<AccountPageProps>().props;
   const accountIndex = account.index;
   const user = auth.user;
@@ -28,7 +30,7 @@ const AccountPage = () => {
 
   return (
     <>
-      <Head title="Account" />
+      <Head title={t('account.pageTitle')} />
 
       <div className="flex min-h-dvh flex-col bg-dark-surface-1 text-dark-primary">
         <header className="flex h-12 items-center justify-between px-6">
@@ -39,7 +41,9 @@ const AccountPage = () => {
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-dark-surface-2">
               <Zeno className="h-5 w-5" />
             </span>
-            <span className="text-sm font-semibold">Projects</span>
+            <span className="text-sm font-semibold">
+              {t('account.projects')}
+            </span>
           </Link>
         </header>
 
@@ -62,15 +66,17 @@ const AccountPage = () => {
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <div className="rounded-md bg-dark-surface-1 p-4">
                 <p className="text-xs font-semibold text-dark-secondary uppercase">
-                  Email status
+                  {t('account.emailStatus')}
                 </p>
                 <p className="mt-1 text-sm font-medium">
-                  {user?.email_verified_at ? 'Verified' : 'Not verified'}
+                  {user?.email_verified_at
+                    ? t('account.verified')
+                    : t('account.notVerified')}
                 </p>
               </div>
               <div className="rounded-md bg-dark-surface-1 p-4">
                 <p className="text-xs font-semibold text-dark-secondary uppercase">
-                  Account route
+                  {t('account.accountRoute')}
                 </p>
                 <p className="mt-1 text-sm font-medium">/u/{accountIndex}</p>
               </div>
@@ -82,21 +88,21 @@ const AccountPage = () => {
                 onClick={() => logoutTo('login')}
                 className="rounded-md border border-dark-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-white/[0.07]"
               >
-                Switch accounts
+                {t('account.switchAccounts')}
               </button>
               <button
                 type="button"
                 onClick={() => logoutTo('register')}
                 className="rounded-md border border-dark-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-white/[0.07]"
               >
-                Create another account
+                {t('account.createAnotherAccount')}
               </button>
               <button
                 type="button"
                 onClick={() => logoutTo('home')}
                 className="rounded-md bg-dark-primary px-4 py-2 text-sm font-semibold text-dark-surface-1 transition-opacity hover:opacity-90"
               >
-                Sign out
+                {t('account.signOut')}
               </button>
             </div>
           </div>

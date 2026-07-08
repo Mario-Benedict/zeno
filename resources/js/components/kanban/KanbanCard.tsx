@@ -1,6 +1,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { useState } from 'react';
 import ConfirmModal from '@/components/shared/ConfirmModal';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoardCard } from '@/types/kanban';
 import { calculateChecklistProgress, formatDate } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
@@ -29,6 +30,7 @@ export const KanbanCard = ({
   onClick,
   onDeleteCard,
 }: KanbanCardProps) => {
+  const { t } = useTranslation();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const checklistProgress = calculateChecklistProgress(card.checklists);
@@ -39,17 +41,11 @@ export const KanbanCard = ({
     <>
       {showDeleteConfirm && (
         <ConfirmModal
-          title="Delete Card"
-          description={
-            <>
-              Are you sure you want to delete{' '}
-              <strong className="font-semibold text-white">
-                "{card.kanban_board_card_title}"
-              </strong>
-              ? This action cannot be undone.
-            </>
-          }
-          confirmLabel="Yes, delete it"
+          title={t('kanban.deleteCardTitle')}
+          description={t('kanban.deleteCardDescription', {
+            title: card.kanban_board_card_title,
+          })}
+          confirmLabel={t('kanban.deleteCardConfirm')}
           onCancel={() => setShowDeleteConfirm(false)}
           onConfirm={() => {
             onDeleteCard(boardId, card.kanban_board_card_id);
@@ -110,7 +106,7 @@ export const KanbanCard = ({
                   setShowDeleteConfirm(true);
                 }}
                 className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white/0 transition-all group-hover:text-white/30 hover:bg-accent-red/10 hover:text-accent-red!"
-                title="Delete card"
+                title={t('kanban.deleteCard')}
               >
                 ✕
               </button>
@@ -121,7 +117,7 @@ export const KanbanCard = ({
               {card.kanban_board_card_description && (
                 <span
                   className="flex items-center gap-1"
-                  title="Has description"
+                  title={t('kanban.hasDescription')}
                 >
                   <DescIcon className="h-4 w-4" />
                 </span>
@@ -129,7 +125,7 @@ export const KanbanCard = ({
               {!!card.attachments?.length && (
                 <span
                   className="flex items-center gap-1"
-                  title="Has attachments"
+                  title={t('kanban.hasAttachments')}
                 >
                   <PaperclipIcon className="h-4 w-4" />
                 </span>

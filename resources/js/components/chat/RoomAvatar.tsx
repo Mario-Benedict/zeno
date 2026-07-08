@@ -1,3 +1,4 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatRoom, ChatParticipant } from '@/types/chat';
 import { avatarBgClass, getRoomDisplayName, initials } from '@/utils/chat';
 
@@ -28,6 +29,7 @@ const UsersIcon = ({ size }: { size: number }) => (
 );
 
 const RoomAvatar = ({ room, currentUser, size = 36 }: Props) => {
+  const { t } = useTranslation();
   const dim = { width: size, height: size };
   const style = { ...dim, minWidth: size };
   const textClass = size >= 36 ? 'text-xsmall' : 'text-micro';
@@ -37,7 +39,7 @@ const RoomAvatar = ({ room, currentUser, size = 36 }: Props) => {
       return (
         <img
           src={room.avatarUrl}
-          alt={room.name ?? 'Group'}
+          alt={room.name ?? t('common.members')}
           style={style}
           className="rounded-full object-cover"
         />

@@ -8,6 +8,7 @@ import { MonthGrid } from '@/components/calendar/MonthGrid';
 import { RecurrenceEditDialog } from '@/components/calendar/RecurrenceEditDialog';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
 import type {
@@ -25,6 +26,7 @@ export default function Calendar({
   projectUsers,
   currentUser,
 }: CalendarProps) {
+  const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
@@ -176,7 +178,7 @@ export default function Calendar({
       });
       setRecurrenceDialogOpen(true);
     } else {
-      if (confirm('Are you sure you want to delete this schedule?')) {
+      if (confirm(t('calendar.deleteScheduleConfirm'))) {
         submitDelete(selectedEvent as CalendarEventFull, 'single');
       }
     }

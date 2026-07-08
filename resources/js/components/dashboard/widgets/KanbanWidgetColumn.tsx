@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoard, KanbanBoardCard } from '@/types/kanban';
 import { KanbanWidgetCard } from './KanbanWidgetCard';
 
@@ -15,6 +16,7 @@ export const KanbanWidgetColumn = ({
   onToggleDone,
   onCardClick,
 }: Props) => {
+  const { t } = useTranslation();
   const filteredCards = useMemo(() => {
     if (!board.cards) return [];
     const query = searchQuery.trim().toLowerCase();
@@ -39,7 +41,9 @@ export const KanbanWidgetColumn = ({
       <div className="scrollbar-app flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-1.5 pb-2">
         {filteredCards.length === 0 ? (
           <p className="px-2 py-4 text-center text-micro text-white/20">
-            {searchQuery.trim() ? 'No matches' : 'No cards'}
+            {searchQuery.trim()
+              ? t('dashboard.noMatches')
+              : t('dashboard.noCards')}
           </p>
         ) : (
           filteredCards.map((card) => (

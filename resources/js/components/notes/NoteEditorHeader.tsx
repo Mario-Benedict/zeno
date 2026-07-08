@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import type { NoteDetail, NoteSaveStatus } from '@/types/notes';
 
 const AVATAR_COLORS = [
@@ -13,16 +15,17 @@ const AVATAR_COLORS = [
 const saveStatusLabel = (
   status: NoteSaveStatus,
   savedAtLabel: string,
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string,
 ): string => {
   switch (status) {
     case 'dirty':
-      return 'Editing…';
+      return t('notes.editingStatus');
     case 'saving':
-      return 'Saving…';
+      return t('notes.savingStatus');
     case 'error':
-      return 'Save failed — retry';
+      return t('notes.saveFailedStatus');
     default:
-      return savedAtLabel ? `Saved ${savedAtLabel}` : '';
+      return savedAtLabel ? t('notes.savedStatus', { when: savedAtLabel }) : '';
   }
 };
 
@@ -53,9 +56,10 @@ const NoteEditorHeader = ({
   onShareClick,
   onDeleteClick,
 }: NoteEditorHeaderProps): React.ReactElement => {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const savedAtLabel = useRelativeTime(savedAt);
-  const statusLabel = saveStatusLabel(saveStatus, savedAtLabel);
+  const statusLabel = saveStatusLabel(saveStatus, savedAtLabel, t);
   const statusColor =
     saveStatus === 'error' ? 'text-status-error' : 'text-dark-secondary';
 
@@ -66,7 +70,7 @@ const NoteEditorHeader = ({
         onChange={(e) => canEdit && onTitleChange(e.target.value)}
         onBlur={canEdit ? onTitleBlur : undefined}
         readOnly={!canEdit}
-        placeholder="Untitled"
+        placeholder={t('notes.untitledPlaceholder')}
         className={`box-border w-full min-w-0 flex-1 border-none bg-transparent p-0 font-sans text-h3 font-bold text-dark-primary outline-none placeholder:text-dark-secondary/40 ${!canEdit ? 'cursor-default' : ''}`}
       />
 
@@ -80,7 +84,12 @@ const NoteEditorHeader = ({
             {note.collaborators.slice(0, 4).map((c, index) => (
               <div
                 key={c.id}
-                title={`${c.name} · ${c.canEdit ? 'Editor' : 'Viewer'}`}
+                title={t('notes.collaboratorRoleTitle', {
+                  name: c.name,
+                  role: c.canEdit
+                    ? t('notes.editorRole')
+                    : t('notes.viewerRole'),
+                })}
                 className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-xsmall font-bold text-white ${AVATAR_COLORS[index % AVATAR_COLORS.length]} ${
                   onlineUserIds.includes(c.id)
                     ? 'border-status-success'
@@ -99,7 +108,7 @@ const NoteEditorHeader = ({
             onClick={onShareClick}
             className="rounded-lg bg-dark-surface-3 px-3 py-1.5 text-xsmall font-medium text-dark-primary hover:bg-dark-input-focus"
           >
-            {note.isShared ? 'Share' : 'Share…'}
+            {note.isShared ? t('notes.share') : t('notes.shareEllipsis')}
           </button>
         )}
 
@@ -107,7 +116,7 @@ const NoteEditorHeader = ({
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            title="More"
+            title={t('notes.more')}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -131,7 +140,7 @@ const NoteEditorHeader = ({
                   }}
                   className="block w-full rounded-md px-2.5 py-1.5 text-left text-small text-status-error hover:bg-dark-surface-1"
                 >
-                  Delete note
+                  {t('notes.deleteNote')}
                 </button>
               </div>
             </>

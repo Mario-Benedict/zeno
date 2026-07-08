@@ -8,6 +8,7 @@ import {
   AddCardModal,
   AddBoardInput,
 } from '@/components/kanban';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import projects from '@/routes/projects';
 import type { KanbanBoardCard, KanbanBoard, KanbanProps } from '@/types/kanban';
@@ -55,6 +56,7 @@ export default function Kanban({
   currentUser,
   cardLabels,
 }: KanbanProps) {
+  const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [searchQuery, setSearchQuery] = useState('');
@@ -262,7 +264,7 @@ export default function Kanban({
             ),
           );
           console.error('Failed to add card', errors);
-          alert('Failed to create card.');
+          alert(t('kanban.failedToCreateCard'));
         },
       },
     );
@@ -298,7 +300,7 @@ export default function Kanban({
             prev.filter((b) => b.kanban_board_id !== boardId),
           );
           console.error('Failed to add board:', errors);
-          alert('Failed to create board.');
+          alert(t('kanban.failedToCreateBoard'));
         },
       },
     );
@@ -429,7 +431,7 @@ export default function Kanban({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 type="text"
-                placeholder="Search all cards"
+                placeholder={t('kanban.searchPlaceholder')}
                 className="w-64 rounded-full border-2 border-dark-surface-3 bg-dark-surface-2 px-4 py-2 pl-9 text-small font-semibold text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
               />
               <span className="absolute top-1/2 left-3 -translate-y-1/2 text-dark-secondary">
@@ -438,7 +440,7 @@ export default function Kanban({
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xsmall text-white/20">
-                {boards.length} boards
+                {t('kanban.boardCount', { count: boards.length })}
               </span>
             </div>
           </header>
@@ -505,7 +507,7 @@ export default function Kanban({
                       className="flex h-fit w-70 shrink-0 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-dark-surface-3 py-6 text-small font-semibold text-dark-surface-3 transition hover:border-dark-secondary hover:text-dark-secondary"
                     >
                       <AddIcon />
-                      Add board
+                      {t('kanban.addBoard')}
                     </button>
                   )}
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { KeyboardEvent, SyntheticEvent } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   value: string;
@@ -40,6 +41,7 @@ const SpinnerIcon = () => (
 );
 
 const LlmChatComposer = ({ value, onChange, onSubmit, disabled }: Props) => {
+  const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Reset height when value is cleared after send.
@@ -81,7 +83,7 @@ const LlmChatComposer = ({ value, onChange, onSubmit, disabled }: Props) => {
             adjustHeight();
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Ask anything…"
+          placeholder={t('llmChat.askAnything')}
           disabled={disabled}
           rows={1}
           className="flex-1 resize-none bg-transparent py-0.5 text-small leading-normal text-dark-primary placeholder:text-dark-secondary focus:outline-none disabled:opacity-50"
