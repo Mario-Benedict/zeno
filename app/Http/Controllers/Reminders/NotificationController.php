@@ -51,16 +51,25 @@ class NotificationController extends Controller
             ->get();
 
         $chat = $rooms
-            ->map(fn (ChatRoom $room) => [
-                'id' => $room->id,
-                'type' => $room->type,
-                'name' => $room->name,
-                'participants' => $room->participants->map(fn (User $p) => [
-                    'id' => (string) $p->id,
-                    'name' => $p->name,
-                ])->values()->all(),
-                'unread_count' => $this->messageService->countUnread($room->id, (string) $user->id),
-            ])
+            ->map(function (ChatRoom $room) use ($user) {
+                // Already eager-loaded on $room->participants — avoids a
+                // redundant `chat_room_participants` query per room.
+                $lastReadMessageId = $room->participants
+                    ->firstWhere('id', $user->id)
+                    ?->pivot
+                    ->last_read_message_id;
+
+                return [
+                    'id' => $room->id,
+                    'type' => $room->type,
+                    'name' => $room->name,
+                    'participants' => $room->participants->map(fn (User $p) => [
+                        'id' => (string) $p->id,
+                        'name' => $p->name,
+                    ])->values()->all(),
+                    'unread_count' => $this->messageService->countUnread($room->id, $lastReadMessageId),
+                ];
+            })
             ->filter(fn (array $r) => $r['unread_count'] > 0)
             ->values();
 

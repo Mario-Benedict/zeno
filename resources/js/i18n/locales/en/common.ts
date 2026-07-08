@@ -37,6 +37,7 @@ export const common = {
   jumpToToday: 'Jump to today',
   hour: 'Hour',
   minute: 'Minute',
+  period: 'AM/PM',
   member: 'Member',
   members: 'Members',
   owner: 'Owner',

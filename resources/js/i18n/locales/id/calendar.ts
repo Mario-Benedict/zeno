@@ -41,11 +41,8 @@ export const calendar: typeof en = {
   refresh: 'Segarkan',
   month: 'Bulan',
   week: 'Minggu',
-  priorityLow: 'Rendah',
-  priorityMid: 'Sedang',
-  priorityHigh: 'Tinggi',
-  hidePriority: 'Sembunyikan prioritas {{priority}}',
-  showPriority: 'Tampilkan prioritas {{priority}}',
+  hideLabel: 'Sembunyikan acara "{{label}}"',
+  showLabel: 'Tampilkan acara "{{label}}"',
 
   // Sidebar member list
   searchForPeople: 'Cari orang',
@@ -58,15 +55,18 @@ export const calendar: typeof en = {
   // Day events popup
   close: 'Tutup',
 
-  // Week grid
-  weekly: 'Mingguan',
+  // Week grid — short recurrence badges
+  daily: 'Harian',
+  weeklyShort: 'Mingguan',
+  monthlyShort: 'Bulanan',
+  yearlyShort: 'Tahunan',
 
   // Event detail modal
   privateSchedule: 'Jadwal Pribadi',
   privateScheduleDescription:
     'Jadwal ini milik proyek lain. Hanya ketersediaan peserta yang dapat Anda lihat.',
-  priorityBadge: 'Prioritas {{priority}}',
-  repeatsWeekly: 'Berulang Mingguan',
+  fromBoard: 'Dari {{board}}',
+  openInBoard: 'Buka di Board',
   unknownMember: 'Tidak diketahui',
   delete: 'Hapus',
   edit: 'Ubah',
@@ -80,10 +80,17 @@ export const calendar: typeof en = {
   startTime: 'Waktu Mulai',
   endDate: 'Tanggal Selesai',
   endTime: 'Waktu Selesai',
-  priority: 'Prioritas',
+  labels: 'Label',
+  selectLabels: 'Pilih label',
+  noLabelsInProject: 'Belum ada label di proyek ini — buat dari Board.',
   recurrence: 'Pengulangan',
-  oneTime: 'Sekali',
-  everyWeek: 'Setiap minggu',
+  doesNotRepeat: 'Tidak berulang',
+  weeklyOn: 'Setiap minggu pada {{weekday}}',
+  monthlyOn: 'Setiap bulan pada tanggal {{day}}',
+  yearlyOn: 'Setiap tahun pada {{date}}',
+  until: 'sampai {{date}}',
+  endsOn: 'Berakhir pada',
+  neverEnds: 'Tidak pernah',
   assignee: 'Ditugaskan ke',
   assigneeRestrictionNote:
     'Hanya Pemilik dan Admin yang dapat menugaskan jadwal ke anggota lain.',
@@ -94,6 +101,8 @@ export const calendar: typeof en = {
   saveSchedule: 'Simpan Jadwal',
   endTimeAfterStartTimeError:
     'Waktu selesai harus setelah waktu mulai. Jika berakhir keesokan harinya, silakan perbarui Tanggal Selesai.',
+  recurrenceEndBeforeStartError:
+    'Tanggal akhir pengulangan harus sama dengan atau setelah tanggal mulai.',
   saveScheduleError: 'Gagal menyimpan jadwal.',
 
   // Delete confirmation

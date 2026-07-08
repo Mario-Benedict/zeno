@@ -4,15 +4,19 @@ namespace App\Http\Requests\Calendar;
 
 use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateCalendarEventRequest extends FormRequest
 {
+    private ?Project $project = null;
+
     public function authorize(): bool
     {
         $project = $this->resolveProject($this->route('project'));
         if (! $project instanceof Project) {
             return false;
         }
+        $this->project = $project;
 
         $user = $this->user();
         if (! $user) {
@@ -62,8 +66,15 @@ class UpdateCalendarEventRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'start_time' => ['sometimes', 'date'],
             'end_time' => ['sometimes', 'date', 'after:start_time'],
-            'priority' => ['sometimes', 'in:low,mid,high'],
-            'recurrence' => ['sometimes', 'in:none,weekly'],
+            'label_ids' => ['sometimes', 'array'],
+            'label_ids.*' => [
+                'string',
+                'uuid',
+                Rule::exists('card_labels', 'card_label_id')
+                    ->where('card_label_project_id', $this->project?->project_id),
+            ],
+            'recurrence' => ['sometimes', 'in:none,daily,weekly,monthly,yearly'],
+            'recurrence_end_date' => ['nullable', 'date', 'after_or_equal:start_time'],
             'participants' => ['sometimes', 'array', 'min:1'],
             'participants.*' => ['integer', 'exists:users,id'],
             'scope' => ['sometimes', 'in:single,all'],

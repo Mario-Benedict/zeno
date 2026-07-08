@@ -70,7 +70,11 @@ class ReminderController extends Controller
      */
     public function update(int $accountIndex, Request $request, Project $project, Reminder $reminder): RedirectResponse
     {
-        abort_unless($reminder->reminder_user_id === $request->user()->id, 403);
+        abort_unless(
+            $reminder->reminder_project_id === $project->project_id
+                && $reminder->reminder_user_id === $request->user()->id,
+            403,
+        );
 
         $validated = $request->validate([
             'reminder_title' => 'string|max:255',
@@ -89,7 +93,11 @@ class ReminderController extends Controller
      */
     public function togglePin(int $accountIndex, Request $request, Project $project, Reminder $reminder): RedirectResponse
     {
-        abort_unless($reminder->reminder_user_id === $request->user()->id, 403);
+        abort_unless(
+            $reminder->reminder_project_id === $project->project_id
+                && $reminder->reminder_user_id === $request->user()->id,
+            403,
+        );
 
         $reminder->update(['is_pinned' => ! $reminder->is_pinned]);
 
@@ -101,7 +109,11 @@ class ReminderController extends Controller
      */
     public function destroy(int $accountIndex, Request $request, Project $project, Reminder $reminder): RedirectResponse
     {
-        abort_unless($reminder->reminder_user_id === $request->user()->id, 403);
+        abort_unless(
+            $reminder->reminder_project_id === $project->project_id
+                && $reminder->reminder_user_id === $request->user()->id,
+            403,
+        );
 
         $reminder->delete();
 

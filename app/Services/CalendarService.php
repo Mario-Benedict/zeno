@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Models\CalendarEvent;
+use App\Models\CardLabel;
+use App\Models\KanbanBoardCard;
 use App\Models\Project;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -32,9 +35,56 @@ class CalendarService
     ];
 
     /**
-     * How far ahead to expand recurring events (in months).
+     * How far ahead to expand recurring events (in months). This is a safety
+     * cap, not the usual bound — the actual expansion loop below always stops
+     * at the requested view's date range first (a month/week grid only ever
+     * asks for a few weeks), so a generous cap here only matters for
+     * `yearly` events, which need several years ahead to show upcoming
+     * occurrences at all.
      */
-    private const RECURRENCE_HORIZON_MONTHS = 6;
+    private const RECURRENCE_HORIZON_MONTHS = 60;
+
+    /** Every recurrence type except `none` repeats — this is the shared test everywhere below. */
+    private function isRecurring(CalendarEvent $event): bool
+    {
+        return $event->recurrence !== 'none';
+    }
+
+    /**
+     * Advance a date by one occurrence of the given recurrence type.
+     * `addMonthNoOverflow` keeps a "monthly on the 31st" event pinned to the
+     * end of shorter months instead of spilling into the next one.
+     */
+    private function stepRecurrence(CarbonInterface $date, string $recurrence): CarbonInterface
+    {
+        return match ($recurrence) {
+            'daily' => $date->addDay(),
+            'weekly' => $date->addWeek(),
+            'monthly' => $date->addMonthNoOverflow(),
+            'yearly' => $date->addYear(),
+            default => $date->addWeek(),
+        };
+    }
+
+    /**
+     * The latest point a recurring event's occurrences should be expanded to
+     * — whichever comes first of the requested view's range end, the safety
+     * horizon, or the event's own "repeat until" date (`recurrence_end_date`,
+     * Google Calendar's "Ends on" — null means no end date).
+     */
+    private function effectiveExpansionEnd(CalendarEvent $event, Carbon $rangeEnd): CarbonInterface
+    {
+        $horizon = $event->start_time->copy()->addMonths(self::RECURRENCE_HORIZON_MONTHS);
+        $effectiveEnd = $rangeEnd->lt($horizon) ? $rangeEnd : $horizon;
+
+        if ($event->recurrence_end_date) {
+            // recurrence_end_date is a calendar day — include the whole day.
+            $recurrenceEnd = $event->recurrence_end_date->copy()->endOfDay();
+            $effectiveEnd = $effectiveEnd->lt($recurrenceEnd) ? $effectiveEnd : $recurrenceEnd;
+        }
+
+        return $effectiveEnd;
+    }
 
     /**
      * Get events for a calendar view, including CLASSIFIED busy-blocks
@@ -64,7 +114,103 @@ class CalendarService
         // 2) CLASSIFIED busy-blocks from other projects
         $classifiedEvents = $this->getClassifiedEvents($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
 
-        return array_merge($projectEvents, $classifiedEvents);
+        // 3) Kanban cards assigned to the selected members, so a due/start
+        // date with an assignment shows up on the calendar without needing
+        // a separate manually-created schedule.
+        $kanbanTasks = $this->getAssignedKanbanTasks($projectId, $userIds, $rangeStart, $rangeEnd);
+
+        return array_merge($projectEvents, $classifiedEvents, $kanbanTasks);
+    }
+
+    /**
+     * Kanban cards in this project that (a) have at least one of
+     * start/due date set and (b) are assigned to at least one of the
+     * selected members — i.e. cards with a real "assignment to someone" per
+     * the feature request. Formatted to the same shape `formatFullEvent()`
+     * produces, plus `is_kanban_task` / `kanban_board_card_id` /
+     * `kanban_board_id`, so every existing render path (month/week grid, the
+     * mini-calendar's "has event" dots, the detail modal) already knows how
+     * to display them without special-casing.
+     */
+    private function getAssignedKanbanTasks(
+        string $projectId,
+        array $userIds,
+        Carbon $rangeStart,
+        Carbon $rangeEnd
+    ): array {
+        $cards = KanbanBoardCard::whereHas(
+            'kanbanBoard',
+            fn ($q) => $q->where('kanban_board_project_id', $projectId)
+        )
+            ->where(function ($q) {
+                $q->whereNotNull('kanban_board_card_start_date')
+                    ->orWhereNotNull('kanban_board_card_due_date');
+            })
+            // Interval overlap against the requested window, using whichever
+            // of the two dates stands in for the missing one — mirrors the
+            // non-recurring overlap check in getProjectEvents() above.
+            ->where(function ($q) use ($rangeStart, $rangeEnd) {
+                $q->whereRaw(
+                    'COALESCE(kanban_board_card_start_date, kanban_board_card_due_date) < ?',
+                    [$rangeEnd]
+                )->whereRaw(
+                    'COALESCE(kanban_board_card_due_date, kanban_board_card_start_date) >= ?',
+                    [$rangeStart]
+                );
+            })
+            ->whereHas('members', fn ($q) => $q->whereIn('users.id', $userIds))
+            ->with([
+                'members' => fn ($q) => $q->whereIn('users.id', $userIds),
+                'labels',
+                'kanbanBoard:kanban_board_id,kanban_board_name',
+            ])
+            ->get();
+
+        return $cards->map(fn (KanbanBoardCard $card) => $this->formatKanbanTask($card, $projectId))->values()->all();
+    }
+
+    /**
+     * Format a Kanban card as a calendar entry. Structurally a full
+     * `CalendarEventFull` (recurrence is always `none` — Kanban cards don't
+     * recur) plus the extra fields the frontend uses to render it read-only
+     * and link back to the board instead of Calendar's own edit form.
+     */
+    private function formatKanbanTask(KanbanBoardCard $card, string $projectId): array
+    {
+        $start = $card->kanban_board_card_start_date ?? $card->kanban_board_card_due_date;
+        $end = $card->kanban_board_card_due_date ?? $card->kanban_board_card_start_date;
+
+        if ($end->equalTo($start)) {
+            $end = $end->copy()->addHour();
+        }
+
+        return [
+            'id' => 'kanban-'.$card->kanban_board_card_id,
+            'project_id' => $projectId,
+            'title' => $card->kanban_board_card_title,
+            'description' => $card->kanban_board_card_description,
+            'start_time' => $start->toIso8601String(),
+            'end_time' => $end->toIso8601String(),
+            'labels' => $card->labels->map(fn (CardLabel $label) => [
+                'card_label_id' => $label->card_label_id,
+                'card_label_name' => $label->card_label_name,
+                'card_label_color_hex' => $label->card_label_color_hex,
+            ])->values()->all(),
+            'recurrence' => 'none',
+            'recurrence_group_id' => null,
+            'recurrence_end_date' => null,
+            'created_by' => $card->members->first()?->id,
+            'participants' => $card->members->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+            ])->values()->all(),
+            'is_classified' => false,
+            'is_completed' => $card->is_completed,
+            'is_kanban_task' => true,
+            'kanban_board_card_id' => $card->kanban_board_card_id,
+            'kanban_board_id' => $card->kanban_board_id,
+            'kanban_board_name' => $card->kanbanBoard->kanban_board_name,
+        ];
     }
 
     /**
@@ -76,25 +222,25 @@ class CalendarService
         Carbon $rangeStart,
         Carbon $rangeEnd
     ): array {
-        // Get events in range. Weekly recurring events only need to have
-        // started before the window ends — expandWeeklyOccurrences() is the
+        // Get events in range. Recurring events only need to have started
+        // before the window ends — expandRecurringOccurrences() is the
         // single source of truth for which occurrences actually fall inside
         // the requested window, so we don't pre-filter them by overlap here.
         $events = CalendarEvent::where('project_id', $projectId)
             ->where(function ($q) use ($rangeStart, $rangeEnd) {
                 $q->where(function ($sub) use ($rangeStart, $rangeEnd) {
-                    $sub->where('recurrence', '!=', 'weekly')
+                    $sub->where('recurrence', 'none')
                         ->where('start_time', '<', $rangeEnd)
                         ->where('end_time', '>', $rangeStart);
                 })->orWhere(function ($sub) use ($rangeEnd) {
-                    $sub->where('recurrence', 'weekly')
+                    $sub->where('recurrence', '!=', 'none')
                         ->where('start_time', '<', $rangeEnd);
                 });
             })
             ->whereHas('participants', function ($q) use ($userIds) {
                 $q->whereIn('user_id', $userIds);
             })
-            ->with(['participants:id,name', 'creator:id,name'])
+            ->with(['participants:id,name', 'creator:id,name', 'labels'])
             ->get();
 
         $result = [];
@@ -102,9 +248,9 @@ class CalendarService
         foreach ($events as $event) {
             $eventData = $this->formatFullEvent($event);
 
-            if ($event->recurrence === 'weekly') {
+            if ($this->isRecurring($event)) {
                 // Expand recurring events into virtual occurrences
-                $occurrences = $this->expandWeeklyOccurrences($event, $rangeStart, $rangeEnd);
+                $occurrences = $this->expandRecurringOccurrences($event, $rangeStart, $rangeEnd);
                 foreach ($occurrences as $occurrence) {
                     $result[] = $occurrence;
                 }
@@ -128,22 +274,25 @@ class CalendarService
         Carbon $rangeEnd
     ): array {
         // Get events from OTHER projects where any of the target users participate.
-        // Same weekly-recurrence handling as getProjectEvents() — see comment there.
+        // Same recurrence handling as getProjectEvents() — see comment there.
         $events = CalendarEvent::where('project_id', '!=', $projectId)
             ->where(function ($q) use ($rangeStart, $rangeEnd) {
                 $q->where(function ($sub) use ($rangeStart, $rangeEnd) {
-                    $sub->where('recurrence', '!=', 'weekly')
+                    $sub->where('recurrence', 'none')
                         ->where('start_time', '<', $rangeEnd)
                         ->where('end_time', '>', $rangeStart);
                 })->orWhere(function ($sub) use ($rangeEnd) {
-                    $sub->where('recurrence', 'weekly')
+                    $sub->where('recurrence', '!=', 'none')
                         ->where('start_time', '<', $rangeEnd);
                 });
             })
             ->whereHas('participants', function ($q) use ($userIds) {
                 $q->whereIn('user_id', $userIds);
             })
-            ->with(['participants:id,name'])
+            // `labels` is only actually read by formatFullEvent() below, for
+            // the subset of events the viewer participates in — eager-loading
+            // it here avoids a per-event lazy load in that branch.
+            ->with(['participants:id,name', 'labels'])
             ->get();
 
         $result = [];
@@ -151,10 +300,10 @@ class CalendarService
         foreach ($events as $event) {
             $viewerIsParticipant = $event->participants->contains('id', $viewerId);
 
-            if ($event->recurrence === 'weekly') {
+            if ($this->isRecurring($event)) {
                 $occurrences = $viewerIsParticipant
-                    ? $this->expandWeeklyOccurrences($event, $rangeStart, $rangeEnd)
-                    : $this->expandWeeklyClassifiedOccurrences($event, $rangeStart, $rangeEnd);
+                    ? $this->expandRecurringOccurrences($event, $rangeStart, $rangeEnd)
+                    : $this->expandRecurringClassifiedOccurrences($event, $rangeStart, $rangeEnd);
 
                 foreach ($occurrences as $occurrence) {
                     $result[] = $occurrence;
@@ -183,9 +332,14 @@ class CalendarService
             'description' => $event->description,
             'start_time' => $event->start_time->toIso8601String(),
             'end_time' => $event->end_time->toIso8601String(),
-            'priority' => $event->priority,
+            'labels' => $event->labels->map(fn (CardLabel $label) => [
+                'card_label_id' => $label->card_label_id,
+                'card_label_name' => $label->card_label_name,
+                'card_label_color_hex' => $label->card_label_color_hex,
+            ])->values()->all(),
             'recurrence' => $event->recurrence,
             'recurrence_group_id' => $event->recurrence_group_id,
+            'recurrence_end_date' => $event->recurrence_end_date?->toDateString(),
             'created_by' => $event->created_by,
             'participants' => $event->participants->map(fn ($u) => [
                 'id' => $u->id,
@@ -214,10 +368,11 @@ class CalendarService
     }
 
     /**
-     * Expand a weekly recurring event into individual occurrences for the view window.
+     * Expand a recurring event into individual occurrences for the view
+     * window (daily/weekly/monthly/yearly step, per `$event->recurrence`).
      * Returns full-detail occurrences.
      */
-    private function expandWeeklyOccurrences(
+    private function expandRecurringOccurrences(
         CalendarEvent $event,
         Carbon $rangeStart,
         Carbon $rangeEnd
@@ -228,9 +383,7 @@ class CalendarService
             ->map(fn ($date) => Carbon::parse($date)->toDateString())
             ->all();
 
-        // Calculate the horizon limit
-        $horizon = $event->start_time->copy()->addMonths(self::RECURRENCE_HORIZON_MONTHS);
-        $effectiveEnd = $rangeEnd->lt($horizon) ? $rangeEnd : $horizon;
+        $effectiveEnd = $this->effectiveExpansionEnd($event, $rangeEnd);
 
         $current = $event->start_time->copy();
 
@@ -249,17 +402,17 @@ class CalendarService
             }
 
             // CarbonImmutable is used app-wide (see AppServiceProvider), so
-            // add* returns a new instance and must be reassigned.
-            $current = $current->addWeek();
+            // step* returns a new instance and must be reassigned.
+            $current = $this->stepRecurrence($current, $event->recurrence);
         }
 
         return $occurrences;
     }
 
     /**
-     * Expand a weekly recurring event into CLASSIFIED occurrences.
+     * Expand a recurring event into CLASSIFIED occurrences.
      */
-    private function expandWeeklyClassifiedOccurrences(
+    private function expandRecurringClassifiedOccurrences(
         CalendarEvent $event,
         Carbon $rangeStart,
         Carbon $rangeEnd
@@ -270,8 +423,7 @@ class CalendarService
             ->map(fn ($date) => Carbon::parse($date)->toDateString())
             ->all();
 
-        $horizon = $event->start_time->copy()->addMonths(self::RECURRENCE_HORIZON_MONTHS);
-        $effectiveEnd = $rangeEnd->lt($horizon) ? $rangeEnd : $horizon;
+        $effectiveEnd = $this->effectiveExpansionEnd($event, $rangeEnd);
 
         $current = $event->start_time->copy();
 
@@ -288,8 +440,8 @@ class CalendarService
             }
 
             // CarbonImmutable is used app-wide (see AppServiceProvider), so
-            // add* returns a new instance and must be reassigned.
-            $current = $current->addWeek();
+            // step* returns a new instance and must be reassigned.
+            $current = $this->stepRecurrence($current, $event->recurrence);
         }
 
         return $occurrences;
@@ -297,6 +449,9 @@ class CalendarService
 
     /**
      * Create a calendar event with participants.
+     *
+     * @param  array  $data  May include `label_ids`, an array of existing
+     *                       project CardLabel UUIDs to attach.
      */
     public function createEvent(array $data, array $participantIds): CalendarEvent
     {
@@ -310,17 +465,18 @@ class CalendarService
         $event->description = $data['description'] ?? null;
         $event->start_time = $startTime;
         $event->end_time = $endTime;
-        $event->priority = $data['priority'] ?? 'mid';
         $event->created_by = $data['created_by'];
         $event->recurrence = $data['recurrence'] ?? 'none';
 
-        if ($event->recurrence === 'weekly') {
+        if ($this->isRecurring($event)) {
             $event->recurrence_group_id = Str::uuid()->toString();
+            $event->recurrence_end_date = $data['recurrence_end_date'] ?? null;
         }
 
         $event->save();
         $event->participants()->sync($participantIds);
-        $event->load('participants:id,name');
+        $event->labels()->sync($data['label_ids'] ?? []);
+        $event->load(['participants:id,name', 'labels']);
 
         return $event;
     }
@@ -335,7 +491,7 @@ class CalendarService
         $startTime = isset($data['start_time']) ? Carbon::parse($data['start_time'])->utc() : $event->start_time;
         $endTime = isset($data['end_time']) ? Carbon::parse($data['end_time'])->utc() : $event->end_time;
 
-        if ($event->recurrence === 'weekly' && $scope === 'single' && isset($data['occurrence_date'])) {
+        if ($this->isRecurring($event) && $scope === 'single' && isset($data['occurrence_date'])) {
             $occurrenceDate = Carbon::parse($data['occurrence_date'])->toDateString();
 
             return DB::transaction(function () use ($event, $data, $participantIds, $occurrenceDate) {
@@ -345,6 +501,9 @@ class CalendarService
                     'project_id' => $event->project_id,
                     'created_by' => $event->created_by,
                     'recurrence' => 'none',
+                    // Carry the original occurrence's labels forward unless
+                    // this particular edit explicitly changed them.
+                    'label_ids' => $data['label_ids'] ?? $event->labels->pluck('card_label_id')->all(),
                 ]);
 
                 unset($newData['scope'], $newData['occurrence_date']);
@@ -355,8 +514,12 @@ class CalendarService
 
         // Update the event directly (applies to 'all' or non-recurring)
         $event->fill(collect($data)->only([
-            'title', 'description', 'priority', 'recurrence',
+            'title', 'description', 'recurrence', 'recurrence_end_date',
         ])->all());
+
+        if (array_key_exists('label_ids', $data)) {
+            $event->labels()->sync($data['label_ids']);
+        }
 
         if (isset($data['start_time'])) {
             $event->start_time = $startTime;
@@ -367,7 +530,7 @@ class CalendarService
 
         $event->save();
         $event->participants()->sync($participantIds);
-        $event->load('participants:id,name');
+        $event->load(['participants:id,name', 'labels']);
 
         return $event;
     }
@@ -379,13 +542,13 @@ class CalendarService
      */
     public function deleteEvent(CalendarEvent $event, string $scope = 'single', ?string $occurrenceDate = null): void
     {
-        if ($event->recurrence === 'weekly' && $scope === 'single' && $occurrenceDate) {
+        if ($this->isRecurring($event) && $scope === 'single' && $occurrenceDate) {
             $this->appendExcludedOccurrenceDate($event, Carbon::parse($occurrenceDate)->toDateString());
 
             return;
         }
 
-        if ($event->recurrence === 'weekly' && $scope === 'all' && $event->recurrence_group_id) {
+        if ($this->isRecurring($event) && $scope === 'all' && $event->recurrence_group_id) {
             // Delete all events in the recurrence group
             CalendarEvent::where('recurrence_group_id', $event->recurrence_group_id)->delete();
         } else {

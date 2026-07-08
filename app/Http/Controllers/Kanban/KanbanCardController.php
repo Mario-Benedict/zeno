@@ -80,36 +80,42 @@ class KanbanCardController extends Controller
 
         DB::transaction(function () use ($card, $oldBoardId, $newBoardId, $newPosition) {
             // Read the destination board's current ordering (locking the rows
-            // for the duration of this transaction).
+            // for the duration of this transaction). Plucking the title
+            // alongside the id — in the same query — gives repackBoard() what
+            // it needs to satisfy the cards' NOT NULL title column without an
+            // extra round trip; see repackBoard()'s docblock for why.
             $destOrder = KanbanBoardCard::where('kanban_board_id', $newBoardId)
                 ->where('kanban_board_card_id', '!=', $card->kanban_board_card_id)
                 ->orderBy('position')
                 ->lockForUpdate()
-                ->pluck('kanban_board_card_id')
+                ->pluck('kanban_board_card_title', 'kanban_board_card_id')
                 ->all();
 
-            // Insert the moved card at the requested index.
+            // Insert the moved card at the requested index (both in the
+            // ordering and in the id => title map used to repack it).
+            $destIds = array_keys($destOrder);
             array_splice(
-                $destOrder,
-                min($newPosition, count($destOrder)),
+                $destIds,
+                min($newPosition, count($destIds)),
                 0,
                 [$card->kanban_board_card_id]
             );
+            $destOrder[$card->kanban_board_card_id] = $card->kanban_board_card_title;
 
             // One bulk write to repack the destination board.
             // `kanban_board_id` is included in the update so the moved card
             // is migrated to the new column in the same statement.
-            $this->repackBoard($newBoardId, $destOrder, includeBoardId: true);
+            $this->repackBoard($newBoardId, $destIds, $destOrder, includeBoardId: true);
 
             // If the move crossed boards, repack what's left in the source.
             if ($oldBoardId !== $newBoardId) {
                 $sourceOrder = KanbanBoardCard::where('kanban_board_id', $oldBoardId)
                     ->orderBy('position')
                     ->lockForUpdate()
-                    ->pluck('kanban_board_card_id')
+                    ->pluck('kanban_board_card_title', 'kanban_board_card_id')
                     ->all();
 
-                $this->repackBoard($oldBoardId, $sourceOrder);
+                $this->repackBoard($oldBoardId, array_keys($sourceOrder), $sourceOrder);
             }
         });
 
@@ -135,10 +141,10 @@ class KanbanCardController extends Controller
             $remaining = KanbanBoardCard::where('kanban_board_id', $boardId)
                 ->orderBy('position')
                 ->lockForUpdate()
-                ->pluck('kanban_board_card_id')
+                ->pluck('kanban_board_card_title', 'kanban_board_card_id')
                 ->all();
 
-            $this->repackBoard($boardId, $remaining);
+            $this->repackBoard($boardId, array_keys($remaining), $remaining);
         });
 
         return back();
@@ -154,9 +160,22 @@ class KanbanCardController extends Controller
      * column — used by `move()` so the moved card is reparented in the same
      * statement that repacks the destination column.
      *
+     * Every card here already exists, so the `ON DUPLICATE KEY UPDATE` branch
+     * is always what actually runs — but `upsert()` still compiles a full
+     * `INSERT` clause from every key in `$rows`, and the database validates
+     * that clause against the table's NOT NULL constraints regardless of
+     * which branch fires. `kanban_board_card_title` has no default, so an
+     * insert row that only carried id/board/position used to fail outright
+     * (this was the "cannot switch board and position" bug). `$titlesByCardId`
+     * supplies the real title so that INSERT clause is valid; it's
+     * deliberately left out of `update:` below, so an existing row's title is
+     * never touched by this call — only `position` (and optionally
+     * `kanban_board_id`) actually change.
+     *
      * @param  array<int, string>  $orderedCardIds  IDs in their new position order
+     * @param  array<string, string>  $titlesByCardId  Each id's current title, keyed by id
      */
-    private function repackBoard(string $boardId, array $orderedCardIds, bool $includeBoardId = false): void
+    private function repackBoard(string $boardId, array $orderedCardIds, array $titlesByCardId, bool $includeBoardId = false): void
     {
         if (empty($orderedCardIds)) {
             return;
@@ -168,6 +187,7 @@ class KanbanCardController extends Controller
                 'kanban_board_card_id' => $cardId,
                 'kanban_board_id' => $boardId,
                 'position' => $index,
+                'kanban_board_card_title' => $titlesByCardId[$cardId],
             ];
         }
 

@@ -123,18 +123,21 @@ export const MiniCalendar = ({
             `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
           );
 
-          // Priority of visual states (matches the reference design):
-          // today -> neutral grey, has-event -> solid blue, selected -> ring.
+          // The one date that's "marked" solid blue is always the currently
+          // selected date (currentDate defaults to today, so today is marked
+          // out of the box). Today gets a subtle ring when it isn't the
+          // selection, so it stays visible as a reference point. Having an
+          // event never overrides the cell background — it's a small dot
+          // instead, so it can't be mistaken for "selected".
           let stateClass = isCurrentMonth
             ? 'text-dark-primary hover:bg-dark-surface-3'
             : 'text-dark-secondary/40 hover:text-dark-secondary';
 
-          if (isToday) {
-            stateClass = 'bg-dark-surface-3 font-semibold text-dark-primary';
-          } else if (hasEvent && isCurrentMonth) {
+          if (isSelected) {
             stateClass = 'bg-accent-blue font-semibold text-white';
-          } else if (isSelected) {
-            stateClass = 'text-dark-primary ring-1 ring-accent-blue ring-inset';
+          } else if (isToday) {
+            stateClass =
+              'font-semibold text-dark-primary ring-1 ring-dark-secondary/50 ring-inset';
           }
 
           return (
@@ -144,6 +147,13 @@ export const MiniCalendar = ({
               className={`relative mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xsmall transition-colors ${stateClass}`}
             >
               {date.getDate()}
+              {hasEvent && (
+                <span
+                  className={`absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${
+                    isSelected ? 'bg-white' : 'bg-accent-blue'
+                  }`}
+                />
+              )}
             </button>
           );
         })}

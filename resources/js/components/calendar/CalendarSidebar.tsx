@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { TranslationKey } from '@/i18n/dictionary';
 import type {
-  CalendarMember,
   AnyCalendarEvent,
+  CalendarMember,
   CalendarViewMode,
-  CalendarPriority,
 } from '@/types/calendar';
+import type { CardLabel } from '@/types/kanban';
 import { MiniCalendar } from './MiniCalendar';
 
 interface CalendarSidebarProps {
@@ -22,19 +21,10 @@ interface CalendarSidebarProps {
   members: CalendarMember[];
   onToggleMember: (id: number) => void;
   events: AnyCalendarEvent[];
-  hiddenPriorities: Set<CalendarPriority>;
-  onTogglePriority: (priority: CalendarPriority) => void;
+  cardLabels: CardLabel[];
+  hiddenLabelIds: Set<string>;
+  onToggleLabel: (labelId: string) => void;
 }
-
-const PRIORITIES: {
-  key: CalendarPriority;
-  labelKey: TranslationKey;
-  dot: string;
-}[] = [
-  { key: 'low', labelKey: 'calendar.priorityLow', dot: 'bg-status-success' },
-  { key: 'mid', labelKey: 'calendar.priorityMid', dot: 'bg-status-warning' },
-  { key: 'high', labelKey: 'calendar.priorityHigh', dot: 'bg-status-error' },
-];
 
 const PlusIcon = () => (
   <svg
@@ -97,8 +87,9 @@ export const CalendarSidebar = ({
   members,
   onToggleMember,
   events,
-  hiddenPriorities,
-  onTogglePriority,
+  cardLabels,
+  hiddenLabelIds,
+  onToggleLabel,
 }: CalendarSidebarProps) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
@@ -150,32 +141,40 @@ export const CalendarSidebar = ({
           events={events}
         />
 
-        <div className="mt-3 flex items-center justify-center gap-2 border-t border-dark-border pt-3">
-          {PRIORITIES.map((p) => {
-            const active = !hiddenPriorities.has(p.key);
-            const label = t(p.labelKey);
+        {cardLabels.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 border-t border-dark-border pt-3">
+            {cardLabels.map((label) => {
+              const active = !hiddenLabelIds.has(label.card_label_id);
 
-            return (
-              <button
-                key={p.key}
-                onClick={() => onTogglePriority(p.key)}
-                title={
-                  active
-                    ? t('calendar.hidePriority', { priority: label })
-                    : t('calendar.showPriority', { priority: label })
-                }
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xsmall font-medium transition ${
-                  active
-                    ? 'border-dark-border bg-dark-surface-3 text-dark-primary'
-                    : 'border-transparent bg-transparent text-dark-secondary/60 line-through'
-                }`}
-              >
-                <span className={`h-2.5 w-2.5 rounded-full ${p.dot}`} />
-                {label}
-              </button>
-            );
-          })}
-        </div>
+              return (
+                <button
+                  key={label.card_label_id}
+                  onClick={() => onToggleLabel(label.card_label_id)}
+                  title={
+                    active
+                      ? t('calendar.hideLabel', {
+                          label: label.card_label_name,
+                        })
+                      : t('calendar.showLabel', {
+                          label: label.card_label_name,
+                        })
+                  }
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xsmall font-medium transition ${
+                    active
+                      ? 'border-dark-border bg-dark-surface-3 text-dark-primary'
+                      : 'border-transparent bg-transparent text-dark-secondary/60 line-through'
+                  }`}
+                >
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: label.card_label_color_hex }}
+                  />
+                  {label.card_label_name}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* --- Bottom card: people search + member list --- */}

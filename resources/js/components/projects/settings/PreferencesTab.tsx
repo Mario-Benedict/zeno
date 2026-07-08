@@ -1,7 +1,5 @@
-import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import preferences from '@/routes/preferences';
+import { useLocaleContext } from '@/i18n/LocaleContext';
 import { FieldLabel } from './shared';
 
 // ── Icons (stroke="currentColor" so they inherit the wrapper text color) ─
@@ -61,48 +59,15 @@ const GlobeIcon = () => (
   </svg>
 );
 
-// ── Theme helpers ─────────────────────────────────────────────────────────
-
-const getStoredTheme = (): 'dark' | 'light' => {
-  try {
-    return (localStorage.getItem('theme') as 'dark' | 'light') ?? 'dark';
-  } catch {
-    return 'dark';
-  }
-};
-
-const applyTheme = (theme: 'dark' | 'light') => {
-  try {
-    localStorage.setItem('theme', theme);
-  } catch {
-    /* ignore */
-  }
-  if (theme === 'light') {
-    document.documentElement.classList.add('light-mode');
-  } else {
-    document.documentElement.classList.remove('light-mode');
-  }
-};
-
 // ── PreferencesTab ────────────────────────────────────────────────────────
+//
+// Theme + locale are both owned by `LocaleContext` (a single source of truth
+// shared with `app.tsx`'s pre-mount bootstrap), so this component just reads
+// and writes through it rather than keeping its own copy of the state.
 
-interface PreferencesTabProps {
-  accountIndex: number;
-}
-
-const PreferencesTab = ({ accountIndex }: PreferencesTabProps) => {
-  const { t, locale, setLocale } = useTranslation();
-  const [theme, setTheme] = useState<'dark' | 'light'>(getStoredTheme);
-
-  const handleTheme = (next: 'dark' | 'light') => {
-    setTheme(next);
-    applyTheme(next);
-    router.patch(
-      preferences.update.url({ accountIndex }),
-      { theme: next },
-      { preserveScroll: true, preserveState: true },
-    );
-  };
+const PreferencesTab = () => {
+  const { t } = useTranslation();
+  const { locale, setLocale, theme, setTheme } = useLocaleContext();
 
   return (
     <div>
@@ -119,7 +84,7 @@ const PreferencesTab = ({ accountIndex }: PreferencesTabProps) => {
             {/* Dark option */}
             <button
               type="button"
-              onClick={() => handleTheme('dark')}
+              onClick={() => setTheme('dark')}
               className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
                 theme === 'dark'
                   ? 'border-accent-blue bg-accent-blue/10'
@@ -145,7 +110,7 @@ const PreferencesTab = ({ accountIndex }: PreferencesTabProps) => {
             {/* Light option */}
             <button
               type="button"
-              onClick={() => handleTheme('light')}
+              onClick={() => setTheme('light')}
               className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
                 theme === 'light'
                   ? 'border-accent-blue bg-accent-blue/10'

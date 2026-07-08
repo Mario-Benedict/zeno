@@ -41,7 +41,7 @@ class CalendarEventController extends Controller
     public function update(UpdateCalendarEventRequest $request): JsonResponse
     {
         $project = $this->resolveProject($request->route('project'));
-        $event = $this->resolveEvent($request->route('event'));
+        $event = $this->resolveEvent($request->route('event'), $project);
         $scope = $request->input('scope', 'single');
 
         // Participants that were in the event before update (to notify them of removal)
@@ -66,7 +66,7 @@ class CalendarEventController extends Controller
     public function destroy(UpdateCalendarEventRequest $request): JsonResponse
     {
         $project = $this->resolveProject($request->route('project'));
-        $event = $this->resolveEvent($request->route('event'));
+        $event = $this->resolveEvent($request->route('event'), $project);
         $scope = $request->input('scope', 'single');
         $participants = $event->participants()->pluck('users.id')->all();
         $occurrenceDate = $request->input('occurrence_date');
@@ -95,16 +95,22 @@ class CalendarEventController extends Controller
         return Project::where('project_slug', $project)->firstOrFail();
     }
 
-    private function resolveEvent(CalendarEvent|string|null $event): CalendarEvent
+    /**
+     * Resolve the `{event}` route parameter and verify it belongs to the
+     * project the request is scoped to. Route-model binding only proves the
+     * caller is a member of *some* project matching the URL slug — without
+     * this check, any member could mutate another project's event by UUID.
+     */
+    private function resolveEvent(CalendarEvent|string|null $event, Project $project): CalendarEvent
     {
-        if ($event instanceof CalendarEvent) {
-            return $event;
-        }
+        $resolved = $event instanceof CalendarEvent
+            ? $event
+            : (is_string($event) && $event !== ''
+                ? CalendarEvent::whereKey($event)->first()
+                : null);
 
-        if (! is_string($event) || $event === '') {
-            abort(404);
-        }
+        abort_if($resolved === null || $resolved->project_id !== $project->project_id, 404);
 
-        return CalendarEvent::whereKey($event)->firstOrFail();
+        return $resolved;
     }
 }

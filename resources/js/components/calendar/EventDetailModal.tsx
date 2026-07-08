@@ -1,10 +1,15 @@
+import { Link } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
+import { TagBadge } from '@/components/kanban';
 import { useTranslation } from '@/hooks/useTranslation';
+import { projectPath } from '@/lib/accountRoutes';
 import type {
   AnyCalendarEvent,
   CalendarEventFull,
   CalendarMember,
 } from '@/types/calendar';
+import { getRecurrenceLabel } from '@/utils/calendar';
+import BoardIcon from '@public/icons/large/board.svg';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -14,6 +19,8 @@ interface EventDetailModalProps {
   onEdit: () => void;
   onDelete: () => void;
   canEdit: boolean;
+  accountIndex: number;
+  projectSlug: string;
 }
 
 export const EventDetailModal = ({
@@ -24,8 +31,11 @@ export const EventDetailModal = ({
   onEdit,
   onDelete,
   canEdit,
+  accountIndex,
+  projectSlug,
 }: EventDetailModalProps) => {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,6 +88,13 @@ export const EventDetailModal = ({
     );
   }
 
+  // Narrow before the CalendarEventFull cast below, which would otherwise
+  // erase the CalendarKanbanTask-only fields (kanban_board_id / _name).
+  const kanbanTask = event.is_kanban_task ? event : null;
+  const kanbanBoardUrl = kanbanTask
+    ? projectPath(accountIndex, projectSlug, '/kanban')
+    : null;
+
   const fullEvent = event as CalendarEventFull;
 
   const start = new Date(fullEvent.start_time);
@@ -91,27 +108,16 @@ export const EventDetailModal = ({
   });
   const timeStr = `${start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low':
-        return 'text-status-success';
-      case 'high':
-        return 'text-status-error';
-      default:
-        return 'text-status-warning';
-    }
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'low':
-        return 'bg-status-success/15 text-status-success ring-status-success/25';
-      case 'high':
-        return 'bg-status-error/15 text-status-error ring-status-error/25';
-      default:
-        return 'bg-status-warning/15 text-status-warning ring-status-warning/25';
-    }
-  };
+  const recurrenceLabel =
+    fullEvent.recurrence !== 'none'
+      ? getRecurrenceLabel(
+          fullEvent.recurrence,
+          start,
+          fullEvent.recurrence_end_date,
+          localeCode,
+          t,
+        )
+      : null;
 
   return (
     <div
@@ -120,22 +126,31 @@ export const EventDetailModal = ({
     >
       <div className="flex items-start justify-between border-b border-dark-border px-5 py-4">
         <div className="pr-4">
-          <h2 className="text-large font-semibold text-dark-primary">
+          <h2
+            className={`text-large font-semibold text-dark-primary ${kanbanTask?.is_completed ? 'text-dark-secondary line-through' : ''}`}
+          >
             {fullEvent.title}
           </h2>
-          <div className="mt-1 flex items-center gap-3 text-xsmall text-dark-secondary">
-            <span
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 font-semibold tracking-wider uppercase ring-1 ${getPriorityBadge(fullEvent.priority)}`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${getPriorityColor(fullEvent.priority)}`}
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xsmall text-dark-secondary">
+            {kanbanTask && (
+              <span className="flex items-center gap-1 font-medium">
+                <BoardIcon className="h-3 w-3" />
+                {t('calendar.fromBoard', {
+                  board: kanbanTask.kanban_board_name,
+                })}
+              </span>
+            )}
+            {fullEvent.labels.map((label) => (
+              <TagBadge
+                key={label.card_label_id}
+                label={label.card_label_name}
+                colorHex={label.card_label_color_hex}
               />
-              {t('calendar.priorityBadge', { priority: fullEvent.priority })}
-            </span>
-            {fullEvent.recurrence === 'weekly' && (
+            ))}
+            {recurrenceLabel && (
               <>
                 <span>•</span>
-                <span>{t('calendar.repeatsWeekly')}</span>
+                <span>{recurrenceLabel}</span>
               </>
             )}
           </div>
@@ -202,6 +217,17 @@ export const EventDetailModal = ({
             <p className="leading-relaxed whitespace-pre-wrap">
               {fullEvent.description}
             </p>
+          </div>
+        )}
+
+        {kanbanTask && (
+          <div className="mt-6 flex justify-end border-t border-dark-border pt-4">
+            <Link
+              href={kanbanBoardUrl!}
+              className="rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-medium text-dark-primary transition hover:bg-dark-border"
+            >
+              {t('calendar.openInBoard')}
+            </Link>
           </div>
         )}
 
