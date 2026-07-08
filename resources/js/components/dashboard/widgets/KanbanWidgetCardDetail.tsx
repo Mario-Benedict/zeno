@@ -5,7 +5,7 @@ import {
   formatDate,
   generateInitials,
   getContrastColor,
-  MEMBER_COLORS,
+  memberColor,
 } from '@/utils/kanban';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import CheckIcon from '@public/icons/small/check.svg';
@@ -105,13 +105,13 @@ export const KanbanWidgetCardDetail = ({
         {!!card.members?.length && (
           <div className="mb-3 flex items-center gap-2">
             <div className="flex -space-x-1.5">
-              {card.members.map((member, i) => (
+              {card.members.map((member) => (
                 <div
                   key={member.id}
                   title={member.name}
                   className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-dark-surface-2 text-micro font-bold text-white"
                   style={{
-                    backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length],
+                    backgroundColor: memberColor(member.id),
                   }}
                 >
                   {generateInitials(member.name)}

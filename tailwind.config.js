@@ -52,6 +52,24 @@ export default {
                     secondary: '#B0B0B0',
                 },
 
+                // --- STATIC DARK ---
+                // A handful of header icon buttons (bell, people, gear, the
+                // account/project switcher triggers) are meant to stay a dark
+                // rounded chip in both themes rather than following the
+                // adaptive `dark.*` tokens (which intentionally flip to light
+                // colors in light mode — see the `@theme` comment in app.css).
+                // These are literal hex, same technique as `light.*` above and
+                // `.prose-note` in app.css, matching dark mode's default
+                // `--color-dark-surface-*` / `--color-dark-primary` values.
+                'static-dark': {
+                    surface: {
+                        2: '#242424',
+                        3: '#2E2E2E',
+                    },
+                    primary: '#F0F0F0',
+                    secondary: '#7B7B7B',
+                },
+
                 // --- ACCENT COLORS ---
                 accent: {
                     red: { light: '#FFB3B3', DEFAULT: '#D32F2F' },

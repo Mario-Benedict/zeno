@@ -52,6 +52,7 @@ export const EventFormModal = ({
   const [assigneeId, setAssigneeId] = useState<number>(currentUser.id);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
 
   const canAssignOthers = projectRole === 'OWNER' || projectRole === 'ADMIN';
 
@@ -61,6 +62,9 @@ export const EventFormModal = ({
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isOpen) {
+      setTitleError(null);
+      setErrorMsg(null);
+
       if (eventToEdit) {
         setTitle(eventToEdit.title);
         setDescription(eventToEdit.description || '');
@@ -111,8 +115,15 @@ export const EventFormModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setErrorMsg(null);
+
+    if (!title.trim()) {
+      setTitleError(t('calendar.titleRequiredError'));
+      return;
+    }
+    setTitleError(null);
+
+    setIsSubmitting(true);
     try {
       if (!startDate || !startTime || !endDate || !endTime) {
         throw new Error(t('calendar.saveScheduleError'));
@@ -227,12 +238,21 @@ export const EventFormModal = ({
             </label>
             <input
               type="text"
-              required
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-lg border border-dark-border bg-dark-input px-3 py-2 text-small text-dark-primary focus:border-dark-border-focus focus:outline-none"
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (titleError) setTitleError(null);
+              }}
+              className={`w-full rounded-lg border bg-dark-input px-3 py-2 text-small text-dark-primary focus:outline-none ${
+                titleError
+                  ? 'border-status-error focus:border-status-error'
+                  : 'border-dark-border focus:border-dark-border-focus'
+              }`}
               placeholder={t('calendar.eventTitlePlaceholder')}
             />
+            {titleError && (
+              <p className="mt-1 text-xsmall text-status-error">{titleError}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -278,6 +298,7 @@ export const EventFormModal = ({
               value={recurrence}
               options={recurrenceOptions}
               onChange={handleRecurrenceChange}
+              align="right"
             />
           </div>
 

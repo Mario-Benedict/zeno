@@ -76,6 +76,7 @@ export const calendar: typeof en = {
   newSchedule: 'Jadwal Baru',
   title: 'Judul',
   eventTitlePlaceholder: 'Judul acara',
+  titleRequiredError: 'Silakan masukkan judul.',
   startDate: 'Tanggal Mulai',
   startTime: 'Waktu Mulai',
   endDate: 'Tanggal Selesai',

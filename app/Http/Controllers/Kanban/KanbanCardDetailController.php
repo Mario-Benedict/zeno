@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Kanban;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\CheckTaskConflictJob;
 use App\Models\CardLabel;
 use App\Models\KanbanBoardCard;
 use App\Models\Project;
@@ -143,6 +144,10 @@ class KanbanCardDetailController extends Controller
         if (! $card->members()->where('kanban_board_card_account_id', $validated['user_id'])->exists()) {
             $card->members()->attach($validated['user_id']);
             KanbanBoardCardObserver::syncReminders($card);
+
+            if ($card->kanban_board_card_due_date) {
+                CheckTaskConflictJob::dispatch($card->kanban_board_card_id, (int) $validated['user_id'], $request->user()->id);
+            }
         }
 
         return back();
@@ -173,7 +178,16 @@ class KanbanCardDetailController extends Controller
             'kanban_board_card_due_date' => 'nullable|date',
         ]);
 
+        $dueDateSubmitted = array_key_exists('kanban_board_card_due_date', $validated)
+            && $validated['kanban_board_card_due_date'] !== null;
+
         $card->update($validated);
+
+        if ($dueDateSubmitted && $card->kanban_board_card_due_date) {
+            $card->members()->get()->each(
+                fn ($member) => CheckTaskConflictJob::dispatch($card->kanban_board_card_id, $member->id, $request->user()->id)
+            );
+        }
 
         return back();
     }

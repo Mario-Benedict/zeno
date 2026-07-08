@@ -52,7 +52,30 @@ export interface NotificationChatItem {
   unread_count: number;
 }
 
+/**
+ * One row from `task_conflicts`, shaped differently depending on which side
+ * of the conflict the current user is on — `role: 'assignee'` means they
+ * need to respond Yes/No, `role: 'assigner'` means they're seeing a decline
+ * alert for a task they assigned.
+ */
+export type NotificationConflictItem =
+  | {
+      id: string;
+      role: 'assignee';
+      card_title: string | null;
+      conflicting_title: string;
+      conflicting_start: string;
+      conflicting_end: string;
+    }
+  | {
+      id: string;
+      role: 'assigner';
+      card_title: string | null;
+      assignee_name: string | null;
+    };
+
 export interface NotificationInboxResponse {
   inbox: NotificationInboxItem[];
   chat: NotificationChatItem[];
+  conflicts: NotificationConflictItem[];
 }

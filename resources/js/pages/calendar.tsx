@@ -131,6 +131,22 @@ export default function Calendar({
     );
   };
 
+  const handlePrevWeek = () => {
+    setCurrentDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() - 7);
+      return next;
+    });
+  };
+
+  const handleNextWeek = () => {
+    setCurrentDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() + 7);
+      return next;
+    });
+  };
+
   const handleToggleMember = (id: number) => {
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, checked: !m.checked } : m)),
@@ -319,6 +335,8 @@ export default function Calendar({
               members={members}
               onDateClick={handleGridDateClick}
               onEventClick={handleEventClick}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
             />
           ) : (
             <WeekGrid
@@ -327,6 +345,8 @@ export default function Calendar({
               members={members}
               onDateClick={handleGridDateClick}
               onEventClick={handleEventClick}
+              onPrevWeek={handlePrevWeek}
+              onNextWeek={handleNextWeek}
             />
           )}
 

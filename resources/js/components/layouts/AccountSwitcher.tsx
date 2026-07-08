@@ -71,7 +71,7 @@ const AccountSwitcher = ({
         aria-haspopup="true"
         aria-expanded={open}
         aria-label={t('account.userMenu')}
-        className="flex h-8 max-w-60 items-center gap-2 rounded-lg bg-dark-surface-2 px-2 text-dark-primary transition-colors select-none hover:bg-dark-surface-3"
+        className="flex h-8 max-w-60 items-center gap-2 rounded-lg bg-static-dark-surface-2 px-2 text-static-dark-primary transition-colors select-none hover:bg-static-dark-surface-3"
       >
         {/* Colour-coded avatar matching the account-menu style */}
         <div
@@ -85,7 +85,7 @@ const AccountSwitcher = ({
         </span>
 
         <span
-          className={`shrink-0 text-dark-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+          className={`shrink-0 text-static-dark-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
         >
           <ArrowDown />
         </span>

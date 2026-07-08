@@ -60,6 +60,12 @@ export interface CalendarEventFull extends CalendarEventBase {
 
 export interface CalendarEventClassified extends CalendarEventBase {
   is_classified: true;
+  /**
+   * The event creator's `calendar_visibility` preference: `masked` renders a
+   * generic "busy" label alongside the real times, `busy_only` renders just
+   * the coloured block with no label at all.
+   */
+  visibility: 'masked' | 'busy_only';
 }
 
 /**

@@ -1,4 +1,5 @@
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWheelStepNavigation } from '@/hooks/useWheelStepNavigation';
 import type { TranslationKey } from '@/i18n/dictionary';
 import type { AnyCalendarEvent } from '@/types/calendar';
 
@@ -45,6 +46,13 @@ export const MiniCalendar = ({
   const viewYear = currentDate.getFullYear();
   const viewMonth = currentDate.getMonth();
 
+  // Scrolling over the mini calendar changes the month instead of scrolling
+  // the page underneath it — see the hook for why it's a native listener.
+  const containerRef = useWheelStepNavigation<HTMLDivElement>({
+    onPrev: onPrevMonth,
+    onNext: onNextMonth,
+  });
+
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
@@ -85,7 +93,7 @@ export const MiniCalendar = ({
   });
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={containerRef}>
       <div className="mb-2 flex items-center justify-between px-1">
         <span className="text-small font-semibold text-dark-primary">
           {t(MONTH_KEYS[viewMonth])} {viewYear}

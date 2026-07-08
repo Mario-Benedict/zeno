@@ -82,7 +82,7 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
       </p>
       <div
         ref={containerRef}
-        className="scrollbar-app h-44 overflow-y-auto rounded-lg border border-dark-border bg-dark-surface-2 py-1"
+        className="scrollbar-app h-44 overflow-y-auto rounded-lg border border-dark-border bg-dark-surface-2 p-1"
       >
         {items.map((item) => {
           const active = item.value === selected;
@@ -93,9 +93,9 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
               ref={active ? selectedRef : null}
               type="button"
               onClick={() => onSelect(item.value)}
-              className={`w-full py-1.5 text-center text-xsmall transition ${
+              className={`w-full rounded-lg py-1.5 text-center text-xsmall transition ${
                 active
-                  ? 'bg-accent-blue font-semibold text-white'
+                  ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]'
                   : 'text-white/50 hover:bg-white/8 hover:text-white'
               }`}
             >
@@ -109,10 +109,13 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
 };
 
 /**
- * A time picker styled to match the `DatePicker`: the same trigger button and
- * centred dark popover, but with scrollable accent-blue columns for the hour
- * (1–12) and minute (00–59), plus an AM/PM toggle. Reads / emits 24-hour
- * "HH:mm".
+ * A time picker styled to match the `DatePicker`: same trigger button, same
+ * `w-64` centred dark popover with a border-bottomed header (here, a
+ * clickable "jump to now" time readout instead of month navigation) and the
+ * same rounded-cell selection style — just with scrollable accent-blue
+ * columns for the hour (1–12) and minute (00–59) plus an AM/PM toggle
+ * instead of a day grid, since a time has no calendar-grid layout to draw.
+ * Reads / emits 24-hour "HH:mm".
  */
 export const TimePicker = ({
   value,
@@ -191,9 +194,16 @@ export const TimePicker = ({
       )}
 
       {open && !disabled && (
-        <div className="fixed top-1/2 left-1/2 z-50 w-72 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl">
-          <div className="border-b border-dark-border px-4 py-3 text-center text-small font-semibold text-white/80">
-            {current.hour12}:{pad(current.minute)} {current.period}
+        <div className="fixed top-1/2 left-1/2 z-50 w-64 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl">
+          <div className="flex items-center justify-center border-b border-dark-border px-4 py-3">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-small font-semibold text-white/70 transition hover:text-white"
+              onClick={setNow}
+              title={t('common.now')}
+            >
+              {current.hour12}:{pad(current.minute)} {current.period}
+            </button>
           </div>
 
           <div className="flex gap-2 px-3 py-3">
@@ -222,9 +232,9 @@ export const TimePicker = ({
                       key={p}
                       type="button"
                       onClick={() => emit({ period: p })}
-                      className={`flex-1 rounded-md text-xsmall font-semibold transition ${
+                      className={`flex-1 rounded-lg text-xsmall font-semibold transition ${
                         active
-                          ? 'bg-accent-blue text-white'
+                          ? 'bg-accent-blue text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]'
                           : 'text-white/40 hover:bg-white/8 hover:text-white/70'
                       }`}
                     >

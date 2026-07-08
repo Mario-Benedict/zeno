@@ -49,10 +49,29 @@ it('rejects an unsupported locale or theme value', function () {
         ->assertSessionHasErrors(['locale', 'theme']);
 });
 
-it('defaults new users to english and dark theme', function () {
+it('defaults new users to english, dark theme, and busy_only calendar visibility', function () {
     /** @var mixed $this */
     $this->user->refresh();
 
     expect($this->user->locale)->toBe('en')
-        ->and($this->user->theme)->toBe('dark');
+        ->and($this->user->theme)->toBe('dark')
+        ->and($this->user->calendar_visibility)->toBe('busy_only');
+});
+
+it('persists a valid calendar visibility level', function () {
+    /** @var mixed $this */
+    $this->actingAs($this->user)
+        ->patch('/u/0/profile/preferences', ['calendar_visibility' => 'transparent'])
+        ->assertRedirect();
+
+    $this->user->refresh();
+
+    expect($this->user->calendar_visibility)->toBe('transparent');
+});
+
+it('rejects an unsupported calendar visibility value', function () {
+    /** @var mixed $this */
+    $this->actingAs($this->user)
+        ->patch('/u/0/profile/preferences', ['calendar_visibility' => 'public'])
+        ->assertSessionHasErrors(['calendar_visibility']);
 });

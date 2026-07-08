@@ -5,55 +5,20 @@ import type { Theme } from '@/lib/theme';
 import { applyThemeClass, getStoredTheme, persistTheme } from '@/lib/theme';
 import preferences from '@/routes/preferences';
 import type { Locale } from './dictionary';
-
-const STORAGE_KEY = 'locale';
-
-/** Synchronous, localStorage-first read — mirrors `getStoredTheme()`. */
-export const getStoredLocale = (): Locale => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-
-    return stored === 'id' ? 'id' : 'en';
-  } catch {
-    return 'en';
-  }
-};
-
-const persistLocale = (locale: Locale) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, locale);
-  } catch {
-    // localStorage unavailable — the in-memory value still applies this session.
-  }
-};
-
-interface AuthPageProps {
-  auth?: { user?: { locale?: Locale; theme?: Theme } | null };
-  account?: { index?: number };
-}
-
-/**
- * Reads the server-rendered initial page payload straight out of the DOM
- * (Inertia embeds it as JSON on `#app[data-page]`), without depending on
- * `usePage()` — `LocaleProvider` sits outside Inertia's `<App>` component
- * (it wraps `<App>` in app.tsx so every page, including auth pages that
- * don't use AppLayout, gets it), so React's page context isn't available here.
- */
-const readInitialPageProps = (): AuthPageProps | null => {
-  try {
-    const raw = document.getElementById('app')?.dataset.page;
-
-    return raw ? (JSON.parse(raw).props as AuthPageProps) : null;
-  } catch {
-    return null;
-  }
-};
+import type { AuthPageProps, CalendarVisibility } from './localeStorage';
+import {
+  getStoredLocale,
+  persistLocale,
+  readInitialPageProps,
+} from './localeStorage';
 
 interface LocaleContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  calendarVisibility: CalendarVisibility;
+  setCalendarVisibility: (visibility: CalendarVisibility) => void;
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -61,6 +26,11 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   const [locale, setLocaleState] = useState<Locale>(getStoredLocale);
   const [theme, setThemeState] = useState<Theme>(getStoredTheme);
+  // No localStorage backing (unlike locale/theme) — this preference doesn't
+  // affect pre-paint rendering, so it's fine to start at the DB default and
+  // pick up the real value once `reconcile` sees the server's page props.
+  const [calendarVisibility, setCalendarVisibilityState] =
+    useState<CalendarVisibility>('busy_only');
   // Tracks the current page's props across client-side navigations, since
   // the DOM's `data-page` attribute only reflects the very first server
   // render and Inertia doesn't rewrite it on subsequent visits.
@@ -78,6 +48,7 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   // will ever arrive).
   const pendingLocaleRef = useRef<Locale | null>(null);
   const pendingThemeRef = useRef<Theme | null>(null);
+  const pendingCalendarVisibilityRef = useRef<CalendarVisibility | null>(null);
 
   // Reconcile locale and theme with the server's stored preference on every
   // Inertia navigation (e.g. preference changed on another device, or user
@@ -123,6 +94,23 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       }
+
+      const serverCalendarVisibility = props?.auth?.user?.calendar_visibility;
+      if (serverCalendarVisibility) {
+        if (
+          pendingCalendarVisibilityRef.current !== null &&
+          serverCalendarVisibility !== pendingCalendarVisibilityRef.current
+        ) {
+          // Same guard as above, for calendar visibility.
+        } else {
+          if (
+            pendingCalendarVisibilityRef.current === serverCalendarVisibility
+          ) {
+            pendingCalendarVisibilityRef.current = null;
+          }
+          setCalendarVisibilityState(serverCalendarVisibility);
+        }
+      }
     };
 
     reconcile(currentProps.current);
@@ -132,7 +120,11 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
     );
   }, []);
 
-  const persistPreference = (patch: { locale?: Locale; theme?: Theme }) => {
+  const persistPreference = (patch: {
+    locale?: Locale;
+    theme?: Theme;
+    calendar_visibility?: CalendarVisibility;
+  }) => {
     const props = currentProps.current;
     const accountIndex = props?.account?.index;
     if (!props?.auth?.user || accountIndex === undefined) return;
@@ -145,6 +137,9 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
         // it, so stop waiting and let normal reconciliation resume.
         if ('locale' in patch) pendingLocaleRef.current = null;
         if ('theme' in patch) pendingThemeRef.current = null;
+        if ('calendar_visibility' in patch) {
+          pendingCalendarVisibilityRef.current = null;
+        }
       },
     });
   };
@@ -164,8 +159,23 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
     persistPreference({ theme: next });
   };
 
+  const setCalendarVisibility = (next: CalendarVisibility) => {
+    pendingCalendarVisibilityRef.current = next;
+    setCalendarVisibilityState(next);
+    persistPreference({ calendar_visibility: next });
+  };
+
   return (
-    <LocaleContext.Provider value={{ locale, setLocale, theme, setTheme }}>
+    <LocaleContext.Provider
+      value={{
+        locale,
+        setLocale,
+        theme,
+        setTheme,
+        calendarVisibility,
+        setCalendarVisibility,
+      }}
+    >
       {children}
     </LocaleContext.Provider>
   );

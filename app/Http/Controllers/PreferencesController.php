@@ -13,6 +13,7 @@ class PreferencesController extends Controller
         $validated = $request->validate([
             'locale' => ['sometimes', 'string', Rule::in(['en', 'id'])],
             'theme' => ['sometimes', 'string', Rule::in(['dark', 'light'])],
+            'calendar_visibility' => ['sometimes', 'string', Rule::in(['transparent', 'masked', 'busy_only'])],
         ]);
 
         $request->user()->update($validated);

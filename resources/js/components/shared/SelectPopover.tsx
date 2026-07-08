@@ -15,14 +15,21 @@ interface SelectPopoverProps<T extends string | number> {
   onChange: (value: T) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** Which edge of the trigger the popover hangs from. Use 'right' for a
+   * field in the right-hand column of a 2-column form grid, so the popover
+   * opens toward the middle of the form instead of off the far edge. */
+  align?: 'left' | 'right';
 }
 
 /**
- * A single-select dropdown styled to match `DatePicker`/`TimePicker`: the
- * same trigger button and fixed, centred dark popover, with an accent-blue
- * selected row instead of a native `<select>`. Generic over the option
- * value type so both string (recurrence) and number (assignee id) selects
- * can share it.
+ * A single-select dropdown with an accent-blue selected row instead of a
+ * native `<select>`, anchored directly below its own trigger button (like
+ * `AccountMenu`/`ProjectSwitcher`) rather than centred on the viewport —
+ * centring made sense for `DatePicker`/`TimePicker` (one clear "the" picker
+ * per form), but with several of these open at once in a form grid,
+ * centring them all in the same spot made whichever opened last cover the
+ * others. Generic over the option value type so both string (recurrence)
+ * and number (assignee id) selects can share it.
  */
 export const SelectPopover = <T extends string | number>({
   label,
@@ -31,6 +38,7 @@ export const SelectPopover = <T extends string | number>({
   onChange,
   disabled = false,
   placeholder = 'Select…',
+  align = 'left',
 }: SelectPopoverProps<T>) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -77,7 +85,11 @@ export const SelectPopover = <T extends string | number>({
       </div>
 
       {open && !disabled && (
-        <div className="fixed top-1/2 left-1/2 z-50 w-64 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl">
+        <div
+          className={`absolute top-full z-50 mt-1.5 w-64 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl ${
+            align === 'right' ? 'right-0' : 'left-0'
+          }`}
+        >
           <div className="border-b border-dark-border px-4 py-3 text-small font-semibold text-white/80">
             {label}
           </div>

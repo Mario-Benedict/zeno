@@ -8,18 +8,22 @@ interface EventLabelPickerProps {
   cardLabels: CardLabel[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
+  /** See `SelectPopover`'s `align` prop — same reasoning. */
+  align?: 'left' | 'right';
 }
 
 /**
- * Multi-select over the project's real Kanban labels — the fixed, centred
- * dark popover matches `LabelPopover` (the Kanban card's label picker), minus
- * the "create new label" flow: labels are project-wide, so Calendar only
- * picks from what already exists rather than minting its own.
+ * Multi-select over the project's real Kanban labels, anchored directly
+ * below its own trigger (see `SelectPopover` for why — same reasoning
+ * applies here). Minus the "create new label" flow `LabelPopover` (the
+ * Kanban card's label picker) has: labels are project-wide, so Calendar
+ * only picks from what already exists rather than minting its own.
  */
 export const EventLabelPicker = ({
   cardLabels,
   selectedIds,
   onChange,
+  align = 'left',
 }: EventLabelPickerProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -76,7 +80,11 @@ export const EventLabelPicker = ({
       </button>
 
       {open && (
-        <div className="fixed top-1/2 left-1/2 z-50 w-64 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl">
+        <div
+          className={`absolute top-full z-50 mt-1.5 w-64 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl ${
+            align === 'right' ? 'right-0' : 'left-0'
+          }`}
+        >
           <div className="border-b border-dark-border px-4 py-3 text-small font-semibold text-white/80">
             {t('calendar.labels')}
           </div>

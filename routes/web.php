@@ -8,6 +8,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectInvitationController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectSettingsController;
+use App\Http\Controllers\TaskConflictController;
 use App\Models\Project;
 use App\Services\AccountSessionService;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('pomodoro.settings.update');
             Route::patch('profile/preferences', [PreferencesController::class, 'update'])
                 ->name('preferences.update');
+
+            // Task conflicts are addressed by account (the assignee/assigner),
+            // not by project — a conflict can span two different projects.
+            Route::controller(TaskConflictController::class)
+                ->prefix('task-conflicts/{taskConflict}')
+                ->name('task-conflicts.')
+                ->group(function () {
+                    Route::patch('respond', 'respond')->name('respond');
+                    Route::patch('acknowledge', 'acknowledge')->name('acknowledge');
+                });
 
             Route::prefix('p/{project:project_slug}')
                 ->middleware('project.member')

@@ -74,6 +74,7 @@ export const calendar = {
   newSchedule: 'New Schedule',
   title: 'Title',
   eventTitlePlaceholder: 'Event title',
+  titleRequiredError: 'Please enter a title.',
   startDate: 'Start Date',
   startTime: 'Start Time',
   endDate: 'End Date',

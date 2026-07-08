@@ -6,17 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Models\Reminder;
+use App\Models\TaskConflict;
 use App\Models\User;
 use App\Services\ChatMessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Powers the header notification popover's two tabs. Both are computed live
- * at read time — the Inbox tab queries `reminders` directly for due/overdue
- * items (no persisted `notifications` table), and the Chat tab reuses
- * `ChatMessageService::countUnread()` against the existing chat schema
- * rather than duplicating unread state anywhere.
+ * Powers the header notification popover's tabs. All computed live at read
+ * time — the Inbox tab queries `reminders` directly for due/overdue items,
+ * the Chat tab reuses `ChatMessageService::countUnread()`, and the Conflicts
+ * tab queries `task_conflicts` (no persisted generic `notifications` table
+ * anywhere in this app — see TaskConflict for why). Conflicts are
+ * account-wide, not project-scoped (a conflict can span two different
+ * projects), unlike Inbox/Chat.
  */
 class NotificationController extends Controller
 {
@@ -73,9 +76,37 @@ class NotificationController extends Controller
             ->filter(fn (array $r) => $r['unread_count'] > 0)
             ->values();
 
+        $pendingConflicts = TaskConflict::where('assignee_user_id', $user->id)
+            ->whereNull('assignee_acknowledged_at')
+            ->with('kanbanBoardCard:kanban_board_card_id,kanban_board_card_title')
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn (TaskConflict $c) => [
+                'id' => $c->id,
+                'role' => 'assignee',
+                'card_title' => $c->kanbanBoardCard?->kanban_board_card_title,
+                'conflicting_title' => $c->conflicting_title,
+                'conflicting_start' => $c->conflicting_start->toIso8601String(),
+                'conflicting_end' => $c->conflicting_end->toIso8601String(),
+            ]);
+
+        $declineAlerts = TaskConflict::where('assigned_by_user_id', $user->id)
+            ->where('status', 'declined')
+            ->whereNull('assigner_acknowledged_at')
+            ->with(['kanbanBoardCard:kanban_board_card_id,kanban_board_card_title', 'assignee:id,name'])
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn (TaskConflict $c) => [
+                'id' => $c->id,
+                'role' => 'assigner',
+                'card_title' => $c->kanbanBoardCard?->kanban_board_card_title,
+                'assignee_name' => $c->assignee?->name,
+            ]);
+
         return response()->json([
             'inbox' => $inbox,
             'chat' => $chat,
+            'conflicts' => $pendingConflicts->concat($declineAlerts)->values(),
         ]);
     }
 }

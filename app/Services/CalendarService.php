@@ -123,10 +123,13 @@ class CalendarService
     }
 
     /**
-     * Kanban cards in this project that (a) have at least one of
-     * start/due date set and (b) are assigned to at least one of the
-     * selected members — i.e. cards with a real "assignment to someone" per
-     * the feature request. Formatted to the same shape `formatFullEvent()`
+     * Kanban cards in this project that (a) have a due date set and (b) are
+     * assigned to at least one of the selected members — i.e. cards with a
+     * real "assignment to someone" per the feature request. Only the due
+     * date is projected onto the calendar (not the start date): a card's
+     * start date describes when work on it begins, not a commitment the
+     * assignee owes anyone else, so it has no business appearing as a
+     * calendar block. Formatted to the same shape `formatFullEvent()`
      * produces, plus `is_kanban_task` / `kanban_board_card_id` /
      * `kanban_board_id`, so every existing render path (month/week grid, the
      * mini-calendar's "has event" dots, the detail modal) already knows how
@@ -142,22 +145,9 @@ class CalendarService
             'kanbanBoard',
             fn ($q) => $q->where('kanban_board_project_id', $projectId)
         )
-            ->where(function ($q) {
-                $q->whereNotNull('kanban_board_card_start_date')
-                    ->orWhereNotNull('kanban_board_card_due_date');
-            })
-            // Interval overlap against the requested window, using whichever
-            // of the two dates stands in for the missing one — mirrors the
-            // non-recurring overlap check in getProjectEvents() above.
-            ->where(function ($q) use ($rangeStart, $rangeEnd) {
-                $q->whereRaw(
-                    'COALESCE(kanban_board_card_start_date, kanban_board_card_due_date) < ?',
-                    [$rangeEnd]
-                )->whereRaw(
-                    'COALESCE(kanban_board_card_due_date, kanban_board_card_start_date) >= ?',
-                    [$rangeStart]
-                );
-            })
+            ->whereNotNull('kanban_board_card_due_date')
+            ->where('kanban_board_card_due_date', '<', $rangeEnd)
+            ->where('kanban_board_card_due_date', '>=', $rangeStart)
             ->whereHas('members', fn ($q) => $q->whereIn('users.id', $userIds))
             ->with([
                 'members' => fn ($q) => $q->whereIn('users.id', $userIds),
@@ -173,16 +163,13 @@ class CalendarService
      * Format a Kanban card as a calendar entry. Structurally a full
      * `CalendarEventFull` (recurrence is always `none` — Kanban cards don't
      * recur) plus the extra fields the frontend uses to render it read-only
-     * and link back to the board instead of Calendar's own edit form.
+     * and link back to the board instead of Calendar's own edit form. Always
+     * anchored on the due date only — see `getAssignedKanbanTasks()`.
      */
     private function formatKanbanTask(KanbanBoardCard $card, string $projectId): array
     {
-        $start = $card->kanban_board_card_start_date ?? $card->kanban_board_card_due_date;
-        $end = $card->kanban_board_card_due_date ?? $card->kanban_board_card_start_date;
-
-        if ($end->equalTo($start)) {
-            $end = $end->copy()->addHour();
-        }
+        $start = $card->kanban_board_card_due_date;
+        $end = $start->copy()->addHour();
 
         return [
             'id' => 'kanban-'.$card->kanban_board_card_id,
@@ -291,17 +278,25 @@ class CalendarService
             })
             // `labels` is only actually read by formatFullEvent() below, for
             // the subset of events the viewer participates in — eager-loading
-            // it here avoids a per-event lazy load in that branch.
-            ->with(['participants:id,name', 'labels'])
+            // it here avoids a per-event lazy load in that branch. `creator`
+            // is needed by formatClassifiedEvent() to decide how much detail
+            // a non-participant viewer is allowed to see (their `calendar_visibility`).
+            ->with(['participants:id,name', 'labels', 'creator:id,calendar_visibility'])
             ->get();
 
         $result = [];
 
         foreach ($events as $event) {
-            $viewerIsParticipant = $event->participants->contains('id', $viewerId);
+            // Full detail when the viewer is a participant, or when the
+            // event's creator has opted into "transparent" cross-project
+            // visibility. Otherwise the event is classified — either
+            // "masked" (generic label, real times) or "busy_only" (no label
+            // at all), per the creator's `calendar_visibility` preference.
+            $showFull = $event->participants->contains('id', $viewerId)
+                || $event->creator?->calendar_visibility === 'transparent';
 
             if ($this->isRecurring($event)) {
-                $occurrences = $viewerIsParticipant
+                $occurrences = $showFull
                     ? $this->expandRecurringOccurrences($event, $rangeStart, $rangeEnd)
                     : $this->expandRecurringClassifiedOccurrences($event, $rangeStart, $rangeEnd);
 
@@ -309,7 +304,7 @@ class CalendarService
                     $result[] = $occurrence;
                 }
             } else {
-                if ($viewerIsParticipant) {
+                if ($showFull) {
                     $result[] = $this->formatFullEvent($event);
                 } else {
                     $result[] = $this->formatClassifiedEvent($event);
@@ -350,8 +345,11 @@ class CalendarService
     }
 
     /**
-     * Format an event as a CLASSIFIED busy-block. Only time and owner info.
-     * NO title, description, priority, or project_id.
+     * Format an event as a CLASSIFIED busy-block. Only time and owner info —
+     * NO title, description, priority, or project_id. `visibility` tells the
+     * frontend whether to render a generic "busy" label (`masked`) or
+     * nothing but the coloured block itself (`busy_only`); the actual label
+     * text is a translated string owned by the frontend, not baked in here.
      */
     private function formatClassifiedEvent(CalendarEvent $event): array
     {
@@ -364,6 +362,7 @@ class CalendarService
                 'name' => $u->name,
             ])->values()->all(),
             'is_classified' => true,
+            'visibility' => $event->creator?->calendar_visibility === 'masked' ? 'masked' : 'busy_only',
         ];
     }
 
