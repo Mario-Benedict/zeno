@@ -11,12 +11,13 @@ export const isReminderDueSoon = (dueAt: string | null): boolean => {
 /** e.g. "Fri, December 20, 2026" — used in the reminders list rows. */
 export const formatReminderListDate = (
   dueAt: string | null | undefined,
+  locale = 'en-US',
 ): string => {
   if (!dueAt) return '';
   const date = new Date(dueAt);
   if (isNaN(date.getTime())) return '';
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(locale, {
     weekday: 'short',
     month: 'long',
     day: 'numeric',
@@ -27,18 +28,20 @@ export const formatReminderListDate = (
 /** e.g. "Friday, December 20, 2026 - 09:30 AM" — used in the detail panel. */
 export const formatReminderDetailDateTime = (
   dueAt: string | null | undefined,
+  locale: string,
+  noDueDate: string,
 ): string => {
-  if (!dueAt) return 'No due date';
+  if (!dueAt) return noDueDate;
   const date = new Date(dueAt);
-  if (isNaN(date.getTime())) return 'No due date';
+  if (isNaN(date.getTime())) return noDueDate;
 
-  const datePart = date.toLocaleDateString('en-US', {
+  const datePart = date.toLocaleDateString(locale, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
-  const timePart = date.toLocaleTimeString('en-US', {
+  const timePart = date.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
   });

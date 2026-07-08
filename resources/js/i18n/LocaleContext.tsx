@@ -26,7 +26,7 @@ const persistLocale = (locale: Locale) => {
 };
 
 interface AuthPageProps {
-  auth?: { user?: { locale?: Locale } | null };
+  auth?: { user?: { locale?: Locale; theme?: 'dark' | 'light' } | null };
   account?: { index?: number };
 }
 
@@ -61,8 +61,9 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
   // render and Inertia doesn't rewrite it on subsequent visits.
   const currentProps = useRef<AuthPageProps | null>(readInitialPageProps());
 
-  // Reconcile with the server's stored preference on first load (e.g. it was
-  // changed on another device) and after every subsequent Inertia navigation.
+  // Reconcile locale and theme with the server's stored preference on every
+  // Inertia navigation (e.g. preference changed on another device, or user
+  // just logged in with a different account).
   useEffect(() => {
     const reconcile = (props: AuthPageProps | null) => {
       currentProps.current = props;
@@ -70,6 +71,32 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
       if (serverLocale && serverLocale !== getStoredLocale()) {
         setLocaleState(serverLocale);
         persistLocale(serverLocale);
+      }
+
+      // Theme reconciliation — mirrors the locale logic above.
+      const serverTheme = props?.auth?.user?.theme;
+      if (serverTheme) {
+        try {
+          const storedTheme = localStorage.getItem('theme') as
+            | 'dark'
+            | 'light'
+            | null;
+          if (serverTheme !== storedTheme) {
+            localStorage.setItem('theme', serverTheme);
+            if (serverTheme === 'light') {
+              document.documentElement.classList.add('light-mode');
+            } else {
+              document.documentElement.classList.remove('light-mode');
+            }
+          }
+        } catch {
+          /* localStorage unavailable — apply DOM class only */
+          if (serverTheme === 'light') {
+            document.documentElement.classList.add('light-mode');
+          } else {
+            document.documentElement.classList.remove('light-mode');
+          }
+        }
       }
     };
 

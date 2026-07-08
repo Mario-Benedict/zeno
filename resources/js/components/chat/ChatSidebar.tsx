@@ -24,7 +24,10 @@ const ChatSidebar = ({
   const hasQuery = query.trim().length > 0;
 
   const filtered = rooms.filter((r) => {
-    const nameMatch = getRoomDisplayName(r, currentUser)
+    const nameMatch = getRoomDisplayName(r, currentUser, {
+      group: t('chat.groupFallback'),
+      directMessage: t('chat.directMessageFallback'),
+    })
       .toLowerCase()
       .includes(query.toLowerCase());
     if (!nameMatch) return false;

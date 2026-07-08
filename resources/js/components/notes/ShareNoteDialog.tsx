@@ -1,6 +1,6 @@
-import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { inertiaJson } from '@/lib/inertiaJson';
 import notes from '@/routes/notes';
 import type {
   NoteCollaboratorRole,
@@ -221,13 +221,16 @@ const ShareNoteDialog = ({
     setSubmitting(true);
     setError(null);
     try {
-      const { data } = await axios.post<{ note: NoteDetail }>(
+      const data = await inertiaJson<{ note: NoteDetail }>(
+        'post',
         notes.share.url({ accountIndex, project: projectSlug, note: note.id }),
         {
-          collaborators: pending.map((p) => ({
-            user_id: p.user.id,
-            can_edit: p.canEdit,
-          })),
+          data: {
+            collaborators: pending.map((p) => ({
+              user_id: p.user.id,
+              can_edit: p.canEdit,
+            })),
+          },
         },
       );
       onNoteUpdated(data.note);
@@ -242,13 +245,14 @@ const ShareNoteDialog = ({
   const addCollaborator = async (user: NoteProjectUser): Promise<void> => {
     setError(null);
     try {
-      const { data } = await axios.post<{ note: NoteDetail }>(
+      const data = await inertiaJson<{ note: NoteDetail }>(
+        'post',
         notes.collaborators.store.url({
           accountIndex,
           project: projectSlug,
           note: note.id,
         }),
-        { user_id: user.id, can_edit: true },
+        { data: { user_id: user.id, can_edit: true } },
       );
       onNoteUpdated(data.note);
     } catch {
@@ -260,20 +264,22 @@ const ShareNoteDialog = ({
     userId: number,
     canEdit: boolean,
   ): Promise<void> => {
-    const { data } = await axios.patch<{ note: NoteDetail }>(
+    const data = await inertiaJson<{ note: NoteDetail }>(
+      'patch',
       notes.collaborators.update.url({
         accountIndex,
         project: projectSlug,
         note: note.id,
         user: userId,
       }),
-      { can_edit: canEdit },
+      { data: { can_edit: canEdit } },
     );
     onNoteUpdated(data.note);
   };
 
   const removeCollaborator = async (userId: number): Promise<void> => {
-    const { data } = await axios.delete<{ note: NoteDetail }>(
+    const data = await inertiaJson<{ note: NoteDetail }>(
+      'delete',
       notes.collaborators.destroy.url({
         accountIndex,
         project: projectSlug,

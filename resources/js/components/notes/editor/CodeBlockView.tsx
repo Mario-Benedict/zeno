@@ -1,6 +1,6 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CODE_LANGUAGES } from './codeLanguages';
 
@@ -21,6 +21,11 @@ const LanguagePicker = ({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const languageLabel = useCallback(
+    (languageOption: (typeof CODE_LANGUAGES)[number]) =>
+      t(languageOption.labelKey),
+    [t],
+  );
 
   const current =
     CODE_LANGUAGES.find((l) => l.value === language) ?? CODE_LANGUAGES[0];
@@ -29,14 +34,14 @@ const LanguagePicker = ({
     const q = query.trim().toLowerCase();
 
     return q
-      ? CODE_LANGUAGES.filter((l) => l.label.toLowerCase().includes(q))
+      ? CODE_LANGUAGES.filter((l) => languageLabel(l).toLowerCase().includes(q))
       : CODE_LANGUAGES;
-  }, [query]);
+  }, [languageLabel, query]);
 
   if (!editable) {
     return (
       <span className="px-1.5 py-0.5 text-xsmall font-medium text-dark-secondary">
-        {current.label}
+        {languageLabel(current)}
       </span>
     );
   }
@@ -48,7 +53,7 @@ const LanguagePicker = ({
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xsmall font-medium text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary"
       >
-        {current.label}
+        {languageLabel(current)}
         <svg
           width="10"
           height="10"
@@ -96,7 +101,7 @@ const LanguagePicker = ({
                         : 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary'
                     }`}
                   >
-                    {l.label}
+                    {languageLabel(l)}
                   </button>
                 ))
               )}

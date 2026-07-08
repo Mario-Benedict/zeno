@@ -12,6 +12,7 @@ export const projectSettingsTabs: typeof en = {
   uploading: 'Mengunggah…',
   upload: 'Unggah',
   clickToSelectImage: 'Klik untuk memilih gambar',
+  imagePreviewAlt: 'Pratinjau gambar',
   imageFormatsHint: 'JPEG, PNG, WebP, atau GIF · maks 2 MB',
   removeCurrentAvatar: 'Hapus avatar saat ini',
   avatar: 'Avatar',

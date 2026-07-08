@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DatePickerProps {
   value: string | null;
@@ -9,30 +10,34 @@ interface DatePickerProps {
   highlightOverdue?: boolean;
 }
 
-const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
 export const DatePicker = ({
   value,
   onChange,
   onClear,
   label,
-  placeholder = 'Set date',
+  placeholder,
   highlightOverdue = false,
 }: DatePickerProps) => {
+  const { locale, t } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
+  const dayLabels = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) =>
+        new Intl.DateTimeFormat(localeCode, { weekday: 'short' }).format(
+          new Date(2024, 0, 7 + i),
+        ),
+      ),
+    [localeCode],
+  );
+  const monthLabels = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) =>
+        new Intl.DateTimeFormat(localeCode, { month: 'long' }).format(
+          new Date(2024, i, 1),
+        ),
+      ),
+    [localeCode],
+  );
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(() => {
     if (value) return new Date(value + 'T00:00:00').getFullYear();
@@ -120,8 +125,8 @@ export const DatePicker = ({
     setOpen(false);
   };
 
-  const formatDisplay = (d: Date) =>
-    d.toLocaleDateString('en-US', {
+  const formatLocalizedDisplay = (d: Date) =>
+    d.toLocaleDateString(localeCode, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -146,7 +151,9 @@ export const DatePicker = ({
           }`}
         >
           <span className="flex-1 truncate">
-            {selectedDate ? formatDisplay(selectedDate) : placeholder}
+            {selectedDate
+              ? formatLocalizedDisplay(selectedDate)
+              : (placeholder ?? t('common.setDate'))}
           </span>
           {selectedDate && onClear && (
             <span
@@ -178,9 +185,9 @@ export const DatePicker = ({
                 setViewMonth(new Date().getMonth());
                 setViewYear(new Date().getFullYear());
               }}
-              title="Jump to today"
+              title={t('common.jumpToToday')}
             >
-              {MONTHS[viewMonth]} {viewYear}
+              {monthLabels[viewMonth]} {viewYear}
             </button>
             <button
               onClick={nextMonth}
@@ -191,7 +198,7 @@ export const DatePicker = ({
           </div>
 
           <div className="grid grid-cols-7 px-3 pt-3 pb-1">
-            {DAYS.map((d) => (
+            {dayLabels.map((d) => (
               <div
                 key={d}
                 className="py-1 text-center text-xsmall font-semibold tracking-wider text-white/20 uppercase"
@@ -231,7 +238,7 @@ export const DatePicker = ({
               onClick={() => selectDate(today)}
               className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/70"
             >
-              Today
+              {t('common.today')}
             </button>
             {selectedDate && onClear && (
               <button
@@ -241,7 +248,7 @@ export const DatePicker = ({
                 }}
                 className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-white/40 transition hover:border-accent-red/30 hover:bg-accent-red/10 hover:text-accent-red"
               >
-                Clear
+                {t('common.clear')}
               </button>
             )}
           </div>

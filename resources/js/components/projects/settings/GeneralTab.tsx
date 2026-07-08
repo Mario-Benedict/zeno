@@ -207,7 +207,7 @@ const AvatarUploadModal = ({
             {preview ? (
               <img
                 src={preview}
-                alt="Preview"
+                alt={t('projectSettingsTabs.imagePreviewAlt')}
                 className="h-full w-full object-contain"
               />
             ) : (

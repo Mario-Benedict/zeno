@@ -24,7 +24,8 @@ export const ReminderRow = ({
   onTogglePin,
   onDelete,
 }: ReminderRowProps) => {
-  const { t } = useTranslation();
+  const { locale, t } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const overdue =
     !reminder.is_completed && isReminderOverdue(reminder.reminder_due_at);
@@ -96,7 +97,7 @@ export const ReminderRow = ({
               }`}
             >
               <CalendarIcon className="h-3 w-3" />
-              {formatReminderListDate(reminder.reminder_due_at)}
+              {formatReminderListDate(reminder.reminder_due_at, localeCode)}
             </p>
           )}
         </div>

@@ -1,4 +1,6 @@
 export const calendar = {
+  pageTitle: 'Calendar',
+
   // Weekday headers (short form, Sun-Sat)
   daySun: 'Sun',
   dayMon: 'Mon',

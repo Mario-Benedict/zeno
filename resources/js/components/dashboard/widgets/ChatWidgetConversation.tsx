@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import echo from '@/echo';
 import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
+import { inertiaJson } from '@/lib/inertiaJson';
 import chat from '@/routes/chat';
 import type { ChatMessage, ChatParticipant, ChatRoom } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
@@ -12,10 +13,6 @@ interface Props {
   currentUser: ChatParticipant;
   onBack: () => void;
 }
-
-const csrfToken = () =>
-  document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ??
-  '';
 
 // Multiple ChatWidget instances (e.g. two chat widgets on the same
 // dashboard) can subscribe to the same `chat.{roomId}` channel. Echo caches
@@ -87,15 +84,14 @@ export const ChatWidgetConversation = ({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
-    fetch(
+    inertiaJson<{ messages: ChatMessage[] }>(
+      'get',
       chat.rooms.messages.index.url({
         accountIndex,
         project: project.project_slug,
         room: room.id,
       }),
-      { headers: { Accept: 'application/json' } },
     )
-      .then((res) => res.json())
       .then((data: { messages: ChatMessage[] }) => {
         if (!cancelled) setMessages(data.messages);
       })
@@ -128,46 +124,39 @@ export const ChatWidgetConversation = ({
     setBody('');
 
     try {
-      const res = await fetch(
+      // Deliberately NOT sending X-Socket-ID here. That would make the
+      // backend's broadcast(...)->toOthers() exclude this browser tab's whole
+      // websocket connection, and sibling dashboard widgets share that one
+      // connection. Every widget receives the socket event; _id dedupe keeps
+      // it from rendering twice.
+      const data = await inertiaJson<{ message: ChatMessage }>(
+        'post',
         chat.rooms.messages.store.url({
           accountIndex,
           project: project.project_slug,
           room: room.id,
         }),
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'X-CSRF-TOKEN': csrfToken(),
-            // Deliberately NOT sending X-Socket-ID here. That would make the
-            // backend's broadcast(...)->toOthers() exclude this browser
-            // tab's whole websocket connection — but two chat widgets on the
-            // same dashboard share that one connection, so excluding "self"
-            // would also block a sibling widget on the same room from ever
-            // getting the broadcast. Instead every widget (including the
-            // sender) receives it over the socket, and the _id dedupe below
-            // (and in subscribeToRoomMessages) keeps it from rendering twice.
-          },
-          body: JSON.stringify({ type: 'text', body: trimmed }),
+          data: { type: 'text', body: trimmed },
         },
       );
-      if (!res.ok) throw new Error('Failed to send message');
-      const data: { message: ChatMessage } = await res.json();
       setMessages((prev) =>
         prev.some((m) => m._id === data.message._id)
           ? prev
           : [data.message, ...prev],
       );
     } catch {
-      console.error('Failed to send message');
+      console.error(t('chat.failedToSendMessage'));
       setBody(trimmed);
     } finally {
       setSending(false);
     }
   };
 
-  const displayName = getRoomDisplayName(room, currentUser);
+  const displayName = getRoomDisplayName(room, currentUser, {
+    group: t('chat.groupFallback'),
+    directMessage: t('chat.directMessageFallback'),
+  });
   // Backend returns newest-first (cursor pagination order) — reverse to render oldest→newest.
   const ordered = [...messages].reverse();
 

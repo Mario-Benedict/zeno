@@ -68,7 +68,10 @@ const RoomHeader = ({
   onSearchToggle: () => void;
 }) => {
   const { t } = useTranslation();
-  const displayName = getRoomDisplayName(room, currentUser);
+  const displayName = getRoomDisplayName(room, currentUser, {
+    group: t('chat.groupFallback'),
+    directMessage: t('chat.directMessageFallback'),
+  });
   const btnBase = 'p-2 rounded-lg transition-colors';
   const btnIdle =
     'text-dark-secondary hover:text-dark-primary hover:bg-dark-surface-2';

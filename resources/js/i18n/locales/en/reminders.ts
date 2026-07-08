@@ -27,6 +27,7 @@ export const reminders = {
   reminderTitleLabel: 'Title',
   reminderTitlePlaceholder: 'Reminder title...',
   dueDate: 'Due date',
+  noDueDate: 'No due date',
   time: 'Time',
   optional: 'Optional',
   cancel: 'Cancel',

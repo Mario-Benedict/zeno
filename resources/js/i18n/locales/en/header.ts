@@ -10,4 +10,12 @@ export const header = {
   seeAllProjects: 'See all projects',
   createAProject: 'Create a project',
   projectSettings: 'Project settings',
+  inbox: 'Inbox',
+  chat: 'Chat',
+  nothingDueSoon: 'Nothing due soon.',
+  noUnreadMessages: 'No unread messages.',
+  overduePrefix: 'Overdue · ',
+  duePrefix: 'Due ',
+  groupFallback: 'Group',
+  directMessageFallback: 'Direct Message',
 };

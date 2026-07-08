@@ -4,9 +4,9 @@ import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { inertiaJson } from '@/lib/inertiaJson';
 import notes from '@/routes/notes';
 import type { NoteContent, NoteDetail, NoteSaveStatus } from '@/types/notes';
 import { AutoCloseBrackets } from './editor/extensions/autoCloseBrackets';
@@ -79,13 +79,14 @@ export const useNoteEditor = ({
       const form = new FormData();
       form.append('image', file);
 
-      const { data } = await axios.post<{ url: string }>(
+      const data = await inertiaJson<{ url: string }>(
+        'post',
         notes.images.store.url({
           accountIndex,
           project: projectSlug,
           note: noteId,
         }),
-        form,
+        { data: form },
       );
 
       return data.url;
@@ -100,15 +101,18 @@ export const useNoteEditor = ({
       setSaveStatus('saving');
 
       try {
-        const { data } = await axios.patch<{ note: NoteDetail }>(
+        const data = await inertiaJson<{ note: NoteDetail }>(
+          'patch',
           notes.update.url({
             accountIndex,
             project: projectSlug,
             note: noteId,
           }),
           {
-            title: titleRef.current.trim() || t('notes.untitled'),
-            content: activeEditor.getJSON(),
+            data: {
+              title: titleRef.current.trim() || t('notes.untitled'),
+              content: activeEditor.getJSON(),
+            },
           },
         );
 
@@ -120,7 +124,7 @@ export const useNoteEditor = ({
         setSaveStatus('error');
       }
     },
-    [accountIndex, projectSlug, noteId, onSaved],
+    [accountIndex, projectSlug, noteId, onSaved, t],
   );
 
   const scheduleSave = useCallback(

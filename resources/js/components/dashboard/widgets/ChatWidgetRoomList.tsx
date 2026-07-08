@@ -23,7 +23,10 @@ export const ChatWidgetRoomList = ({
         </p>
       ) : (
         rooms.map((room) => {
-          const name = getRoomDisplayName(room, currentUser);
+          const name = getRoomDisplayName(room, currentUser, {
+            group: t('chat.groupFallback'),
+            directMessage: t('chat.directMessageFallback'),
+          });
 
           return (
             <button

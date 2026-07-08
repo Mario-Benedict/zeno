@@ -8,6 +8,7 @@ import { Embed } from '@/components/notes/editor/extensions/embed';
 import { NoteImage } from '@/components/notes/editor/extensions/image';
 import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
+import { inertiaJson } from '@/lib/inertiaJson';
 import notes from '@/routes/notes';
 import type { NoteDetail, NoteListItem } from '@/types/notes';
 import BackIcon from '@public/icons/small/arrow_left.svg';
@@ -58,15 +59,14 @@ export const NotesWidgetDetail = ({ note, onBack }: Props) => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
-    fetch(
+    inertiaJson<{ note: NoteDetail }>(
+      'get',
       notes.show.url({
         accountIndex,
         project: project.project_slug,
         note: note.id,
       }),
-      { headers: { Accept: 'application/json' } },
     )
-      .then((res) => res.json())
       .then((data: { note: NoteDetail }) => {
         if (!cancelled) {
           editor?.commands.setContent(data.note.content, {

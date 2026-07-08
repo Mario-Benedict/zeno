@@ -1,6 +1,8 @@
 import type { calendar as en } from '../en/calendar';
 
 export const calendar: typeof en = {
+  pageTitle: 'Kalender',
+
   // Weekday headers (short form, Sun-Sat)
   daySun: 'Min',
   dayMon: 'Sen',

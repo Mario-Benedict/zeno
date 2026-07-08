@@ -63,9 +63,14 @@ export const ChatWidget = ({ rooms, currentUser, slotIndex }: Props) => {
     if (!query) return rooms;
 
     return rooms.filter((room) =>
-      getRoomDisplayName(room, currentUser).toLowerCase().includes(query),
+      getRoomDisplayName(room, currentUser, {
+        group: t('chat.groupFallback'),
+        directMessage: t('chat.directMessageFallback'),
+      })
+        .toLowerCase()
+        .includes(query),
     );
-  }, [rooms, currentUser, searchQuery]);
+  }, [rooms, currentUser, searchQuery, t]);
 
   // The persisted room id may point at a room that's since become
   // unavailable to this user — drop it instead of getting stuck showing

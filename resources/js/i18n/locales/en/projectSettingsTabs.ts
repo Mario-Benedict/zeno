@@ -13,6 +13,7 @@ export const projectSettingsTabs = {
   uploading: 'Uploading…',
   upload: 'Upload',
   clickToSelectImage: 'Click to select an image',
+  imagePreviewAlt: 'Image preview',
   imageFormatsHint: 'JPEG, PNG, WebP or GIF · max 2 MB',
   removeCurrentAvatar: 'Remove current avatar',
   avatar: 'Avatar',

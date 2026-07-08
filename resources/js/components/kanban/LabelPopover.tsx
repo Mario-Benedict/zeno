@@ -198,11 +198,11 @@ export const LabelPopover = ({
               <div className="grid grid-cols-5 gap-1.5">
                 {LABEL_COLORS.map((c) => (
                   <button
-                    key={c.name}
+                    key={c.id}
                     onClick={() => setNewColor(c.hex)}
                     className="relative aspect-square w-full rounded-lg transition-all"
                     style={{ backgroundColor: c.hex }}
-                    title={c.name}
+                    title={t(c.labelKey)}
                   >
                     {newColor === c.hex && (
                       <span className="absolute inset-0 flex items-center justify-center">

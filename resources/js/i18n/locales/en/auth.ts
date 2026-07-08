@@ -28,6 +28,16 @@ export const auth = {
     haveAccount: 'Already have an account?',
     signIn: 'Sign in',
   },
+  google: {
+    continue: 'Continue with Google',
+  },
+  passwordStrength: {
+    weak: 'Weak',
+    fair: 'Fair',
+    strong: 'Strong',
+    superStrong: 'Super Strong',
+    requirement: 'At least 8 characters with uppercase, numbers & symbols',
+  },
   forgotPassword: {
     title: 'Forgot Password',
     description: 'Please enter your email address to reset your password.',

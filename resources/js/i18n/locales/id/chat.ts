@@ -2,6 +2,8 @@ import type { chat as en } from '../en/chat';
 
 export const chat: typeof en = {
   noMessagesInRoom: 'Belum ada pesan',
+  groupFallback: 'Grup',
+  directMessageFallback: 'Pesan Langsung',
   sendAMessage: 'Kirim pesan',
   searchMessages: 'Cari pesan',
   searchMessagesPlaceholder: 'Cari pesan…',

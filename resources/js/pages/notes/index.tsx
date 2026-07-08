@@ -1,5 +1,4 @@
 import { Head } from '@inertiajs/react';
-import axios from 'axios';
 import React, { useCallback, useState } from 'react';
 import Header from '@/components/layouts/Header';
 import Sidebar from '@/components/layouts/Sidebar';
@@ -9,6 +8,7 @@ import NotesSidebarPanel from '@/components/notes/NotesSidebarPanel';
 import ShareNoteDialog from '@/components/notes/ShareNoteDialog';
 import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
+import { inertiaJson } from '@/lib/inertiaJson';
 import notes from '@/routes/notes';
 import type { NoteDetail, NoteListItem, NotesPageProps } from '@/types/notes';
 
@@ -66,7 +66,8 @@ const NotesPage = ({
 
   const openNote = useCallback(
     async (item: NoteListItem) => {
-      const { data } = await axios.get<{ note: NoteDetail }>(
+      const data = await inertiaJson<{ note: NoteDetail }>(
+        'get',
         notes.show.url({ accountIndex, project: projectSlug, note: item.id }),
       );
       setSelectedNote(data.note);
@@ -84,23 +85,27 @@ const NotesPage = ({
 
   const handleCreate = useCallback(
     async (isShared: boolean) => {
-      const { data } = await axios.post<{ note: NoteDetail }>(
+      const data = await inertiaJson<{ note: NoteDetail }>(
+        'post',
         notes.store.url({ accountIndex, project: projectSlug }),
         {
-          title: t('notes.untitled'),
-          is_shared: isShared,
+          data: {
+            title: t('notes.untitled'),
+            is_shared: isShared,
+          },
         },
       );
       upsertListItem(data.note);
       setSelectedNote(data.note);
     },
-    [accountIndex, projectSlug, upsertListItem],
+    [accountIndex, projectSlug, t, upsertListItem],
   );
 
   const handleDelete = useCallback(async () => {
     if (!deleteTargetId) return;
 
-    await axios.delete(
+    await inertiaJson(
+      'delete',
       notes.destroy.url({
         accountIndex,
         project: projectSlug,

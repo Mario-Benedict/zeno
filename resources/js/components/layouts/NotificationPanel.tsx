@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
+import { inertiaJson } from '@/lib/inertiaJson';
 import notifications from '@/routes/notifications';
 import type { CurrentProject, NotificationInboxResponse } from '@/types';
 import { initials } from '@/utils/chat';
@@ -21,6 +23,8 @@ const NotificationPanel = ({
   project,
   accountIndex,
 }: NotificationPanelProps) => {
+  const { locale, t } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const [tab, setTab] = useState<Tab>('inbox');
   const [data, setData] = useState<NotificationInboxResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,13 +44,10 @@ const NotificationPanel = ({
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    fetch(
+    inertiaJson<NotificationInboxResponse>(
+      'get',
       notifications.index.url({ accountIndex, project: project.project_slug }),
-      {
-        headers: { Accept: 'application/json' },
-      },
     )
-      .then((res) => res.json())
       .then((json: NotificationInboxResponse) => setData(json))
       .catch((err: unknown) =>
         console.error('Failed to load notifications', err),
@@ -71,7 +72,7 @@ const NotificationPanel = ({
               : 'text-dark-secondary hover:text-dark-primary'
           }`}
         >
-          Inbox
+          {t('header.inbox')}
         </button>
         <button
           type="button"
@@ -82,14 +83,14 @@ const NotificationPanel = ({
               : 'text-dark-secondary hover:text-dark-primary'
           }`}
         >
-          Chat
+          {t('header.chat')}
         </button>
       </div>
 
       <div className="scrollbar-app max-h-96 overflow-y-auto p-2">
         {loading && (
           <p className="py-8 text-center text-xsmall text-white/20">
-            Loading...
+            {t('common.loading')}
           </p>
         )}
 
@@ -97,7 +98,7 @@ const NotificationPanel = ({
           <>
             {(data?.inbox.length ?? 0) === 0 && (
               <p className="py-8 text-center text-xsmall text-white/20">
-                Nothing due soon.
+                {t('header.nothingDueSoon')}
               </p>
             )}
             {data?.inbox.map((item) => (
@@ -117,8 +118,10 @@ const NotificationPanel = ({
                   <p
                     className={`text-xsmall ${item.is_overdue ? 'text-accent-red' : 'text-dark-secondary'}`}
                   >
-                    {item.is_overdue ? 'Overdue · ' : 'Due '}
-                    {formatReminderListDate(item.due_at)}
+                    {item.is_overdue
+                      ? t('header.overduePrefix')
+                      : t('header.duePrefix')}
+                    {formatReminderListDate(item.due_at, localeCode)}
                   </p>
                 </div>
               </Link>
@@ -130,14 +133,15 @@ const NotificationPanel = ({
           <>
             {(data?.chat.length ?? 0) === 0 && (
               <p className="py-8 text-center text-xsmall text-white/20">
-                No unread messages.
+                {t('header.noUnreadMessages')}
               </p>
             )}
             {data?.chat.map((room) => {
               const label =
                 room.type === 'group'
-                  ? (room.name ?? 'Group')
-                  : (room.participants[0]?.name ?? 'Direct Message');
+                  ? (room.name ?? t('header.groupFallback'))
+                  : (room.participants[0]?.name ??
+                    t('header.directMessageFallback'));
 
               return (
                 <Link

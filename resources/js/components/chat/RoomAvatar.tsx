@@ -70,7 +70,10 @@ const RoomAvatar = ({ room, currentUser, size = 36 }: Props) => {
     );
   }
 
-  const name = getRoomDisplayName(room, currentUser);
+  const name = getRoomDisplayName(room, currentUser, {
+    group: t('chat.groupFallback'),
+    directMessage: t('chat.directMessageFallback'),
+  });
   const bg = avatarBgClass(name);
 
   return (

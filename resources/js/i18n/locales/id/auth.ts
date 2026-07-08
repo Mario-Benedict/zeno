@@ -30,6 +30,16 @@ export const auth: typeof en = {
     haveAccount: 'Sudah punya akun?',
     signIn: 'Masuk',
   },
+  google: {
+    continue: 'Lanjutkan dengan Google',
+  },
+  passwordStrength: {
+    weak: 'Lemah',
+    fair: 'Cukup',
+    strong: 'Kuat',
+    superStrong: 'Sangat Kuat',
+    requirement: 'Minimal 8 karakter dengan huruf besar, angka & simbol',
+  },
   forgotPassword: {
     title: 'Lupa Kata Sandi',
     description: 'Silakan masukkan alamat email Anda untuk mereset kata sandi.',

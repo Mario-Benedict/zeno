@@ -35,7 +35,8 @@ export const ReminderDetailPanel = ({
   onToggleStep,
   onDeleteStep,
 }: ReminderDetailPanelProps) => {
-  const { t } = useTranslation();
+  const { locale, t } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(reminder.reminder_title);
   const [editingDesc, setEditingDesc] = useState(false);
@@ -240,7 +241,11 @@ export const ReminderDetailPanel = ({
               className="flex items-center gap-2 text-small text-dark-secondary transition hover:text-dark-primary"
             >
               <CalendarIcon className="h-4 w-4" />
-              {formatReminderDetailDateTime(reminder.reminder_due_at)}
+              {formatReminderDetailDateTime(
+                reminder.reminder_due_at,
+                localeCode,
+                t('reminders.noDueDate'),
+              )}
             </button>
           )}
         </div>

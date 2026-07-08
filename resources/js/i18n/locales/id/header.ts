@@ -12,4 +12,12 @@ export const header: typeof en = {
   seeAllProjects: 'Lihat semua proyek',
   createAProject: 'Buat proyek',
   projectSettings: 'Pengaturan proyek',
+  inbox: 'Kotak masuk',
+  chat: 'Obrolan',
+  nothingDueSoon: 'Tidak ada yang jatuh tempo segera.',
+  noUnreadMessages: 'Tidak ada pesan belum dibaca.',
+  overduePrefix: 'Terlambat · ',
+  duePrefix: 'Jatuh tempo ',
+  groupFallback: 'Grup',
+  directMessageFallback: 'Pesan Langsung',
 };

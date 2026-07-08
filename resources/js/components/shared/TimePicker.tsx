@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import ClockIcon from '@public/icons/small/time.svg';
 
 interface TimePickerProps {
@@ -108,9 +109,10 @@ export const TimePicker = ({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Set time',
+  placeholder,
   ariaLabel,
 }: TimePickerProps) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -161,7 +163,7 @@ export const TimePicker = ({
         <span className="flex-1 truncate">
           {value
             ? `${current.hour12}:${pad(current.minute)} ${current.period}`
-            : placeholder}
+            : (placeholder ?? t('common.setTime'))}
         </span>
       </button>
 
@@ -173,13 +175,13 @@ export const TimePicker = ({
 
           <div className="flex gap-2 px-3 py-3">
             <TimeColumn
-              label="Hour"
+              label={t('common.hour')}
               items={HOURS.map((h) => ({ value: h, label: String(h) }))}
               selected={value ? current.hour12 : null}
               onSelect={(h) => emit({ hour12: h })}
             />
             <TimeColumn
-              label="Min"
+              label={t('common.minute')}
               items={MINUTES.map((m) => ({ value: m, label: pad(m) }))}
               selected={value ? current.minute : null}
               onSelect={(m) => emit({ minute: m })}
@@ -217,14 +219,14 @@ export const TimePicker = ({
               onClick={setNow}
               className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/70"
             >
-              Now
+              {t('common.now')}
             </button>
             <button
               type="button"
               onClick={() => setOpen(false)}
               className="hover:bg-opacity-90 flex-1 rounded-lg bg-accent-blue py-1.5 text-xsmall font-semibold text-white transition"
             >
-              Done
+              {t('common.done')}
             </button>
           </div>
         </div>

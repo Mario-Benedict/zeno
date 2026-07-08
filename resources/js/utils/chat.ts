@@ -47,10 +47,14 @@ export const initials = (name: string): string =>
 export const getRoomDisplayName = (
   room: ChatRoom,
   currentUser: ChatParticipant,
+  fallbacks: {
+    group: string;
+    directMessage: string;
+  },
 ): string => {
-  if (room.type === 'group') return room.name ?? 'Group';
+  if (room.type === 'group') return room.name ?? fallbacks.group;
 
   const other = room.participants?.find((p) => p.id !== currentUser.id);
 
-  return other?.name ?? 'Direct Message';
+  return other?.name ?? fallbacks.directMessage;
 };

@@ -60,7 +60,7 @@ const ImageBlock = ({
               <input
                 type="url"
                 value={urlDraft}
-                placeholder="https://…"
+                placeholder={t('notes.imageUrlPlaceholder')}
                 onChange={(e) => setUrlDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && urlDraft.trim()) {

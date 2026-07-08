@@ -1,5 +1,7 @@
 export const chat = {
   noMessagesInRoom: 'No messages yet',
+  groupFallback: 'Group',
+  directMessageFallback: 'Direct Message',
   sendAMessage: 'Send a message',
   searchMessages: 'Search messages',
   searchMessagesPlaceholder: 'Search messages…',

@@ -3,14 +3,23 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 const WEEK = 7 * DAY;
 
+interface RelativeTimeLabels {
+  justNow: string;
+  minutesAgo: (count: number) => string;
+  hoursAgo: (count: number) => string;
+  daysAgo: (count: number) => string;
+}
+
 /**
- * Formats a timestamp as a short, human-meaningful relative label —
- * never in seconds. Anything under a minute reads as "Just now" rather
- * than "12s ago", since second-level precision isn't meaningful for
+ * Formats a timestamp as a short, human-meaningful relative label,
+ * never in seconds. Anything under a minute uses the provided immediate label
+ * since second-level precision isn't meaningful for
  * autosave status or note list timestamps.
  */
 export const formatRelativeTime = (
   iso: string | null | undefined,
+  labels: RelativeTimeLabels,
+  locale = 'en-US',
   now: Date = new Date(),
 ): string => {
   if (!iso) return '';
@@ -18,12 +27,12 @@ export const formatRelativeTime = (
   const then = new Date(iso).getTime();
   const diff = now.getTime() - then;
 
-  if (diff < MINUTE) return 'Just now';
-  if (diff < HOUR) return `${Math.floor(diff / MINUTE)}m ago`;
-  if (diff < DAY) return `${Math.floor(diff / HOUR)}h ago`;
-  if (diff < WEEK) return `${Math.floor(diff / DAY)}d ago`;
+  if (diff < MINUTE) return labels.justNow;
+  if (diff < HOUR) return labels.minutesAgo(Math.floor(diff / MINUTE));
+  if (diff < DAY) return labels.hoursAgo(Math.floor(diff / HOUR));
+  if (diff < WEEK) return labels.daysAgo(Math.floor(diff / DAY));
 
-  return new Date(then).toLocaleDateString([], {
+  return new Date(then).toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
   });

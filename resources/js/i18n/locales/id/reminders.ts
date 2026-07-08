@@ -29,6 +29,7 @@ export const reminders: typeof en = {
   reminderTitleLabel: 'Judul',
   reminderTitlePlaceholder: 'Judul pengingat...',
   dueDate: 'Tanggal jatuh tempo',
+  noDueDate: 'Tidak ada tanggal jatuh tempo',
   time: 'Waktu',
   optional: 'Opsional',
   cancel: 'Batal',

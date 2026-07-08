@@ -1,17 +1,18 @@
 import React from 'react';
+import type { TranslationKey } from '@/i18n/dictionary';
 
 export interface EmbedProvider {
   id: string;
-  label: string;
+  labelKey: TranslationKey;
   matcher: (url: string) => boolean;
   getEmbedUrl?: (url: string) => string;
-  renderIcon: () => React.ReactElement;
+  renderIcon: (alt: string) => React.ReactElement;
 }
 
 export const EMBED_PROVIDERS: EmbedProvider[] = [
   {
     id: 'youtube',
-    label: 'YouTube',
+    labelKey: 'notes.embedProviderYouTube',
     // Slashes outside character classes are safely escaped (\/), slashes inside character classes ([^/]) left clean
     matcher: (url: string) =>
       /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i.test(
@@ -25,34 +26,34 @@ export const EMBED_PROVIDERS: EmbedProvider[] = [
 
       return `https://www.youtube.com/embed/${videoId}`;
     },
-    renderIcon: () =>
+    renderIcon: (alt) =>
       React.createElement('img', {
         src: 'https://www.youtube.com/s/desktop/28169123/img/favicon_32x32.png',
-        alt: 'YouTube',
+        alt,
         className: 'w-6 h-6 shrink-0',
       }),
   },
   {
     id: 'google-drive',
-    label: 'Google Drive',
+    labelKey: 'notes.embedProviderGoogleDrive',
     matcher: (url: string) => url.includes('drive.google.com'),
     getEmbedUrl: (url: string) => url.replace('/view', '/preview'),
-    renderIcon: () =>
+    renderIcon: (alt) =>
       React.createElement('img', {
         src: 'https://ssl.gstatic.com/docs/doclist/images/drive_2021q4_32dp.png',
-        alt: 'Google Drive',
+        alt,
         className: 'w-6 h-6 shrink-0',
       }),
   },
   {
     id: 'figma',
-    label: 'Figma',
+    labelKey: 'notes.embedProviderFigma',
     matcher: (url: string) =>
       url.includes('figma.com/file') || url.includes('figma.com/design'),
-    renderIcon: () =>
+    renderIcon: (alt) =>
       React.createElement('img', {
         src: 'https://www.figma.com/assets/favicon.ico',
-        alt: 'Figma',
+        alt,
         className: 'w-6 h-6 shrink-0',
       }),
   },

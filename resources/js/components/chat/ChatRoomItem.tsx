@@ -12,7 +12,10 @@ interface Props {
 
 const ChatRoomItem = ({ room, currentUser, isActive, onClick }: Props) => {
   const { t } = useTranslation();
-  const displayName = getRoomDisplayName(room, currentUser);
+  const displayName = getRoomDisplayName(room, currentUser, {
+    group: t('chat.groupFallback'),
+    directMessage: t('chat.directMessageFallback'),
+  });
   const lastMsgBody = room.lastMessage?.body ?? '';
   const lastMsgSender = room.lastMessage?.senderName;
   const preview = lastMsgBody
