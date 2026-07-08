@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AssignableProjectRole } from '@/types';
 import ArrowDownIcon from '@public/icons/small/arrow_down.svg';
 import CheckIcon from '@public/icons/small/check.svg';
 
-export const ROLE_LABELS: Record<AssignableProjectRole, string> = {
-  ADMIN: 'Admin',
-  MEMBER: 'Member',
-  VIEWER: 'Viewer',
+export const useRoleLabels = (): Record<AssignableProjectRole, string> => {
+  const { t } = useTranslation();
+
+  return {
+    ADMIN: t('common.admin'),
+    MEMBER: t('common.member'),
+    VIEWER: t('common.viewer'),
+  };
 };
 
 export const inputClass =
@@ -27,16 +32,20 @@ export const FieldLabel = ({ children }: { children: ReactNode }) => (
   </p>
 );
 
-export const SavedBadge = ({ visible }: { visible: boolean }) => (
-  <span
-    className={`flex items-center gap-1.5 text-xsmall font-semibold text-status-success transition-opacity duration-300 ${
-      visible ? 'opacity-100' : 'pointer-events-none opacity-0'
-    }`}
-  >
-    <CheckIcon />
-    Saved
-  </span>
-);
+export const SavedBadge = ({ visible }: { visible: boolean }) => {
+  const { t } = useTranslation();
+
+  return (
+    <span
+      className={`flex items-center gap-1.5 text-xsmall font-semibold text-status-success transition-opacity duration-300 ${
+        visible ? 'opacity-100' : 'pointer-events-none opacity-0'
+      }`}
+    >
+      <CheckIcon />
+      {t('projectSettingsTabs.saved')}
+    </span>
+  );
+};
 
 export const RoleSelect = ({
   value,
@@ -51,6 +60,7 @@ export const RoleSelect = ({
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const roleLabels = useRoleLabels();
 
   useEffect(() => {
     if (!open) return;
@@ -71,7 +81,7 @@ export const RoleSelect = ({
         aria-expanded={open}
         className="flex h-8 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {ROLE_LABELS[value]}
+        {roleLabels[value]}
         <span
           className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
         >
@@ -100,7 +110,7 @@ export const RoleSelect = ({
               <span
                 className={`h-1.5 w-1.5 shrink-0 rounded-full ${role === value ? 'bg-accent-blue' : ''}`}
               />
-              {ROLE_LABELS[role]}
+              {roleLabels[role]}
             </button>
           ))}
         </div>

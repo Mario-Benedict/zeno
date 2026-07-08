@@ -1,9 +1,10 @@
 import type { Editor, Range } from '@tiptap/core';
+import type { TranslationKey } from '@/i18n/dictionary';
 
 export interface SlashCommandItem {
   key: string;
-  title: string;
-  description: string;
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
   glyph: string;
   keywords: string[];
   run: (editor: Editor, range: Range) => void;
@@ -12,13 +13,17 @@ export interface SlashCommandItem {
 /**
  * The full "/" command palette — headings, lists, blocks, and embeds. Each
  * item's `run` deletes the "/query" text and applies the block command in
- * one chain, matching Notion's slash-menu behavior.
+ * one chain, matching Notion's slash-menu behavior. `titleKey`/`descriptionKey`
+ * are translation keys (this module has no React context to call `t()`
+ * itself) resolved by the rendering component — see `SlashCommandMenu.tsx`.
+ * Keyword matching below stays on the untranslated English keywords, which
+ * is fine since it's just a fuzzy-filter aid, not user-facing copy.
  */
 export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   {
     key: 'paragraph',
-    title: 'Text',
-    description: 'Plain paragraph text',
+    titleKey: 'notes.slashCommandText',
+    descriptionKey: 'notes.slashCommandTextDescription',
     glyph: 'T',
     keywords: ['text', 'paragraph', 'p'],
     run: (editor, range) =>
@@ -26,8 +31,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'heading1',
-    title: 'Heading 1',
-    description: 'Big section heading',
+    titleKey: 'notes.slashCommandHeading1',
+    descriptionKey: 'notes.slashCommandHeading1Description',
     glyph: 'H1',
     keywords: ['h1', 'heading', 'title'],
     run: (editor, range) =>
@@ -40,8 +45,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'heading2',
-    title: 'Heading 2',
-    description: 'Medium section heading',
+    titleKey: 'notes.slashCommandHeading2',
+    descriptionKey: 'notes.slashCommandHeading2Description',
     glyph: 'H2',
     keywords: ['h2', 'heading', 'subtitle'],
     run: (editor, range) =>
@@ -54,8 +59,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'heading3',
-    title: 'Heading 3',
-    description: 'Small section heading',
+    titleKey: 'notes.slashCommandHeading3',
+    descriptionKey: 'notes.slashCommandHeading3Description',
     glyph: 'H3',
     keywords: ['h3', 'heading'],
     run: (editor, range) =>
@@ -68,8 +73,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'bulletList',
-    title: 'Bulleted list',
-    description: 'Simple unordered list',
+    titleKey: 'notes.slashCommandBulletList',
+    descriptionKey: 'notes.slashCommandBulletListDescription',
     glyph: '•',
     keywords: ['bullet', 'list', 'ul'],
     run: (editor, range) =>
@@ -77,8 +82,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'orderedList',
-    title: 'Numbered list',
-    description: 'Ordered, numbered list',
+    titleKey: 'notes.slashCommandOrderedList',
+    descriptionKey: 'notes.slashCommandOrderedListDescription',
     glyph: '1.',
     keywords: ['numbered', 'ordered', 'list', 'ol'],
     run: (editor, range) =>
@@ -86,8 +91,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'taskList',
-    title: 'To-do list',
-    description: 'Checkbox task list',
+    titleKey: 'notes.slashCommandTaskList',
+    descriptionKey: 'notes.slashCommandTaskListDescription',
     glyph: '☑',
     keywords: ['todo', 'task', 'checkbox', 'check'],
     run: (editor, range) =>
@@ -95,8 +100,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'blockquote',
-    title: 'Quote',
-    description: 'Capture a quote',
+    titleKey: 'notes.slashCommandBlockquote',
+    descriptionKey: 'notes.slashCommandBlockquoteDescription',
     glyph: '"',
     keywords: ['quote', 'blockquote', 'citation'],
     run: (editor, range) =>
@@ -104,8 +109,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'codeBlock',
-    title: 'Code block',
-    description: 'Monospace code snippet',
+    titleKey: 'notes.slashCommandCodeBlock',
+    descriptionKey: 'notes.slashCommandCodeBlockDescription',
     glyph: '</>',
     keywords: ['code', 'codeblock', 'snippet'],
     run: (editor, range) =>
@@ -113,8 +118,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'divider',
-    title: 'Divider',
-    description: 'Horizontal rule',
+    titleKey: 'notes.slashCommandDivider',
+    descriptionKey: 'notes.slashCommandDividerDescription',
     glyph: '—',
     keywords: ['divider', 'hr', 'rule', 'line'],
     run: (editor, range) =>
@@ -122,8 +127,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'image',
-    title: 'Image',
-    description: 'Upload or embed an image',
+    titleKey: 'notes.slashCommandImage',
+    descriptionKey: 'notes.slashCommandImageDescription',
     glyph: '▣',
     keywords: ['image', 'picture', 'photo', 'upload'],
     run: (editor, range) =>
@@ -131,8 +136,8 @@ export const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     key: 'embed',
-    title: 'Link / Embed',
-    description: 'Paste a link, YouTube, Figma, or Drive URL',
+    titleKey: 'notes.slashCommandEmbed',
+    descriptionKey: 'notes.slashCommandEmbedDescription',
     glyph: '⛓',
     keywords: ['link', 'embed', 'url', 'youtube', 'figma', 'drive'],
     run: (editor, range) =>
@@ -147,7 +152,7 @@ export const filterSlashCommandItems = (query: string): SlashCommandItem[] => {
 
   return SLASH_COMMAND_ITEMS.filter(
     (item) =>
-      item.title.toLowerCase().includes(q) ||
+      item.key.toLowerCase().includes(q) ||
       item.keywords.some((k) => k.includes(q)),
   );
 };

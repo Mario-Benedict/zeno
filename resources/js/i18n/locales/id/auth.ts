@@ -1,0 +1,82 @@
+import type { auth as en } from '../en/auth';
+
+export const auth: typeof en = {
+  login: {
+    title: 'Selamat datang kembali',
+    description: 'Masuk ke akun Anda untuk melanjutkan',
+    headTitle: 'Masuk',
+    emailLabel: 'Email',
+    passwordLabel: 'Kata sandi',
+    rememberMe: 'Ingat saya',
+    forgotPassword: 'Lupa kata sandi?',
+    signIn: 'Masuk',
+    signingIn: 'Sedang masuk…',
+    or: 'atau',
+    noAccount: 'Belum punya akun?',
+    signUp: 'Daftar',
+  },
+  register: {
+    title: 'Buat akun',
+    description: 'Isi detail Anda untuk memulai',
+    headTitle: 'Daftar',
+    firstNameLabel: 'Nama depan',
+    lastNameLabel: 'Nama belakang',
+    emailLabel: 'Email',
+    passwordLabel: 'Kata sandi',
+    confirmPasswordLabel: 'Konfirmasi kata sandi',
+    createAccount: 'Buat akun',
+    creatingAccount: 'Membuat akun…',
+    or: 'atau',
+    haveAccount: 'Sudah punya akun?',
+    signIn: 'Masuk',
+  },
+  google: {
+    continue: 'Lanjutkan dengan Google',
+  },
+  passwordStrength: {
+    weak: 'Lemah',
+    fair: 'Cukup',
+    strong: 'Kuat',
+    superStrong: 'Sangat Kuat',
+    requirement: 'Minimal 8 karakter dengan huruf besar, angka & simbol',
+  },
+  forgotPassword: {
+    title: 'Lupa Kata Sandi',
+    description: 'Silakan masukkan alamat email Anda untuk mereset kata sandi.',
+    headTitle: 'Lupa Kata Sandi',
+    emailLabel: 'Email',
+    continue: 'Lanjutkan',
+    sending: 'Mengirim…',
+    rememberedIt: 'Sudah ingat?',
+    backToLogin: 'Kembali ke Masuk',
+  },
+  resetPassword: {
+    title: 'Atur Kata Sandi Baru',
+    description:
+      'Pastikan untuk menyimpan kata sandi Anda di pengelola kata sandi.',
+    headTitle: 'Reset Kata Sandi',
+    passwordLabel: 'Kata sandi',
+    confirmPasswordLabel: 'Konfirmasi Kata Sandi',
+    reset: 'Reset Kata Sandi',
+    resetting: 'Mereset…',
+  },
+  twoFactor: {
+    title: 'Autentikasi 2 Faktor',
+    description:
+      'Masukkan kode 6 digit dari aplikasi autentikasi dua faktor Anda.',
+    headTitle: 'Autentikasi Dua Faktor',
+    verify: 'Verifikasi',
+    verifying: 'Memverifikasi…',
+  },
+  verifyEmail: {
+    title: 'Verifikasi Email Anda',
+    description:
+      'Masukkan kode 6 digit dari email untuk memverifikasi identitas Anda.',
+    headTitle: 'Verifikasi Email',
+    codeSent: 'Kode verifikasi baru telah dikirim ke email Anda.',
+    verify: 'Verifikasi',
+    verifying: 'Memverifikasi…',
+    noCode: 'Tidak menerima kode?',
+    resendCode: 'Kirim Ulang Kode',
+  },
+};

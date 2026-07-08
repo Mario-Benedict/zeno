@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import AccountMenu, {
   accountAvatarColor,
 } from '@/components/layouts/AccountMenu';
+import { useTranslation } from '@/hooks/useTranslation';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ const AccountSwitcher = ({
   onSettingsOpen,
 }: AccountSwitcherProps = {}) => {
   const { auth, account } = usePage().props;
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const userName = auth.user?.name ?? 'User';
@@ -68,7 +70,7 @@ const AccountSwitcher = ({
         onClick={toggle}
         aria-haspopup="true"
         aria-expanded={open}
-        aria-label="User menu"
+        aria-label={t('account.userMenu')}
         className="flex h-8 max-w-60 items-center gap-2 rounded-lg bg-dark-surface-2 px-2 text-dark-primary transition-colors select-none hover:bg-dark-surface-3"
       >
         {/* Colour-coded avatar matching the account-menu style */}

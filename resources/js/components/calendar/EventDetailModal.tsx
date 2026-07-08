@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type {
   AnyCalendarEvent,
   CalendarEventFull,
@@ -24,6 +25,7 @@ export const EventDetailModal = ({
   onDelete,
   canEdit,
 }: EventDetailModalProps) => {
+  const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,17 +63,16 @@ export const EventDetailModal = ({
           </svg>
         </div>
         <h3 className="mb-2 text-medium font-semibold text-dark-primary">
-          Private Schedule
+          {t('calendar.privateSchedule')}
         </h3>
         <p className="mb-6 text-small text-dark-secondary">
-          This schedule belongs to another project. Only the participant's
-          availability is visible to you.
+          {t('calendar.privateScheduleDescription')}
         </p>
         <button
           onClick={onClose}
           className="w-full rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-medium text-dark-primary transition hover:bg-dark-border"
         >
-          Close
+          {t('calendar.close')}
         </button>
       </div>
     );
@@ -129,18 +130,19 @@ export const EventDetailModal = ({
               <span
                 className={`h-1.5 w-1.5 rounded-full ${getPriorityColor(fullEvent.priority)}`}
               />
-              {fullEvent.priority} Priority
+              {t('calendar.priorityBadge', { priority: fullEvent.priority })}
             </span>
             {fullEvent.recurrence === 'weekly' && (
               <>
                 <span>•</span>
-                <span>Repeats Weekly</span>
+                <span>{t('calendar.repeatsWeekly')}</span>
               </>
             )}
           </div>
         </div>
         <button
           onClick={onClose}
+          aria-label={t('calendar.close')}
           className="shrink-0 text-dark-secondary hover:text-dark-primary"
         >
           ✕
@@ -190,7 +192,9 @@ export const EventDetailModal = ({
                   ?.color ?? '#7B7B7B',
             }}
           />
-          <span>{fullEvent.participants[0]?.name || 'Unknown'}</span>
+          <span>
+            {fullEvent.participants[0]?.name || t('calendar.unknownMember')}
+          </span>
         </div>
 
         {fullEvent.description && (
@@ -207,13 +211,13 @@ export const EventDetailModal = ({
               onClick={onDelete}
               className="rounded-lg px-4 py-2 text-small font-medium text-status-error transition hover:bg-status-error/10"
             >
-              Delete
+              {t('calendar.delete')}
             </button>
             <button
               onClick={onEdit}
               className="rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-medium text-dark-primary transition hover:bg-dark-border"
             >
-              Edit
+              {t('calendar.edit')}
             </button>
           </div>
         )}

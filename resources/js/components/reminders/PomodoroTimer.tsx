@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import type { PomodoroSettings } from '@/types/reminder';
 import MoreIcon from '@public/icons/large/more.svg';
 import PlayIcon from '@public/icons/small/play.svg';
@@ -13,14 +15,14 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
 
 const MODE_STYLES = {
   focus: {
-    label: 'Focus',
+    labelKey: 'reminders.focus' as TranslationKey,
     badgeClass: 'bg-accent-blue/15 text-accent-blue border-accent-blue/30',
     ringClass: 'ring-accent-blue/40',
     timeClass: 'text-dark-primary',
     startButtonClass: 'bg-accent-blue hover:bg-opacity-90',
   },
   break: {
-    label: 'Break',
+    labelKey: 'reminders.break' as TranslationKey,
     badgeClass: 'bg-accent-green/15 text-accent-green border-accent-green/30',
     ringClass: 'ring-accent-green/40',
     timeClass: 'text-accent-green',
@@ -47,6 +49,7 @@ export const PomodoroTimer = ({
   settings,
   onSaveSettings,
 }: PomodoroTimerProps) => {
+  const { t } = useTranslation();
   const activeSettings = settings ?? DEFAULT_SETTINGS;
   // `mode` and `secondsLeft` are tracked as a single state object and always
   // updated together via a functional updater. This is what lets the tick
@@ -114,6 +117,7 @@ export const PomodoroTimer = ({
   };
 
   const style = MODE_STYLES[mode];
+  const modeLabel = t(style.labelKey);
 
   return (
     <div
@@ -123,14 +127,14 @@ export const PomodoroTimer = ({
         <span
           className={`rounded-full border px-3 py-1 text-xsmall font-semibold tracking-wider uppercase ${style.badgeClass}`}
         >
-          {running ? `${style.label} · running` : style.label}
+          {running ? t('reminders.running', { label: modeLabel }) : modeLabel}
         </span>
         <div className="relative">
           <button
             type="button"
             onClick={() => setSettingsOpen((v) => !v)}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-dark-secondary transition hover:bg-white/[0.07] hover:text-dark-primary"
-            aria-label="Timer settings"
+            aria-label={t('reminders.timerSettings')}
           >
             <MoreIcon className="h-4 w-4" />
           </button>
@@ -159,7 +163,7 @@ export const PomodoroTimer = ({
             className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-small font-semibold text-white transition ${style.startButtonClass}`}
           >
             <PlayIcon className="h-3.5 w-3.5" />
-            Start
+            {t('reminders.start')}
           </button>
         ) : (
           <button
@@ -168,7 +172,7 @@ export const PomodoroTimer = ({
             className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-semibold text-white transition hover:bg-dark-secondary"
           >
             <StopIcon className="h-3.5 w-3.5" />
-            Stop
+            {t('reminders.stop')}
           </button>
         )}
         <button
@@ -177,7 +181,7 @@ export const PomodoroTimer = ({
           className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-semibold text-white transition hover:bg-dark-secondary"
         >
           <RestartIcon className="h-3.5 w-3.5" />
-          Reset
+          {t('reminders.reset')}
         </button>
       </div>
     </div>

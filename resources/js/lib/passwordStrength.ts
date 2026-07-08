@@ -21,14 +21,6 @@ export const getPasswordStrength = (password: string): PasswordStrength => {
   return score as PasswordStrength;
 };
 
-export const strengthLabel: Record<PasswordStrength, string> = {
-  0: '',
-  1: 'Weak',
-  2: 'Fair',
-  3: 'Strong',
-  4: 'Super Strong',
-};
-
 export const strengthLabelColor: Record<PasswordStrength, string> = {
   0: '',
   1: 'text-status-error',

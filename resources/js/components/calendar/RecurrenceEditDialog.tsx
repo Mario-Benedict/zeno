@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RecurrenceEditDialogProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const RecurrenceEditDialog = ({
   onConfirm,
   action,
 }: RecurrenceEditDialogProps) => {
+  const { t } = useTranslation();
   const [scope, setScope] = useState<'single' | 'all'>('single');
 
   if (!isOpen) return null;
@@ -23,15 +25,19 @@ export const RecurrenceEditDialog = ({
         <div className="border-b border-dark-border px-5 py-4">
           <h2 className="text-large font-semibold text-dark-primary">
             {action === 'edit'
-              ? 'Edit Recurring Schedule'
-              : 'Delete Recurring Schedule'}
+              ? t('calendar.editRecurringSchedule')
+              : t('calendar.deleteRecurringSchedule')}
           </h2>
         </div>
 
         <div className="p-5">
           <p className="mb-4 text-small text-dark-secondary">
-            This is a repeating schedule. Do you want to {action} only this
-            occurrence, or all occurrences?
+            {t('calendar.recurrenceEditPrompt', {
+              action:
+                action === 'edit'
+                  ? t('calendar.recurrenceActionEdit')
+                  : t('calendar.recurrenceActionDelete'),
+            })}
           </p>
 
           <div className="mb-6 flex flex-col gap-2">
@@ -45,7 +51,7 @@ export const RecurrenceEditDialog = ({
                 className="text-accent-blue focus:ring-accent-blue"
               />
               <span className="text-small font-medium text-dark-primary">
-                This occurrence only
+                {t('calendar.thisOccurrenceOnly')}
               </span>
             </label>
             <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dark-border p-3 transition hover:bg-dark-surface-2">
@@ -58,7 +64,7 @@ export const RecurrenceEditDialog = ({
                 className="text-accent-blue focus:ring-accent-blue"
               />
               <span className="text-small font-medium text-dark-primary">
-                All occurrences in series
+                {t('calendar.allOccurrencesInSeries')}
               </span>
             </label>
           </div>
@@ -68,7 +74,7 @@ export const RecurrenceEditDialog = ({
               onClick={onClose}
               className="rounded-lg px-4 py-2 text-small font-medium text-dark-primary transition hover:bg-dark-surface-2"
             >
-              Cancel
+              {t('calendar.cancel')}
             </button>
             <button
               onClick={() => onConfirm(scope)}
@@ -78,7 +84,7 @@ export const RecurrenceEditDialog = ({
                   : 'bg-accent-blue hover:bg-accent-blue/90'
               }`}
             >
-              Confirm
+              {t('calendar.confirm')}
             </button>
           </div>
         </div>

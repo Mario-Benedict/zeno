@@ -1,3 +1,4 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatFileSize } from '@/lib/utils';
 import type {
   ChatMessage,
@@ -151,6 +152,7 @@ const MessageBubble = ({
   showHeader,
   onSenderClick,
 }: Props) => {
+  const { t } = useTranslation();
   const isOwn = String(message.senderId) === String(currentUser.id);
   const sender = message.sender;
   const isDeleted = message.isDeleted ?? false;
@@ -184,7 +186,7 @@ const MessageBubble = ({
 
           {isDeleted ? (
             <p className="pr-1 text-right text-small text-dark-secondary italic">
-              This message was deleted.
+              {t('chat.messageDeleted')}
             </p>
           ) : isImageOnly ? (
             <ImageAttachment att={attachments[0]} timestamp={formattedTime} />
@@ -241,7 +243,7 @@ const MessageBubble = ({
               type="button"
               onClick={handleSenderClick}
               className="transition-opacity hover:opacity-75"
-              title={`Message ${sender?.name}`}
+              title={t('chat.messageFromSender', { name: sender?.name ?? '' })}
             >
               <SenderAvatar participant={sender} />
             </button>
@@ -261,7 +263,7 @@ const MessageBubble = ({
               ].join(' ')}
               onClick={handleSenderClick}
             >
-              {sender?.name ?? 'Unknown'}
+              {sender?.name ?? t('common.unknown')}
             </span>
             <span className="text-xsmall text-dark-secondary">
               {formatTime(message.createdAt)}
@@ -271,7 +273,7 @@ const MessageBubble = ({
 
         {isDeleted ? (
           <p className="pl-1 text-small text-dark-secondary italic">
-            This message was deleted.
+            {t('chat.messageDeleted')}
           </p>
         ) : isImageOnly ? (
           <ImageAttachment att={attachments[0]} timestamp={formattedTime} />

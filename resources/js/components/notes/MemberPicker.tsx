@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteProjectUser } from '@/types/notes';
 
 interface MemberPickerProps {
@@ -13,6 +14,7 @@ const MemberPicker = ({
   excludeUserIds,
   onPick,
 }: MemberPickerProps): React.ReactElement => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
 
   const results = useMemo(() => {
@@ -35,7 +37,7 @@ const MemberPicker = ({
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search project members by name or email…"
+        placeholder={t('notes.memberPickerPlaceholder')}
         className="w-full rounded-md border border-dark-border bg-dark-input px-3 py-2 text-small text-dark-primary outline-none placeholder:text-dark-secondary focus:bg-dark-input-focus"
       />
 
@@ -62,7 +64,7 @@ const MemberPicker = ({
 
       {query && results.length === 0 && (
         <p className="px-1 text-xsmall text-dark-secondary">
-          No matching project members.
+          {t('notes.noMatchingMembers')}
         </p>
       )}
     </div>

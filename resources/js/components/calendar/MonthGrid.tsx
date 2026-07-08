@@ -1,3 +1,5 @@
+import { useTranslation } from '@/hooks/useTranslation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 import { MonthDayCell } from './MonthDayCell';
 
@@ -9,7 +11,15 @@ interface MonthGridProps {
   onEventClick: (event: AnyCalendarEvent) => void;
 }
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_KEYS: TranslationKey[] = [
+  'calendar.daySun',
+  'calendar.dayMon',
+  'calendar.dayTue',
+  'calendar.dayWed',
+  'calendar.dayThu',
+  'calendar.dayFri',
+  'calendar.daySat',
+];
 
 export const MonthGrid = ({
   currentDate,
@@ -18,6 +28,7 @@ export const MonthGrid = ({
   onDateClick,
   onEventClick,
 }: MonthGridProps) => {
+  const { t } = useTranslation();
   const viewYear = currentDate.getFullYear();
   const viewMonth = currentDate.getMonth();
 
@@ -50,12 +61,12 @@ export const MonthGrid = ({
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-dark-border bg-dark-surface-1">
       <div className="grid grid-cols-7 border-b border-dark-border">
-        {DAYS.map((d, i) => (
+        {DAY_KEYS.map((key, i) => (
           <div
             key={i}
             className="py-2.5 text-center text-xsmall font-semibold tracking-wider text-dark-secondary uppercase"
           >
-            {d}
+            {t(key)}
           </div>
         ))}
       </div>

@@ -3,6 +3,7 @@ import type { SyntheticEvent } from 'react';
 import Button from '@/components/shared/Button';
 import PasswordField from '@/components/shared/PasswordField';
 import PasswordStrengthBar from '@/components/shared/PasswordStrengthBar';
+import { useTranslation } from '@/hooks/useTranslation';
 import AuthLayout from '@/layouts/AuthLayout';
 import { getPasswordStrength } from '@/lib/passwordStrength';
 
@@ -12,6 +13,7 @@ interface ResetPasswordProps {
 }
 
 const ResetPassword = ({ token, email }: ResetPasswordProps) => {
+  const { t } = useTranslation();
   const { data, setData, post, processing, errors, reset } = useForm({
     token,
     email,
@@ -30,10 +32,10 @@ const ResetPassword = ({ token, email }: ResetPasswordProps) => {
 
   return (
     <AuthLayout
-      title="Set New Password"
-      description="Make sure to save your password in a password manager."
+      title={t('auth.resetPassword.title')}
+      description={t('auth.resetPassword.description')}
     >
-      <Head title="Reset Password" />
+      <Head title={t('auth.resetPassword.headTitle')} />
 
       <form onSubmit={submit} className="space-y-4">
         <input type="hidden" name="token" value={data.token} />
@@ -42,7 +44,7 @@ const ResetPassword = ({ token, email }: ResetPasswordProps) => {
         <div>
           <PasswordField
             id="password"
-            label="Password"
+            label={t('auth.resetPassword.passwordLabel')}
             value={data.password}
             onChange={(e) => setData('password', e.target.value)}
             autoComplete="new-password"
@@ -54,7 +56,7 @@ const ResetPassword = ({ token, email }: ResetPasswordProps) => {
 
         <PasswordField
           id="password_confirmation"
-          label="Confirm Password"
+          label={t('auth.resetPassword.confirmPasswordLabel')}
           value={data.password_confirmation}
           onChange={(e) => setData('password_confirmation', e.target.value)}
           autoComplete="new-password"
@@ -62,7 +64,9 @@ const ResetPassword = ({ token, email }: ResetPasswordProps) => {
         />
 
         <Button type="submit" loading={processing} className="mt-2 w-full">
-          {processing ? 'Resetting…' : 'Reset Password'}
+          {processing
+            ? t('auth.resetPassword.resetting')
+            : t('auth.resetPassword.reset')}
         </Button>
       </form>
     </AuthLayout>

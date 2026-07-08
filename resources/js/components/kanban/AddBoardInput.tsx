@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface AddBoardInputProps {
   onAdd: (name: string) => void;
@@ -6,6 +7,7 @@ interface AddBoardInputProps {
 }
 
 export const AddBoardInput = ({ onAdd, onCancel }: AddBoardInputProps) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -30,7 +32,7 @@ export const AddBoardInput = ({ onAdd, onCancel }: AddBoardInputProps) => {
           if (e.key === 'Enter') handleAdd();
           if (e.key === 'Escape') onCancel();
         }}
-        placeholder="Board name..."
+        placeholder={t('kanban.boardNamePlaceholder')}
         className="mb-2 w-full rounded-xl border border-dark-border-focus bg-dark-input px-3 py-2 text-sm text-white placeholder-dark-secondary focus:outline-none"
       />
       <div className="flex gap-2">
@@ -39,13 +41,13 @@ export const AddBoardInput = ({ onAdd, onCancel }: AddBoardInputProps) => {
           disabled={!name.trim()}
           className="flex-1 rounded-lg bg-accent-blue py-1.5 text-xs font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Add Board
+          {t('kanban.addBoard')}
         </button>
         <button
           onClick={onCancel}
           className="flex-1 rounded-lg border border-dark-border py-1.5 text-xs text-white/50 transition hover:bg-white/5 hover:text-white"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
       </div>
     </div>

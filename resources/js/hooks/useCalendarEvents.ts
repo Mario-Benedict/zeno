@@ -1,7 +1,7 @@
-import axios from 'axios';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import echo from '@/echo';
 import { projectPath } from '@/lib/accountRoutes';
+import { inertiaJson } from '@/lib/inertiaJson';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 
 export const useCalendarEvents = (
@@ -38,7 +38,8 @@ export const useCalendarEvents = (
 
     setLoading(true);
     try {
-      const response = await axios.get(
+      const data = await inertiaJson<AnyCalendarEvent[]>(
+        'get',
         projectPath(accountIndex, projectSlug, '/calendar/events'),
         {
           params: {
@@ -48,7 +49,7 @@ export const useCalendarEvents = (
           },
         },
       );
-      setEvents(response.data);
+      setEvents(data);
     } catch (error) {
       console.error('Failed to fetch calendar events:', error);
     } finally {

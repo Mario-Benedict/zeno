@@ -1,3 +1,4 @@
+import type { TranslationKey } from '@/i18n/dictionary';
 import type { KanbanBoardCardChecklist } from '@/types/kanban';
 
 // ─── Display helpers ─────────────────────────────────────────────────────────
@@ -24,27 +25,43 @@ export const MEMBER_COLORS = [
   '#3949AB',
 ];
 
-export const LABEL_COLORS: { name: string; hex: string }[] = [
-  { name: 'red', hex: '#D32F2F' },
-  { name: 'orange', hex: '#F57C00' },
-  { name: 'yellow', hex: '#FBC02D' },
-  { name: 'lime', hex: '#7CB342' },
-  { name: 'green', hex: '#00897B' },
-  { name: 'cyan', hex: '#0288D1' },
-  { name: 'blue', hex: '#3949AB' },
-  { name: 'purple', hex: '#8E24AA' },
-  { name: 'pink', hex: '#C2185B' },
-  { name: 'brown', hex: '#8D6E63' },
-  { name: 'red-light', hex: '#FFB3B3' },
-  { name: 'orange-light', hex: '#FFD1A1' },
-  { name: 'yellow-light', hex: '#FFF0B3' },
-  { name: 'lime-light', hex: '#DCEDC8' },
-  { name: 'green-light', hex: '#B2DFDB' },
-  { name: 'cyan-light', hex: '#B3E5FC' },
-  { name: 'blue-light', hex: '#C5CAE9' },
-  { name: 'purple-light', hex: '#E1BEE7' },
-  { name: 'pink-light', hex: '#F8BBD0' },
-  { name: 'brown-light', hex: '#D7CCC8' },
+export const LABEL_COLORS: {
+  id: string;
+  hex: string;
+  labelKey: TranslationKey;
+}[] = [
+  { id: 'red', hex: '#D32F2F', labelKey: 'kanban.colorRed' },
+  { id: 'orange', hex: '#F57C00', labelKey: 'kanban.colorOrange' },
+  { id: 'yellow', hex: '#FBC02D', labelKey: 'kanban.colorYellow' },
+  { id: 'lime', hex: '#7CB342', labelKey: 'kanban.colorLime' },
+  { id: 'green', hex: '#00897B', labelKey: 'kanban.colorGreen' },
+  { id: 'cyan', hex: '#0288D1', labelKey: 'kanban.colorCyan' },
+  { id: 'blue', hex: '#3949AB', labelKey: 'kanban.colorBlue' },
+  { id: 'purple', hex: '#8E24AA', labelKey: 'kanban.colorPurple' },
+  { id: 'pink', hex: '#C2185B', labelKey: 'kanban.colorPink' },
+  { id: 'brown', hex: '#8D6E63', labelKey: 'kanban.colorBrown' },
+  { id: 'red-light', hex: '#FFB3B3', labelKey: 'kanban.colorRedLight' },
+  {
+    id: 'orange-light',
+    hex: '#FFD1A1',
+    labelKey: 'kanban.colorOrangeLight',
+  },
+  {
+    id: 'yellow-light',
+    hex: '#FFF0B3',
+    labelKey: 'kanban.colorYellowLight',
+  },
+  { id: 'lime-light', hex: '#DCEDC8', labelKey: 'kanban.colorLimeLight' },
+  { id: 'green-light', hex: '#B2DFDB', labelKey: 'kanban.colorGreenLight' },
+  { id: 'cyan-light', hex: '#B3E5FC', labelKey: 'kanban.colorCyanLight' },
+  { id: 'blue-light', hex: '#C5CAE9', labelKey: 'kanban.colorBlueLight' },
+  {
+    id: 'purple-light',
+    hex: '#E1BEE7',
+    labelKey: 'kanban.colorPurpleLight',
+  },
+  { id: 'pink-light', hex: '#F8BBD0', labelKey: 'kanban.colorPinkLight' },
+  { id: 'brown-light', hex: '#D7CCC8', labelKey: 'kanban.colorBrownLight' },
 ];
 
 // ─── Progress / formatting ───────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 
 interface DayEventsPopupProps {
@@ -16,6 +17,7 @@ export const DayEventsPopup = ({
   onClose,
   onEventClick,
 }: DayEventsPopupProps) => {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,11 +50,11 @@ export const DayEventsPopup = ({
   const getPriorityLabel = (priority: string) => {
     switch (priority) {
       case 'low':
-        return 'Low';
+        return t('calendar.priorityLow');
       case 'high':
-        return 'High';
+        return t('calendar.priorityHigh');
       default:
-        return 'Mid';
+        return t('calendar.priorityMid');
     }
   };
 
@@ -75,6 +77,7 @@ export const DayEventsPopup = ({
         </h3>
         <button
           onClick={onClose}
+          aria-label={t('calendar.close')}
           className="text-dark-secondary hover:text-dark-primary"
         >
           ✕
@@ -106,7 +109,7 @@ export const DayEventsPopup = ({
                 </div>
                 <div className="flex flex-col overflow-hidden">
                   <span className="truncate text-xsmall font-medium text-dark-secondary">
-                    CLASSIFIED
+                    {t('calendar.classified')}
                   </span>
                   <span className="text-[10px] text-dark-secondary/70">
                     {startTime} · {ev.participants[0]?.name}

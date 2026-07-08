@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { DatePicker } from '@/components/shared/DatePicker';
 import { TimePicker } from '@/components/shared/TimePicker';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { Reminder } from '@/types/reminder';
 import {
   combineDueAt,
@@ -34,6 +35,8 @@ export const ReminderDetailPanel = ({
   onToggleStep,
   onDeleteStep,
 }: ReminderDetailPanelProps) => {
+  const { locale, t } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(reminder.reminder_title);
   const [editingDesc, setEditingDesc] = useState(false);
@@ -124,7 +127,7 @@ export const ReminderDetailPanel = ({
             <h2
               className="line-clamp-2 cursor-pointer text-medium leading-snug font-bold text-dark-primary transition hover:text-dark-secondary"
               onClick={() => setEditingTitle(true)}
-              title="Click to edit title"
+              title={t('reminders.clickToEditTitle')}
             >
               {reminder.reminder_title}
             </h2>
@@ -135,7 +138,7 @@ export const ReminderDetailPanel = ({
           type="button"
           onClick={onClose}
           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/10 hover:text-white"
-          title="Close"
+          title={t('reminders.close')}
         >
           <CloseIcon className="h-6 w-6" />
         </button>
@@ -145,7 +148,7 @@ export const ReminderDetailPanel = ({
         {/* Steps */}
         <div>
           <div className="mb-2 flex items-center gap-2 text-xsmall font-semibold tracking-wider text-white/50 uppercase">
-            <span>Steps</span>
+            <span>{t('reminders.steps')}</span>
           </div>
           <div className="space-y-1">
             {(reminder.steps || []).map((step) => (
@@ -195,7 +198,7 @@ export const ReminderDetailPanel = ({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddStep();
               }}
-              placeholder="Add Step"
+              placeholder={t('reminders.addStep')}
               className="flex-1 rounded-lg bg-transparent py-1 text-small text-dark-primary placeholder-accent-blue outline-none"
             />
           </div>
@@ -206,18 +209,18 @@ export const ReminderDetailPanel = ({
           {editingDate ? (
             <div className="flex items-end gap-2">
               <DatePicker
-                label="Due date"
+                label={t('reminders.dueDate')}
                 value={dueDate}
                 onChange={(v) => onUpdateDueAt(combineDueAt(v, dueTime))}
                 onClear={() => onUpdateDueAt(null)}
-                placeholder="Set due date"
+                placeholder={t('reminders.setDueDate')}
               />
               <div>
                 <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
-                  Time
+                  {t('reminders.time')}
                 </label>
                 <TimePicker
-                  ariaLabel="Time"
+                  ariaLabel={t('reminders.time')}
                   value={dueTime}
                   onChange={(v) => onUpdateDueAt(combineDueAt(dueDate, v))}
                   disabled={!dueDate}
@@ -228,7 +231,7 @@ export const ReminderDetailPanel = ({
                 onClick={() => setEditingDate(false)}
                 className="rounded-lg border border-dark-border px-3 py-1.5 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
               >
-                Done
+                {t('reminders.done')}
               </button>
             </div>
           ) : (
@@ -238,7 +241,11 @@ export const ReminderDetailPanel = ({
               className="flex items-center gap-2 text-small text-dark-secondary transition hover:text-dark-primary"
             >
               <CalendarIcon className="h-4 w-4" />
-              {formatReminderDetailDateTime(reminder.reminder_due_at)}
+              {formatReminderDetailDateTime(
+                reminder.reminder_due_at,
+                localeCode,
+                t('reminders.noDueDate'),
+              )}
             </button>
           )}
         </div>
@@ -247,7 +254,7 @@ export const ReminderDetailPanel = ({
         <div>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xsmall font-semibold tracking-wider text-white/50 uppercase">
-              Description
+              {t('reminders.description')}
             </span>
             {!editingDesc && (
               <button
@@ -255,7 +262,7 @@ export const ReminderDetailPanel = ({
                 onClick={() => setEditingDesc(true)}
                 className="rounded px-2 py-0.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
               >
-                Edit
+                {t('reminders.edit')}
               </button>
             )}
           </div>
@@ -266,7 +273,7 @@ export const ReminderDetailPanel = ({
                 value={descValue}
                 onChange={(e) => setDescValue(e.target.value)}
                 rows={5}
-                placeholder="Add a more detailed description..."
+                placeholder={t('reminders.descriptionPlaceholder')}
                 className="scrollbar-app w-full resize-none rounded-xl border border-dark-border-focus bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed text-dark-primary placeholder-white/20 focus:outline-none"
               />
               <div className="mt-2 flex gap-2">
@@ -275,7 +282,7 @@ export const ReminderDetailPanel = ({
                   onClick={commitDesc}
                   className="hover:bg-opacity-90 rounded-lg bg-accent-blue px-3.5 py-1.5 text-xsmall font-semibold text-white transition"
                 >
-                  Save
+                  {t('reminders.save')}
                 </button>
                 <button
                   type="button"
@@ -285,7 +292,7 @@ export const ReminderDetailPanel = ({
                   }}
                   className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/50 transition hover:bg-white/5 hover:text-white"
                 >
-                  Discard
+                  {t('reminders.discard')}
                 </button>
               </div>
             </div>
@@ -300,7 +307,7 @@ export const ReminderDetailPanel = ({
                 </span>
               ) : (
                 <span className="text-white/20">
-                  Add a more detailed description...
+                  {t('reminders.descriptionPlaceholder')}
                 </span>
               )}
             </div>

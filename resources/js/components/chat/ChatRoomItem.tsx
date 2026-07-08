@@ -1,4 +1,5 @@
 import RoomAvatar from '@/components/chat/RoomAvatar';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatRoom, ChatParticipant } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
 
@@ -10,14 +11,18 @@ interface Props {
 }
 
 const ChatRoomItem = ({ room, currentUser, isActive, onClick }: Props) => {
-  const displayName = getRoomDisplayName(room, currentUser);
+  const { t } = useTranslation();
+  const displayName = getRoomDisplayName(room, currentUser, {
+    group: t('chat.groupFallback'),
+    directMessage: t('chat.directMessageFallback'),
+  });
   const lastMsgBody = room.lastMessage?.body ?? '';
   const lastMsgSender = room.lastMessage?.senderName;
   const preview = lastMsgBody
     ? lastMsgSender && room.type === 'group'
       ? `${lastMsgSender}: ${lastMsgBody}`
       : lastMsgBody
-    : 'No messages yet';
+    : t('chat.noMessagesInRoom');
 
   return (
     <button

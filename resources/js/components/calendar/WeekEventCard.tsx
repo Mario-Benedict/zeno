@@ -1,3 +1,4 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 
 interface WeekEventCardProps {
@@ -30,6 +31,7 @@ export const WeekEventCard = ({
   style,
   onClick,
 }: WeekEventCardProps) => {
+  const { t } = useTranslation();
   const evStart = new Date(event.start_time);
   const evEnd = new Date(event.end_time);
 
@@ -59,7 +61,7 @@ export const WeekEventCard = ({
       >
         <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-dashed border-dark-border bg-dark-surface-3 px-2 py-1">
           <span className="truncate text-[10px] font-bold tracking-wide text-dark-secondary uppercase">
-            Classified
+            {t('calendar.classified')}
           </span>
           <span className="truncate text-[11px] font-medium text-dark-primary/80">
             {event.participants[0]?.name}
@@ -97,7 +99,7 @@ export const WeekEventCard = ({
 
         {event.recurrence === 'weekly' && height >= 58 && (
           <span className="mt-auto w-fit rounded-full bg-black/10 px-1.5 py-px text-[8px] font-bold tracking-wide uppercase">
-            Weekly
+            {t('calendar.weekly')}
           </span>
         )}
 

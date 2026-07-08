@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import projects from '@/routes/projects';
 import type { KanbanBoard } from '@/types/kanban';
 import { KanbanWidgetCardDetail } from './KanbanWidgetCardDetail';
@@ -19,6 +20,7 @@ interface Props {
  */
 export const KanbanWidget = ({ kanbanBoards }: Props) => {
   const { project, accountIndex } = useProject();
+  const { t } = useTranslation();
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -83,8 +85,13 @@ export const KanbanWidget = ({ kanbanBoards }: Props) => {
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl bg-dark-surface-2">
       <WidgetSearchHeader
-        title="Kanban"
-        countLabel={`${totalCards} card${totalCards === 1 ? '' : 's'}`}
+        title={t('dashboard.kanbanTitle')}
+        countLabel={t(
+          totalCards === 1
+            ? 'dashboard.cardCount'
+            : 'dashboard.cardCountPlural',
+          { count: totalCards },
+        )}
         searchOpen={searchOpen}
         query={searchQuery}
         onQueryChange={setSearchQuery}
@@ -93,17 +100,17 @@ export const KanbanWidget = ({ kanbanBoards }: Props) => {
           setSearchOpen(false);
           setSearchQuery('');
         }}
-        searchLabel="Search cards"
-        placeholder="Search cards…"
+        searchLabel={t('dashboard.searchCards')}
+        placeholder={t('dashboard.searchCardsPlaceholder')}
       />
 
       {boards.length === 0 ? (
         <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-white/30">
-          No boards yet. Create one from the Kanban page.
+          {t('dashboard.noBoardsYet')}
         </div>
       ) : visibleBoards.length === 0 ? (
         <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-white/30">
-          No cards match your search.
+          {t('dashboard.noCardsMatch')}
         </div>
       ) : (
         <div className="scrollbar-app flex min-h-0 flex-1 gap-2 overflow-x-auto px-3 pb-3">

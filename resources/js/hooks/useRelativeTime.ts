@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatRelativeTime } from '@/lib/formatRelativeTime';
 
 /**
@@ -8,6 +9,8 @@ import { formatRelativeTime } from '@/lib/formatRelativeTime';
  * without a page reload, e.g. "Saved just now" aging to "Saved 2m ago".
  */
 export const useRelativeTime = (iso: string | null | undefined): string => {
+  const { locale, t } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -18,5 +21,15 @@ export const useRelativeTime = (iso: string | null | undefined): string => {
     return () => clearInterval(interval);
   }, [iso]);
 
-  return formatRelativeTime(iso);
+  return formatRelativeTime(
+    iso,
+    {
+      justNow: t('common.justNow'),
+      minutesAgo: (count) => t('common.minutesAgoShort', { count }),
+      hoursAgo: (count) => t('common.hoursAgoShort', { count }),
+      daysAgo: (count) => t('common.daysAgoShort', { count }),
+    },
+    localeCode,
+    new Date(),
+  );
 };

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import { PinButton } from '@/components/shared/PinButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { Reminder } from '@/types/reminder';
 import { formatReminderListDate, isReminderOverdue } from '@/utils/reminders';
 import CloseIcon from '@public/icons/small/cancel.svg';
@@ -23,6 +24,8 @@ export const ReminderRow = ({
   onTogglePin,
   onDelete,
 }: ReminderRowProps) => {
+  const { locale, t } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const overdue =
     !reminder.is_completed && isReminderOverdue(reminder.reminder_due_at);
@@ -31,17 +34,11 @@ export const ReminderRow = ({
     <>
       {showDeleteConfirm && (
         <ConfirmModal
-          title="Delete Reminder"
-          description={
-            <>
-              Are you sure you want to delete{' '}
-              <strong className="font-semibold text-white">
-                "{reminder.reminder_title}"
-              </strong>
-              ? This action cannot be undone.
-            </>
-          }
-          confirmLabel="Yes, delete it"
+          title={t('reminders.deleteReminderTitle')}
+          description={t('reminders.deleteReminderDescription', {
+            title: reminder.reminder_title,
+          })}
+          confirmLabel={t('reminders.deleteReminderConfirm')}
           onCancel={() => setShowDeleteConfirm(false)}
           onConfirm={() => {
             onDelete();
@@ -77,7 +74,9 @@ export const ReminderRow = ({
               : 'border-dark-secondary hover:border-dark-primary'
           }`}
           aria-label={
-            reminder.is_completed ? 'Mark as not done' : 'Mark as done'
+            reminder.is_completed
+              ? t('reminders.markAsNotDone')
+              : t('reminders.markAsDone')
           }
         />
 
@@ -98,7 +97,7 @@ export const ReminderRow = ({
               }`}
             >
               <CalendarIcon className="h-3 w-3" />
-              {formatReminderListDate(reminder.reminder_due_at)}
+              {formatReminderListDate(reminder.reminder_due_at, localeCode)}
             </p>
           )}
         </div>
@@ -112,8 +111,8 @@ export const ReminderRow = ({
             setShowDeleteConfirm(true);
           }}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-dark-secondary transition-colors hover:bg-accent-red/10 hover:text-accent-red"
-          title="Delete reminder"
-          aria-label="Delete reminder"
+          title={t('reminders.deleteReminder')}
+          aria-label={t('reminders.deleteReminder')}
         >
           <CloseIcon className="h-4 w-4" />
         </button>

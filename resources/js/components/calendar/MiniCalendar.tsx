@@ -1,3 +1,5 @@
+import { useTranslation } from '@/hooks/useTranslation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import type { AnyCalendarEvent } from '@/types/calendar';
 
 interface MiniCalendarProps {
@@ -8,20 +10,28 @@ interface MiniCalendarProps {
   events: AnyCalendarEvent[];
 }
 
-const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+const DAY_LETTER_KEYS: TranslationKey[] = [
+  'calendar.dayLetterSun',
+  'calendar.dayLetterMon',
+  'calendar.dayLetterTue',
+  'calendar.dayLetterWed',
+  'calendar.dayLetterThu',
+  'calendar.dayLetterFri',
+  'calendar.dayLetterSat',
+];
+const MONTH_KEYS: TranslationKey[] = [
+  'calendar.monthJanuary',
+  'calendar.monthFebruary',
+  'calendar.monthMarch',
+  'calendar.monthApril',
+  'calendar.monthMay',
+  'calendar.monthJune',
+  'calendar.monthJuly',
+  'calendar.monthAugust',
+  'calendar.monthSeptember',
+  'calendar.monthOctober',
+  'calendar.monthNovember',
+  'calendar.monthDecember',
 ];
 
 export const MiniCalendar = ({
@@ -31,6 +41,7 @@ export const MiniCalendar = ({
   onNextMonth,
   events,
 }: MiniCalendarProps) => {
+  const { t } = useTranslation();
   const viewYear = currentDate.getFullYear();
   const viewMonth = currentDate.getMonth();
 
@@ -77,7 +88,7 @@ export const MiniCalendar = ({
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between px-1">
         <span className="text-small font-semibold text-dark-primary">
-          {MONTHS[viewMonth]} {viewYear}
+          {t(MONTH_KEYS[viewMonth])} {viewYear}
         </span>
         <div className="flex gap-1">
           <button
@@ -95,12 +106,12 @@ export const MiniCalendar = ({
         </div>
       </div>
       <div className="mb-1 grid grid-cols-7">
-        {DAYS.map((d, i) => (
+        {DAY_LETTER_KEYS.map((key, i) => (
           <div
             key={i}
             className="text-center text-[10px] font-medium text-dark-secondary"
           >
-            {d}
+            {t(key)}
           </div>
         ))}
       </div>

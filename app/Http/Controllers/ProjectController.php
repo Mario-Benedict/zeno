@@ -106,7 +106,7 @@ class ProjectController extends Controller
         return response()->json(['available' => ! $exists]);
     }
 
-    public function show(int $accountIndex, Project $project): Response
+    public function show(int $accountIndex, Project $project): RedirectResponse
     {
         $user = auth()->user();
 
@@ -120,10 +120,10 @@ class ProjectController extends Controller
             'opened_at' => now(),
         ]);
 
-        // `project` and `projectRole` are exposed automatically as Inertia
-        // shared data (see HandleInertiaRequests), so the page can read them
-        // via `usePage().props` — no need to pass them here.
-        return Inertia::render('projects/workspace');
+        return redirect()->route('projects.dashboard', [
+            'accountIndex' => $accountIndex,
+            'project' => $project->project_slug,
+        ]);
     }
 
     public function togglePin(int $accountIndex, Project $project): RedirectResponse

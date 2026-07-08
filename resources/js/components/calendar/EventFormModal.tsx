@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CalendarMember, CalendarEventFull } from '@/types/calendar';
 import type { ProjectRole } from '@/types/project';
 
@@ -23,6 +24,7 @@ export const EventFormModal = ({
   currentUser,
   projectRole,
 }: EventFormModalProps) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -98,9 +100,7 @@ export const EventFormModal = ({
       const endIso = new Date(`${endDate}T${endTime}`).toISOString();
 
       if (new Date(startIso) >= new Date(endIso)) {
-        throw new Error(
-          'End time must be after start time. If it ends the next day, please update the End Date.',
-        );
+        throw new Error(t('calendar.endTimeAfterStartTimeError'));
       }
 
       await onSubmit({
@@ -124,7 +124,7 @@ export const EventFormModal = ({
       } else if (error.response?.data?.message) {
         setErrorMsg(error.response.data.message);
       } else {
-        setErrorMsg(error.message || 'Failed to save schedule.');
+        setErrorMsg(error.message || t('calendar.saveScheduleError'));
       }
     } finally {
       setIsSubmitting(false);
@@ -136,10 +136,13 @@ export const EventFormModal = ({
       <div className="w-full max-w-md rounded-xl border border-dark-border bg-dark-surface-1 shadow-2xl">
         <div className="flex items-center justify-between border-b border-dark-border px-5 py-4">
           <h2 className="text-large font-semibold text-dark-primary">
-            {eventToEdit ? 'Edit Schedule' : 'New Schedule'}
+            {eventToEdit
+              ? t('calendar.editSchedule')
+              : t('calendar.newSchedule')}
           </h2>
           <button
             onClick={onClose}
+            aria-label={t('calendar.close')}
             className="text-dark-secondary hover:text-dark-primary"
           >
             ✕
@@ -155,7 +158,7 @@ export const EventFormModal = ({
 
           <div>
             <label className="mb-1 block text-xsmall text-dark-secondary">
-              Title
+              {t('calendar.title')}
             </label>
             <input
               type="text"
@@ -163,14 +166,14 @@ export const EventFormModal = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full rounded-lg border border-dark-border bg-dark-input px-3 py-2 text-small text-dark-primary focus:border-dark-border-focus focus:outline-none"
-              placeholder="Event title"
+              placeholder={t('calendar.eventTitlePlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-xsmall text-dark-secondary">
-                Start Date
+                {t('calendar.startDate')}
               </label>
               <input
                 type="date"
@@ -182,7 +185,7 @@ export const EventFormModal = ({
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xsmall text-dark-secondary">
-                Start Time
+                {t('calendar.startTime')}
               </label>
               <input
                 type="time"
@@ -197,7 +200,7 @@ export const EventFormModal = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-xsmall text-dark-secondary">
-                End Date
+                {t('calendar.endDate')}
               </label>
               <input
                 type="date"
@@ -209,7 +212,7 @@ export const EventFormModal = ({
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xsmall text-dark-secondary">
-                End Time
+                {t('calendar.endTime')}
               </label>
               <input
                 type="time"
@@ -224,35 +227,37 @@ export const EventFormModal = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-xsmall text-dark-secondary">
-                Priority
+                {t('calendar.priority')}
               </label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
                 className="w-full rounded-lg border border-dark-border bg-dark-input px-3 py-2 text-small text-dark-primary focus:border-dark-border-focus focus:outline-none"
               >
-                <option value="low">Low</option>
-                <option value="mid">Mid</option>
-                <option value="high">High</option>
+                <option value="low">{t('calendar.priorityLow')}</option>
+                <option value="mid">{t('calendar.priorityMid')}</option>
+                <option value="high">{t('calendar.priorityHigh')}</option>
               </select>
             </div>
             <div>
               <label className="mb-1 block text-xsmall text-dark-secondary">
-                Recurrence
+                {t('calendar.recurrence')}
               </label>
               <select
                 value={recurrence}
                 onChange={(e) => setRecurrence(e.target.value)}
                 className="w-full rounded-lg border border-dark-border bg-dark-input px-3 py-2 text-small text-dark-primary focus:border-dark-border-focus focus:outline-none"
               >
-                <option value="none">One time</option>
-                <option value="weekly">Every week</option>
+                <option value="none">{t('calendar.oneTime')}</option>
+                <option value="weekly">{t('calendar.everyWeek')}</option>
               </select>
             </div>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xsmall text-dark-secondary">Assignee</label>
+            <label className="text-xsmall text-dark-secondary">
+              {t('calendar.assignee')}
+            </label>
             <select
               value={assigneeId}
               onChange={(e) => setAssigneeId(Number(e.target.value))}
@@ -271,21 +276,21 @@ export const EventFormModal = ({
             </select>
             {!canAssignOthers && (
               <p className="mt-1 text-[10px] text-dark-secondary">
-                Only Owners and Admins can assign schedules to other members.
+                {t('calendar.assigneeRestrictionNote')}
               </p>
             )}
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-xsmall text-dark-secondary">
-              Description (Optional)
+              {t('calendar.descriptionOptional')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               className="w-full resize-none rounded-lg border border-dark-border bg-dark-input px-3 py-2 text-small text-dark-primary focus:border-dark-border-focus focus:outline-none"
-              placeholder="Event details..."
+              placeholder={t('calendar.eventDescriptionPlaceholder')}
             />
           </div>
 
@@ -296,14 +301,14 @@ export const EventFormModal = ({
               disabled={isSubmitting}
               className="rounded-lg px-4 py-2 text-small font-medium text-dark-primary transition hover:bg-dark-surface-2"
             >
-              Cancel
+              {t('calendar.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="rounded-lg bg-accent-blue px-4 py-2 text-small font-medium text-white transition hover:bg-accent-blue/90 disabled:opacity-70"
             >
-              {isSubmitting ? 'Saving...' : 'Save Schedule'}
+              {isSubmitting ? t('calendar.saving') : t('calendar.saveSchedule')}
             </button>
           </div>
         </form>

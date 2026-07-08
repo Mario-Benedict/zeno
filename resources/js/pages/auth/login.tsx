@@ -5,6 +5,7 @@ import Checkbox from '@/components/shared/Checkbox';
 import FloatInputField from '@/components/shared/FloatInputField';
 import GoogleButton from '@/components/shared/GoogleButton';
 import PasswordField from '@/components/shared/PasswordField';
+import { useTranslation } from '@/hooks/useTranslation';
 import AuthLayout from '@/layouts/AuthLayout';
 
 interface LoginProps {
@@ -13,6 +14,7 @@ interface LoginProps {
 }
 
 const Login = ({ status, canResetPassword }: LoginProps) => {
+  const { t } = useTranslation();
   const { data, setData, post, processing, errors, reset } = useForm({
     email: '',
     password: '',
@@ -26,10 +28,10 @@ const Login = ({ status, canResetPassword }: LoginProps) => {
 
   return (
     <AuthLayout
-      title="Welcome back"
-      description="Sign in to your account to continue"
+      title={t('auth.login.title')}
+      description={t('auth.login.description')}
     >
-      <Head title="Log in" />
+      <Head title={t('auth.login.headTitle')} />
 
       {status && (
         <div className="mb-4 rounded-lg bg-status-success/10 px-4 py-3 text-sm text-status-success">
@@ -40,7 +42,7 @@ const Login = ({ status, canResetPassword }: LoginProps) => {
       <form onSubmit={submit} className="space-y-4">
         <FloatInputField
           id="email"
-          label="Email"
+          label={t('auth.login.emailLabel')}
           type="email"
           value={data.email}
           onChange={(e) => setData('email', e.target.value)}
@@ -51,7 +53,7 @@ const Login = ({ status, canResetPassword }: LoginProps) => {
 
         <PasswordField
           id="password"
-          label="Password"
+          label={t('auth.login.passwordLabel')}
           value={data.password}
           onChange={(e) => setData('password', e.target.value)}
           autoComplete="current-password"
@@ -61,7 +63,7 @@ const Login = ({ status, canResetPassword }: LoginProps) => {
         <div className="flex items-center justify-between">
           <Checkbox
             id="remember"
-            label="Remember me"
+            label={t('auth.login.rememberMe')}
             checked={data.remember}
             onChange={(checked) => setData('remember', checked)}
           />
@@ -70,31 +72,33 @@ const Login = ({ status, canResetPassword }: LoginProps) => {
               href="/forgot-password"
               className="text-sm text-dark-secondary transition-colors hover:text-dark-primary"
             >
-              Forgot password?
+              {t('auth.login.forgotPassword')}
             </Link>
           )}
         </div>
 
         <Button type="submit" loading={processing} className="mt-2 w-full">
-          {processing ? 'Signing in…' : 'Sign in'}
+          {processing ? t('auth.login.signingIn') : t('auth.login.signIn')}
         </Button>
       </form>
 
       <div className="my-5 flex items-center gap-3">
         <div className="h-px flex-1 bg-dark-border" />
-        <span className="text-xs text-dark-secondary">or</span>
+        <span className="text-xs text-dark-secondary">
+          {t('auth.login.or')}
+        </span>
         <div className="h-px flex-1 bg-dark-border" />
       </div>
 
       <GoogleButton />
 
       <p className="mt-6 text-center text-sm text-dark-secondary">
-        Don't have an account?{' '}
+        {t('auth.login.noAccount')}{' '}
         <Link
           href="/register"
           className="font-medium text-dark-primary underline underline-offset-4"
         >
-          Sign up
+          {t('auth.login.signUp')}
         </Link>
       </p>
     </AuthLayout>

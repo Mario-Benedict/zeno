@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath, projectPath } from '@/lib/accountRoutes';
 import { avatarHex } from '@/lib/projectAvatar';
 import type { CurrentProject, ProjectSummary } from '@/types';
@@ -47,6 +48,7 @@ const ProjectSwitcher = ({
   onSettingsOpen,
 }: ProjectSwitcherProps) => {
   const { account } = usePage().props;
+  const { t } = useTranslation();
   const accountIndex = account.index;
 
   if (!open) return null;
@@ -81,7 +83,7 @@ const ProjectSwitcher = ({
         <>
           <div className="my-2 h-px bg-dark-border" />
           <p className="px-2 py-1 text-xsmall font-semibold tracking-wide text-dark-primary uppercase">
-            Your projects
+            {t('header.yourProjects')}
           </p>
           <div className="scrollbar-app max-h-64 space-y-0.5 overflow-y-auto pr-1">
             {projects.map((project) => (
@@ -118,14 +120,14 @@ const ProjectSwitcher = ({
           onClick={onClose}
           className="block rounded-md px-2 py-2 text-small font-semibold text-dark-primary transition-colors hover:bg-dark-surface-2"
         >
-          See all projects
+          {t('header.seeAllProjects')}
         </Link>
         <Link
           href={accountPath(accountIndex, '/projects?create=1')}
           onClick={onClose}
           className="block rounded-md px-2 py-2 text-small font-semibold text-dark-primary transition-colors hover:bg-dark-surface-2"
         >
-          Create a project
+          {t('header.createAProject')}
         </Link>
         {currentProject && (
           <button
@@ -136,7 +138,7 @@ const ProjectSwitcher = ({
             }}
             className="block w-full rounded-md px-2 py-2 text-left text-small font-semibold text-dark-secondary transition-colors hover:bg-dark-surface-2 hover:text-dark-primary"
           >
-            Project settings
+            {t('header.projectSettings')}
           </button>
         )}
       </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoardCard } from '@/types/kanban';
 import {
   calculateChecklistProgress,
@@ -31,6 +32,7 @@ export const KanbanWidgetCardDetail = ({
   onClose,
   onToggleDone,
 }: Props) => {
+  const { t } = useTranslation();
   const startDate = card.kanban_board_card_start_date;
   const dueDate = card.kanban_board_card_due_date;
 
@@ -47,7 +49,11 @@ export const KanbanWidgetCardDetail = ({
           <button
             type="button"
             onClick={() => onToggleDone(card.kanban_board_card_id)}
-            aria-label={card.is_completed ? 'Mark as not done' : 'Mark as done'}
+            aria-label={
+              card.is_completed
+                ? t('dashboard.markAsNotDone')
+                : t('dashboard.markAsDone')
+            }
             className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
               card.is_completed
                 ? 'border-accent-blue bg-accent-blue'
@@ -70,7 +76,7 @@ export const KanbanWidgetCardDetail = ({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('dashboard.close')}
             className="shrink-0 rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-white"
           >
             <CloseIcon className="h-4 w-4" />
@@ -124,13 +130,13 @@ export const KanbanWidgetCardDetail = ({
             {startDate && (
               <span className="flex items-center gap-1">
                 <TimeIcon className="h-3 w-3" />
-                Start {formatDate(startDate)}
+                {t('dashboard.startDate', { date: formatDate(startDate) })}
               </span>
             )}
             {dueDate && (
               <span className="flex items-center gap-1">
                 <TimeIcon className="h-3 w-3" />
-                Due {formatDate(dueDate)}
+                {t('dashboard.dueDate', { date: formatDate(dueDate) })}
               </span>
             )}
           </div>
@@ -214,7 +220,7 @@ export const KanbanWidgetCardDetail = ({
           <div className="mb-3">
             <p className="mb-1.5 flex items-center gap-1 text-micro text-white/40">
               <PaperclipIcon className="h-3 w-3" />
-              Attachments ({card.attachments.length})
+              {t('dashboard.attachments', { count: card.attachments.length })}
             </p>
             <div className="space-y-1">
               {card.attachments.map((att) => (
@@ -235,7 +241,7 @@ export const KanbanWidgetCardDetail = ({
           <div>
             <p className="mb-1.5 flex items-center gap-1 text-micro text-white/40">
               <CommentIcon className="h-3 w-3" />
-              Comments ({card.comments.length})
+              {t('dashboard.comments', { count: card.comments.length })}
             </p>
             <div className="space-y-2">
               {card.comments.map((comment) => (
@@ -245,7 +251,7 @@ export const KanbanWidgetCardDetail = ({
                 >
                   <div className="mb-0.5 flex items-center gap-1.5">
                     <span className="text-micro font-semibold text-white/70">
-                      {comment.user?.name ?? 'Unknown'}
+                      {comment.user?.name ?? t('dashboard.unknownSender')}
                     </span>
                     <span className="text-micro text-white/30">
                       {formatDate(comment.created_at)}

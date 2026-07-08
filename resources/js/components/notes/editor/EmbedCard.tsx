@@ -1,6 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { detectEmbedProvider } from '../embedProviders';
 
 const IFRAME_PROVIDERS = new Set(['youtube', 'google-drive']);
@@ -11,6 +12,7 @@ const EmbedCard = ({
   deleteNode,
   editor,
 }: NodeViewProps): React.ReactElement => {
+  const { t } = useTranslation();
   const { url, provider } = node.attrs as {
     url: string | null;
     provider: string | null;
@@ -34,7 +36,7 @@ const EmbedCard = ({
             autoFocus
             type="url"
             value={draft}
-            placeholder="Paste a link to embed (YouTube, Figma, Drive, or any URL)…"
+            placeholder={t('notes.embedPlaceholder')}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -50,7 +52,7 @@ const EmbedCard = ({
             onClick={submit}
             className="shrink-0 rounded-md bg-dark-surface-3 px-2.5 py-1 text-xsmall font-medium text-dark-primary hover:bg-dark-input-focus"
           >
-            Embed
+            {t('notes.embed')}
           </button>
         </div>
       </NodeViewWrapper>
@@ -106,7 +108,7 @@ const EmbedCard = ({
             onClick={deleteNode}
             className="absolute top-1.5 right-1.5 hidden rounded-md bg-dark-surface-1/80 px-2 py-1 text-xsmall text-dark-secondary group-hover:block hover:text-dark-primary"
           >
-            Remove
+            {t('notes.remove')}
           </button>
         )}
       </div>

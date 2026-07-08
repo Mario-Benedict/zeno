@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 import { DayEventsPopup } from './DayEventsPopup';
 
@@ -57,6 +58,7 @@ export const MonthDayCell = ({
   onClick,
   onEventClick,
 }: MonthDayCellProps) => {
+  const { t } = useTranslation();
   const [popupOpen, setPopupOpen] = useState(false);
 
   const now = new Date();
@@ -86,7 +88,7 @@ export const MonthDayCell = ({
   const hiddenCount = dayEvents.length - MAX_VISIBLE_EVENTS;
 
   const ownerName = (ev: AnyCalendarEvent) =>
-    ev.participants[0]?.name ?? 'Unknown';
+    ev.participants[0]?.name ?? t('calendar.unknownMember');
 
   const dayLabel =
     date.getDate() === 1
@@ -133,7 +135,7 @@ export const MonthDayCell = ({
                 </span>
                 <span className="h-2 w-2 shrink-0 rounded-full bg-dark-secondary/50" />
                 <span className="truncate italic">
-                  CLASSIFIED · {ownerName(ev)}
+                  {t('calendar.classified')} · {ownerName(ev)}
                 </span>
               </button>
             );
@@ -169,7 +171,7 @@ export const MonthDayCell = ({
             }}
             className="mt-px pl-1 text-left text-[11px] font-medium text-dark-secondary hover:text-dark-primary"
           >
-            + {hiddenCount} more
+            {t('calendar.moreEvents', { count: hiddenCount })}
           </button>
         )}
       </div>

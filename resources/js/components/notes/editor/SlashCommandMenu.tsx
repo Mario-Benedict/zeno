@@ -9,6 +9,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { SlashCommandItem } from './commandItems';
 
 export interface SlashCommandMenuHandle {
@@ -19,6 +20,7 @@ const SlashCommandMenu = forwardRef<
   SlashCommandMenuHandle,
   SuggestionProps<SlashCommandItem>
 >((props, ref) => {
+  const { t } = useTranslation();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -56,7 +58,7 @@ const SlashCommandMenu = forwardRef<
   if (props.items.length === 0) {
     return (
       <div className="w-64 rounded-lg border border-dark-border bg-dark-surface-2 p-3 text-small text-dark-secondary shadow-lg">
-        No matching blocks
+        {t('notes.noMatchingBlocks')}
       </div>
     );
   }
@@ -83,10 +85,10 @@ const SlashCommandMenu = forwardRef<
           </span>
           <span className="min-w-0">
             <span className="block truncate text-small text-dark-primary">
-              {item.title}
+              {t(item.titleKey)}
             </span>
             <span className="block truncate text-xsmall text-dark-secondary">
-              {item.description}
+              {t(item.descriptionKey)}
             </span>
           </span>
         </button>

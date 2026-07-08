@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { PomodoroSettings } from '@/types/reminder';
 
 interface PomodoroSettingsPopoverProps {
@@ -12,6 +13,7 @@ export const PomodoroSettingsPopover = ({
   onSave,
   onClose,
 }: PomodoroSettingsPopoverProps) => {
+  const { t } = useTranslation();
   const [focusMinutes, setFocusMinutes] = useState(settings.focus_minutes);
   const [breakMinutes, setBreakMinutes] = useState(settings.break_minutes);
   const ref = useRef<HTMLDivElement>(null);
@@ -37,12 +39,12 @@ export const PomodoroSettingsPopover = ({
       className="absolute top-full right-0 z-50 mt-2 w-56 rounded-xl border border-dark-border bg-dark-surface-1 p-4 shadow-2xl"
     >
       <p className="mb-3 text-xsmall font-semibold tracking-wider text-white/40 uppercase">
-        Timer settings
+        {t('reminders.timerSettings')}
       </p>
       <div className="space-y-3">
         <div>
           <label className="mb-1 block text-xsmall text-white/40">
-            Focus (minutes)
+            {t('reminders.focusMinutesLabel')}
           </label>
           <input
             type="number"
@@ -55,7 +57,7 @@ export const PomodoroSettingsPopover = ({
         </div>
         <div>
           <label className="mb-1 block text-xsmall text-white/40">
-            Break (minutes)
+            {t('reminders.breakMinutesLabel')}
           </label>
           <input
             type="number"
@@ -71,7 +73,7 @@ export const PomodoroSettingsPopover = ({
           onClick={handleSave}
           className="hover:bg-opacity-90 w-full rounded-lg bg-accent-blue px-3 py-1.5 text-xsmall font-semibold text-white transition"
         >
-          Save
+          {t('reminders.save')}
         </button>
       </div>
     </div>

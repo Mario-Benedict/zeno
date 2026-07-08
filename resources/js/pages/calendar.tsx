@@ -1,5 +1,4 @@
 import { Head, usePage } from '@inertiajs/react';
-import axios from 'axios';
 import { useState, useMemo } from 'react';
 import { CalendarSidebar } from '@/components/calendar/CalendarSidebar';
 import { EventDetailModal } from '@/components/calendar/EventDetailModal';
@@ -8,8 +7,10 @@ import { MonthGrid } from '@/components/calendar/MonthGrid';
 import { RecurrenceEditDialog } from '@/components/calendar/RecurrenceEditDialog';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
+import { inertiaJson } from '@/lib/inertiaJson';
 import type {
   CalendarProps,
   CalendarViewMode,
@@ -25,6 +26,7 @@ export default function Calendar({
   projectUsers,
   currentUser,
 }: CalendarProps) {
+  const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
@@ -176,7 +178,7 @@ export default function Calendar({
       });
       setRecurrenceDialogOpen(true);
     } else {
-      if (confirm('Are you sure you want to delete this schedule?')) {
+      if (confirm(t('calendar.deleteScheduleConfirm'))) {
         submitDelete(selectedEvent as CalendarEventFull, 'single');
       }
     }
@@ -222,12 +224,15 @@ export default function Calendar({
           }
         }
 
-        await axios.patch(`${basePath}/${targetId}`, payload);
+        await inertiaJson('patch', `${basePath}/${targetId}`, {
+          data: payload,
+        });
       } else {
         // Create new
-        await axios.post(
+        await inertiaJson(
+          'post',
           projectPath(accountIndex, project.project_slug, '/calendar/events'),
-          data,
+          { data },
         );
       }
       refetch();
@@ -249,7 +254,8 @@ export default function Calendar({
         scope === 'single' && ev.recurrence === 'weekly'
           ? ev.start_time
           : undefined;
-      await axios.delete(
+      await inertiaJson(
+        'delete',
         projectPath(
           accountIndex,
           project.project_slug,
@@ -279,7 +285,7 @@ export default function Calendar({
 
   return (
     <AppLayout project={project}>
-      <Head title={`${project.project_name} - Calendar`} />
+      <Head title={`${project.project_name} - ${t('calendar.pageTitle')}`} />
 
       <div className="flex h-full w-full gap-3 bg-dark-surface-1">
         <CalendarSidebar
