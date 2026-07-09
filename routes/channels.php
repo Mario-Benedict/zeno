@@ -20,6 +20,10 @@ Broadcast::channel('calendar.project.{projectId}', function (User $user, string 
     return $user->projects()->where('projects.project_id', $projectId)->exists();
 });
 
+Broadcast::channel('notifications.user.{userId}', function (User $user, int $userId) {
+    return $user->id === $userId;
+});
+
 // ── Notes presence channel (real-time content sync) ──
 Broadcast::channel('note.{noteId}', function (User $user, string $noteId) {
     $note = Note::with('project')->where('note_id', $noteId)->first();

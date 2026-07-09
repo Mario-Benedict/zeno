@@ -2,11 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
+#[Fillable([
+    'project_id',
+    'title',
+    'description',
+    'start_time',
+    'end_time',
+    'created_by',
+    'recurrence',
+    'recurrence_group_id',
+    'recurrence_end_date',
+])]
 class CalendarEvent extends Model
 {
     protected $table = 'calendar_events';
@@ -17,23 +29,12 @@ class CalendarEvent extends Model
 
     protected $keyType = 'string';
 
-    protected $fillable = [
-        'project_id',
-        'title',
-        'description',
-        'start_time',
-        'end_time',
-        'priority',
-        'created_by',
-        'recurrence',
-        'recurrence_group_id',
-    ];
-
     protected function casts(): array
     {
         return [
             'start_time' => 'datetime',
             'end_time' => 'datetime',
+            'recurrence_end_date' => 'date',
             'excluded_occurrence_dates' => 'array',
         ];
     }
@@ -60,5 +61,10 @@ class CalendarEvent extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'calendar_event_participants', 'event_id', 'user_id');
+    }
+
+    public function labels(): BelongsToMany
+    {
+        return $this->belongsToMany(CardLabel::class, 'calendar_event_labels', 'calendar_event_id', 'card_label_id');
     }
 }

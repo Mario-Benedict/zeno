@@ -39,11 +39,8 @@ export const calendar = {
   refresh: 'Refresh',
   month: 'Month',
   week: 'Week',
-  priorityLow: 'Low',
-  priorityMid: 'Mid',
-  priorityHigh: 'High',
-  hidePriority: 'Hide {{priority}} priority',
-  showPriority: 'Show {{priority}} priority',
+  hideLabel: 'Hide "{{label}}" events',
+  showLabel: 'Show "{{label}}" events',
 
   // Sidebar member list
   searchForPeople: 'Search for people',
@@ -56,15 +53,18 @@ export const calendar = {
   // Day events popup
   close: 'Close',
 
-  // Week grid
-  weekly: 'Weekly',
+  // Week grid — short recurrence badges
+  daily: 'Daily',
+  weeklyShort: 'Weekly',
+  monthlyShort: 'Monthly',
+  yearlyShort: 'Yearly',
 
   // Event detail modal
   privateSchedule: 'Private Schedule',
   privateScheduleDescription:
     "This schedule belongs to another project. Only the participant's availability is visible to you.",
-  priorityBadge: '{{priority}} Priority',
-  repeatsWeekly: 'Repeats Weekly',
+  fromBoard: 'From {{board}}',
+  openInBoard: 'Open in Board',
   unknownMember: 'Unknown',
   delete: 'Delete',
   edit: 'Edit',
@@ -74,14 +74,22 @@ export const calendar = {
   newSchedule: 'New Schedule',
   title: 'Title',
   eventTitlePlaceholder: 'Event title',
+  titleRequiredError: 'Please enter a title.',
   startDate: 'Start Date',
   startTime: 'Start Time',
   endDate: 'End Date',
   endTime: 'End Time',
-  priority: 'Priority',
+  labels: 'Labels',
+  selectLabels: 'Select labels',
+  noLabelsInProject: 'No labels in this project yet — create one from Board.',
   recurrence: 'Recurrence',
-  oneTime: 'One time',
-  everyWeek: 'Every week',
+  doesNotRepeat: 'Does not repeat',
+  weeklyOn: 'Weekly on {{weekday}}',
+  monthlyOn: 'Monthly on day {{day}}',
+  yearlyOn: 'Annually on {{date}}',
+  until: 'until {{date}}',
+  endsOn: 'Ends on',
+  neverEnds: 'Never',
   assignee: 'Assignee',
   assigneeRestrictionNote:
     'Only Owners and Admins can assign schedules to other members.',
@@ -92,6 +100,8 @@ export const calendar = {
   saveSchedule: 'Save Schedule',
   endTimeAfterStartTimeError:
     'End time must be after start time. If it ends the next day, please update the End Date.',
+  recurrenceEndBeforeStartError:
+    'The recurrence end date must be on or after the start date.',
   saveScheduleError: 'Failed to save schedule.',
 
   // Delete confirmation

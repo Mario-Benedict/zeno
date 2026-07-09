@@ -1,7 +1,7 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CardLabel, KanbanBoard, KanbanUser } from '@/types/kanban';
 import type { TimelineFilters } from '@/types/timeline';
-import { generateInitials, MEMBER_COLORS } from '@/utils/kanban';
+import { generateInitials, memberColor } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 
 interface TimelineFilterMenuProps {
@@ -117,7 +117,7 @@ export const TimelineFilterMenu = ({
         <div className="mb-3">
           <SectionLabel>{t('timeline.assignee')}</SectionLabel>
           <div className="space-y-0.5">
-            {projectUsers.map((user, i) => (
+            {projectUsers.map((user) => (
               <FilterRow
                 key={user.id}
                 active={filters.memberIds.includes(user.id)}
@@ -132,7 +132,7 @@ export const TimelineFilterMenu = ({
                   <span
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-micro font-bold text-white"
                     style={{
-                      backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length],
+                      backgroundColor: memberColor(user.id),
                     }}
                   >
                     {generateInitials(user.name)}

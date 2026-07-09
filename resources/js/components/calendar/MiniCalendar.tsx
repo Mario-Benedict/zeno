@@ -1,4 +1,5 @@
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWheelStepNavigation } from '@/hooks/useWheelStepNavigation';
 import type { TranslationKey } from '@/i18n/dictionary';
 import type { AnyCalendarEvent } from '@/types/calendar';
 
@@ -45,6 +46,13 @@ export const MiniCalendar = ({
   const viewYear = currentDate.getFullYear();
   const viewMonth = currentDate.getMonth();
 
+  // Scrolling over the mini calendar changes the month instead of scrolling
+  // the page underneath it — see the hook for why it's a native listener.
+  const containerRef = useWheelStepNavigation<HTMLDivElement>({
+    onPrev: onPrevMonth,
+    onNext: onNextMonth,
+  });
+
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
@@ -85,7 +93,7 @@ export const MiniCalendar = ({
   });
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={containerRef}>
       <div className="mb-2 flex items-center justify-between px-1">
         <span className="text-small font-semibold text-dark-primary">
           {t(MONTH_KEYS[viewMonth])} {viewYear}
@@ -123,18 +131,21 @@ export const MiniCalendar = ({
             `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
           );
 
-          // Priority of visual states (matches the reference design):
-          // today -> neutral grey, has-event -> solid blue, selected -> ring.
+          // The one date that's "marked" solid blue is always the currently
+          // selected date (currentDate defaults to today, so today is marked
+          // out of the box). Today gets a subtle ring when it isn't the
+          // selection, so it stays visible as a reference point. Having an
+          // event never overrides the cell background — it's a small dot
+          // instead, so it can't be mistaken for "selected".
           let stateClass = isCurrentMonth
             ? 'text-dark-primary hover:bg-dark-surface-3'
             : 'text-dark-secondary/40 hover:text-dark-secondary';
 
-          if (isToday) {
-            stateClass = 'bg-dark-surface-3 font-semibold text-dark-primary';
-          } else if (hasEvent && isCurrentMonth) {
+          if (isSelected) {
             stateClass = 'bg-accent-blue font-semibold text-white';
-          } else if (isSelected) {
-            stateClass = 'text-dark-primary ring-1 ring-accent-blue ring-inset';
+          } else if (isToday) {
+            stateClass =
+              'font-semibold text-dark-primary ring-1 ring-dark-secondary/50 ring-inset';
           }
 
           return (
@@ -144,6 +155,13 @@ export const MiniCalendar = ({
               className={`relative mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xsmall transition-colors ${stateClass}`}
             >
               {date.getDate()}
+              {hasEvent && (
+                <span
+                  className={`absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${
+                    isSelected ? 'bg-white' : 'bg-accent-blue'
+                  }`}
+                />
+              )}
             </button>
           );
         })}

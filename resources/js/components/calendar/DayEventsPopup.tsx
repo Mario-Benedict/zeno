@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
+import { getEventLabelColor } from '@/utils/calendar';
 
 interface DayEventsPopupProps {
   date: Date;
@@ -35,28 +36,6 @@ export const DayEventsPopup = ({
     month: 'long',
     day: 'numeric',
   });
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low':
-        return 'bg-status-success';
-      case 'high':
-        return 'bg-status-error';
-      default:
-        return 'bg-status-warning';
-    }
-  };
-
-  const getPriorityLabel = (priority: string) => {
-    switch (priority) {
-      case 'low':
-        return t('calendar.priorityLow');
-      case 'high':
-        return t('calendar.priorityHigh');
-      default:
-        return t('calendar.priorityMid');
-    }
-  };
 
   const getEventOwnerColor = (ev: AnyCalendarEvent) => {
     if (!ev.participants || ev.participants.length === 0) return '#7B7B7B';
@@ -95,6 +74,25 @@ export const DayEventsPopup = ({
           );
 
           if (ev.is_classified) {
+            // "busy_only" shows a plain unlabeled busy row — no time, no name.
+            if (ev.visibility === 'busy_only') {
+              return (
+                <div
+                  key={ev.id}
+                  onClick={() => {
+                    onClose();
+                    onEventClick(ev);
+                  }}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg bg-dark-surface-3 px-2 py-1.5 hover:bg-dark-border"
+                >
+                  <div className="h-2 w-2 shrink-0 rounded-full bg-dark-secondary/50" />
+                  <span className="truncate text-xsmall font-medium text-dark-secondary">
+                    {t('calendar.classified')}
+                  </span>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={ev.id}
@@ -130,7 +128,8 @@ export const DayEventsPopup = ({
               style={{ backgroundColor: `${getEventOwnerColor(ev)}15` }}
             >
               <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${getPriorityColor(ev.priority)}`}
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: getEventLabelColor(ev.labels) }}
               >
                 <span className="h-2 w-2 rounded-full bg-white/90" />
               </span>
@@ -140,9 +139,11 @@ export const DayEventsPopup = ({
                 </span>
                 <span className="flex items-center gap-2 text-[10px] text-dark-secondary">
                   <span>{startTime}</span>
-                  <span className="rounded-full bg-dark-surface-1/70 px-1.5 py-0.5 text-[8px] font-semibold tracking-wide text-dark-primary uppercase">
-                    {getPriorityLabel(ev.priority)}
-                  </span>
+                  {ev.labels[0] && (
+                    <span className="rounded-full bg-dark-surface-1/70 px-1.5 py-0.5 text-[8px] font-semibold tracking-wide text-dark-primary uppercase">
+                      {ev.labels[0].card_label_name}
+                    </span>
+                  )}
                 </span>
               </div>
             </div>

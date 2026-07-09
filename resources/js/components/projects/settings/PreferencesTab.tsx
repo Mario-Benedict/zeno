@@ -1,7 +1,6 @@
-import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import preferences from '@/routes/preferences';
+import { useLocaleContext } from '@/i18n/LocaleContext';
+import GlobeIcon from '@public/icons/small/globe.svg';
 import { FieldLabel } from './shared';
 
 // ── Icons (stroke="currentColor" so they inherit the wrapper text color) ─
@@ -44,7 +43,7 @@ const SunIcon = () => (
   </svg>
 );
 
-const GlobeIcon = () => (
+const EyeIcon = () => (
   <svg
     width="16"
     height="16"
@@ -55,54 +54,58 @@ const GlobeIcon = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <circle cx="12" cy="12" r="10" />
-    <line x1="2" y1="12" x2="22" y2="12" />
-    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 );
 
-// ── Theme helpers ─────────────────────────────────────────────────────────
+const MaskIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M17 3.34a10 10 0 1 1-14.995 8.984" />
+    <path d="M9 9a3 3 0 1 0 6 0 3 3 0 0 0-6 0z" />
+    <path d="M14 3.223a10 10 0 0 1 5.777 5.777" />
+  </svg>
+);
 
-const getStoredTheme = (): 'dark' | 'light' => {
-  try {
-    return (localStorage.getItem('theme') as 'dark' | 'light') ?? 'dark';
-  } catch {
-    return 'dark';
-  }
-};
-
-const applyTheme = (theme: 'dark' | 'light') => {
-  try {
-    localStorage.setItem('theme', theme);
-  } catch {
-    /* ignore */
-  }
-  if (theme === 'light') {
-    document.documentElement.classList.add('light-mode');
-  } else {
-    document.documentElement.classList.remove('light-mode');
-  }
-};
+const CircleIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <circle cx="12" cy="12" r="9" fill="currentColor" fillOpacity="0.25" />
+  </svg>
+);
 
 // ── PreferencesTab ────────────────────────────────────────────────────────
+//
+// Theme + locale + calendar visibility are all owned by `LocaleContext` (a
+// single source of truth shared with `app.tsx`'s pre-mount bootstrap), so
+// this component just reads and writes through it rather than keeping its
+// own copy of the state.
 
-interface PreferencesTabProps {
-  accountIndex: number;
-}
-
-const PreferencesTab = ({ accountIndex }: PreferencesTabProps) => {
-  const { t, locale, setLocale } = useTranslation();
-  const [theme, setTheme] = useState<'dark' | 'light'>(getStoredTheme);
-
-  const handleTheme = (next: 'dark' | 'light') => {
-    setTheme(next);
-    applyTheme(next);
-    router.patch(
-      preferences.update.url({ accountIndex }),
-      { theme: next },
-      { preserveScroll: true, preserveState: true },
-    );
-  };
+const PreferencesTab = () => {
+  const { t } = useTranslation();
+  const {
+    locale,
+    setLocale,
+    theme,
+    setTheme,
+    calendarVisibility,
+    setCalendarVisibility,
+  } = useLocaleContext();
 
   return (
     <div>
@@ -119,7 +122,7 @@ const PreferencesTab = ({ accountIndex }: PreferencesTabProps) => {
             {/* Dark option */}
             <button
               type="button"
-              onClick={() => handleTheme('dark')}
+              onClick={() => setTheme('dark')}
               className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
                 theme === 'dark'
                   ? 'border-accent-blue bg-accent-blue/10'
@@ -145,7 +148,7 @@ const PreferencesTab = ({ accountIndex }: PreferencesTabProps) => {
             {/* Light option */}
             <button
               type="button"
-              onClick={() => handleTheme('light')}
+              onClick={() => setTheme('light')}
               className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
                 theme === 'light'
                   ? 'border-accent-blue bg-accent-blue/10'
@@ -214,6 +217,64 @@ const PreferencesTab = ({ accountIndex }: PreferencesTabProps) => {
                 </span>
               </div>
             </button>
+          </div>
+        </div>
+
+        <div>
+          <FieldLabel>{t('projectSettings.calendarVisibility')}</FieldLabel>
+          <p className="mb-3 text-xsmall text-dark-secondary">
+            {t('projectSettings.calendarVisibilityHint')}
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {(
+              [
+                {
+                  value: 'transparent',
+                  icon: <EyeIcon />,
+                  labelKey: 'projectSettings.visibilityTransparent',
+                  descKey: 'projectSettings.visibilityTransparentDescription',
+                },
+                {
+                  value: 'masked',
+                  icon: <MaskIcon />,
+                  labelKey: 'projectSettings.visibilityMasked',
+                  descKey: 'projectSettings.visibilityMaskedDescription',
+                },
+                {
+                  value: 'busy_only',
+                  icon: <CircleIcon />,
+                  labelKey: 'projectSettings.visibilityBusyOnly',
+                  descKey: 'projectSettings.visibilityBusyOnlyDescription',
+                },
+              ] as const
+            ).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setCalendarVisibility(option.value)}
+                className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 text-center transition-colors ${
+                  calendarVisibility === option.value
+                    ? 'border-accent-blue bg-accent-blue/10'
+                    : 'border-dark-border bg-dark-surface-1 hover:border-dark-border-focus'
+                }`}
+              >
+                <div
+                  className={
+                    calendarVisibility === option.value
+                      ? 'text-accent-blue'
+                      : 'text-dark-primary'
+                  }
+                >
+                  {option.icon}
+                </div>
+                <span className="text-xsmall font-semibold text-dark-primary">
+                  {t(option.labelKey)}
+                </span>
+                <span className="text-micro text-dark-secondary">
+                  {t(option.descKey)}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

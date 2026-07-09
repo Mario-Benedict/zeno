@@ -39,6 +39,7 @@ export const common: typeof en = {
   jumpToToday: 'Lompat ke hari ini',
   hour: 'Jam',
   minute: 'Menit',
+  period: 'AM/PM',
   member: 'Anggota',
   members: 'Anggota',
   owner: 'Pemilik',

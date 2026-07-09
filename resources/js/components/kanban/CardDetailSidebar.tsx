@@ -2,7 +2,7 @@ import { DatePicker } from '@/components/shared/DatePicker';
 import { TimePicker } from '@/components/shared/TimePicker';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoardCard, CardLabel, KanbanUser } from '@/types/kanban';
-import { generateInitials, MEMBER_COLORS } from '@/utils/kanban';
+import { generateInitials, memberColor } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 import ChecklistIcon from '@public/icons/small/checkbox.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
@@ -244,7 +244,7 @@ export const CardDetailSidebar = ({
           {t('kanban.members')}
         </p>
         <div className="space-y-1">
-          {projectUsers?.map((user, i) => {
+          {projectUsers?.map((user) => {
             const isMember = (card.members || []).some((m) => m.id === user.id);
 
             return (
@@ -260,7 +260,7 @@ export const CardDetailSidebar = ({
                 <div
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xsmall font-bold text-white"
                   style={{
-                    backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length],
+                    backgroundColor: memberColor(user.id),
                   }}
                 >
                   {generateInitials(user.name)}

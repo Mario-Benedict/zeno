@@ -18,4 +18,10 @@ export const header = {
   duePrefix: 'Due ',
   groupFallback: 'Group',
   directMessageFallback: 'Direct Message',
+  conflicts: 'Conflicts',
+  noConflicts: 'No scheduling conflicts.',
+  conflictAssigneePrompt:
+    'You were assigned "{{card}}", which overlaps "{{other}}". Can you take both?',
+  conflictAssignerAlert:
+    '{{name}} can’t take both "{{card}}" and their existing commitment.',
 };

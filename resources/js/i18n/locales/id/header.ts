@@ -20,4 +20,10 @@ export const header: typeof en = {
   duePrefix: 'Jatuh tempo ',
   groupFallback: 'Grup',
   directMessageFallback: 'Pesan Langsung',
+  conflicts: 'Konflik',
+  noConflicts: 'Tidak ada konflik jadwal.',
+  conflictAssigneePrompt:
+    'Anda ditugaskan "{{card}}", yang bertabrakan dengan "{{other}}". Bisakah Anda mengambil keduanya?',
+  conflictAssignerAlert:
+    '{{name}} tidak bisa mengambil "{{card}}" bersamaan dengan komitmen lain yang sudah ada.',
 };

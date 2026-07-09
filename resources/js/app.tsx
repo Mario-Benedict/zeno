@@ -2,6 +2,8 @@ import { createInertiaApp } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { LocaleProvider } from '@/i18n/LocaleContext';
+import { applyThemeClass, getStoredTheme, persistTheme } from '@/lib/theme';
+import type { Theme } from '@/lib/theme';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -14,24 +16,15 @@ try {
   // localStorage is stale or absent on a new device.
   const initialPage = document.getElementById('app')?.dataset.page;
   const serverTheme = initialPage
-    ? (JSON.parse(initialPage).props?.auth?.user?.theme as
-        | 'dark'
-        | 'light'
-        | undefined)
+    ? (JSON.parse(initialPage).props?.auth?.user?.theme as Theme | undefined)
     : undefined;
 
-  const stored = localStorage.getItem('theme') as 'dark' | 'light' | null;
   // Server preference wins; fall back to localStorage; default is dark.
-  const theme = serverTheme ?? stored ?? 'dark';
+  const theme = serverTheme ?? getStoredTheme();
 
   // Keep localStorage in sync with the server value.
-  localStorage.setItem('theme', theme);
-
-  if (theme === 'light') {
-    document.documentElement.classList.add('light-mode');
-  } else {
-    document.documentElement.classList.remove('light-mode');
-  }
+  persistTheme(theme);
+  applyThemeClass(theme);
 } catch {
   // localStorage / JSON unavailable — stay in default dark mode
 }

@@ -204,9 +204,7 @@ const ProjectSettingsModal = ({
           {activeTab === 'profile' && (
             <ProfileTab user={auth.user} accountIndex={accountIndex} />
           )}
-          {activeTab === 'preferences' && (
-            <PreferencesTab accountIndex={accountIndex} />
-          )}
+          {activeTab === 'preferences' && <PreferencesTab />}
           {activeTab === 'security' && <SecurityTab twoFactor={twoFactor} />}
           {activeTab === 'danger' && project && (
             <DangerTab

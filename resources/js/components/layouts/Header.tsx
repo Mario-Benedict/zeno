@@ -38,7 +38,7 @@ const IconButton = ({
     aria-label={label}
     disabled={disabled}
     onClick={onClick}
-    className="flex h-8 w-8 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-white/[0.07] hover:text-dark-primary disabled:cursor-not-allowed disabled:opacity-40"
+    className="flex h-8 w-8 items-center justify-center rounded-full bg-static-dark-surface-2 text-static-dark-primary transition-colors hover:bg-static-dark-surface-3 disabled:cursor-not-allowed disabled:opacity-40"
   >
     {children}
   </button>
@@ -103,13 +103,13 @@ const Header = ({
             aria-haspopup="true"
             aria-expanded={projectMenuOpen}
             aria-label={t('header.selectProject')}
-            className="flex h-8 max-w-56 items-center gap-1 rounded-lg bg-dark-surface-2 px-2 text-dark-primary transition-colors hover:bg-dark-surface-3"
+            className="flex h-8 max-w-56 items-center gap-1 rounded-lg bg-static-dark-surface-2 px-2 text-static-dark-primary transition-colors hover:bg-static-dark-surface-3"
           >
             <span className="truncate text-sm font-bold whitespace-nowrap">
               {project?.project_name ?? t('header.projectsFallback')}
             </span>
             <span
-              className={`shrink-0 text-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
+              className={`shrink-0 text-static-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
             >
               <ArrowDown />
             </span>

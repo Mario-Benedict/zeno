@@ -1,4 +1,5 @@
 import type { TranslationKey } from '@/i18n/dictionary';
+import { AVATAR_COLOR_HEX } from '@/lib/projectAvatar';
 import type { KanbanBoardCardChecklist } from '@/types/kanban';
 
 // ─── Display helpers ─────────────────────────────────────────────────────────
@@ -17,13 +18,32 @@ export const generateInitials = (name: string | null | undefined): string => {
 
 // ─── Color palettes ──────────────────────────────────────────────────────────
 
-export const MEMBER_COLORS = [
-  '#8E24AA',
-  '#F57C00',
-  '#00897B',
-  '#D32F2F',
-  '#3949AB',
-];
+// Deterministic per-member colour, not positional (a member always gets the
+// same colour regardless of where they sort in whatever list is rendering
+// them) and not random (drawn from the same tailwind.config.js `accent.*`
+// palette as project avatars — see lib/projectAvatar.ts).
+const MEMBER_COLOR_KEYS = [
+  'accent-red',
+  'accent-orange',
+  'accent-yellow',
+  'accent-lime',
+  'accent-green',
+  'accent-cyan',
+  'accent-blue',
+  'accent-purple',
+  'accent-pink',
+  'accent-brown',
+] as const;
+
+export const memberColor = (id: number | string): string => {
+  const numeric =
+    typeof id === 'number'
+      ? id
+      : Array.from(id).reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  const key = MEMBER_COLOR_KEYS[Math.abs(numeric) % MEMBER_COLOR_KEYS.length];
+
+  return AVATAR_COLOR_HEX[key];
+};
 
 export const LABEL_COLORS: {
   id: string;

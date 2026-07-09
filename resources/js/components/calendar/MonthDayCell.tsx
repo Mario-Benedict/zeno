@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
+import { getEventLabelColor } from '@/utils/calendar';
 import { DayEventsPopup } from './DayEventsPopup';
 
 interface MonthDayCellProps {
@@ -28,17 +29,6 @@ const MONTHS_SHORT = [
   'Nov',
   'Dec',
 ];
-
-const priorityDot = (priority: string) => {
-  switch (priority) {
-    case 'low':
-      return 'bg-status-success';
-    case 'high':
-      return 'bg-status-error';
-    default:
-      return 'bg-status-warning';
-  }
-};
 
 const formatTime = (iso: string) =>
   new Date(iso)
@@ -121,6 +111,24 @@ export const MonthDayCell = ({
           const time = formatTime(ev.start_time);
 
           if (ev.is_classified) {
+            // "busy_only" shows only a bare dot on the day cell — no time,
+            // no label, no name.
+            if (ev.visibility === 'busy_only') {
+              return (
+                <button
+                  key={ev.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEventClick(ev);
+                  }}
+                  title={t('calendar.classified')}
+                  className="flex items-center gap-1.5 truncate rounded px-1 py-px text-left hover:bg-dark-surface-3"
+                >
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-dark-secondary/50" />
+                </button>
+              );
+            }
+
             return (
               <button
                 key={ev.id}
@@ -154,9 +162,12 @@ export const MonthDayCell = ({
                 {time}
               </span>
               <span
-                className={`h-2 w-2 shrink-0 rounded-full ${priorityDot(ev.priority)}`}
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: getEventLabelColor(ev.labels) }}
               />
-              <span className="truncate font-semibold text-dark-primary">
+              <span
+                className={`truncate font-semibold text-dark-primary ${ev.is_kanban_task && ev.is_completed ? 'text-dark-secondary line-through' : ''}`}
+              >
                 {ownerName(ev)}
               </span>
             </button>

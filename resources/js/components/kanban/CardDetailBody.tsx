@@ -6,7 +6,7 @@ import { getFileEmoji } from '@/utils/attachmentStorage';
 import {
   calculateChecklistProgress,
   generateInitials,
-  MEMBER_COLORS,
+  memberColor,
 } from '@/utils/kanban';
 import ArrowRightIcon from '@public/icons/small/arrow_left.svg';
 import CloseIcon from '@public/icons/small/cancel.svg';
@@ -591,7 +591,7 @@ export const CardDetailBody = ({
         <div className="mt-4 mb-3 flex gap-3">
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xsmall font-bold text-white"
-            style={{ backgroundColor: MEMBER_COLORS[0] }}
+            style={{ backgroundColor: memberColor(currentUser.id) }}
           >
             {generateInitials(currentUser.name)}
           </div>
@@ -629,7 +629,7 @@ export const CardDetailBody = ({
         </div>
 
         <div className="space-y-4">
-          {(card.comments || []).map((comment, i) => (
+          {(card.comments || []).map((comment) => (
             <div
               key={comment.kanban_board_card_comment_id}
               className="group/comment flex gap-3"
@@ -637,13 +637,9 @@ export const CardDetailBody = ({
               <div
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xsmall font-bold text-white"
                 style={{
-                  backgroundColor:
-                    MEMBER_COLORS[
-                      (typeof comment.kanban_board_card_comment_from ===
-                      'number'
-                        ? comment.kanban_board_card_comment_from
-                        : i) % MEMBER_COLORS.length
-                    ],
+                  backgroundColor: memberColor(
+                    comment.kanban_board_card_comment_from,
+                  ),
                 }}
               >
                 {generateInitials(comment.user?.name || 'U')}
