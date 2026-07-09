@@ -43,6 +43,10 @@ interface AlarmWidgetData {
   settings: PomodoroSettings | null;
 }
 
+// Same shape as KanbanWidgetData — the Timeline widget is a read-only
+// alternate visualisation of the same board/card tree.
+type TimelineWidgetData = KanbanWidgetData;
+
 interface Props {
   setting: DashboardSetting;
   kanbanWidgetData?: KanbanWidgetData;
@@ -51,6 +55,7 @@ interface Props {
   calendarWidgetData?: CalendarWidgetData;
   remindersWidgetData?: RemindersWidgetData;
   alarmWidgetData?: AlarmWidgetData;
+  timelineWidgetData?: TimelineWidgetData;
 }
 
 export default function Dashboard({
@@ -61,6 +66,7 @@ export default function Dashboard({
   calendarWidgetData,
   remindersWidgetData,
   alarmWidgetData,
+  timelineWidgetData,
 }: Props) {
   const { project, accountIndex } = useProject();
   const { t } = useTranslation();
@@ -131,6 +137,7 @@ export default function Dashboard({
             calendarWidgetData={calendarWidgetData}
             remindersWidgetData={remindersWidgetData}
             alarmWidgetData={alarmWidgetData}
+            timelineWidgetData={timelineWidgetData}
           />
         )}
       </div>

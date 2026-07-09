@@ -22,7 +22,7 @@ class DashboardController extends Controller
 
     // Widgets with a working implementation. Others are surfaced in the
     // widget picker as "coming soon" and can't be assigned to a slot yet.
-    private const VALID_WIDGETS = ['kanban', 'chat', 'notes', 'calendar', 'reminders', 'alarm'];
+    private const VALID_WIDGETS = ['kanban', 'chat', 'notes', 'calendar', 'reminders', 'alarm', 'timeline'];
 
     public function __construct(
         private readonly ChatMessageService $messageService,
@@ -74,6 +74,10 @@ class DashboardController extends Controller
             $props['alarmWidgetData'] = $this->loadAlarmWidgetData();
         }
 
+        if (in_array('timeline', $setting->slots ?? [], true)) {
+            $props['timelineWidgetData'] = $this->loadTimelineWidgetData($project);
+        }
+
         return Inertia::render('dashboard', $props);
     }
 
@@ -82,7 +86,9 @@ class DashboardController extends Controller
         // The widget's card detail view is read-only (no editing
         // affordances) but shows everything the full page's detail panel
         // does, so this mirrors KanbanController::show()'s full eager load.
-        $project->load([
+        // loadMissing (not load) so calling this twice — the Timeline widget
+        // reuses it below — doesn't re-query when both widgets are placed.
+        $project->loadMissing([
             'kanbanBoards' => function ($query) {
                 $query->orderBy('kanban_board_position');
             },
@@ -209,6 +215,15 @@ class DashboardController extends Controller
         return [
             'settings' => Auth::user()->pomodoro_settings,
         ];
+    }
+
+    private function loadTimelineWidgetData(Project $project): array
+    {
+        // The Timeline widget is a read-only alternate visualisation of the
+        // same board/card tree as the Kanban widget — mirrors how the full
+        // Timeline page reuses KanbanController::show()'s data instead of
+        // having its own tables.
+        return $this->loadKanbanWidgetData($project);
     }
 
     public function update(int $accountIndex, Project $project, Request $request): RedirectResponse

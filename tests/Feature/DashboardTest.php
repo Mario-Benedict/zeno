@@ -3,6 +3,7 @@
 use App\Enums\ProjectRole;
 use App\Models\ChatRoom;
 use App\Models\KanbanBoard;
+use App\Models\KanbanBoardCard;
 use App\Models\Note;
 use App\Models\Project;
 use App\Models\Reminder;
@@ -345,6 +346,64 @@ it('assigns the alarm widget to a slot and returns the pomodoro settings once as
             ->where('setting.slots', ['alarm'])
             ->where('alarmWidgetData.settings.focus_minutes', 25)
             ->where('alarmWidgetData.settings.break_minutes', 5)
+        );
+});
+
+it('assigns the timeline widget to a slot and returns the kanban board tree once assigned', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'project_name' => 'Test Project',
+        'project_slug' => Project::generateUniqueSlug('Test Project'),
+        'avatar_color' => 'accent-blue',
+    ]);
+    $project->members()->attach($user->id, ['role' => ProjectRole::Owner->value]);
+
+    $board = KanbanBoard::create([
+        'kanban_board_project_id' => $project->project_id,
+        'kanban_board_name' => 'Todo',
+        'kanban_board_position' => 0,
+    ]);
+
+    KanbanBoardCard::create([
+        'kanban_board_id' => $board->kanban_board_id,
+        'position' => 0,
+        'kanban_board_card_title' => 'Ship the release notes',
+        'is_completed' => false,
+        'kanban_board_card_start_date' => '2026-04-20',
+        'kanban_board_card_due_date' => '2026-04-24',
+    ]);
+
+    $session = [
+        'accounts' => [['user_id' => $user->id]],
+        'account_active_index' => 0,
+    ];
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->patch("/u/0/p/{$project->project_slug}/dashboard/slots", [
+            'index' => 0,
+            'widget' => 'timeline',
+        ])
+        ->assertRedirect();
+
+    $setting = UserDashboardSetting::where('user_id', $user->id)
+        ->where('project_id', $project->project_id)
+        ->first();
+
+    expect($setting->slots)->toBe(['timeline']);
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->get("/u/0/p/{$project->project_slug}/dashboard")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('setting.slots', ['timeline'])
+            ->has('timelineWidgetData.kanbanBoards', 1)
+            ->where(
+                'timelineWidgetData.kanbanBoards.0.cards.0.kanban_board_card_title',
+                'Ship the release notes',
+            )
         );
 });
 

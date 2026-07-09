@@ -16,6 +16,7 @@ import { ChatWidget } from './widgets/ChatWidget';
 import { KanbanWidget } from './widgets/KanbanWidget';
 import { NotesWidget } from './widgets/NotesWidget';
 import { RemindersWidget } from './widgets/RemindersWidget';
+import { TimelineWidget } from './widgets/TimelineWidget';
 
 const TEMPLATE_NAME_KEYS: Record<TemplateId, TranslationKey> = {
   '3a': 'dashboard.templateFocusName',
@@ -50,6 +51,10 @@ interface AlarmWidgetData {
   settings: PomodoroSettings | null;
 }
 
+// Same shape as KanbanWidgetData — the Timeline widget is a read-only
+// alternate visualisation of the same board/card tree.
+type TimelineWidgetData = KanbanWidgetData;
+
 interface Props {
   templateId: TemplateId;
   slots: (WidgetId | null)[];
@@ -61,6 +66,7 @@ interface Props {
   calendarWidgetData?: CalendarWidgetData;
   remindersWidgetData?: RemindersWidgetData;
   alarmWidgetData?: AlarmWidgetData;
+  timelineWidgetData?: TimelineWidgetData;
 }
 
 const PlusIcon = () => (
@@ -124,6 +130,7 @@ const renderWidget = (
   calendarWidgetData?: CalendarWidgetData,
   remindersWidgetData?: RemindersWidgetData,
   alarmWidgetData?: AlarmWidgetData,
+  timelineWidgetData?: TimelineWidgetData,
 ) => {
   if (widgetId === 'kanban' && kanbanWidgetData) {
     return <KanbanWidget {...kanbanWidgetData} />;
@@ -143,6 +150,9 @@ const renderWidget = (
   if (widgetId === 'alarm' && alarmWidgetData) {
     return <AlarmWidget {...alarmWidgetData} />;
   }
+  if (widgetId === 'timeline' && timelineWidgetData) {
+    return <TimelineWidget {...timelineWidgetData} />;
+  }
 
   return null;
 };
@@ -158,6 +168,7 @@ export const DashboardGrid = ({
   calendarWidgetData,
   remindersWidgetData,
   alarmWidgetData,
+  timelineWidgetData,
 }: Props) => {
   const template = getTemplate(templateId);
   const [pickerOpenIndex, setPickerOpenIndex] = useState<number | null>(null);
@@ -199,6 +210,7 @@ export const DashboardGrid = ({
                 calendarWidgetData,
                 remindersWidgetData,
                 alarmWidgetData,
+                timelineWidgetData,
               )
             : null;
 

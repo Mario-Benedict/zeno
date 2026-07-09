@@ -16,6 +16,7 @@ const WIDGET_NAME_KEYS: Record<WidgetId, TranslationKey> = {
   calendar: 'dashboard.widgetCalendarName',
   reminders: 'dashboard.widgetRemindersName',
   alarm: 'dashboard.widgetAlarmName',
+  timeline: 'dashboard.widgetTimelineName',
 };
 
 export const WidgetPicker = ({ onSelect, onClose }: Props) => {
