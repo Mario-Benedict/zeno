@@ -25,7 +25,7 @@ export const dashboard = {
   widgetNotesName: 'Notes',
   widgetCalendarName: 'Calendar',
   widgetRemindersName: 'Reminders',
-  widgetPomodoroName: 'Pomodoro',
+  widgetAlarmName: 'Alarm',
   chatTitle: 'Chat',
   chatCount: '{{count}} chat',
   chatCountPlural: '{{count}} chats',

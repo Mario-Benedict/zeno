@@ -27,7 +27,7 @@ export const dashboard: typeof en = {
   widgetNotesName: 'Catatan',
   widgetCalendarName: 'Kalender',
   widgetRemindersName: 'Pengingat',
-  widgetPomodoroName: 'Pomodoro',
+  widgetAlarmName: 'Alarm',
   chatTitle: 'Obrolan',
   chatCount: '{{count}} obrolan',
   chatCountPlural: '{{count}} obrolan',

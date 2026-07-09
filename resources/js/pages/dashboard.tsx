@@ -11,7 +11,7 @@ import { projectPath } from '@/lib/accountRoutes';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
 import type { NoteListItem } from '@/types/notes';
-import type { Reminder } from '@/types/reminder';
+import type { PomodoroSettings, Reminder } from '@/types/reminder';
 
 interface DashboardSetting {
   template_id: TemplateId | null;
@@ -39,6 +39,10 @@ interface RemindersWidgetData {
   reminders: Reminder[];
 }
 
+interface AlarmWidgetData {
+  settings: PomodoroSettings | null;
+}
+
 interface Props {
   setting: DashboardSetting;
   kanbanWidgetData?: KanbanWidgetData;
@@ -46,6 +50,7 @@ interface Props {
   notesWidgetData?: NotesWidgetData;
   calendarWidgetData?: CalendarWidgetData;
   remindersWidgetData?: RemindersWidgetData;
+  alarmWidgetData?: AlarmWidgetData;
 }
 
 export default function Dashboard({
@@ -55,6 +60,7 @@ export default function Dashboard({
   notesWidgetData,
   calendarWidgetData,
   remindersWidgetData,
+  alarmWidgetData,
 }: Props) {
   const { project, accountIndex } = useProject();
   const { t } = useTranslation();
@@ -124,6 +130,7 @@ export default function Dashboard({
             notesWidgetData={notesWidgetData}
             calendarWidgetData={calendarWidgetData}
             remindersWidgetData={remindersWidgetData}
+            alarmWidgetData={alarmWidgetData}
           />
         )}
       </div>

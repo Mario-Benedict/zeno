@@ -4,12 +4,13 @@ import type { TranslationKey } from '@/i18n/dictionary';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
 import type { NoteListItem } from '@/types/notes';
-import type { Reminder } from '@/types/reminder';
+import type { PomodoroSettings, Reminder } from '@/types/reminder';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import { getTemplate } from './templates';
 import type { TemplateId } from './templates';
 import { WidgetPicker } from './WidgetPicker';
 import type { WidgetId } from './widgets';
+import { AlarmWidget } from './widgets/AlarmWidget';
 import { CalendarWidget } from './widgets/CalendarWidget';
 import { ChatWidget } from './widgets/ChatWidget';
 import { KanbanWidget } from './widgets/KanbanWidget';
@@ -45,6 +46,10 @@ interface RemindersWidgetData {
   reminders: Reminder[];
 }
 
+interface AlarmWidgetData {
+  settings: PomodoroSettings | null;
+}
+
 interface Props {
   templateId: TemplateId;
   slots: (WidgetId | null)[];
@@ -55,6 +60,7 @@ interface Props {
   notesWidgetData?: NotesWidgetData;
   calendarWidgetData?: CalendarWidgetData;
   remindersWidgetData?: RemindersWidgetData;
+  alarmWidgetData?: AlarmWidgetData;
 }
 
 const PlusIcon = () => (
@@ -117,6 +123,7 @@ const renderWidget = (
   notesWidgetData?: NotesWidgetData,
   calendarWidgetData?: CalendarWidgetData,
   remindersWidgetData?: RemindersWidgetData,
+  alarmWidgetData?: AlarmWidgetData,
 ) => {
   if (widgetId === 'kanban' && kanbanWidgetData) {
     return <KanbanWidget {...kanbanWidgetData} />;
@@ -133,6 +140,9 @@ const renderWidget = (
   if (widgetId === 'reminders' && remindersWidgetData) {
     return <RemindersWidget {...remindersWidgetData} />;
   }
+  if (widgetId === 'alarm' && alarmWidgetData) {
+    return <AlarmWidget {...alarmWidgetData} />;
+  }
 
   return null;
 };
@@ -147,6 +157,7 @@ export const DashboardGrid = ({
   notesWidgetData,
   calendarWidgetData,
   remindersWidgetData,
+  alarmWidgetData,
 }: Props) => {
   const template = getTemplate(templateId);
   const [pickerOpenIndex, setPickerOpenIndex] = useState<number | null>(null);
@@ -187,6 +198,7 @@ export const DashboardGrid = ({
                 notesWidgetData,
                 calendarWidgetData,
                 remindersWidgetData,
+                alarmWidgetData,
               )
             : null;
 

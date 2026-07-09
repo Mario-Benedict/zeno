@@ -306,6 +306,48 @@ it('assigns the reminders widget to a slot and returns the reminder list once as
         );
 });
 
+it('assigns the alarm widget to a slot and returns the pomodoro settings once assigned', function () {
+    $user = User::factory()->create([
+        'pomodoro_settings' => ['focus_minutes' => 25, 'break_minutes' => 5],
+    ]);
+    $project = Project::create([
+        'project_name' => 'Test Project',
+        'project_slug' => Project::generateUniqueSlug('Test Project'),
+        'avatar_color' => 'accent-blue',
+    ]);
+    $project->members()->attach($user->id, ['role' => ProjectRole::Owner->value]);
+
+    $session = [
+        'accounts' => [['user_id' => $user->id]],
+        'account_active_index' => 0,
+    ];
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->patch("/u/0/p/{$project->project_slug}/dashboard/slots", [
+            'index' => 0,
+            'widget' => 'alarm',
+        ])
+        ->assertRedirect();
+
+    $setting = UserDashboardSetting::where('user_id', $user->id)
+        ->where('project_id', $project->project_id)
+        ->first();
+
+    expect($setting->slots)->toBe(['alarm']);
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->get("/u/0/p/{$project->project_slug}/dashboard")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('setting.slots', ['alarm'])
+            ->where('alarmWidgetData.settings.focus_minutes', 25)
+            ->where('alarmWidgetData.settings.break_minutes', 5)
+        );
+});
+
 it('rejects an unimplemented widget for a slot', function () {
     $user = User::factory()->create();
     $project = Project::create([
@@ -322,7 +364,7 @@ it('rejects an unimplemented widget for a slot', function () {
         ])
         ->patch("/u/0/p/{$project->project_slug}/dashboard/slots", [
             'index' => 0,
-            'widget' => 'pomodoro',
+            'widget' => 'invalid-widget',
         ])
         ->assertSessionHasErrors('widget');
 });

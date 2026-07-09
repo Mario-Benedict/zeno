@@ -22,7 +22,7 @@ class DashboardController extends Controller
 
     // Widgets with a working implementation. Others are surfaced in the
     // widget picker as "coming soon" and can't be assigned to a slot yet.
-    private const VALID_WIDGETS = ['kanban', 'chat', 'notes', 'calendar', 'reminders'];
+    private const VALID_WIDGETS = ['kanban', 'chat', 'notes', 'calendar', 'reminders', 'alarm'];
 
     public function __construct(
         private readonly ChatMessageService $messageService,
@@ -68,6 +68,10 @@ class DashboardController extends Controller
 
         if (in_array('reminders', $setting->slots ?? [], true)) {
             $props['remindersWidgetData'] = $this->loadRemindersWidgetData($project);
+        }
+
+        if (in_array('alarm', $setting->slots ?? [], true)) {
+            $props['alarmWidgetData'] = $this->loadAlarmWidgetData();
         }
 
         return Inertia::render('dashboard', $props);
@@ -194,6 +198,16 @@ class DashboardController extends Controller
 
         return [
             'reminders' => $reminders,
+        ];
+    }
+
+    private function loadAlarmWidgetData(): array
+    {
+        // Same per-account setting the Reminders page's Pomodoro timer reads
+        // (Auth::user()->pomodoro_settings) — not project-scoped, so there's
+        // nothing else to load here.
+        return [
+            'settings' => Auth::user()->pomodoro_settings,
         ];
     }
 

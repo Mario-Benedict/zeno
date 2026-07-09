@@ -4,7 +4,7 @@ export type WidgetId =
   | 'notes'
   | 'calendar'
   | 'reminders'
-  | 'pomodoro';
+  | 'alarm';
 
 export interface WidgetDefinition {
   id: WidgetId;
@@ -22,5 +22,5 @@ export const WIDGETS: WidgetDefinition[] = [
   { id: 'notes', available: true },
   { id: 'calendar', available: true },
   { id: 'reminders', available: true },
-  { id: 'pomodoro', available: false },
+  { id: 'alarm', available: true },
 ];
