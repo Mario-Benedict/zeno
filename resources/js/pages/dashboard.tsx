@@ -11,6 +11,7 @@ import { projectPath } from '@/lib/accountRoutes';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
 import type { NoteListItem } from '@/types/notes';
+import type { Reminder } from '@/types/reminder';
 
 interface DashboardSetting {
   template_id: TemplateId | null;
@@ -30,11 +31,21 @@ interface NotesWidgetData {
   notes: NoteListItem[];
 }
 
+interface CalendarWidgetData {
+  currentUserId: number;
+}
+
+interface RemindersWidgetData {
+  reminders: Reminder[];
+}
+
 interface Props {
   setting: DashboardSetting;
   kanbanWidgetData?: KanbanWidgetData;
   chatWidgetData?: ChatWidgetData;
   notesWidgetData?: NotesWidgetData;
+  calendarWidgetData?: CalendarWidgetData;
+  remindersWidgetData?: RemindersWidgetData;
 }
 
 export default function Dashboard({
@@ -42,6 +53,8 @@ export default function Dashboard({
   kanbanWidgetData,
   chatWidgetData,
   notesWidgetData,
+  calendarWidgetData,
+  remindersWidgetData,
 }: Props) {
   const { project, accountIndex } = useProject();
   const { t } = useTranslation();
@@ -109,6 +122,8 @@ export default function Dashboard({
             kanbanWidgetData={kanbanWidgetData}
             chatWidgetData={chatWidgetData}
             notesWidgetData={notesWidgetData}
+            calendarWidgetData={calendarWidgetData}
+            remindersWidgetData={remindersWidgetData}
           />
         )}
       </div>

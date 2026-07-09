@@ -70,4 +70,12 @@ export const dashboard: typeof en = {
   untitled: 'Tanpa judul',
   shared: 'Dibagikan',
   closeSearch: 'Tutup pencarian',
+  eventCount: '{{count}} acara',
+  eventCountPlural: '{{count}} acara',
+  noEvents: 'Tidak ada acara',
+  today: 'Hari ini',
+  reminderCount: '{{count}} pengingat',
+  reminderCountPlural: '{{count}} pengingat',
+  searchReminders: 'Cari pengingat',
+  searchRemindersPlaceholder: 'Cari pengingat…',
 };

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChatRoom;
 use App\Models\Note;
 use App\Models\Project;
+use App\Models\Reminder;
 use App\Models\User;
 use App\Models\UserDashboardSetting;
 use App\Services\ChatMessageService;
@@ -21,7 +22,7 @@ class DashboardController extends Controller
 
     // Widgets with a working implementation. Others are surfaced in the
     // widget picker as "coming soon" and can't be assigned to a slot yet.
-    private const VALID_WIDGETS = ['kanban', 'chat', 'notes'];
+    private const VALID_WIDGETS = ['kanban', 'chat', 'notes', 'calendar', 'reminders'];
 
     public function __construct(
         private readonly ChatMessageService $messageService,
@@ -59,6 +60,14 @@ class DashboardController extends Controller
 
         if (in_array('notes', $setting->slots ?? [], true)) {
             $props['notesWidgetData'] = $this->loadNotesWidgetData($project);
+        }
+
+        if (in_array('calendar', $setting->slots ?? [], true)) {
+            $props['calendarWidgetData'] = $this->loadCalendarWidgetData();
+        }
+
+        if (in_array('reminders', $setting->slots ?? [], true)) {
+            $props['remindersWidgetData'] = $this->loadRemindersWidgetData($project);
         }
 
         return Inertia::render('dashboard', $props);
@@ -157,6 +166,34 @@ class DashboardController extends Controller
                 'updatedAt' => $note->updated_at?->toISOString(),
                 'collaboratorsCount' => (int) $note->collaborators_count,
             ])->values()->all(),
+        ];
+    }
+
+    private function loadCalendarWidgetData(): array
+    {
+        // The widget fetches events itself on demand (month at a time) via
+        // the existing calendar.events.index JSON endpoint, scoped to just
+        // the viewer's own events — this only needs to hand over who that is.
+        return [
+            'currentUserId' => (int) Auth::id(),
+        ];
+    }
+
+    private function loadRemindersWidgetData(Project $project): array
+    {
+        // Mirrors ReminderController::index()'s query — the widget is
+        // read-only apart from toggling a reminder's own completed state
+        // (reusing the same PATCH endpoint), so no trimming needed here.
+        $reminders = Reminder::where('reminder_project_id', $project->project_id)
+            ->where('reminder_user_id', Auth::id())
+            ->with('steps')
+            ->orderByDesc('is_pinned')
+            ->orderBy('is_completed')
+            ->orderBy('reminder_due_at')
+            ->get();
+
+        return [
+            'reminders' => $reminders,
         ];
     }
 

@@ -68,4 +68,12 @@ export const dashboard = {
   untitled: 'Untitled',
   shared: 'Shared',
   closeSearch: 'Close search',
+  eventCount: '{{count}} event',
+  eventCountPlural: '{{count}} events',
+  noEvents: 'No events',
+  today: 'Today',
+  reminderCount: '{{count}} reminder',
+  reminderCountPlural: '{{count}} reminders',
+  searchReminders: 'Search reminders',
+  searchRemindersPlaceholder: 'Search reminders…',
 };

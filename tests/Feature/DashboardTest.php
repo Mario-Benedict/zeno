@@ -5,6 +5,7 @@ use App\Models\ChatRoom;
 use App\Models\KanbanBoard;
 use App\Models\Note;
 use App\Models\Project;
+use App\Models\Reminder;
 use App\Models\User;
 use App\Models\UserDashboardSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -219,6 +220,92 @@ it('assigns the notes widget to a slot and returns the note list once assigned',
         );
 });
 
+it('assigns the calendar widget to a slot and returns the current user id once assigned', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'project_name' => 'Test Project',
+        'project_slug' => Project::generateUniqueSlug('Test Project'),
+        'avatar_color' => 'accent-blue',
+    ]);
+    $project->members()->attach($user->id, ['role' => ProjectRole::Owner->value]);
+
+    $session = [
+        'accounts' => [['user_id' => $user->id]],
+        'account_active_index' => 0,
+    ];
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->patch("/u/0/p/{$project->project_slug}/dashboard/slots", [
+            'index' => 0,
+            'widget' => 'calendar',
+        ])
+        ->assertRedirect();
+
+    $setting = UserDashboardSetting::where('user_id', $user->id)
+        ->where('project_id', $project->project_id)
+        ->first();
+
+    expect($setting->slots)->toBe(['calendar']);
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->get("/u/0/p/{$project->project_slug}/dashboard")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('setting.slots', ['calendar'])
+            ->where('calendarWidgetData.currentUserId', $user->id)
+        );
+});
+
+it('assigns the reminders widget to a slot and returns the reminder list once assigned', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'project_name' => 'Test Project',
+        'project_slug' => Project::generateUniqueSlug('Test Project'),
+        'avatar_color' => 'accent-blue',
+    ]);
+    $project->members()->attach($user->id, ['role' => ProjectRole::Owner->value]);
+
+    Reminder::create([
+        'reminder_project_id' => $project->project_id,
+        'reminder_user_id' => $user->id,
+        'reminder_title' => 'Water the plants',
+        'source' => 'manual',
+    ]);
+
+    $session = [
+        'accounts' => [['user_id' => $user->id]],
+        'account_active_index' => 0,
+    ];
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->patch("/u/0/p/{$project->project_slug}/dashboard/slots", [
+            'index' => 0,
+            'widget' => 'reminders',
+        ])
+        ->assertRedirect();
+
+    $setting = UserDashboardSetting::where('user_id', $user->id)
+        ->where('project_id', $project->project_id)
+        ->first();
+
+    expect($setting->slots)->toBe(['reminders']);
+
+    $this->actingAs($user)
+        ->withSession($session)
+        ->get("/u/0/p/{$project->project_slug}/dashboard")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('setting.slots', ['reminders'])
+            ->has('remindersWidgetData.reminders', 1)
+            ->where('remindersWidgetData.reminders.0.reminder_title', 'Water the plants')
+        );
+});
+
 it('rejects an unimplemented widget for a slot', function () {
     $user = User::factory()->create();
     $project = Project::create([
@@ -235,7 +322,7 @@ it('rejects an unimplemented widget for a slot', function () {
         ])
         ->patch("/u/0/p/{$project->project_slug}/dashboard/slots", [
             'index' => 0,
-            'widget' => 'calendar',
+            'widget' => 'pomodoro',
         ])
         ->assertSessionHasErrors('widget');
 });
