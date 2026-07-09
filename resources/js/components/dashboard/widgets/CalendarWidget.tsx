@@ -119,7 +119,7 @@ export const CalendarWidget = ({ currentUserId }: Props) => {
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl bg-dark-surface-2">
-      <div className="flex shrink-0 items-center justify-between px-3 pt-3 pb-2">
+      <div className="flex shrink-0 items-center justify-between pt-3 pr-10 pb-2 pl-3">
         <span className="text-small font-semibold text-dark-primary">
           {t('calendar.pageTitle')}
         </span>

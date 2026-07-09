@@ -5,13 +5,13 @@ import { projectPath } from '@/lib/accountRoutes';
 
 import BoardIcon from '@public/icons/large/board.svg';
 import CalendarIcon from '@public/icons/large/calendar.svg';
-import DashboardIcon from '@public/icons/large/dashboard.svg';
-import TimelineIcon from '@public/icons/large/timeline.svg';
 import ChatIcon from '@public/icons/large/chat.svg';
+import DashboardIcon from '@public/icons/large/dashboard.svg';
+import SettingsIcon from '@public/icons/large/gear.svg';
 import LLMIcon from '@public/icons/large/llmchat.svg';
 import NotesIcon from '@public/icons/large/notes.svg';
 import RemindersIcon from '@public/icons/large/reminder.svg';
-import SettingsIcon from '@public/icons/large/gear.svg';
+import TimelineIcon from '@public/icons/large/timeline.svg';
 
 interface NavItem {
   key: string;
