@@ -2,7 +2,9 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
 import CreateProjectPanel from '@/components/projects/CreateProjectPanel';
+import ProjectSettingsModal from '@/components/projects/ProjectSettingsModal';
 import { PinButton } from '@/components/shared/PinButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath, projectPath } from '@/lib/accountRoutes';
 import type { PaginatedProjects, ProjectSummary } from '@/types';
 import Zeno from '@public/logos/logo.svg';
@@ -96,6 +98,7 @@ const sortProjects = (items: ProjectSummary[]) => {
 };
 
 const ProjectsPage = () => {
+  const { t } = useTranslation();
   const page = usePage<ProjectsPageProps>();
   const { recentProjects, projects, account } = page.props;
   const accountIndex = account.index;
@@ -106,9 +109,12 @@ const ProjectsPage = () => {
   const [search, setSearch] = useState('');
   const [pinOverrides, setPinOverrides] = useState<Record<string, boolean>>({});
   const [pinningSlugs, setPinningSlugs] = useState<Record<string, boolean>>({});
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const hasProjects = projects.total > 0;
-  const pageTitle = hasProjects ? 'All Projects' : 'Get Started';
+  const pageTitle = hasProjects
+    ? t('projects.pageTitle')
+    : t('projects.getStarted');
 
   const clearPinState = (slug: string) => {
     setPinOverrides((current) => {
@@ -190,7 +196,7 @@ const ProjectsPage = () => {
           <span className="text-sm font-semibold text-dark-primary">
             {pageTitle}
           </span>
-          <AccountSwitcher />
+          <AccountSwitcher onSettingsOpen={() => setSettingsOpen(true)} />
         </div>
 
         {/* Main content */}
@@ -208,10 +214,10 @@ const ProjectsPage = () => {
               </div>
               <div>
                 <p className="text-sm font-semibold text-dark-primary">
-                  Create your Project roadmap.
+                  {t('projects.createCardTitle')}
                 </p>
                 <p className="mt-0.5 text-xs text-dark-secondary">
-                  Define tasks, assign team members, and track progress.
+                  {t('projects.createCardDescription')}
                 </p>
               </div>
             </button>
@@ -219,12 +225,12 @@ const ProjectsPage = () => {
             {/* Recently Opened */}
             <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-dark-surface-2 p-4">
               <h2 className="mb-3 text-sm font-semibold text-dark-primary">
-                Recently Opened
+                {t('projects.recentlyOpened')}
               </h2>
               {recentProjects.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center">
                   <p className="text-center text-sm font-medium text-dark-secondary">
-                    You Don't Have A Project Yet.
+                    {t('projects.noProjectsYet')}
                   </p>
                 </div>
               ) : (
@@ -254,7 +260,7 @@ const ProjectsPage = () => {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search all projects"
+                placeholder={t('projects.searchPlaceholder')}
                 className="h-9 w-full rounded-lg border border-dark-border bg-dark-input pr-3 pl-9 text-sm text-dark-primary outline-none placeholder:text-dark-secondary focus:border-dark-border-focus focus:bg-dark-input-focus"
               />
             </div>
@@ -265,8 +271,8 @@ const ProjectsPage = () => {
                 <div className="flex flex-1 items-center justify-center">
                   <p className="text-sm font-medium text-dark-secondary">
                     {search
-                      ? 'No projects match your search.'
-                      : "You Don't Have A Project Yet."}
+                      ? t('projects.noSearchResults')
+                      : t('projects.noProjectsYet')}
                   </p>
                 </div>
               ) : (
@@ -288,8 +294,11 @@ const ProjectsPage = () => {
             {!search && projects.total > 0 && (
               <div className="mt-auto flex items-center justify-end gap-2 pt-3">
                 <span className="text-xs text-dark-secondary">
-                  {projects.from ?? 0} - {projects.current_page} of{' '}
-                  {projects.last_page}
+                  {t('projects.paginationSummary', {
+                    from: projects.from ?? 0,
+                    currentPage: projects.current_page,
+                    lastPage: projects.last_page,
+                  })}
                 </span>
                 <button
                   type="button"
@@ -318,6 +327,12 @@ const ProjectsPage = () => {
       </div>
 
       <CreateProjectPanel open={panelOpen} onClose={closePanel} />
+
+      <ProjectSettingsModal
+        open={settingsOpen}
+        initialTab="profile"
+        onClose={() => setSettingsOpen(false)}
+      />
     </>
   );
 };

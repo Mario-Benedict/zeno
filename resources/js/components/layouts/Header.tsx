@@ -6,6 +6,7 @@ import NotificationPanel from '@/components/layouts/NotificationPanel';
 import ProjectSwitcher from '@/components/layouts/ProjectSwitcher';
 import ProjectInvitationModal from '@/components/projects/ProjectInvitationModal';
 import ProjectSettingsModal from '@/components/projects/ProjectSettingsModal';
+import { useTranslation } from '@/hooks/useTranslation';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
 import Bell from '@public/icons/small/bell.svg';
 import Gear from '@public/icons/small/gear.svg';
@@ -37,7 +38,7 @@ const IconButton = ({
     aria-label={label}
     disabled={disabled}
     onClick={onClick}
-    className="flex h-8 w-8 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-white/[0.07] hover:text-dark-primary disabled:cursor-not-allowed disabled:opacity-40"
+    className="flex h-8 w-8 items-center justify-center rounded-full bg-static-dark-surface-2 text-static-dark-primary transition-colors hover:bg-static-dark-surface-3 disabled:cursor-not-allowed disabled:opacity-40"
   >
     {children}
   </button>
@@ -51,6 +52,7 @@ const Header = ({
   onSettingsClick,
 }: AppHeaderProps) => {
   const { project, projectNavigation, projectShare, account } = usePage().props;
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -100,14 +102,14 @@ const Header = ({
             onClick={() => setProjectMenuOpen((v) => !v)}
             aria-haspopup="true"
             aria-expanded={projectMenuOpen}
-            aria-label="Select project"
-            className="flex h-8 max-w-56 items-center gap-1 rounded-lg bg-dark-surface-2 px-2 text-dark-primary transition-colors hover:bg-dark-surface-3"
+            aria-label={t('header.selectProject')}
+            className="flex h-8 max-w-56 items-center gap-1 rounded-lg bg-static-dark-surface-2 px-2 text-static-dark-primary transition-colors hover:bg-static-dark-surface-3"
           >
             <span className="truncate text-sm font-bold whitespace-nowrap">
-              {project?.project_name ?? 'Projects'}
+              {project?.project_name ?? t('header.projectsFallback')}
             </span>
             <span
-              className={`shrink-0 text-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
+              className={`shrink-0 text-static-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
             >
               <ArrowDown />
             </span>
@@ -132,8 +134,8 @@ const Header = ({
             type="search"
             value={searchQuery}
             onChange={handleSearch}
-            placeholder="Search"
-            aria-label="Search"
+            placeholder={t('header.search')}
+            aria-label={t('header.search')}
             className="flex-1 bg-transparent text-normal font-bold text-dark-primary outline-none placeholder:text-dark-secondary [&::-webkit-search-cancel-button]:hidden"
           />
         </div>
@@ -143,7 +145,7 @@ const Header = ({
       <div className="flex w-100 shrink-0 items-center justify-end gap-2">
         <div className="relative">
           <IconButton
-            label="Notifications"
+            label={t('header.notifications')}
             disabled={project === null}
             onClick={() => {
               onNotificationClick?.();
@@ -160,13 +162,13 @@ const Header = ({
           />
         </div>
         <IconButton
-          label="Invite members"
+          label={t('header.inviteMembers')}
           disabled={project === null}
           onClick={() => setInviteOpen(true)}
         >
           <People />
         </IconButton>
-        <IconButton label="Settings" onClick={onSettingsClick}>
+        <IconButton label={t('header.settings')} onClick={onSettingsClick}>
           <Gear />
         </IconButton>
 

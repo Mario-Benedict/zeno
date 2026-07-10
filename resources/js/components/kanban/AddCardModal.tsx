@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoard, CardLabel } from '@/types/kanban';
 
 interface AddCardModalProps {
@@ -19,6 +20,7 @@ export const AddCardModal = ({
   onClose,
   onSubmit,
 }: AddCardModalProps) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [boardId] = useState(defaultBoardId);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
@@ -45,22 +47,28 @@ export const AddCardModal = ({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-sm rounded-2xl border border-dark-border bg-dark-surface-2 p-5 shadow-2xl">
-        <h3 className="mb-4 text-base font-bold text-white">Add New Card</h3>
+        <h3 className="mb-4 text-base font-bold text-white">
+          {t('kanban.addNewCard')}
+        </h3>
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-white/50">Title</label>
+            <label className="mb-1 block text-xs text-white/50">
+              {t('kanban.cardTitleLabel')}
+            </label>
             <input
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              placeholder="Card title..."
+              placeholder={t('kanban.cardTitlePlaceholder')}
               className="w-full rounded-xl border border-dark-border bg-dark-input px-3 py-2 text-sm text-white placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
             />
           </div>
           {(cardLabels || []).length > 0 && (
             <div>
-              <label className="mb-1 block text-xs text-white/50">Labels</label>
+              <label className="mb-1 block text-xs text-white/50">
+                {t('kanban.labelsLabel')}
+              </label>
               <div className="flex flex-wrap gap-2">
                 {cardLabels.map((label) => {
                   const active = selectedLabelIds.includes(label.card_label_id);
@@ -98,14 +106,14 @@ export const AddCardModal = ({
             onClick={onClose}
             className="flex-1 rounded-xl border border-dark-border py-2 text-sm text-white/50 transition hover:bg-white/5 hover:text-white"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!title.trim() || loading}
             className="hover:bg-opacity-90 flex-1 rounded-xl bg-accent-blue py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {loading ? 'Adding...' : 'Add Card'}
+            {loading ? t('kanban.adding') : t('kanban.addCard')}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { EditorContent } from '@tiptap/react';
 import React, { useCallback } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteDetail } from '@/types/notes';
 import NoteEditorHeader from './NoteEditorHeader';
 import NoteEmptyState from './NoteEmptyState';
@@ -32,6 +33,7 @@ const NoteEditor = ({
   onShareClick,
   onDeleteClick,
 }: NoteEditorProps): React.ReactElement => {
+  const { t } = useTranslation();
   const {
     editor,
     title,
@@ -96,7 +98,7 @@ const NoteEditor = ({
 
         {!canEdit && (
           <div className="mb-3 rounded-lg border border-dark-border/40 bg-dark-surface-2 px-3 py-2 text-small font-medium text-dark-secondary">
-            You have view-only access to this note.
+            {t('notes.viewOnlyNotice')}
           </div>
         )}
 
@@ -106,8 +108,7 @@ const NoteEditor = ({
             onClick={dismissStaleRemoteChange}
             className="mb-3 rounded-lg border border-status-warning/40 bg-dark-surface-2 px-3 py-2 text-left text-small font-medium text-status-warning"
           >
-            This note changed elsewhere while you were editing. Your changes are
-            safe — dismiss to keep working.
+            {t('notes.staleRemoteChangeNotice')}
           </button>
         )}
 

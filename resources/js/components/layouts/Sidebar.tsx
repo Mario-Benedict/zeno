@@ -1,4 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import { projectPath } from '@/lib/accountRoutes';
 
 import BoardIcon from '@public/icons/large/board.svg';
@@ -7,7 +9,8 @@ import DashboardIcon from '@public/icons/large/dashboard.svg';
 import TimelineIcon from '@public/icons/large/timeline.svg';
 
 interface NavItem {
-  name: string;
+  key: string;
+  nameKey: TranslationKey;
   href: string;
   icon: React.FC;
 }
@@ -98,42 +101,50 @@ const buildNavItems = (
   projectSlug: string,
 ): NavItem[] => [
   {
-    name: 'Dashboard',
+    key: 'dashboard',
+    nameKey: 'nav.dashboard',
     href: projectPath(accountIndex, projectSlug, '/dashboard'),
     icon: DashboardIcon,
   },
   {
-    name: 'Board',
+    key: 'board',
+    nameKey: 'nav.board',
     href: projectPath(accountIndex, projectSlug, '/kanban'),
     icon: BoardIcon,
   },
   {
-    name: 'Timeline',
+    key: 'timeline',
+    nameKey: 'nav.timeline',
     href: projectPath(accountIndex, projectSlug, '/timeline'),
     icon: TimelineIcon,
   },
   {
-    name: 'Calendar',
+    key: 'calendar',
+    nameKey: 'nav.calendar',
     href: projectPath(accountIndex, projectSlug, '/calendar'),
     icon: CalendarIcon,
   },
   {
-    name: 'Chat',
+    key: 'chat',
+    nameKey: 'nav.chat',
     href: projectPath(accountIndex, projectSlug, '/chat'),
     icon: ChatIcon,
   },
   {
-    name: 'LLM',
+    key: 'llm',
+    nameKey: 'nav.llm',
     href: projectPath(accountIndex, projectSlug, '/llm-chat'),
     icon: LLMIcon,
   },
   {
-    name: 'Notes',
+    key: 'notes',
+    nameKey: 'nav.notes',
     href: projectPath(accountIndex, projectSlug, '/notes'),
     icon: NotesIcon,
   },
   {
-    name: 'Reminders',
+    key: 'reminders',
+    nameKey: 'nav.reminders',
     href: projectPath(accountIndex, projectSlug, '/reminders'),
     icon: RemindersIcon,
   },
@@ -144,6 +155,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ projectSlug }: SidebarProps) => {
+  const { t } = useTranslation();
   const page = usePage();
   const { url } = page;
   const accountIndex = page.props.account.index;
@@ -160,12 +172,12 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
     <aside className="flex h-[calc(100dvh-var(--header-height))] flex-col bg-dark-surface-1 px-2 pb-2">
       <nav className="flex h-full flex-col justify-between rounded-lg bg-dark-surface-2 p-2">
         <div className="flex flex-1 [scrollbar-width:none] flex-col items-center gap-0.5 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [&::-webkit-scrollbar]:hidden">
-          {navItems.map(({ name, href, icon: Icon }) => {
+          {navItems.map(({ key, nameKey, href, icon: Icon }) => {
             const active = isActive(href);
 
             return (
               <Link
-                key={name}
+                key={key}
                 href={href}
                 // Container utama (teks akan ikut warna ini)
                 className={`group flex w-full flex-col items-center justify-center gap-2 py-2 text-micro leading-none font-medium transition-colors duration-150 ${
@@ -184,7 +196,7 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
                 >
                   <Icon />
                 </div>
-                <span>{name}</span>
+                <span>{t(nameKey)}</span>
               </Link>
             );
           })}
@@ -208,7 +220,7 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
             >
               <SettingsIcon />
             </div>
-            <span>Settings</span>
+            <span>{t('nav.settings')}</span>
           </Link>
         </div>
       </nav>

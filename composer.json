@@ -17,6 +17,7 @@
         "laravel/socialite": "^5.27",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "mongodb/laravel-mongodb": "^5.1",
         "pusher/pusher-php-server": "^7.2"
     },
@@ -107,7 +108,7 @@
             "php-http/discovery": true
         },
         "platform": {
-            "php": "8.4.0"
+            "php": "8.4.1"
         }
     },
     "minimum-stability": "stable"

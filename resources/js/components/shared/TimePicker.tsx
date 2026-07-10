@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import ClockIcon from '@public/icons/small/time.svg';
 
 interface TimePickerProps {
@@ -9,6 +10,15 @@ interface TimePickerProps {
   disabled?: boolean;
   placeholder?: string;
   ariaLabel?: string;
+  /**
+   * Visible label rendered above the trigger, matching `DatePicker`'s label.
+   * Pass this when a `TimePicker` sits side-by-side with a `DatePicker` (e.g.
+   * in a grid) so both triggers line up — without it the date column is
+   * pushed down by its label while the time column isn't, misaligning the
+   * two boxes. Omit it for stacked layouts that already have a shared label
+   * above both (e.g. the Kanban card sidebar's date/time pair).
+   */
+  label?: string;
 }
 
 type Period = 'AM' | 'PM';
@@ -72,7 +82,7 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
       </p>
       <div
         ref={containerRef}
-        className="scrollbar-app h-44 overflow-y-auto rounded-lg border border-dark-border bg-dark-surface-2 py-1"
+        className="scrollbar-app h-44 overflow-y-auto rounded-lg border border-dark-border bg-dark-surface-2 p-1"
       >
         {items.map((item) => {
           const active = item.value === selected;
@@ -83,9 +93,9 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
               ref={active ? selectedRef : null}
               type="button"
               onClick={() => onSelect(item.value)}
-              className={`w-full py-1.5 text-center text-xsmall transition ${
+              className={`w-full rounded-lg py-1.5 text-center text-xsmall transition ${
                 active
-                  ? 'bg-accent-blue font-semibold text-white'
+                  ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]'
                   : 'text-white/50 hover:bg-white/8 hover:text-white'
               }`}
             >
@@ -99,18 +109,23 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
 };
 
 /**
- * A time picker styled to match the `DatePicker`: the same trigger button and
- * centred dark popover, but with scrollable accent-blue columns for the hour
- * (1–12) and minute (00–59), plus an AM/PM toggle. Reads / emits 24-hour
- * "HH:mm".
+ * A time picker styled to match the `DatePicker`: same trigger button, same
+ * `w-64` centred dark popover with a border-bottomed header (here, a
+ * clickable "jump to now" time readout instead of month navigation) and the
+ * same rounded-cell selection style — just with scrollable accent-blue
+ * columns for the hour (1–12) and minute (00–59) plus an AM/PM toggle
+ * instead of a day grid, since a time has no calendar-grid layout to draw.
+ * Reads / emits 24-hour "HH:mm".
  */
 export const TimePicker = ({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Set time',
+  placeholder,
   ariaLabel,
+  label,
 }: TimePickerProps) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -144,51 +159,71 @@ export const TimePicker = ({
     onChange(`${pad(now.getHours())}:${pad(now.getMinutes())}`);
   };
 
+  const trigger = (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={() => setOpen((v) => !v)}
+      className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xsmall transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+        value
+          ? 'border-dark-border bg-dark-surface-2 text-white/70 hover:border-dark-border-focus'
+          : 'border-dark-border bg-dark-surface-2 text-white/25 hover:border-dark-border-focus hover:text-white/40'
+      }`}
+    >
+      <ClockIcon className="h-3.5 w-3.5 shrink-0 opacity-60" />
+      <span className="flex-1 truncate">
+        {value
+          ? `${current.hour12}:${pad(current.minute)} ${current.period}`
+          : (placeholder ?? t('common.setTime'))}
+      </span>
+    </button>
+  );
+
   return (
     <div ref={ref} className="relative">
-      <button
-        type="button"
-        aria-label={ariaLabel}
-        disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
-        className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xsmall transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-          value
-            ? 'border-dark-border bg-dark-surface-2 text-white/70 hover:border-dark-border-focus'
-            : 'border-dark-border bg-dark-surface-2 text-white/25 hover:border-dark-border-focus hover:text-white/40'
-        }`}
-      >
-        <ClockIcon className="h-3.5 w-3.5 shrink-0 opacity-60" />
-        <span className="flex-1 truncate">
-          {value
-            ? `${current.hour12}:${pad(current.minute)} ${current.period}`
-            : placeholder}
-        </span>
-      </button>
+      {label ? (
+        <div className="mb-1">
+          <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
+            {label}
+          </label>
+          {trigger}
+        </div>
+      ) : (
+        trigger
+      )}
 
       {open && !disabled && (
-        <div className="fixed top-1/2 left-1/2 z-50 w-72 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl">
-          <div className="border-b border-dark-border px-4 py-3 text-center text-small font-semibold text-white/80">
-            {current.hour12}:{pad(current.minute)} {current.period}
+        <div className="fixed top-1/2 left-1/2 z-50 w-64 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl">
+          <div className="flex items-center justify-center border-b border-dark-border px-4 py-3">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-small font-semibold text-white/70 transition hover:text-white"
+              onClick={setNow}
+              title={t('common.now')}
+            >
+              {current.hour12}:{pad(current.minute)} {current.period}
+            </button>
           </div>
 
           <div className="flex gap-2 px-3 py-3">
             <TimeColumn
-              label="Hour"
+              label={t('common.hour')}
               items={HOURS.map((h) => ({ value: h, label: String(h) }))}
               selected={value ? current.hour12 : null}
               onSelect={(h) => emit({ hour12: h })}
             />
             <TimeColumn
-              label="Min"
+              label={t('common.minute')}
               items={MINUTES.map((m) => ({ value: m, label: pad(m) }))}
               selected={value ? current.minute : null}
               onSelect={(m) => emit({ minute: m })}
             />
-            <div className="flex w-14 shrink-0 flex-col">
+            <div className="flex min-w-0 flex-1 flex-col">
               <p className="mb-1 text-center text-micro font-semibold tracking-wider text-white/20 uppercase">
-                &nbsp;
+                {t('common.period')}
               </p>
-              <div className="flex h-44 flex-col justify-center gap-2">
+              <div className="flex h-44 flex-col gap-1 rounded-lg border border-dark-border bg-dark-surface-2 p-1">
                 {(['AM', 'PM'] as const).map((p) => {
                   const active = !!value && current.period === p;
 
@@ -197,10 +232,10 @@ export const TimePicker = ({
                       key={p}
                       type="button"
                       onClick={() => emit({ period: p })}
-                      className={`rounded-lg py-2 text-xsmall font-semibold transition ${
+                      className={`flex-1 rounded-lg text-xsmall font-semibold transition ${
                         active
-                          ? 'bg-accent-blue text-white'
-                          : 'border border-dark-border bg-dark-surface-2 text-white/40 hover:text-white/70'
+                          ? 'bg-accent-blue text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]'
+                          : 'text-white/40 hover:bg-white/8 hover:text-white/70'
                       }`}
                     >
                       {p}
@@ -217,14 +252,14 @@ export const TimePicker = ({
               onClick={setNow}
               className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/70"
             >
-              Now
+              {t('common.now')}
             </button>
             <button
               type="button"
               onClick={() => setOpen(false)}
               className="hover:bg-opacity-90 flex-1 rounded-lg bg-accent-blue py-1.5 text-xsmall font-semibold text-white transition"
             >
-              Done
+              {t('common.done')}
             </button>
           </div>
         </div>

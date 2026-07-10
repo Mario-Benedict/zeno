@@ -1,4 +1,9 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
+import {
+  getEventLabelColor,
+  getRecurrenceShortLabelKey,
+} from '@/utils/calendar';
 
 interface WeekEventCardProps {
   event: AnyCalendarEvent;
@@ -7,14 +12,6 @@ interface WeekEventCardProps {
   style: React.CSSProperties;
   onClick: (e: React.MouseEvent) => void;
 }
-
-// Priority colours as raw hex — used for the folded-corner ribbon which is
-// drawn with CSS borders and therefore needs an inline colour value.
-const PRIORITY_HEX: Record<string, string> = {
-  low: '#27AE60', // status-success
-  mid: '#E2B93B', // status-warning
-  high: '#EB5757', // status-error
-};
 
 const formatTime = (d: Date) =>
   d
@@ -30,6 +27,7 @@ export const WeekEventCard = ({
   style,
   onClick,
 }: WeekEventCardProps) => {
+  const { t } = useTranslation();
   const evStart = new Date(event.start_time);
   const evEnd = new Date(event.end_time);
 
@@ -49,8 +47,23 @@ export const WeekEventCard = ({
 
   const timeString = `${formatTime(clampedStart)} - ${formatTime(clampedEnd)}`;
 
-  // --- CLASSIFIED busy-block: neutral card, no colour, no priority ribbon ---
+  // --- CLASSIFIED busy-block: neutral card, no colour, no label ribbon ---
   if (event.is_classified) {
+    // "busy_only" (the event creator's calendar_visibility preference) shows
+    // nothing but the block itself — no label, name, or time text.
+    if (event.visibility === 'busy_only') {
+      return (
+        <div
+          onClick={onClick}
+          className="absolute z-10 cursor-pointer p-[1.5px] transition-opacity hover:opacity-90"
+          style={{ top: `${topMin}px`, height: `${height}px`, ...style }}
+          title={t('calendar.classified')}
+        >
+          <div className="h-full w-full rounded-lg border border-dashed border-dark-border bg-dark-surface-3" />
+        </div>
+      );
+    }
+
     return (
       <div
         onClick={onClick}
@@ -59,7 +72,7 @@ export const WeekEventCard = ({
       >
         <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-dashed border-dark-border bg-dark-surface-3 px-2 py-1">
           <span className="truncate text-[10px] font-bold tracking-wide text-dark-secondary uppercase">
-            Classified
+            {t('calendar.classified')}
           </span>
           <span className="truncate text-[11px] font-medium text-dark-primary/80">
             {event.participants[0]?.name}
@@ -74,8 +87,8 @@ export const WeekEventCard = ({
     );
   }
 
-  // --- Normal full-detail event: pastel owner colour + folded priority corner ---
-  const foldHex = PRIORITY_HEX[event.priority] ?? PRIORITY_HEX.mid;
+  // --- Normal full-detail event: pastel owner colour + folded label corner ---
+  const foldHex = getEventLabelColor(event.labels);
 
   return (
     <div
@@ -87,7 +100,9 @@ export const WeekEventCard = ({
         className="relative flex h-full w-full flex-col overflow-hidden rounded-lg px-2 py-1 shadow-sm ring-1 ring-black/10"
         style={{ backgroundColor: ownerColor, color: '#1c2530' }}
       >
-        <span className="truncate pr-3 text-[11px] font-bold">
+        <span
+          className={`truncate pr-3 text-[11px] font-bold ${event.is_kanban_task && event.is_completed ? 'line-through opacity-60' : ''}`}
+        >
           {event.title}
         </span>
 
@@ -95,13 +110,21 @@ export const WeekEventCard = ({
           <span className="truncate text-[10px] opacity-70">{timeString}</span>
         )}
 
-        {event.recurrence === 'weekly' && height >= 58 && (
+        {event.is_kanban_task && height >= 58 && (
           <span className="mt-auto w-fit rounded-full bg-black/10 px-1.5 py-px text-[8px] font-bold tracking-wide uppercase">
-            Weekly
+            {t('calendar.fromBoard', { board: event.kanban_board_name })}
           </span>
         )}
 
-        {/* Folded-corner priority ribbon (top-right) */}
+        {!event.is_kanban_task &&
+          event.recurrence !== 'none' &&
+          height >= 58 && (
+            <span className="mt-auto w-fit rounded-full bg-black/10 px-1.5 py-px text-[8px] font-bold tracking-wide uppercase">
+              {t(getRecurrenceShortLabelKey(event.recurrence))}
+            </span>
+          )}
+
+        {/* Folded-corner label ribbon (top-right) */}
         <span
           className="absolute top-0 right-0 h-0 w-0"
           style={{

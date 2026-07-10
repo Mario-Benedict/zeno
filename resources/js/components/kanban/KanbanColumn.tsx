@@ -1,6 +1,7 @@
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import ConfirmModal from '@/components/shared/ConfirmModal';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoard, KanbanBoardCard } from '@/types/kanban';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import AddIcon from '@public/icons/small/plus.svg';
@@ -29,6 +30,7 @@ export const KanbanColumn = ({
   searchQuery,
   onCardClick,
 }: KanbanColumnProps) => {
+  const { t } = useTranslation();
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(board.kanban_board_name);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -97,7 +99,7 @@ export const KanbanColumn = ({
               <p
                 className="flex-1 cursor-pointer truncate text-medium font-bold tracking-tight text-white transition hover:text-white/80"
                 onClick={() => setEditingName(true)}
-                title="Click to rename"
+                title={t('kanban.clickToRename')}
               >
                 {board.kanban_board_name}
                 <span className="ml-2 text-xsmall font-normal text-white/20">
@@ -109,7 +111,7 @@ export const KanbanColumn = ({
             <div className="flex shrink-0 items-center gap-1">
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                title="Delete board"
+                title={t('kanban.deleteBoard')}
                 className="shrink-0 rounded-lg p-1.5 text-dark-secondary hover:bg-dark-surface-3 hover:text-accent-red"
               >
                 <CloseIcon className="h-4 w-4" />
@@ -117,17 +119,11 @@ export const KanbanColumn = ({
 
               {showDeleteConfirm && (
                 <ConfirmModal
-                  title="Delete Board"
-                  description={
-                    <>
-                      Are you sure you want to delete{' '}
-                      <strong className="font-semibold text-white">
-                        "{board.kanban_board_name}"
-                      </strong>
-                      ? All cards inside it will be permanently removed.
-                    </>
-                  }
-                  confirmLabel="Yes, delete it"
+                  title={t('kanban.deleteBoardTitle')}
+                  description={t('kanban.deleteBoardDescription', {
+                    name: board.kanban_board_name,
+                  })}
+                  confirmLabel={t('kanban.deleteBoardConfirm')}
                   onCancel={() => setShowDeleteConfirm(false)}
                   onConfirm={() => {
                     onDeleteBoard(board.kanban_board_id);
@@ -148,7 +144,7 @@ export const KanbanColumn = ({
               >
                 {filteredCards.length === 0 && (
                   <div className="rounded-xl py-8 text-center text-xsmall text-white/20">
-                    No cards yet
+                    {t('kanban.noCardsYet')}
                   </div>
                 )}
 
@@ -176,7 +172,7 @@ export const KanbanColumn = ({
               className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-small text-white/30 transition hover:bg-white/5 hover:text-white/70"
             >
               <AddIcon className="h-4 w-4" />
-              Add a card
+              {t('kanban.addACard')}
             </button>
           </div>
         </div>

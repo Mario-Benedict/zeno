@@ -19,7 +19,7 @@ use Illuminate\Notifications\Notifiable;
     'name', 'email', 'password',
     'email_verified_at',
     'two_factor_secret', 'two_factor_enabled_at', 'two_factor_last_counter',
-    'pomodoro_settings',
+    'pomodoro_settings', 'locale', 'theme', 'calendar_visibility',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail

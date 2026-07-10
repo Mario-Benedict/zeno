@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import CancelIcon from '@public/icons/small/cancel.svg';
 import DangerTab from './settings/DangerTab';
 import GeneralTab from './settings/GeneralTab';
@@ -79,6 +80,7 @@ const ProjectSettingsModal = ({
 }: ProjectSettingsModalProps) => {
   const { project, projectRole, projectShare, auth, account, twoFactor } =
     usePage().props;
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const accountIndex = account.index;
 
@@ -118,7 +120,7 @@ const ProjectSettingsModal = ({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Settings"
+        aria-label={t('projectSettings.title')}
         className="flex h-[88dvh] max-h-[640px] w-full max-w-3xl overflow-hidden rounded-xl border border-dark-border bg-dark-surface-2 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -126,12 +128,12 @@ const ProjectSettingsModal = ({
         <div className="flex w-52 shrink-0 flex-col border-r border-dark-border bg-dark-surface-1 p-2">
           <div className="mb-4 flex items-center justify-between px-1 pt-1">
             <p className="text-small font-semibold text-dark-primary">
-              Settings
+              {t('projectSettings.title')}
             </p>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close settings"
+              aria-label={t('projectSettings.close')}
               className="flex h-7 w-7 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-white/[0.07] hover:text-dark-primary"
             >
               <CancelIcon />
@@ -140,32 +142,32 @@ const ProjectSettingsModal = ({
 
           <div className="flex flex-1 flex-col">
             {project && (
-              <NavGroup label="Project">
+              <NavGroup label={t('projectSettings.navProject')}>
                 <NavItem
-                  label="General"
+                  label={t('projectSettings.navGeneral')}
                   active={activeTab === 'general'}
                   onClick={() => setActiveTab('general')}
                 />
                 <NavItem
-                  label="Members"
+                  label={t('projectSettings.navMembers')}
                   active={activeTab === 'members'}
                   onClick={() => setActiveTab('members')}
                 />
               </NavGroup>
             )}
-            <NavGroup label="Your Account">
+            <NavGroup label={t('projectSettings.navYourAccount')}>
               <NavItem
-                label="Profile"
+                label={t('projectSettings.navProfile')}
                 active={activeTab === 'profile'}
                 onClick={() => setActiveTab('profile')}
               />
               <NavItem
-                label="Preferences"
+                label={t('projectSettings.navPreferences')}
                 active={activeTab === 'preferences'}
                 onClick={() => setActiveTab('preferences')}
               />
               <NavItem
-                label="Security"
+                label={t('projectSettings.navSecurity')}
                 active={activeTab === 'security'}
                 onClick={() => setActiveTab('security')}
               />
@@ -173,7 +175,7 @@ const ProjectSettingsModal = ({
             {project && (
               <div className="mt-auto border-t border-dark-border pt-2">
                 <NavItem
-                  label="Danger Zone"
+                  label={t('projectSettings.navDanger')}
                   active={activeTab === 'danger'}
                   danger
                   onClick={() => setActiveTab('danger')}

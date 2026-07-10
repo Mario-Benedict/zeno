@@ -1,6 +1,7 @@
 import { router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
 import type {
   AssignableProjectRole,
@@ -16,10 +17,14 @@ interface ProjectInvitationModalProps {
   onClose: () => void;
 }
 
-const ROLE_LABELS: Record<AssignableProjectRole, string> = {
-  ADMIN: 'Admin',
-  MEMBER: 'Member',
-  VIEWER: 'Viewer',
+const useRoleLabels = (): Record<AssignableProjectRole, string> => {
+  const { t } = useTranslation();
+
+  return {
+    ADMIN: t('common.admin'),
+    MEMBER: t('common.member'),
+    VIEWER: t('common.viewer'),
+  };
 };
 
 const XIcon = () => (
@@ -108,6 +113,7 @@ const RoleSelect = ({
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const roleLabels = useRoleLabels();
 
   useEffect(() => {
     if (!open) return;
@@ -128,7 +134,7 @@ const RoleSelect = ({
         aria-expanded={open}
         className="flex h-9 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus hover:bg-dark-surface-3 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {ROLE_LABELS[value]}
+        {roleLabels[value]}
         <span
           className={`text-dark-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
         >
@@ -159,7 +165,7 @@ const RoleSelect = ({
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-blue" />
               )}
               {role !== value && <span className="h-1.5 w-1.5 shrink-0" />}
-              {ROLE_LABELS[role]}
+              {roleLabels[role]}
             </button>
           ))}
         </div>
@@ -181,6 +187,7 @@ const MemberRow = ({
   onRoleChange: (member: ProjectMember, role: AssignableProjectRole) => void;
   onRemove: (member: ProjectMember) => void;
 }) => {
+  const { t } = useTranslation();
   const canEdit =
     canManage && member.role !== 'OWNER' && !member.is_current_user;
 
@@ -192,13 +199,13 @@ const MemberRow = ({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-dark-primary">
           {member.name}
-          {member.is_current_user ? ' (you)' : ''}
+          {member.is_current_user ? ` (${t('projectSettingsTabs.you')})` : ''}
         </p>
         <p className="truncate text-xs text-dark-secondary">{member.email}</p>
       </div>
       {member.role === 'OWNER' ? (
         <span className="rounded-md border border-dark-border px-3 py-2 text-sm font-medium text-dark-secondary">
-          Owner
+          {t('common.owner')}
         </span>
       ) : (
         <RoleSelect
@@ -211,7 +218,9 @@ const MemberRow = ({
       {canEdit && (
         <button
           type="button"
-          aria-label={`Remove ${member.name}`}
+          aria-label={t('projectSettingsTabs.removeMember', {
+            name: member.name,
+          })}
           onClick={() => onRemove(member)}
           className="flex h-9 w-9 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
         >
@@ -229,6 +238,8 @@ const ProjectInvitationModal = ({
   onClose,
 }: ProjectInvitationModalProps) => {
   const { account } = usePage().props;
+  const { t } = useTranslation();
+  const roleLabels = useRoleLabels();
   const accountIndex = account.index;
   const roles = useMemo<AssignableProjectRole[]>(
     () => share?.assignable_roles ?? ['MEMBER', 'ADMIN', 'VIEWER'],
@@ -350,23 +361,27 @@ const ProjectInvitationModal = ({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Share project"
+        aria-label={t('projectSettingsTabs.shareProject', {
+          projectName: project.project_name,
+        })}
         className="flex max-h-[88dvh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-dark-border bg-dark-surface-2 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-dark-border px-5">
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold text-dark-primary">
-              Share {project.project_name}
+              {t('projectSettingsTabs.shareProject', {
+                projectName: project.project_name,
+              })}
             </h2>
             <p className="text-xs text-dark-secondary">
-              {share.members.length} members
+              {share.members.length} {t('common.members').toLowerCase()}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('projectSettingsTabs.close')}
             className="flex h-8 w-8 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-white/[0.07] hover:text-dark-primary"
           >
             <XIcon />
@@ -383,7 +398,7 @@ const ProjectInvitationModal = ({
                 onChange={(event) =>
                   inviteForm.setData('invitee', event.target.value)
                 }
-                placeholder="Email address or name"
+                placeholder={t('projectSettingsTabs.emailOrNamePlaceholder')}
                 className="h-9 w-full rounded-md border border-dark-border bg-dark-input px-3 text-sm text-dark-primary outline-none placeholder:text-dark-secondary focus:border-dark-border-focus disabled:cursor-not-allowed disabled:opacity-50"
               />
               {inviteForm.errors.invitee && (
@@ -403,7 +418,9 @@ const ProjectInvitationModal = ({
               disabled={!canManage || inviteForm.processing}
               className="h-9 rounded-md bg-dark-primary px-4 text-sm font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {inviteForm.processing ? 'Sharing' : 'Share'}
+              {inviteForm.processing
+                ? t('projectSettingsTabs.sharing')
+                : t('projectSettingsTabs.share')}
             </button>
           </form>
 
@@ -414,7 +431,7 @@ const ProjectInvitationModal = ({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-dark-primary">
-                  Share this project with a link
+                  {t('projectSettingsTabs.shareWithLink')}
                 </p>
                 {invitationLink ? (
                   <button
@@ -422,11 +439,11 @@ const ProjectInvitationModal = ({
                     onClick={() => copyLink(invitationLink.url)}
                     className="mt-1 max-w-full truncate text-left text-sm font-medium text-status-info hover:underline"
                   >
-                    {copied ? 'Copied' : invitationLink.url}
+                    {copied ? t('common.copied') : invitationLink.url}
                   </button>
                 ) : (
                   <p className="mt-1 text-sm text-dark-secondary">
-                    Link disabled
+                    {t('projectSettingsTabs.linkDisabled')}
                   </p>
                 )}
               </div>
@@ -442,7 +459,9 @@ const ProjectInvitationModal = ({
                 disabled={!canManage || linkProcessing}
                 className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {invitationLink ? 'Save' : 'Create'}
+                {invitationLink
+                  ? t('projectSettingsTabs.save')
+                  : t('projectSettingsTabs.create')}
               </button>
               {invitationLink && (
                 <button
@@ -451,7 +470,7 @@ const ProjectInvitationModal = ({
                   disabled={!canManage}
                   className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Disable
+                  {t('projectSettingsTabs.disable')}
                 </button>
               )}
             </div>
@@ -460,7 +479,7 @@ const ProjectInvitationModal = ({
           {share.pending_invitations.length > 0 && (
             <div className="mt-5">
               <p className="mb-2 text-xs font-semibold text-dark-secondary uppercase">
-                Pending invitations
+                {t('projectSettingsTabs.pendingInvitations')}
               </p>
               <div className="space-y-1">
                 {share.pending_invitations.map((invitation) => (
@@ -474,7 +493,7 @@ const ProjectInvitationModal = ({
                       {invitation.email ?? invitation.name}
                     </span>
                     <span className="shrink-0 text-xs font-semibold text-dark-secondary">
-                      {ROLE_LABELS[invitation.role]}
+                      {roleLabels[invitation.role]}
                     </span>
                   </button>
                 ))}
@@ -485,7 +504,7 @@ const ProjectInvitationModal = ({
           <div className="mt-5">
             <div className="mb-2 flex items-center gap-2 border-b border-dark-border pb-2">
               <p className="text-sm font-semibold text-status-info">
-                Project members
+                {t('projectSettingsTabs.projectMembers')}
               </p>
               <span className="rounded bg-dark-surface-3 px-2 py-0.5 text-xs font-semibold text-dark-secondary">
                 {share.members.length}

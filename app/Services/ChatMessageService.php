@@ -304,21 +304,19 @@ class ChatMessageService
     /**
      * Hitung jumlah pesan belum dibaca untuk seorang user di sebuah room.
      *
-     * Strategi:
-     *  1. Ambil last_read_message_id dari MySQL (pivot)
-     *  2. Hitung dokumen MongoDB dengan _id > last_read ObjectId
+     * Takes the participant's `last_read_message_id` directly rather than
+     * looking it up from `chat_room_participants` itself — callers iterating
+     * over several rooms (e.g. the notification popover) already eager-load
+     * `ChatRoom::participants()`, which carries this pivot column
+     * (`withPivot([..., 'last_read_message_id', ...])` in `ChatRoom::participants()`).
+     * Re-querying it per room here would be an avoidable N+1.
      */
-    public function countUnread(string $roomId, string $userId): int
+    public function countUnread(string $roomId, ?string $lastReadMessageId): int
     {
-        $participant = DB::table('chat_room_participants')
-            ->where('chat_room_id', $roomId)
-            ->where('user_id', $userId)
-            ->value('last_read_message_id');
-
         $filter = ['room_id' => $roomId, 'is_deleted' => false];
 
-        if ($participant) {
-            $filter['_id'] = ['$gt' => new ObjectId($participant)];
+        if ($lastReadMessageId) {
+            $filter['_id'] = ['$gt' => new ObjectId($lastReadMessageId)];
         }
 
         return (int) $this->collection->countDocuments($filter);

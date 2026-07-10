@@ -1,7 +1,8 @@
 import { DatePicker } from '@/components/shared/DatePicker';
 import { TimePicker } from '@/components/shared/TimePicker';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoardCard, CardLabel, KanbanUser } from '@/types/kanban';
-import { generateInitials, MEMBER_COLORS } from '@/utils/kanban';
+import { generateInitials, memberColor } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 import ChecklistIcon from '@public/icons/small/checkbox.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
@@ -51,6 +52,7 @@ export const CardDetailSidebar = ({
   labels,
   onToggleMember,
 }: CardDetailSidebarProps) => {
+  const { t } = useTranslation();
   const startDt = card.kanban_board_card_start_date;
   const dueDt = card.kanban_board_card_due_date;
 
@@ -66,12 +68,12 @@ export const CardDetailSidebar = ({
       {/* Dates */}
       <div>
         <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
-          Dates
+          {t('kanban.dates')}
         </p>
         <div className="space-y-3">
           <div className="space-y-1.5">
             <DatePicker
-              label="Start date"
+              label={t('kanban.startDate')}
               value={datePart(startDt)}
               onChange={(v) =>
                 onUpdateDates(
@@ -80,23 +82,23 @@ export const CardDetailSidebar = ({
                 )
               }
               onClear={() => onUpdateDates('kanban_board_card_start_date', '')}
-              placeholder="Set start date"
+              placeholder={t('kanban.setStartDate')}
             />
             <TimePicker
-              ariaLabel="Start time"
+              ariaLabel={t('kanban.startTime')}
               value={timePart(startDt) || null}
               disabled={!startDt}
-              onChange={(t) =>
+              onChange={(time) =>
                 onUpdateDates(
                   'kanban_board_card_start_date',
-                  combine(datePart(startDt), t),
+                  combine(datePart(startDt), time),
                 )
               }
             />
           </div>
           <div className="space-y-1.5">
             <DatePicker
-              label="Due date"
+              label={t('kanban.dueDate')}
               value={datePart(dueDt)}
               onChange={(v) =>
                 onUpdateDates(
@@ -105,17 +107,17 @@ export const CardDetailSidebar = ({
                 )
               }
               onClear={() => onUpdateDates('kanban_board_card_due_date', '')}
-              placeholder="Set due date"
+              placeholder={t('kanban.setDueDate')}
               highlightOverdue
             />
             <TimePicker
-              ariaLabel="Due time"
+              ariaLabel={t('kanban.dueTime')}
               value={timePart(dueDt) || null}
               disabled={!dueDt}
-              onChange={(t) =>
+              onChange={(time) =>
                 onUpdateDates(
                   'kanban_board_card_due_date',
-                  combine(datePart(dueDt), t),
+                  combine(datePart(dueDt), time),
                 )
               }
             />
@@ -128,12 +130,12 @@ export const CardDetailSidebar = ({
       {/* Add to card */}
       <div>
         <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
-          Add to card
+          {t('kanban.addToCard')}
         </p>
         <div className="space-y-1.5">
           <SidebarButton
             icon={<ChecklistIcon className="h-3.5 w-3.5" />}
-            label="Checklist"
+            label={t('kanban.checklist')}
             onClick={() => {
               onToggleChecklist(true);
               onToggleAttachment(false);
@@ -142,7 +144,7 @@ export const CardDetailSidebar = ({
           />
           <SidebarButton
             icon={<PaperclipIcon className="h-3.5 w-3.5" />}
-            label="Attachment"
+            label={t('kanban.attachment')}
             onClick={() => {
               onToggleAttachment(true);
               onToggleChecklist(false);
@@ -157,7 +159,7 @@ export const CardDetailSidebar = ({
       {/* Labels */}
       <div>
         <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
-          Labels
+          {t('kanban.labelsLabel')}
         </p>
 
         <div className="mb-2 space-y-1">
@@ -193,7 +195,7 @@ export const CardDetailSidebar = ({
                     onClick={() => labels.onToggle(label)}
                     className="flex h-4 w-4 items-center justify-center rounded opacity-60 transition hover:opacity-100"
                     style={{ color: hex }}
-                    title="Remove from card"
+                    title={t('kanban.removeFromCard')}
                   >
                     <CheckIcon className="h-2.5 w-2.5" />
                   </button>
@@ -208,7 +210,7 @@ export const CardDetailSidebar = ({
             className="flex w-full items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-1.5 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/60"
           >
             <PaperclipIcon className="h-3.5 w-3.5" />
-            <span>Edit labels</span>
+            <span>{t('kanban.editLabels')}</span>
           </button>
 
           {labels.popoverOpen && (
@@ -239,10 +241,10 @@ export const CardDetailSidebar = ({
       {/* Members */}
       <div>
         <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
-          Members
+          {t('kanban.members')}
         </p>
         <div className="space-y-1">
-          {projectUsers?.map((user, i) => {
+          {projectUsers?.map((user) => {
             const isMember = (card.members || []).some((m) => m.id === user.id);
 
             return (
@@ -258,7 +260,7 @@ export const CardDetailSidebar = ({
                 <div
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xsmall font-bold text-white"
                   style={{
-                    backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length],
+                    backgroundColor: memberColor(user.id),
                   }}
                 >
                   {generateInitials(user.name)}
@@ -274,7 +276,7 @@ export const CardDetailSidebar = ({
           })}
           {(!projectUsers || projectUsers.length === 0) && (
             <p className="px-2 text-xsmall text-white/30 italic">
-              No members in this project.
+              {t('kanban.noMembersInProject')}
             </p>
           )}
         </div>

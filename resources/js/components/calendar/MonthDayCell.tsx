@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
+import { getEventLabelColor } from '@/utils/calendar';
 import { DayEventsPopup } from './DayEventsPopup';
 
 interface MonthDayCellProps {
@@ -28,17 +30,6 @@ const MONTHS_SHORT = [
   'Dec',
 ];
 
-const priorityDot = (priority: string) => {
-  switch (priority) {
-    case 'low':
-      return 'bg-status-success';
-    case 'high':
-      return 'bg-status-error';
-    default:
-      return 'bg-status-warning';
-  }
-};
-
 const formatTime = (iso: string) =>
   new Date(iso)
     .toLocaleTimeString('en-US', {
@@ -57,6 +48,7 @@ export const MonthDayCell = ({
   onClick,
   onEventClick,
 }: MonthDayCellProps) => {
+  const { t } = useTranslation();
   const [popupOpen, setPopupOpen] = useState(false);
 
   const now = new Date();
@@ -86,7 +78,7 @@ export const MonthDayCell = ({
   const hiddenCount = dayEvents.length - MAX_VISIBLE_EVENTS;
 
   const ownerName = (ev: AnyCalendarEvent) =>
-    ev.participants[0]?.name ?? 'Unknown';
+    ev.participants[0]?.name ?? t('calendar.unknownMember');
 
   const dayLabel =
     date.getDate() === 1
@@ -119,6 +111,24 @@ export const MonthDayCell = ({
           const time = formatTime(ev.start_time);
 
           if (ev.is_classified) {
+            // "busy_only" shows only a bare dot on the day cell — no time,
+            // no label, no name.
+            if (ev.visibility === 'busy_only') {
+              return (
+                <button
+                  key={ev.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEventClick(ev);
+                  }}
+                  title={t('calendar.classified')}
+                  className="flex items-center gap-1.5 truncate rounded px-1 py-px text-left hover:bg-dark-surface-3"
+                >
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-dark-secondary/50" />
+                </button>
+              );
+            }
+
             return (
               <button
                 key={ev.id}
@@ -133,7 +143,7 @@ export const MonthDayCell = ({
                 </span>
                 <span className="h-2 w-2 shrink-0 rounded-full bg-dark-secondary/50" />
                 <span className="truncate italic">
-                  CLASSIFIED · {ownerName(ev)}
+                  {t('calendar.classified')} · {ownerName(ev)}
                 </span>
               </button>
             );
@@ -152,9 +162,12 @@ export const MonthDayCell = ({
                 {time}
               </span>
               <span
-                className={`h-2 w-2 shrink-0 rounded-full ${priorityDot(ev.priority)}`}
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: getEventLabelColor(ev.labels) }}
               />
-              <span className="truncate font-semibold text-dark-primary">
+              <span
+                className={`truncate font-semibold text-dark-primary ${ev.is_kanban_task && ev.is_completed ? 'text-dark-secondary line-through' : ''}`}
+              >
                 {ownerName(ev)}
               </span>
             </button>
@@ -169,7 +182,7 @@ export const MonthDayCell = ({
             }}
             className="mt-px pl-1 text-left text-[11px] font-medium text-dark-secondary hover:text-dark-primary"
           >
-            + {hiddenCount} more
+            {t('calendar.moreEvents', { count: hiddenCount })}
           </button>
         )}
       </div>

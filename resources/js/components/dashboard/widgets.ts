@@ -8,7 +8,6 @@ export type WidgetId =
 
 export interface WidgetDefinition {
   id: WidgetId;
-  name: string;
   available: boolean;
 }
 
@@ -18,10 +17,10 @@ export interface WidgetDefinition {
  * can't be selected yet — add the real implementation, then flip this flag.
  */
 export const WIDGETS: WidgetDefinition[] = [
-  { id: 'kanban', name: 'Kanban Board', available: true },
-  { id: 'chat', name: 'Chat', available: true },
-  { id: 'notes', name: 'Notes', available: true },
-  { id: 'calendar', name: 'Calendar', available: false },
-  { id: 'reminders', name: 'Reminders', available: false },
-  { id: 'pomodoro', name: 'Pomodoro', available: false },
+  { id: 'kanban', available: true },
+  { id: 'chat', available: true },
+  { id: 'notes', available: true },
+  { id: 'calendar', available: false },
+  { id: 'reminders', available: false },
+  { id: 'pomodoro', available: false },
 ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Calendar;
 
 use App\Http\Controllers\Controller;
+use App\Models\CardLabel;
 use App\Models\Project;
 use App\Services\CalendarService;
 use Carbon\Carbon;
@@ -30,6 +31,10 @@ class CalendarController extends Controller
 
         $user = Auth::user();
 
+        // Same project-scoped CardLabels Kanban uses (KanbanController::show)
+        // — Calendar tags events with these instead of a fixed priority enum.
+        $cardLabels = CardLabel::where('card_label_project_id', $project->project_id)->get();
+
         // The `{project:project_slug}` binding isn't substituted into a model
         // for these routes, so the globally-shared `project`/`projectRole`
         // props come through null. We therefore pass them explicitly, exactly
@@ -44,6 +49,7 @@ class CalendarController extends Controller
             ],
             'projectRole' => $project->roleFor($user)?->value,
             'projectUsers' => $projectUsers,
+            'cardLabels' => $cardLabels,
             'currentUser' => [
                 'id' => $user?->getAuthIdentifier(),
                 'name' => $user?->name,

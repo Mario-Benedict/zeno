@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, SyntheticEvent } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath } from '@/lib/accountRoutes';
 import { toSlug } from '@/lib/projectSlug';
 
@@ -30,6 +31,7 @@ const XIcon = () => (
 
 const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
   const { account } = usePage().props;
+  const { t } = useTranslation();
   const accountIndex = account.index;
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -69,7 +71,9 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
 
     const trimmed = name.trim();
     if (!trimmed) {
-      setErrors({ project_name: 'Project name is required.' });
+      setErrors({
+        project_name: t('projectSettingsTabs.projectNameRequired'),
+      });
       return;
     }
 
@@ -103,7 +107,7 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Create a project"
+        aria-label={t('projectSettingsTabs.createAProject')}
         className={`fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-dark-surface-1 shadow-2xl transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Panel header */}
@@ -112,12 +116,12 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
             type="button"
             onClick={onClose}
             className="flex h-7 w-7 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-white/[0.07] hover:text-dark-primary"
-            aria-label="Close panel"
+            aria-label={t('projectSettingsTabs.closePanel')}
           >
             <XIcon />
           </button>
           <span className="text-sm font-semibold text-dark-primary">
-            Create a project
+            {t('projectSettingsTabs.createAProject')}
           </span>
         </div>
 
@@ -128,7 +132,7 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
         >
           <div className="flex flex-col items-center gap-8">
             <h1 className="text-center text-xl font-semibold text-dark-primary">
-              Let's start with a name for your project.
+              {t('projectSettingsTabs.createProjectHeading')}
             </h1>
 
             <div className="w-full max-w-sm">
@@ -137,7 +141,7 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
                 type="text"
                 value={name}
                 onChange={handleNameChange}
-                placeholder="Project Title"
+                placeholder={t('projectSettingsTabs.projectTitlePlaceholder')}
                 maxLength={50}
                 className="w-full border-0 border-b border-dark-border bg-transparent pb-2 text-center text-base text-dark-primary outline-none placeholder:text-dark-secondary focus:border-dark-primary"
               />
@@ -150,7 +154,7 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
                   </span>
                 ) : (
                   <span className="inline-flex items-center rounded-full bg-dark-surface-3 px-3 py-1 text-xs text-dark-secondary">
-                    project-slug
+                    {t('projectSettingsTabs.projectSlugPlaceholder')}
                   </span>
                 )}
               </div>
@@ -175,7 +179,9 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
               disabled={submitting || !name.trim()}
               className="rounded-lg bg-dark-primary px-5 py-2 text-sm font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:opacity-40"
             >
-              {submitting ? 'Creating…' : 'Create Project'}
+              {submitting
+                ? t('projectSettingsTabs.creating')
+                : t('projectSettingsTabs.createProject')}
             </button>
           </div>
         </form>

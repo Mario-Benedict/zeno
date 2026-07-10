@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { PinIcon } from '@/components/shared/PinButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { Reminder } from '@/types/reminder';
 import FilterIcon from '@public/icons/large/filter.svg';
 import ArrowDownIcon from '@public/icons/small/arrow_down.svg';
@@ -26,6 +27,7 @@ export const ReminderList = ({
   onDelete,
   onAddClick,
 }: ReminderListProps) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [sortDesc, setSortDesc] = useState(false);
   const [dueOnly, setDueOnly] = useState(false);
@@ -61,14 +63,16 @@ export const ReminderList = ({
   return (
     <div className="flex w-90 shrink-0 flex-col overflow-hidden rounded-2xl bg-dark-surface-2 p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-large font-bold text-dark-primary">Reminders</h1>
+        <h1 className="text-large font-bold text-dark-primary">
+          {t('reminders.title')}
+        </h1>
         <button
           type="button"
           onClick={onAddClick}
           className="hover:bg-opacity-90 flex items-center gap-1.5 rounded-lg bg-accent-blue px-3 py-1.5 text-small font-semibold text-white transition"
         >
           <PlusIcon className="h-3.5 w-3.5" />
-          Add
+          {t('reminders.add')}
         </button>
       </div>
 
@@ -81,14 +85,18 @@ export const ReminderList = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             type="text"
-            placeholder="Search"
+            placeholder={t('reminders.search')}
             className="h-9 w-full rounded-full border-2 border-dark-surface-3 bg-dark-surface-1 pr-3 pl-9 text-small text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
           />
         </div>
         <button
           type="button"
           onClick={() => setSortDesc((v) => !v)}
-          title={sortDesc ? 'Sort: latest first' : 'Sort: earliest first'}
+          title={
+            sortDesc
+              ? t('reminders.sortLatestFirst')
+              : t('reminders.sortEarliestFirst')
+          }
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
             sortDesc
               ? 'bg-accent-blue/20 text-accent-blue'
@@ -102,7 +110,7 @@ export const ReminderList = ({
         <button
           type="button"
           onClick={() => setDueOnly((v) => !v)}
-          title="Only reminders with a due date"
+          title={t('reminders.onlyWithDueDate')}
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
             dueOnly
               ? 'bg-accent-blue/20'
@@ -114,7 +122,7 @@ export const ReminderList = ({
         <button
           type="button"
           onClick={() => setPinnedOnly((v) => !v)}
-          title="Only pinned reminders"
+          title={t('reminders.onlyPinned')}
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
             pinnedOnly
               ? 'bg-accent-blue/20'
@@ -128,7 +136,7 @@ export const ReminderList = ({
       <div className="scrollbar-app flex-1 space-y-2 overflow-y-auto">
         {active.length === 0 && completed.length === 0 && (
           <p className="py-8 text-center text-small text-white/20">
-            No reminders yet.
+            {t('reminders.noRemindersYet')}
           </p>
         )}
 
@@ -154,7 +162,7 @@ export const ReminderList = ({
               <ArrowDownIcon
                 className={`h-3 w-3 transition-transform ${completedOpen ? '' : '-rotate-90'}`}
               />
-              Completed {completed.length}
+              {t('reminders.completedCount', { count: completed.length })}
             </button>
             {completedOpen && (
               <div className="space-y-2">

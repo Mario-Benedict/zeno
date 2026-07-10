@@ -41,7 +41,10 @@ export const SidebarButton: React.FC<SidebarButtonProps> = ({
         : 'border border-dark-border bg-dark-surface-2 text-white/50 hover:border-dark-border-focus hover:bg-dark-surface-3 hover:text-white'
     }`}
   >
-    <span className="w-4 shrink-0 text-center">{icon}</span>
+    {/* Icon keeps its default color in every state — only the button's
+        chrome and label reflect active/hover, so the icon itself never
+        changes look. */}
+    <span className="w-4 shrink-0 text-center text-white/50">{icon}</span>
     <span>{label}</span>
   </button>
 );

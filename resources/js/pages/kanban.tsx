@@ -1,21 +1,22 @@
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   KanbanColumn,
   CardDetailModalWrapper,
   AddCardModal,
   AddBoardInput,
 } from '@/components/kanban';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import projects from '@/routes/projects';
 import type { KanbanBoardCard, KanbanBoard, KanbanProps } from '@/types/kanban';
 import AddIcon from '@public/icons/small/plus.svg';
 import SearchIcon from '@public/icons/small/search.svg';
 
-// All write operations in this page use Inertia's `router` instead of raw
-// `fetch()`. Each controller returns `back()` so Inertia replays the current
+// All write operations in this page use Inertia's `router`. Each controller
+// returns `back()` so Inertia replays the current
 // page, and we keep the optimistic local state by passing `preserveState`
 // and `preserveScroll`.
 const inertiaWriteOptions = {
@@ -23,30 +24,15 @@ const inertiaWriteOptions = {
   preserveState: true,
 } as const;
 
-// Sends a PATCH directly via fetch, bypassing Inertia's page lifecycle so
-// the response never triggers a re-render. Used for drag moves where any
-// extra render during the drop animation causes a visible flinch.
-const silentPatch = (
-  url: string,
-  data: Record<string, unknown>,
-  signal?: AbortSignal,
-) =>
-  fetch(url, {
-    method: 'PATCH',
-    redirect: 'manual',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN':
-        document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-          ?.content ?? '',
-    },
-    body: JSON.stringify(data),
-    signal,
-  }).catch((err: unknown) => {
-    if ((err as Error).name !== 'AbortError') {
-      console.error('Failed to persist move:', err);
-    }
+type InertiaWritePayload = Record<string, string | number | boolean | null>;
+
+const silentPatch = (url: string, data: InertiaWritePayload) => {
+  router.patch(url, data, {
+    ...inertiaWriteOptions,
+    async: true,
+    onError: (errors) => console.error('Failed to persist move:', errors),
   });
+};
 
 export default function Kanban({
   project,
@@ -55,6 +41,7 @@ export default function Kanban({
   currentUser,
   cardLabels,
 }: KanbanProps) {
+  const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,11 +51,6 @@ export default function Kanban({
     card: KanbanBoardCard;
     boardId: string;
   } | null>(null);
-
-  // One abort controller per drag type — cancels the previous in-flight
-  // request when a new move arrives, so only the latest position persists.
-  const cardMoveAbortRef = useRef<AbortController | null>(null);
-  const boardMoveAbortsRef = useRef<AbortController[]>([]);
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
@@ -88,16 +70,11 @@ export default function Kanban({
       next.splice(destination.index, 0, movedBoard);
       setBoards(next);
 
-      // Cancel previous board-move requests and queue fresh ones
-      boardMoveAbortsRef.current.forEach((c) => c.abort());
-      const ctrls: AbortController[] = [];
       const oldPositions = new Map(
         boards.map((b, i) => [b.kanban_board_id, i]),
       );
       next.forEach((board, idx) => {
         if (oldPositions.get(board.kanban_board_id) !== idx) {
-          const ctrl = new AbortController();
-          ctrls.push(ctrl);
           silentPatch(
             projects.kanban.boards.board.update.url({
               accountIndex,
@@ -105,11 +82,9 @@ export default function Kanban({
               board: board.kanban_board_id,
             }),
             { position: idx },
-            ctrl.signal,
           );
         }
       });
-      boardMoveAbortsRef.current = ctrls;
       return;
     }
 
@@ -130,10 +105,6 @@ export default function Kanban({
     toBoard.cards.splice(destination.index, 0, movedCard);
     setBoards(next);
 
-    // Cancel any previous card-move request and send the new position
-    cardMoveAbortRef.current?.abort();
-    const ctrl = new AbortController();
-    cardMoveAbortRef.current = ctrl;
     silentPatch(
       projects.kanban.boards.board.cards.move.url({
         accountIndex,
@@ -142,7 +113,6 @@ export default function Kanban({
         card: draggableId,
       }),
       { board_id: destination.droppableId, position: destination.index },
-      ctrl.signal,
     );
   };
 
@@ -262,7 +232,7 @@ export default function Kanban({
             ),
           );
           console.error('Failed to add card', errors);
-          alert('Failed to create card.');
+          alert(t('kanban.failedToCreateCard'));
         },
       },
     );
@@ -298,7 +268,7 @@ export default function Kanban({
             prev.filter((b) => b.kanban_board_id !== boardId),
           );
           console.error('Failed to add board:', errors);
-          alert('Failed to create board.');
+          alert(t('kanban.failedToCreateBoard'));
         },
       },
     );
@@ -405,7 +375,7 @@ export default function Kanban({
 
   return (
     <AppLayout project={project}>
-      <Head title={`Kanban - ${project.project_name}`} />
+      <Head title={`${t('kanban.pageTitle')} - ${project.project_name}`} />
 
       {openCard && (
         <CardDetailModalWrapper
@@ -429,7 +399,7 @@ export default function Kanban({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 type="text"
-                placeholder="Search all cards"
+                placeholder={t('kanban.searchPlaceholder')}
                 className="w-64 rounded-full border-2 border-dark-surface-3 bg-dark-surface-2 px-4 py-2 pl-9 text-small font-semibold text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
               />
               <span className="absolute top-1/2 left-3 -translate-y-1/2 text-dark-secondary">
@@ -438,7 +408,7 @@ export default function Kanban({
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xsmall text-white/20">
-                {boards.length} boards
+                {t('kanban.boardCount', { count: boards.length })}
               </span>
             </div>
           </header>
@@ -505,7 +475,7 @@ export default function Kanban({
                       className="flex h-fit w-70 shrink-0 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-dark-surface-3 py-6 text-small font-semibold text-dark-surface-3 transition hover:border-dark-secondary hover:text-dark-secondary"
                     >
                       <AddIcon />
-                      Add board
+                      {t('kanban.addBoard')}
                     </button>
                   )}
 

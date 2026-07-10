@@ -1,6 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import React, { useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type UploadImage = (file: File) => Promise<string>;
 
@@ -11,6 +12,7 @@ const ImageBlock = ({
   editor,
   extension,
 }: NodeViewProps): React.ReactElement => {
+  const { t } = useTranslation();
   const { src, alt } = node.attrs as { src: string | null; alt: string | null };
   const [urlDraft, setUrlDraft] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -27,7 +29,7 @@ const ImageBlock = ({
       const url = await uploadImage(file);
       updateAttributes({ src: url });
     } catch {
-      setError('Upload failed — try again.');
+      setError(t('notes.imageUploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -38,7 +40,9 @@ const ImageBlock = ({
       <NodeViewWrapper data-type="image">
         <div className="rounded-lg border border-dashed border-dark-border bg-dark-surface-2 p-4">
           {uploading ? (
-            <div className="text-small text-dark-secondary">Uploading…</div>
+            <div className="text-small text-dark-secondary">
+              {t('notes.uploadingImage')}
+            </div>
           ) : (
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -47,16 +51,16 @@ const ImageBlock = ({
                   onClick={() => fileInputRef.current?.click()}
                   className="rounded-md bg-dark-surface-3 px-2.5 py-1 text-xsmall font-medium text-dark-primary hover:bg-dark-input-focus"
                 >
-                  Upload an image
+                  {t('notes.uploadImage')}
                 </button>
                 <span className="text-xsmall text-dark-secondary">
-                  or paste an image URL
+                  {t('notes.orPasteImageUrl')}
                 </span>
               </div>
               <input
                 type="url"
                 value={urlDraft}
-                placeholder="https://…"
+                placeholder={t('notes.imageUrlPlaceholder')}
                 onChange={(e) => setUrlDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && urlDraft.trim()) {
@@ -101,7 +105,7 @@ const ImageBlock = ({
             onClick={deleteNode}
             className="absolute top-1.5 right-1.5 hidden rounded-md bg-dark-surface-1/80 px-2 py-1 text-xsmall text-dark-secondary group-hover:block hover:text-dark-primary"
           >
-            Remove
+            {t('notes.remove')}
           </button>
         )}
       </div>

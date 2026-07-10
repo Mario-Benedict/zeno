@@ -1,3 +1,5 @@
+import type { TranslationKey } from '@/i18n/dictionary';
+import { AVATAR_COLOR_HEX } from '@/lib/projectAvatar';
 import type { KanbanBoardCardChecklist } from '@/types/kanban';
 
 // ─── Display helpers ─────────────────────────────────────────────────────────
@@ -16,35 +18,70 @@ export const generateInitials = (name: string | null | undefined): string => {
 
 // ─── Color palettes ──────────────────────────────────────────────────────────
 
-export const MEMBER_COLORS = [
-  '#8E24AA',
-  '#F57C00',
-  '#00897B',
-  '#D32F2F',
-  '#3949AB',
-];
+// Deterministic per-member colour, not positional (a member always gets the
+// same colour regardless of where they sort in whatever list is rendering
+// them) and not random (drawn from the same tailwind.config.js `accent.*`
+// palette as project avatars — see lib/projectAvatar.ts).
+const MEMBER_COLOR_KEYS = [
+  'accent-red',
+  'accent-orange',
+  'accent-yellow',
+  'accent-lime',
+  'accent-green',
+  'accent-cyan',
+  'accent-blue',
+  'accent-purple',
+  'accent-pink',
+  'accent-brown',
+] as const;
 
-export const LABEL_COLORS: { name: string; hex: string }[] = [
-  { name: 'red', hex: '#D32F2F' },
-  { name: 'orange', hex: '#F57C00' },
-  { name: 'yellow', hex: '#FBC02D' },
-  { name: 'lime', hex: '#7CB342' },
-  { name: 'green', hex: '#00897B' },
-  { name: 'cyan', hex: '#0288D1' },
-  { name: 'blue', hex: '#3949AB' },
-  { name: 'purple', hex: '#8E24AA' },
-  { name: 'pink', hex: '#C2185B' },
-  { name: 'brown', hex: '#8D6E63' },
-  { name: 'red-light', hex: '#FFB3B3' },
-  { name: 'orange-light', hex: '#FFD1A1' },
-  { name: 'yellow-light', hex: '#FFF0B3' },
-  { name: 'lime-light', hex: '#DCEDC8' },
-  { name: 'green-light', hex: '#B2DFDB' },
-  { name: 'cyan-light', hex: '#B3E5FC' },
-  { name: 'blue-light', hex: '#C5CAE9' },
-  { name: 'purple-light', hex: '#E1BEE7' },
-  { name: 'pink-light', hex: '#F8BBD0' },
-  { name: 'brown-light', hex: '#D7CCC8' },
+export const memberColor = (id: number | string): string => {
+  const numeric =
+    typeof id === 'number'
+      ? id
+      : Array.from(id).reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  const key = MEMBER_COLOR_KEYS[Math.abs(numeric) % MEMBER_COLOR_KEYS.length];
+
+  return AVATAR_COLOR_HEX[key];
+};
+
+export const LABEL_COLORS: {
+  id: string;
+  hex: string;
+  labelKey: TranslationKey;
+}[] = [
+  { id: 'red', hex: '#D32F2F', labelKey: 'kanban.colorRed' },
+  { id: 'orange', hex: '#F57C00', labelKey: 'kanban.colorOrange' },
+  { id: 'yellow', hex: '#FBC02D', labelKey: 'kanban.colorYellow' },
+  { id: 'lime', hex: '#7CB342', labelKey: 'kanban.colorLime' },
+  { id: 'green', hex: '#00897B', labelKey: 'kanban.colorGreen' },
+  { id: 'cyan', hex: '#0288D1', labelKey: 'kanban.colorCyan' },
+  { id: 'blue', hex: '#3949AB', labelKey: 'kanban.colorBlue' },
+  { id: 'purple', hex: '#8E24AA', labelKey: 'kanban.colorPurple' },
+  { id: 'pink', hex: '#C2185B', labelKey: 'kanban.colorPink' },
+  { id: 'brown', hex: '#8D6E63', labelKey: 'kanban.colorBrown' },
+  { id: 'red-light', hex: '#FFB3B3', labelKey: 'kanban.colorRedLight' },
+  {
+    id: 'orange-light',
+    hex: '#FFD1A1',
+    labelKey: 'kanban.colorOrangeLight',
+  },
+  {
+    id: 'yellow-light',
+    hex: '#FFF0B3',
+    labelKey: 'kanban.colorYellowLight',
+  },
+  { id: 'lime-light', hex: '#DCEDC8', labelKey: 'kanban.colorLimeLight' },
+  { id: 'green-light', hex: '#B2DFDB', labelKey: 'kanban.colorGreenLight' },
+  { id: 'cyan-light', hex: '#B3E5FC', labelKey: 'kanban.colorCyanLight' },
+  { id: 'blue-light', hex: '#C5CAE9', labelKey: 'kanban.colorBlueLight' },
+  {
+    id: 'purple-light',
+    hex: '#E1BEE7',
+    labelKey: 'kanban.colorPurpleLight',
+  },
+  { id: 'pink-light', hex: '#F8BBD0', labelKey: 'kanban.colorPinkLight' },
+  { id: 'brown-light', hex: '#D7CCC8', labelKey: 'kanban.colorBrownLight' },
 ];
 
 // ─── Progress / formatting ───────────────────────────────────────────────────

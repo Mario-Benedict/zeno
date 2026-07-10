@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath } from '@/lib/accountRoutes';
 import type { User } from '@/types/auth';
 import { FieldLabel, SavedBadge, getInitials, inputClass } from './shared';
@@ -12,6 +13,7 @@ const ProfileTab = ({
   user: User | null;
   accountIndex: number;
 }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState(user?.name ?? '');
   const [prevUserName, setPrevUserName] = useState(user?.name);
   const [saving, setSaving] = useState(false);
@@ -32,7 +34,7 @@ const ProfileTab = ({
     if (!hasChanged || saving) return;
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Name is required.');
+      setError(t('projectSettingsTabs.nameRequired'));
       return;
     }
     setSaving(true);
@@ -48,7 +50,7 @@ const ProfileTab = ({
         },
         onError: (errs) => {
           setError(
-            (errs.name as string | undefined) ?? 'Something went wrong.',
+            (errs.name as string | undefined) ?? t('common.somethingWentWrong'),
           );
         },
         onFinish: () => setSaving(false),
@@ -59,7 +61,7 @@ const ProfileTab = ({
   return (
     <div>
       <h3 className="mb-5 text-normal font-semibold text-dark-primary">
-        Profile
+        {t('projectSettingsTabs.profile')}
       </h3>
       <div className="mb-6 flex items-center gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-blue text-large font-bold text-white">
@@ -76,7 +78,7 @@ const ProfileTab = ({
       </div>
       <form onSubmit={handleSave} className="space-y-5">
         <div>
-          <FieldLabel>Display name</FieldLabel>
+          <FieldLabel>{t('projectSettingsTabs.displayName')}</FieldLabel>
           <input
             type="text"
             value={name}
@@ -85,7 +87,7 @@ const ProfileTab = ({
               setError(null);
             }}
             maxLength={255}
-            placeholder="Your name"
+            placeholder={t('projectSettingsTabs.yourNamePlaceholder')}
             className={inputClass}
           />
           {error && (
@@ -93,23 +95,23 @@ const ProfileTab = ({
           )}
         </div>
         <div>
-          <FieldLabel>Email address</FieldLabel>
+          <FieldLabel>{t('projectSettingsTabs.emailAddress')}</FieldLabel>
           <div className="flex items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-3 px-3 py-2.5">
             <span className="flex-1 text-small text-dark-primary">
               {user?.email}
             </span>
             {user?.email_verified_at ? (
               <span className="rounded-full bg-status-success/15 px-2 py-0.5 text-micro font-semibold text-status-success">
-                Verified
+                {t('projectSettingsTabs.verified')}
               </span>
             ) : (
               <span className="rounded-full bg-status-warning/15 px-2 py-0.5 text-micro font-semibold text-status-warning">
-                Unverified
+                {t('projectSettingsTabs.unverified')}
               </span>
             )}
           </div>
           <p className="mt-1.5 text-xsmall text-dark-secondary">
-            Email cannot be changed here.
+            {t('projectSettingsTabs.emailCannotBeChanged')}
           </p>
         </div>
         <div className="flex items-center gap-3 pt-1">
@@ -118,7 +120,7 @@ const ProfileTab = ({
             disabled={saving || !hasChanged}
             className="rounded-lg bg-dark-primary px-4 py-2 text-small font-semibold text-dark-surface-1 transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {saving ? 'Saving…' : 'Save changes'}
+            {saving ? t('common.saving') : t('projectSettingsTabs.saveChanges')}
           </button>
           <SavedBadge visible={saved} />
         </div>

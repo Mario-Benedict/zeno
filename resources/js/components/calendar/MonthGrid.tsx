@@ -1,3 +1,6 @@
+import { useTranslation } from '@/hooks/useTranslation';
+import { useWheelStepNavigation } from '@/hooks/useWheelStepNavigation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 import { MonthDayCell } from './MonthDayCell';
 
@@ -7,9 +10,19 @@ interface MonthGridProps {
   members: CalendarMember[];
   onDateClick: (date: Date) => void;
   onEventClick: (event: AnyCalendarEvent) => void;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
 }
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_KEYS: TranslationKey[] = [
+  'calendar.daySun',
+  'calendar.dayMon',
+  'calendar.dayTue',
+  'calendar.dayWed',
+  'calendar.dayThu',
+  'calendar.dayFri',
+  'calendar.daySat',
+];
 
 export const MonthGrid = ({
   currentDate,
@@ -17,9 +30,19 @@ export const MonthGrid = ({
   members,
   onDateClick,
   onEventClick,
+  onPrevMonth,
+  onNextMonth,
 }: MonthGridProps) => {
+  const { t } = useTranslation();
   const viewYear = currentDate.getFullYear();
   const viewMonth = currentDate.getMonth();
+
+  // Scrolling anywhere over the month grid steps to the prev/next month —
+  // the grid has no scrollable content of its own to conflict with.
+  const containerRef = useWheelStepNavigation<HTMLDivElement>({
+    onPrev: onPrevMonth,
+    onNext: onNextMonth,
+  });
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -48,14 +71,17 @@ export const MonthGrid = ({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-dark-border bg-dark-surface-1">
+    <div
+      ref={containerRef}
+      className="flex h-full flex-col overflow-hidden rounded-xl border border-dark-border bg-dark-surface-1"
+    >
       <div className="grid grid-cols-7 border-b border-dark-border">
-        {DAYS.map((d, i) => (
+        {DAY_KEYS.map((key, i) => (
           <div
             key={i}
             className="py-2.5 text-center text-xsmall font-semibold tracking-wider text-dark-secondary uppercase"
           >
-            {d}
+            {t(key)}
           </div>
         ))}
       </div>

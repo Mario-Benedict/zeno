@@ -31,19 +31,15 @@ export default {
             },
             colors: {
                 // --- DARK MODE ---
-                dark: {
-                    surface: {
-                        1: '#111111',
-                        2: '#242424',
-                        3: '#2E2E2E',
-                    },
-                    primary: '#F0F0F0',
-                    secondary: '#7B7B7B',
-                    border: '#3A3A3A',
-                    'border-focus': '#4A4A4A',
-                    input: '#2A2A2A',
-                    'input-focus': '#313131',
-                },
+                // NOTE: the `dark.*` palette is intentionally NOT declared here.
+                // It's declared as native CSS custom properties in the `@theme`
+                // block in resources/css/app.css, so utility classes emit
+                // `var(--color-dark-*)` instead of a literal hex value — that's
+                // what lets `html.light-mode`'s variable overrides in app.css
+                // actually recolor the UI. Adding a `dark` key back here would
+                // make Tailwind's `@config` compat layer bake literal hex again
+                // and silently break light mode. See the comment above that
+                // `@theme` block for the full explanation.
 
                 // --- LIGHT MODE ---
                 light: {
@@ -54,6 +50,24 @@ export default {
                     },
                     primary: '#2D2D2D',
                     secondary: '#B0B0B0',
+                },
+
+                // --- STATIC DARK ---
+                // A handful of header icon buttons (bell, people, gear, the
+                // account/project switcher triggers) are meant to stay a dark
+                // rounded chip in both themes rather than following the
+                // adaptive `dark.*` tokens (which intentionally flip to light
+                // colors in light mode — see the `@theme` comment in app.css).
+                // These are literal hex, same technique as `light.*` above and
+                // `.prose-note` in app.css, matching dark mode's default
+                // `--color-dark-surface-*` / `--color-dark-primary` values.
+                'static-dark': {
+                    surface: {
+                        2: '#242424',
+                        3: '#2E2E2E',
+                    },
+                    primary: '#F0F0F0',
+                    secondary: '#7B7B7B',
                 },
 
                 // --- ACCENT COLORS ---

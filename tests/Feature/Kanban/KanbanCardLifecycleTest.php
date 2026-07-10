@@ -109,6 +109,101 @@ it('sets and clears the card start and due dates', function () {
     ]);
 });
 
+it('reorders cards within the same board', function () {
+    /** @var mixed $this */
+    $first = createCard($this->board, 'First');
+    $second = KanbanBoardCard::create([
+        'kanban_board_id' => $this->board->kanban_board_id,
+        'position' => 1,
+        'kanban_board_card_title' => 'Second',
+        'is_completed' => false,
+    ]);
+    $third = KanbanBoardCard::create([
+        'kanban_board_id' => $this->board->kanban_board_id,
+        'position' => 2,
+        'kanban_board_card_title' => 'Third',
+        'is_completed' => false,
+    ]);
+
+    // Move the last card to the front of the same board.
+    $this->actingAs($this->user)
+        ->patch(kanbanUrl($this->project, "kanban/boards/{$this->board->kanban_board_id}/cards/{$third->kanban_board_card_id}/move"), [
+            'board_id' => $this->board->kanban_board_id,
+            'position' => 0,
+        ])
+        ->assertRedirect();
+
+    // The move must not corrupt (or null out) any card's title — this is the
+    // exact failure mode of the upsert bug this test guards against.
+    $this->assertDatabaseHas('kanban_board_cards', [
+        'kanban_board_card_id' => $third->kanban_board_card_id,
+        'position' => 0,
+        'kanban_board_card_title' => 'Third',
+    ]);
+    $this->assertDatabaseHas('kanban_board_cards', [
+        'kanban_board_card_id' => $first->kanban_board_card_id,
+        'position' => 1,
+        'kanban_board_card_title' => 'First',
+    ]);
+    $this->assertDatabaseHas('kanban_board_cards', [
+        'kanban_board_card_id' => $second->kanban_board_card_id,
+        'position' => 2,
+        'kanban_board_card_title' => 'Second',
+    ]);
+});
+
+it('moves a card to a different board and repacks both columns', function () {
+    /** @var mixed $this */
+    $sourceCardA = createCard($this->board, 'Stays behind');
+    $movingCard = KanbanBoardCard::create([
+        'kanban_board_id' => $this->board->kanban_board_id,
+        'position' => 1,
+        'kanban_board_card_title' => 'Moving card',
+        'is_completed' => false,
+    ]);
+
+    $otherBoard = KanbanBoard::create([
+        'kanban_board_project_id' => $this->project->project_id,
+        'kanban_board_name' => 'In Progress',
+        'kanban_board_position' => 1,
+    ]);
+    $destCard = KanbanBoardCard::create([
+        'kanban_board_id' => $otherBoard->kanban_board_id,
+        'position' => 0,
+        'kanban_board_card_title' => 'Already there',
+        'is_completed' => false,
+    ]);
+
+    $this->actingAs($this->user)
+        ->patch(kanbanUrl($this->project, "kanban/boards/{$this->board->kanban_board_id}/cards/{$movingCard->kanban_board_card_id}/move"), [
+            'board_id' => $otherBoard->kanban_board_id,
+            'position' => 0,
+        ])
+        ->assertRedirect();
+
+    // Moved card now belongs to the destination board, title intact.
+    $this->assertDatabaseHas('kanban_board_cards', [
+        'kanban_board_card_id' => $movingCard->kanban_board_card_id,
+        'kanban_board_id' => $otherBoard->kanban_board_id,
+        'position' => 0,
+        'kanban_board_card_title' => 'Moving card',
+    ]);
+    // The card already on the destination board got pushed down, unharmed.
+    $this->assertDatabaseHas('kanban_board_cards', [
+        'kanban_board_card_id' => $destCard->kanban_board_card_id,
+        'kanban_board_id' => $otherBoard->kanban_board_id,
+        'position' => 1,
+        'kanban_board_card_title' => 'Already there',
+    ]);
+    // Source board is repacked with no gap left behind.
+    $this->assertDatabaseHas('kanban_board_cards', [
+        'kanban_board_card_id' => $sourceCardA->kanban_board_card_id,
+        'kanban_board_id' => $this->board->kanban_board_id,
+        'position' => 0,
+        'kanban_board_card_title' => 'Stays behind',
+    ]);
+});
+
 it('creates a project label with a color and attaches it to the card', function () {
     /** @var mixed $this */
     $card = createCard($this->board);

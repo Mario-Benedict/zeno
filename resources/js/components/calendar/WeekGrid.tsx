@@ -1,4 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useWheelStepNavigation } from '@/hooks/useWheelStepNavigation';
+import type { TranslationKey } from '@/i18n/dictionary';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 import { WeekEventCard } from './WeekEventCard';
 
@@ -8,9 +11,19 @@ interface WeekGridProps {
   members: CalendarMember[];
   onDateClick: (date: Date) => void;
   onEventClick: (event: AnyCalendarEvent) => void;
+  onPrevWeek: () => void;
+  onNextWeek: () => void;
 }
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_KEYS: TranslationKey[] = [
+  'calendar.daySun',
+  'calendar.dayMon',
+  'calendar.dayTue',
+  'calendar.dayWed',
+  'calendar.dayThu',
+  'calendar.dayFri',
+  'calendar.daySat',
+];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const HOUR_HEIGHT = 60; // px per hour
 const GRID_HEIGHT = HOUR_HEIGHT * 24;
@@ -23,8 +36,19 @@ export const WeekGrid = ({
   members,
   onDateClick,
   onEventClick,
+  onPrevWeek,
+  onNextWeek,
 }: WeekGridProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
+  // Scrolling the hour grid works normally (browsing hours within the visible
+  // week); only once it's already scrolled to the very top or bottom does
+  // scrolling further step to the previous/next week, so this never fights
+  // with the grid's own vertical scroll.
+  const scrollRef = useWheelStepNavigation<HTMLDivElement>({
+    onPrev: onPrevWeek,
+    onNext: onNextWeek,
+    requireScrollBoundary: true,
+  });
 
   const startOfWeek = new Date(currentDate);
   startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
@@ -160,7 +184,7 @@ export const WeekGrid = ({
                       isToday ? 'text-white/90' : 'text-dark-secondary'
                     }`}
                   >
-                    {DAYS[d.getDay()]}
+                    {t(DAY_KEYS[d.getDay()])}
                   </span>
                   <span className="text-large font-bold">{d.getDate()}</span>
                 </div>

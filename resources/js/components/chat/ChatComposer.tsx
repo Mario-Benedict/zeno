@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { useCallback, useRef, useState } from 'react';
 import echo from '@/echo';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatFileSize } from '@/lib/utils';
 import chat from '@/routes/chat';
 import type { ChatMessage } from '@/types/chat';
@@ -142,6 +143,7 @@ const ChatComposer = ({
   onMessageSent,
   disabled = false,
 }: Props) => {
+  const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
   const [body, setBody] = useState('');
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
@@ -167,7 +169,7 @@ const ChatComposer = ({
       for (const file of Array.from(list)) {
         if (pendingFiles.length + toAdd.length >= 10) break;
         if (file.size > MAX_SIZE) {
-          setError(`"${file.name}" melebihi batas 50 MB.`);
+          setError(t('chat.fileExceedsSizeLimit', { name: file.name }));
           continue;
         }
         const type = getAttachmentType(file);
@@ -177,7 +179,7 @@ const ChatComposer = ({
       }
       setPendingFiles((prev) => [...prev, ...toAdd]);
     },
-    [pendingFiles.length],
+    [pendingFiles.length, t],
   );
 
   const removeFile = useCallback((id: string) => {
@@ -237,7 +239,7 @@ const ChatComposer = ({
           textareaRef.current?.focus();
         },
         onError: (errors) => {
-          setError(Object.values(errors)[0] ?? 'Gagal mengirim pesan.');
+          setError(Object.values(errors)[0] ?? t('chat.failedToSendMessage'));
         },
         onFinish: () => setSending(false),
       },
@@ -251,6 +253,7 @@ const ChatComposer = ({
     projectSlug,
     roomId,
     onMessageSent,
+    t,
   ]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -299,7 +302,7 @@ const ChatComposer = ({
             adjustHeight();
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message"
+          placeholder={t('chat.typeAMessage')}
           disabled={isDisabled}
           rows={1}
           className="flex-1 resize-none bg-transparent text-small leading-normal text-dark-primary placeholder:text-dark-secondary focus:outline-none disabled:opacity-50"
@@ -311,7 +314,7 @@ const ChatComposer = ({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isDisabled}
-            title="Attach file"
+            title={t('chat.attachFile')}
             className="p-1 text-dark-secondary transition-colors hover:text-dark-primary disabled:opacity-40"
           >
             <PaperclipIcon className="h-4.5 w-4.5" />
@@ -321,7 +324,7 @@ const ChatComposer = ({
             type="button"
             onClick={send}
             disabled={!canSend}
-            title="Send"
+            title={t('chat.send')}
             className={[
               'flex h-8 w-8 items-center justify-center rounded-full transition-all',
               canSend

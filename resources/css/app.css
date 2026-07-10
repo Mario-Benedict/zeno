@@ -4,12 +4,33 @@
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
+/* ─── Dark-mode palette — native CSS custom properties, not @config JS ──────
+   Tailwind v4's `@config` compatibility layer bakes JS `theme.extend.colors`
+   values into *literal* hex per utility class (e.g. `.bg-dark-surface-1 {
+   background-color: #111111 }`), not `var(--color-*)` references. That meant
+   the `html.light-mode` variable overrides below never had any effect: the
+   variable existed, but nothing consumed it. Declaring these colors via a
+   native `@theme` block instead makes Tailwind emit them as
+   `var(--color-dark-surface-1)`, so the light-mode override actually recolors
+   every `bg-dark-*`/`text-dark-*`/`border-dark-*` utility at runtime. Keep
+   this namespace's source of truth here, not in tailwind.config.js.
+   ─────────────────────────────────────────────────────────────────────────── */
 @theme {
   --header-height: 3rem; /* 48px — matches h-12, used for sidebar viewport calc */
 
   --font-sans:
     'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  --color-dark-surface-1: #111111;
+  --color-dark-surface-2: #242424;
+  --color-dark-surface-3: #2e2e2e;
+  --color-dark-primary: #f0f0f0;
+  --color-dark-secondary: #7b7b7b;
+  --color-dark-border: #3a3a3a;
+  --color-dark-border-focus: #4a4a4a;
+  --color-dark-input: #2a2a2a;
+  --color-dark-input-focus: #313131;
 }
 
 @font-face {

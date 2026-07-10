@@ -8,6 +8,7 @@ import {
   ReminderList,
 } from '@/components/reminders';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import pomodoro from '@/routes/pomodoro';
 import reminders from '@/routes/reminders';
@@ -29,6 +30,7 @@ export default function RemindersPage({
   reminders: initialReminders,
   pomodoroSettings,
 }: RemindersPageProps) {
+  const { t } = useTranslation();
   const { project, accountIndex } = useProject();
   const [reminderList, setReminderList] =
     useState<Reminder[]>(initialReminders);
@@ -121,7 +123,7 @@ export default function RemindersPage({
             prev.filter((r) => r.reminder_id !== reminderId),
           );
           console.error('Failed to add reminder', errors);
-          alert('Failed to create reminder.');
+          alert(t('common.somethingWentWrong'));
         },
       },
     );
@@ -296,7 +298,7 @@ export default function RemindersPage({
 
   return (
     <AppLayout project={project}>
-      <Head title={`Reminders - ${project.project_name}`} />
+      <Head title={`${t('reminders.title')} - ${project.project_name}`} />
 
       <div className="flex h-full w-full gap-3 overflow-hidden">
         <ReminderList

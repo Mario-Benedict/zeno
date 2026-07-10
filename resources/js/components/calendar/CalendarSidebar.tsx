@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type {
-  CalendarMember,
   AnyCalendarEvent,
+  CalendarMember,
   CalendarViewMode,
-  CalendarPriority,
 } from '@/types/calendar';
+import type { CardLabel } from '@/types/kanban';
 import { MiniCalendar } from './MiniCalendar';
 
 interface CalendarSidebarProps {
@@ -20,15 +21,10 @@ interface CalendarSidebarProps {
   members: CalendarMember[];
   onToggleMember: (id: number) => void;
   events: AnyCalendarEvent[];
-  hiddenPriorities: Set<CalendarPriority>;
-  onTogglePriority: (priority: CalendarPriority) => void;
+  cardLabels: CardLabel[];
+  hiddenLabelIds: Set<string>;
+  onToggleLabel: (labelId: string) => void;
 }
-
-const PRIORITIES: { key: CalendarPriority; label: string; dot: string }[] = [
-  { key: 'low', label: 'Low', dot: 'bg-status-success' },
-  { key: 'mid', label: 'Mid', dot: 'bg-status-warning' },
-  { key: 'high', label: 'High', dot: 'bg-status-error' },
-];
 
 const PlusIcon = () => (
   <svg
@@ -91,9 +87,11 @@ export const CalendarSidebar = ({
   members,
   onToggleMember,
   events,
-  hiddenPriorities,
-  onTogglePriority,
+  cardLabels,
+  hiddenLabelIds,
+  onToggleLabel,
 }: CalendarSidebarProps) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
 
   const filteredMembers = members.filter((m) =>
@@ -110,16 +108,16 @@ export const CalendarSidebar = ({
             className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-dark-primary px-4 py-2 text-small font-semibold text-dark-surface-1 transition hover:opacity-90"
           >
             <PlusIcon />
-            Create
+            {t('calendar.create')}
           </button>
           <button
             onClick={() =>
               onViewModeChange(viewMode === 'month' ? 'week' : 'month')
             }
-            title="Switch month / week view"
+            title={t('calendar.switchView')}
             className="flex items-center gap-2 rounded-full border border-dark-border bg-dark-surface-3 px-3 py-2 text-small font-semibold text-dark-primary transition hover:bg-dark-border"
           >
-            {viewMode === 'month' ? 'Month' : 'Week'}
+            {viewMode === 'month' ? t('calendar.month') : t('calendar.week')}
             <span
               role="button"
               tabIndex={-1}
@@ -127,7 +125,7 @@ export const CalendarSidebar = ({
                 e.stopPropagation();
                 if (!isLoading) onRefresh();
               }}
-              title="Refresh"
+              title={t('calendar.refresh')}
               className="text-dark-secondary transition hover:text-dark-primary"
             >
               <RefreshIcon spinning={isLoading} />
@@ -143,31 +141,40 @@ export const CalendarSidebar = ({
           events={events}
         />
 
-        <div className="mt-3 flex items-center justify-center gap-2 border-t border-dark-border pt-3">
-          {PRIORITIES.map((p) => {
-            const active = !hiddenPriorities.has(p.key);
+        {cardLabels.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 border-t border-dark-border pt-3">
+            {cardLabels.map((label) => {
+              const active = !hiddenLabelIds.has(label.card_label_id);
 
-            return (
-              <button
-                key={p.key}
-                onClick={() => onTogglePriority(p.key)}
-                title={
-                  active
-                    ? `Hide ${p.label} priority`
-                    : `Show ${p.label} priority`
-                }
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xsmall font-medium transition ${
-                  active
-                    ? 'border-dark-border bg-dark-surface-3 text-dark-primary'
-                    : 'border-transparent bg-transparent text-dark-secondary/60 line-through'
-                }`}
-              >
-                <span className={`h-2.5 w-2.5 rounded-full ${p.dot}`} />
-                {p.label}
-              </button>
-            );
-          })}
-        </div>
+              return (
+                <button
+                  key={label.card_label_id}
+                  onClick={() => onToggleLabel(label.card_label_id)}
+                  title={
+                    active
+                      ? t('calendar.hideLabel', {
+                          label: label.card_label_name,
+                        })
+                      : t('calendar.showLabel', {
+                          label: label.card_label_name,
+                        })
+                  }
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xsmall font-medium transition ${
+                    active
+                      ? 'border-dark-border bg-dark-surface-3 text-dark-primary'
+                      : 'border-transparent bg-transparent text-dark-secondary/60 line-through'
+                  }`}
+                >
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: label.card_label_color_hex }}
+                  />
+                  {label.card_label_name}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* --- Bottom card: people search + member list --- */}
@@ -178,7 +185,7 @@ export const CalendarSidebar = ({
           </span>
           <input
             type="text"
-            placeholder="Search for people"
+            placeholder={t('calendar.searchForPeople')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-full border border-dark-border bg-dark-surface-1 py-2 pr-9 pl-10 text-small text-dark-primary transition outline-none placeholder:text-dark-secondary focus:border-dark-border-focus"
@@ -253,7 +260,7 @@ export const CalendarSidebar = ({
             ))}
             {filteredMembers.length === 0 && (
               <p className="py-4 text-center text-small text-dark-secondary">
-                No members found.
+                {t('calendar.noMembersFound')}
               </p>
             )}
           </div>

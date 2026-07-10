@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ChatRoomItem from '@/components/chat/ChatRoomItem';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatRoom, ChatParticipant } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
 import SearchIcon from '@public/icons/small/search.svg';
@@ -17,12 +18,16 @@ const ChatSidebar = ({
   activeRoomId,
   onSelectRoom,
 }: Props) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
 
   const hasQuery = query.trim().length > 0;
 
   const filtered = rooms.filter((r) => {
-    const nameMatch = getRoomDisplayName(r, currentUser)
+    const nameMatch = getRoomDisplayName(r, currentUser, {
+      group: t('chat.groupFallback'),
+      directMessage: t('chat.directMessageFallback'),
+    })
       .toLowerCase()
       .includes(query.toLowerCase());
     if (!nameMatch) return false;
@@ -39,7 +44,7 @@ const ChatSidebar = ({
           <SearchIcon className="h-3.5 w-3.5 shrink-0 text-dark-secondary" />
           <input
             type="text"
-            placeholder="Search chat"
+            placeholder={t('chat.searchChatPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-transparent text-small text-dark-primary placeholder:text-dark-secondary focus:outline-none"
@@ -61,7 +66,7 @@ const ChatSidebar = ({
 
         {filtered.length === 0 && (
           <p className="px-4 py-6 text-center text-xsmall text-dark-secondary">
-            No chats found
+            {t('chat.noChatsFound')}
           </p>
         )}
       </nav>

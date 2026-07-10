@@ -4,15 +4,19 @@ namespace App\Http\Requests\Calendar;
 
 use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCalendarEventRequest extends FormRequest
 {
+    private ?Project $project = null;
+
     public function authorize(): bool
     {
         $project = $this->resolveProject($this->route('project'));
         if (! $project instanceof Project) {
             return false;
         }
+        $this->project = $project;
 
         $user = $this->user();
         if (! $user) {
@@ -61,8 +65,15 @@ class StoreCalendarEventRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'start_time' => ['required', 'date'],
             'end_time' => ['required', 'date', 'after:start_time'],
-            'priority' => ['required', 'in:low,mid,high'],
-            'recurrence' => ['required', 'in:none,weekly'],
+            'label_ids' => ['sometimes', 'array'],
+            'label_ids.*' => [
+                'string',
+                'uuid',
+                Rule::exists('card_labels', 'card_label_id')
+                    ->where('card_label_project_id', $this->project?->project_id),
+            ],
+            'recurrence' => ['required', 'in:none,daily,weekly,monthly,yearly'],
+            'recurrence_end_date' => ['nullable', 'date', 'after_or_equal:start_time'],
             'participants' => ['required', 'array', 'min:1'],
             'participants.*' => ['required', 'integer', 'exists:users,id'],
         ];

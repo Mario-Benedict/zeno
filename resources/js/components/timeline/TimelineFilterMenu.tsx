@@ -1,6 +1,7 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CardLabel, KanbanBoard, KanbanUser } from '@/types/kanban';
 import type { TimelineFilters } from '@/types/timeline';
-import { generateInitials, MEMBER_COLORS } from '@/utils/kanban';
+import { generateInitials, memberColor } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 
 interface TimelineFilterMenuProps {
@@ -53,6 +54,7 @@ export const TimelineFilterMenu = ({
   filters,
   onChange,
 }: TimelineFilterMenuProps) => {
+  const { t } = useTranslation();
   const hasFilters =
     filters.labelIds.length > 0 ||
     filters.memberIds.length > 0 ||
@@ -61,7 +63,9 @@ export const TimelineFilterMenu = ({
   return (
     <div className="scrollbar-app absolute top-full right-0 z-40 mt-2 max-h-[70vh] w-64 overflow-y-auto rounded-xl border border-dark-border bg-dark-surface-2 p-3 shadow-2xl">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-small font-semibold text-white">Filter</span>
+        <span className="text-small font-semibold text-white">
+          {t('timeline.filter')}
+        </span>
         {hasFilters && (
           <button
             type="button"
@@ -70,14 +74,14 @@ export const TimelineFilterMenu = ({
             }
             className="text-xsmall text-white/40 transition hover:text-accent-red"
           >
-            Clear all
+            {t('timeline.clearAll')}
           </button>
         )}
       </div>
 
       {cardLabels.length > 0 && (
         <div className="mb-3">
-          <SectionLabel>Labels</SectionLabel>
+          <SectionLabel>{t('timeline.labels')}</SectionLabel>
           <div className="space-y-0.5">
             {cardLabels.map((label) => {
               const hex = label.card_label_color_hex ?? '#7B7B7B';
@@ -111,9 +115,9 @@ export const TimelineFilterMenu = ({
 
       {projectUsers.length > 0 && (
         <div className="mb-3">
-          <SectionLabel>Assignee</SectionLabel>
+          <SectionLabel>{t('timeline.assignee')}</SectionLabel>
           <div className="space-y-0.5">
-            {projectUsers.map((user, i) => (
+            {projectUsers.map((user) => (
               <FilterRow
                 key={user.id}
                 active={filters.memberIds.includes(user.id)}
@@ -128,7 +132,7 @@ export const TimelineFilterMenu = ({
                   <span
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-micro font-bold text-white"
                     style={{
-                      backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length],
+                      backgroundColor: memberColor(user.id),
                     }}
                   >
                     {generateInitials(user.name)}
@@ -145,7 +149,7 @@ export const TimelineFilterMenu = ({
 
       {boards.length > 0 && (
         <div>
-          <SectionLabel>Status</SectionLabel>
+          <SectionLabel>{t('timeline.status')}</SectionLabel>
           <div className="space-y-0.5">
             {boards.map((board) => (
               <FilterRow

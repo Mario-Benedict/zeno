@@ -5,6 +5,7 @@ import { TemplatePicker } from '@/components/dashboard/TemplatePicker';
 import type { TemplateId } from '@/components/dashboard/templates';
 import type { WidgetId } from '@/components/dashboard/widgets';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
@@ -43,6 +44,7 @@ export default function Dashboard({
   notesWidgetData,
 }: Props) {
   const { project, accountIndex } = useProject();
+  const { t } = useTranslation();
 
   // Local state mirrors the server setting so the picker→grid transition is
   // instant (optimistic) without waiting for the Inertia round-trip.
@@ -93,7 +95,7 @@ export default function Dashboard({
 
   return (
     <AppLayout project={project}>
-      <Head title={`Dashboard - ${project.project_name}`} />
+      <Head title={`${t('dashboard.title')} - ${project.project_name}`} />
 
       <div className="flex h-full w-full flex-col overflow-hidden bg-dark-surface-1">
         {templateId === null ? (

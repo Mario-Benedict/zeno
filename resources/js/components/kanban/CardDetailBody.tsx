@@ -1,3 +1,4 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatFileSize } from '@/lib/utils';
 import type { KanbanBoardCard, KanbanUser } from '@/types/kanban';
 import type { LocalAttachment } from '@/utils/attachmentStorage';
@@ -5,7 +6,7 @@ import { getFileEmoji } from '@/utils/attachmentStorage';
 import {
   calculateChecklistProgress,
   generateInitials,
-  MEMBER_COLORS,
+  memberColor,
 } from '@/utils/kanban';
 import ArrowRightIcon from '@public/icons/small/arrow_left.svg';
 import CloseIcon from '@public/icons/small/cancel.svg';
@@ -87,6 +88,7 @@ export const CardDetailBody = ({
   checklists,
   comments,
 }: CardDetailBodyProps) => {
+  const { t } = useTranslation();
   // Destructure desc properties to avoid ref access warnings
   const {
     editing: descEditing,
@@ -161,8 +163,9 @@ export const CardDetailBody = ({
         <div className="flex items-center gap-2">
           <AvatarStack members={card.members} />
           <span className="text-xsmall text-white/30">
-            {card.members.length} member
-            {card.members.length !== 1 ? 's' : ''}
+            {card.members.length === 1
+              ? t('kanban.memberCount', { count: card.members.length })
+              : t('kanban.membersCount', { count: card.members.length })}
           </span>
         </div>
       )}
@@ -174,7 +177,9 @@ export const CardDetailBody = ({
           {card.kanban_board_card_start_date && (
             <div className="flex items-center gap-1.5">
               <CalendarIcon className="h-3.5 w-3.5 text-white/30" />
-              <span className="text-xsmall text-white/40">Start</span>
+              <span className="text-xsmall text-white/40">
+                {t('kanban.startLabel')}
+              </span>
               <span className="text-xsmall font-medium text-white/60">
                 {new Date(card.kanban_board_card_start_date).toLocaleDateString(
                   'en-US',
@@ -202,7 +207,11 @@ export const CardDetailBody = ({
               <span
                 className={`text-xsmall font-medium ${isOverdue ? 'text-accent-red' : isDueSoon ? 'text-accent-yellow' : 'text-white/60'}`}
               >
-                {isOverdue ? 'Overdue · ' : isDueSoon ? 'Due soon · ' : ''}
+                {isOverdue
+                  ? t('kanban.overdue')
+                  : isDueSoon
+                    ? t('kanban.dueSoon')
+                    : ''}
                 {new Date(card.kanban_board_card_due_date).toLocaleDateString(
                   'en-US',
                   {
@@ -220,14 +229,14 @@ export const CardDetailBody = ({
       <div>
         <SectionHeader
           icon={<DescriptionIcon className="h-4 w-4" />}
-          label="Description"
+          label={t('kanban.description')}
           action={
             !descEditing && (
               <button
                 onClick={descOnEdit}
                 className="rounded px-2 py-0.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
               >
-                Edit
+                {t('common.edit')}
               </button>
             )
           }
@@ -239,7 +248,7 @@ export const CardDetailBody = ({
               value={descValue}
               onChange={(e) => descOnChange(e.target.value)}
               rows={5}
-              placeholder="Add a more detailed description..."
+              placeholder={t('kanban.descriptionPlaceholder')}
               className="scrollbar-app w-full resize-none rounded-xl border border-dark-border-focus bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed text-dark-primary placeholder-white/20 focus:outline-none"
             />
             <div className="mt-2 flex gap-2">
@@ -247,13 +256,13 @@ export const CardDetailBody = ({
                 onClick={descOnCommit}
                 className="hover:bg-opacity-90 rounded-lg bg-accent-blue px-3.5 py-1.5 text-xsmall font-semibold text-white transition"
               >
-                Save
+                {t('common.save')}
               </button>
               <button
                 onClick={descOnDiscard}
                 className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/50 transition hover:bg-white/5 hover:text-white"
               >
-                Discard
+                {t('kanban.discard')}
               </button>
             </div>
           </div>
@@ -268,7 +277,7 @@ export const CardDetailBody = ({
               </span>
             ) : (
               <span className="text-white/20">
-                Add a more detailed description...
+                {t('kanban.descriptionPlaceholder')}
               </span>
             )}
           </div>
@@ -280,7 +289,9 @@ export const CardDetailBody = ({
         <div>
           <SectionHeader
             icon={<PaperclipIcon className="h-4 w-4" />}
-            label={`Attachments (${totalAttachments})`}
+            label={t('kanban.attachmentsWithCount', {
+              count: totalAttachments,
+            })}
           />
           <div className="space-y-2">
             {card.attachments?.map((att) => (
@@ -331,14 +342,14 @@ export const CardDetailBody = ({
                   <button
                     onClick={() => attachmentsOnDownload(att)}
                     className="flex h-7 w-7 items-center justify-center rounded-lg text-xsmall text-white/30 transition hover:bg-white/10 hover:text-white"
-                    title="Download"
+                    title={t('kanban.download')}
                   >
                     ↓
                   </button>
                   <button
                     onClick={() => attachmentsOnDelete(att.id)}
                     className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:bg-accent-red/10 hover:text-accent-red"
-                    title="Delete"
+                    title={t('common.delete')}
                   >
                     <CloseIcon className="h-3 w-3" />
                   </button>
@@ -356,7 +367,7 @@ export const CardDetailBody = ({
           className="space-y-2 rounded-xl border border-dark-border bg-dark-surface-2 p-4"
         >
           <p className="mb-2 text-xsmall font-semibold text-white/40">
-            Add attachment
+            {t('kanban.addAttachment')}
           </p>
           <div
             onDragOver={(e) => {
@@ -379,10 +390,12 @@ export const CardDetailBody = ({
             <PaperclipIcon className="h-5 w-5" />
             <p className="text-center text-xsmall">
               {attachmentsUploading
-                ? 'Uploading...'
-                : 'Drop file here or click to select'}
+                ? t('kanban.uploading')
+                : t('kanban.dropFileHere')}
             </p>
-            <p className="text-xsmall text-white/20">Max 20 MB per file</p>
+            <p className="text-xsmall text-white/20">
+              {t('kanban.maxFileSize')}
+            </p>
           </div>
           <input
             ref={attachmentsFileInputRef}
@@ -398,7 +411,7 @@ export const CardDetailBody = ({
             onClick={attachmentsOnCancel}
             className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
       )}
@@ -426,7 +439,7 @@ export const CardDetailBody = ({
                 }
                 className="rounded px-2 py-0.5 text-xsmall text-white/20 transition hover:bg-accent-red/10 hover:text-accent-red"
               >
-                Delete
+                {t('kanban.deleteChecklist')}
               </button>
             </div>
 
@@ -515,7 +528,7 @@ export const CardDetailBody = ({
                     );
                   }
                 }}
-                placeholder="Add an item..."
+                placeholder={t('kanban.addAnItem')}
                 className="flex-1 rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-dark-primary placeholder-dark-secondary transition focus:border-dark-surface-3 focus:outline-none"
               />
               <button
@@ -524,7 +537,7 @@ export const CardDetailBody = ({
                 }
                 className="rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-white/50 transition hover:bg-dark-surface-3 hover:text-white"
               >
-                Add
+                {t('common.add')}
               </button>
             </div>
           </div>
@@ -535,7 +548,7 @@ export const CardDetailBody = ({
       {checklistsAdding && (
         <div className="space-y-2 rounded-xl border border-dark-border bg-dark-surface-2 p-4">
           <p className="mb-2 text-xsmall font-semibold text-white/40">
-            New checklist
+            {t('kanban.newChecklist')}
           </p>
           <input
             autoFocus
@@ -545,7 +558,7 @@ export const CardDetailBody = ({
               if (e.key === 'Enter') checklistsOnAdd();
               if (e.key === 'Escape') checklistsOnCancel();
             }}
-            placeholder="Checklist title..."
+            placeholder={t('kanban.checklistTitlePlaceholder')}
             className="w-full rounded-lg border border-dark-border-focus bg-dark-surface-1 px-3 py-2 text-small text-white placeholder-white/20 focus:outline-none"
           />
           <div className="flex gap-2">
@@ -554,13 +567,13 @@ export const CardDetailBody = ({
               disabled={checklistsSaving}
               className="hover:bg-opacity-90 rounded-lg bg-accent-blue px-3.5 py-1.5 text-xsmall font-semibold text-white transition disabled:opacity-50"
             >
-              Add Checklist
+              {t('kanban.addChecklist')}
             </button>
             <button
               onClick={checklistsOnCancel}
               className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </div>
@@ -572,13 +585,13 @@ export const CardDetailBody = ({
       <div>
         <SectionHeader
           icon={<CommentIcon className="h-4 w-4" />}
-          label="Activity"
+          label={t('kanban.activity')}
         />
 
         <div className="mt-4 mb-3 flex gap-3">
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xsmall font-bold text-white"
-            style={{ backgroundColor: MEMBER_COLORS[0] }}
+            style={{ backgroundColor: memberColor(currentUser.id) }}
           >
             {generateInitials(currentUser.name)}
           </div>
@@ -592,7 +605,7 @@ export const CardDetailBody = ({
                   commentsOnSubmit();
                 }
               }}
-              placeholder="Write a comment... (Enter to send)"
+              placeholder={t('kanban.commentPlaceholder')}
               rows={commentsNewComment ? 3 : 2}
               className="w-full resize-none rounded-xl border border-dark-border bg-dark-surface-2 px-3.5 py-2.5 text-small text-white placeholder-white/20 transition-all focus:border-dark-border-focus focus:outline-none"
             />
@@ -602,13 +615,13 @@ export const CardDetailBody = ({
                   onClick={commentsOnSubmit}
                   className="hover:bg-opacity-90 rounded-lg bg-accent-blue px-3.5 py-1.5 text-xsmall font-semibold text-white transition"
                 >
-                  Save
+                  {t('common.save')}
                 </button>
                 <button
                   onClick={commentsOnDiscard}
                   className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
                 >
-                  Discard
+                  {t('kanban.discard')}
                 </button>
               </div>
             )}
@@ -616,7 +629,7 @@ export const CardDetailBody = ({
         </div>
 
         <div className="space-y-4">
-          {(card.comments || []).map((comment, i) => (
+          {(card.comments || []).map((comment) => (
             <div
               key={comment.kanban_board_card_comment_id}
               className="group/comment flex gap-3"
@@ -624,13 +637,9 @@ export const CardDetailBody = ({
               <div
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xsmall font-bold text-white"
                 style={{
-                  backgroundColor:
-                    MEMBER_COLORS[
-                      (typeof comment.kanban_board_card_comment_from ===
-                      'number'
-                        ? comment.kanban_board_card_comment_from
-                        : i) % MEMBER_COLORS.length
-                    ],
+                  backgroundColor: memberColor(
+                    comment.kanban_board_card_comment_from,
+                  ),
                 }}
               >
                 {generateInitials(comment.user?.name || 'U')}
@@ -638,7 +647,7 @@ export const CardDetailBody = ({
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
                   <span className="text-xsmall font-semibold text-white/70">
-                    {comment.user?.name || 'User'}
+                    {comment.user?.name || t('common.unknown')}
                   </span>
                   <span className="text-xsmall text-white/20">
                     {new Date(comment.created_at).toLocaleDateString('en-US', {
@@ -667,7 +676,7 @@ export const CardDetailBody = ({
           ))}
           {!card.comments?.length && (
             <p className="py-4 text-center text-xsmall text-white/15">
-              No activity yet
+              {t('kanban.noActivityYet')}
             </p>
           )}
         </div>

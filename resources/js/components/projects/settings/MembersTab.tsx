@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
 import type {
   AssignableProjectRole,
@@ -34,6 +35,7 @@ const MembersTab = ({
   project: CurrentProject;
   accountIndex: number;
 }) => {
+  const { t } = useTranslation();
   const canManage = share?.can_manage_members ?? false;
   const roles =
     share?.assignable_roles ??
@@ -58,14 +60,18 @@ const MembersTab = ({
   return (
     <div>
       <div className="mb-5 flex items-center gap-2.5">
-        <h3 className="text-normal font-semibold text-dark-primary">Members</h3>
+        <h3 className="text-normal font-semibold text-dark-primary">
+          {t('projectSettingsTabs.members')}
+        </h3>
         <span className="rounded-md bg-dark-surface-3 px-2 py-0.5 text-xsmall font-semibold text-dark-secondary">
           {members.length}
         </span>
       </div>
 
       {members.length === 0 ? (
-        <p className="text-small text-dark-secondary">No members yet.</p>
+        <p className="text-small text-dark-secondary">
+          {t('projectSettingsTabs.noMembersYet')}
+        </p>
       ) : (
         <div className="space-y-0.5">
           {members.map((member) => {
@@ -85,7 +91,7 @@ const MembersTab = ({
                     {member.name}
                     {member.is_current_user && (
                       <span className="ml-1.5 font-normal text-dark-secondary">
-                        (you)
+                        ({t('projectSettingsTabs.you')})
                       </span>
                     )}
                   </p>
@@ -95,7 +101,7 @@ const MembersTab = ({
                 </div>
                 {isOwner ? (
                   <span className="rounded-md border border-dark-border px-2.5 py-1.5 text-xsmall font-medium text-dark-secondary">
-                    Owner
+                    {t('common.owner')}
                   </span>
                 ) : (
                   <RoleSelect
@@ -108,7 +114,9 @@ const MembersTab = ({
                 {canEdit && (
                   <button
                     type="button"
-                    aria-label={`Remove ${member.name}`}
+                    aria-label={t('projectSettingsTabs.removeMember', {
+                      name: member.name,
+                    })}
                     onClick={() => removeMember(member)}
                     className="flex h-8 w-8 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
                   >
@@ -122,9 +130,9 @@ const MembersTab = ({
       )}
 
       <div className="mt-5 rounded-lg border border-dark-border bg-dark-surface-1 px-4 py-3 text-small text-dark-secondary">
-        To invite new members, use the{' '}
-        <strong className="font-semibold text-dark-primary">People</strong> icon
-        in the top bar.
+        {t('projectSettingsTabs.inviteMembersHint', {
+          people: t('projectSettingsTabs.peopleIcon'),
+        })}
       </div>
     </div>
   );

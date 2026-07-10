@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useLocaleContext } from '@/i18n/LocaleContext';
+import GlobeIcon from '@public/icons/small/globe.svg';
 import { FieldLabel } from './shared';
 
 // ── Icons (stroke="currentColor" so they inherit the wrapper text color) ─
@@ -41,55 +43,86 @@ const SunIcon = () => (
   </svg>
 );
 
-// ── Theme helpers ─────────────────────────────────────────────────────────
+const EyeIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
 
-const getStoredTheme = (): 'dark' | 'light' => {
-  try {
-    return (localStorage.getItem('theme') as 'dark' | 'light') ?? 'dark';
-  } catch {
-    return 'dark';
-  }
-};
+const MaskIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M17 3.34a10 10 0 1 1-14.995 8.984" />
+    <path d="M9 9a3 3 0 1 0 6 0 3 3 0 0 0-6 0z" />
+    <path d="M14 3.223a10 10 0 0 1 5.777 5.777" />
+  </svg>
+);
 
-const applyTheme = (theme: 'dark' | 'light') => {
-  try {
-    localStorage.setItem('theme', theme);
-  } catch {
-    /* ignore */
-  }
-  if (theme === 'light') {
-    document.documentElement.classList.add('light-mode');
-  } else {
-    document.documentElement.classList.remove('light-mode');
-  }
-};
+const CircleIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <circle cx="12" cy="12" r="9" fill="currentColor" fillOpacity="0.25" />
+  </svg>
+);
 
 // ── PreferencesTab ────────────────────────────────────────────────────────
+//
+// Theme + locale + calendar visibility are all owned by `LocaleContext` (a
+// single source of truth shared with `app.tsx`'s pre-mount bootstrap), so
+// this component just reads and writes through it rather than keeping its
+// own copy of the state.
 
 const PreferencesTab = () => {
-  const [theme, setTheme] = useState<'dark' | 'light'>(getStoredTheme);
-
-  const handleTheme = (next: 'dark' | 'light') => {
-    setTheme(next);
-    applyTheme(next);
-  };
+  const { t } = useTranslation();
+  const {
+    locale,
+    setLocale,
+    theme,
+    setTheme,
+    calendarVisibility,
+    setCalendarVisibility,
+  } = useLocaleContext();
 
   return (
     <div>
       <h3 className="mb-5 text-normal font-semibold text-dark-primary">
-        Preferences
+        {t('projectSettings.preferencesTitle')}
       </h3>
       <div className="space-y-5">
         <div>
-          <FieldLabel>Appearance</FieldLabel>
+          <FieldLabel>{t('projectSettings.appearance')}</FieldLabel>
           <p className="mb-3 text-xsmall text-dark-secondary">
-            Choose how Zeno looks on this device.
+            {t('projectSettings.appearanceHint')}
           </p>
           <div className="grid grid-cols-2 gap-3">
             {/* Dark option */}
             <button
               type="button"
-              onClick={() => handleTheme('dark')}
+              onClick={() => setTheme('dark')}
               className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
                 theme === 'dark'
                   ? 'border-accent-blue bg-accent-blue/10'
@@ -106,14 +139,16 @@ const PreferencesTab = () => {
                 className={`flex items-center gap-2 ${theme === 'dark' ? 'text-accent-blue' : 'text-dark-primary'}`}
               >
                 <MoonIcon />
-                <span className="text-small font-semibold">Dark</span>
+                <span className="text-small font-semibold">
+                  {t('projectSettings.dark')}
+                </span>
               </div>
             </button>
 
             {/* Light option */}
             <button
               type="button"
-              onClick={() => handleTheme('light')}
+              onClick={() => setTheme('light')}
               className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
                 theme === 'light'
                   ? 'border-accent-blue bg-accent-blue/10'
@@ -129,9 +164,117 @@ const PreferencesTab = () => {
                 className={`flex items-center gap-2 ${theme === 'light' ? 'text-accent-blue' : 'text-dark-primary'}`}
               >
                 <SunIcon />
-                <span className="text-small font-semibold">Light</span>
+                <span className="text-small font-semibold">
+                  {t('projectSettings.light')}
+                </span>
               </div>
             </button>
+          </div>
+        </div>
+
+        <div>
+          <FieldLabel>{t('projectSettings.language')}</FieldLabel>
+          <p className="mb-3 text-xsmall text-dark-secondary">
+            {t('projectSettings.languageHint')}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {/* English option */}
+            <button
+              type="button"
+              onClick={() => setLocale('en')}
+              className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
+                locale === 'en'
+                  ? 'border-accent-blue bg-accent-blue/10'
+                  : 'border-dark-border bg-dark-surface-1 hover:border-dark-border-focus'
+              }`}
+            >
+              <div
+                className={`flex items-center gap-2 ${locale === 'en' ? 'text-accent-blue' : 'text-dark-primary'}`}
+              >
+                <GlobeIcon />
+                <span className="text-small font-semibold">
+                  {t('projectSettings.english')}
+                </span>
+              </div>
+            </button>
+
+            {/* Indonesian option */}
+            <button
+              type="button"
+              onClick={() => setLocale('id')}
+              className={`flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
+                locale === 'id'
+                  ? 'border-accent-blue bg-accent-blue/10'
+                  : 'border-dark-border bg-dark-surface-1 hover:border-dark-border-focus'
+              }`}
+            >
+              <div
+                className={`flex items-center gap-2 ${locale === 'id' ? 'text-accent-blue' : 'text-dark-primary'}`}
+              >
+                <GlobeIcon />
+                <span className="text-small font-semibold">
+                  {t('projectSettings.indonesian')}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <FieldLabel>{t('projectSettings.calendarVisibility')}</FieldLabel>
+          <p className="mb-3 text-xsmall text-dark-secondary">
+            {t('projectSettings.calendarVisibilityHint')}
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {(
+              [
+                {
+                  value: 'transparent',
+                  icon: <EyeIcon />,
+                  labelKey: 'projectSettings.visibilityTransparent',
+                  descKey: 'projectSettings.visibilityTransparentDescription',
+                },
+                {
+                  value: 'masked',
+                  icon: <MaskIcon />,
+                  labelKey: 'projectSettings.visibilityMasked',
+                  descKey: 'projectSettings.visibilityMaskedDescription',
+                },
+                {
+                  value: 'busy_only',
+                  icon: <CircleIcon />,
+                  labelKey: 'projectSettings.visibilityBusyOnly',
+                  descKey: 'projectSettings.visibilityBusyOnlyDescription',
+                },
+              ] as const
+            ).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setCalendarVisibility(option.value)}
+                className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 text-center transition-colors ${
+                  calendarVisibility === option.value
+                    ? 'border-accent-blue bg-accent-blue/10'
+                    : 'border-dark-border bg-dark-surface-1 hover:border-dark-border-focus'
+                }`}
+              >
+                <div
+                  className={
+                    calendarVisibility === option.value
+                      ? 'text-accent-blue'
+                      : 'text-dark-primary'
+                  }
+                >
+                  {option.icon}
+                </div>
+                <span className="text-xsmall font-semibold text-dark-primary">
+                  {t(option.labelKey)}
+                </span>
+                <span className="text-micro text-dark-secondary">
+                  {t(option.descKey)}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

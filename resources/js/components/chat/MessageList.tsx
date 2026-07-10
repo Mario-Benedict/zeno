@@ -6,6 +6,7 @@ import {
   useRef,
 } from 'react';
 import MessageBubble from '@/components/chat/MessageBubble';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatMessage, ChatParticipant } from '@/types/chat';
 
 interface Props {
@@ -30,14 +31,17 @@ const isSameDay = (a: string, b: string): boolean => {
   );
 };
 
-const formatDateLabel = (iso: string): string => {
+const formatDateLabel = (
+  iso: string,
+  labels: { today: string; yesterday: string },
+): string => {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
-  if (isSameDay(iso, today.toISOString())) return 'Today';
-  if (isSameDay(iso, yesterday.toISOString())) return 'Yesterday';
+  if (isSameDay(iso, today.toISOString())) return labels.today;
+  if (isSameDay(iso, yesterday.toISOString())) return labels.yesterday;
 
   return d.toLocaleDateString([], {
     weekday: 'long',
@@ -87,6 +91,7 @@ const MessageList = ({
   newMessageSignal,
   onSenderClick,
 }: Props) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const isFirstRenderRef = useRef(true);
@@ -177,7 +182,7 @@ const MessageList = ({
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
         <p className="text-small text-dark-secondary opacity-50">
-          No messages yet. Say hello!
+          {t('chat.noMessagesYet')}
         </p>
       </div>
     );
@@ -203,7 +208,10 @@ const MessageList = ({
               <div className="my-5 flex items-center gap-3">
                 <hr className="flex-1 border-dark-border" />
                 <span className="shrink-0 px-1 text-xsmall text-dark-secondary">
-                  {formatDateLabel(msg.createdAt)}
+                  {formatDateLabel(msg.createdAt, {
+                    today: t('chat.today'),
+                    yesterday: t('chat.yesterday'),
+                  })}
                 </span>
                 <hr className="flex-1 border-dark-border" />
               </div>

@@ -1,5 +1,4 @@
 import { Head, usePage } from '@inertiajs/react';
-import axios from 'axios';
 import { useState, useMemo } from 'react';
 import { CalendarSidebar } from '@/components/calendar/CalendarSidebar';
 import { EventDetailModal } from '@/components/calendar/EventDetailModal';
@@ -8,13 +7,14 @@ import { MonthGrid } from '@/components/calendar/MonthGrid';
 import { RecurrenceEditDialog } from '@/components/calendar/RecurrenceEditDialog';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
+import { inertiaJson } from '@/lib/inertiaJson';
 import type {
   CalendarProps,
   CalendarViewMode,
   CalendarMember,
-  CalendarPriority,
   AnyCalendarEvent,
   CalendarEventFull,
 } from '@/types/calendar';
@@ -23,8 +23,10 @@ export default function Calendar({
   project,
   projectRole,
   projectUsers,
+  cardLabels,
   currentUser,
 }: CalendarProps) {
+  const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
@@ -35,10 +37,10 @@ export default function Calendar({
     projectUsers.map((u) => ({ ...u, checked: true })),
   );
 
-  // Priority legend doubles as a filter (click a pill to show/hide).
-  const [hiddenPriorities, setHiddenPriorities] = useState<
-    Set<CalendarPriority>
-  >(() => new Set());
+  // Label legend doubles as a filter (click a pill to show/hide).
+  const [hiddenLabelIds, setHiddenLabelIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   // Modals state
   const [formOpen, setFormOpen] = useState(false);
@@ -94,23 +96,25 @@ export default function Calendar({
     members,
   );
 
-  // Apply the priority filter. Classified busy-blocks carry no priority, so
-  // they are always shown regardless of which pills are hidden.
+  // Apply the label filter. Classified busy-blocks and unlabeled events are
+  // always shown; a labeled event shows if at least one of its labels is
+  // still visible.
   const visibleEvents = useMemo(
     () =>
-      events.filter(
-        (ev) => ev.is_classified || !hiddenPriorities.has(ev.priority),
-      ),
-    [events, hiddenPriorities],
+      events.filter((ev) => {
+        if (ev.is_classified || ev.labels.length === 0) return true;
+        return ev.labels.some((l) => !hiddenLabelIds.has(l.card_label_id));
+      }),
+    [events, hiddenLabelIds],
   );
 
   // --- Handlers ---
 
-  const handleTogglePriority = (priority: CalendarPriority) => {
-    setHiddenPriorities((prev) => {
+  const handleToggleLabel = (labelId: string) => {
+    setHiddenLabelIds((prev) => {
       const next = new Set(prev);
-      if (next.has(priority)) next.delete(priority);
-      else next.add(priority);
+      if (next.has(labelId)) next.delete(labelId);
+      else next.add(labelId);
       return next;
     });
   };
@@ -125,6 +129,22 @@ export default function Calendar({
     setCurrentDate(
       (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
     );
+  };
+
+  const handlePrevWeek = () => {
+    setCurrentDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() - 7);
+      return next;
+    });
+  };
+
+  const handleNextWeek = () => {
+    setCurrentDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() + 7);
+      return next;
+    });
   };
 
   const handleToggleMember = (id: number) => {
@@ -154,7 +174,7 @@ export default function Calendar({
     setDetailOpen(false);
     if (!selectedEvent || selectedEvent.is_classified) return;
 
-    if (selectedEvent.recurrence === 'weekly') {
+    if (selectedEvent.recurrence !== 'none') {
       setPendingAction({
         type: 'edit',
         event: selectedEvent as CalendarEventFull,
@@ -169,14 +189,14 @@ export default function Calendar({
     setDetailOpen(false);
     if (!selectedEvent || selectedEvent.is_classified) return;
 
-    if (selectedEvent.recurrence === 'weekly') {
+    if (selectedEvent.recurrence !== 'none') {
       setPendingAction({
         type: 'delete',
         event: selectedEvent as CalendarEventFull,
       });
       setRecurrenceDialogOpen(true);
     } else {
-      if (confirm('Are you sure you want to delete this schedule?')) {
+      if (confirm(t('calendar.deleteScheduleConfirm'))) {
         submitDelete(selectedEvent as CalendarEventFull, 'single');
       }
     }
@@ -205,7 +225,7 @@ export default function Calendar({
       if (selectedEvent && !selectedEvent.is_classified) {
         // Edit existing
         const payload: Record<string, unknown> = { ...data };
-        const isRecurring = selectedEvent.recurrence === 'weekly';
+        const isRecurring = selectedEvent.recurrence !== 'none';
 
         // Use original ID if it's a virtual instance, otherwise the event ID
         const targetId = selectedEvent.original_event_id || selectedEvent.id;
@@ -222,12 +242,15 @@ export default function Calendar({
           }
         }
 
-        await axios.patch(`${basePath}/${targetId}`, payload);
+        await inertiaJson('patch', `${basePath}/${targetId}`, {
+          data: payload,
+        });
       } else {
         // Create new
-        await axios.post(
+        await inertiaJson(
+          'post',
           projectPath(accountIndex, project.project_slug, '/calendar/events'),
-          data,
+          { data },
         );
       }
       refetch();
@@ -246,10 +269,11 @@ export default function Calendar({
     try {
       const targetId = ev.original_event_id || ev.id;
       const occurrence_date =
-        scope === 'single' && ev.recurrence === 'weekly'
+        scope === 'single' && ev.recurrence !== 'none'
           ? ev.start_time
           : undefined;
-      await axios.delete(
+      await inertiaJson(
+        'delete',
         projectPath(
           accountIndex,
           project.project_slug,
@@ -270,6 +294,9 @@ export default function Calendar({
   // Auth checks
   const canEditSelectedEvent = () => {
     if (!selectedEvent || selectedEvent.is_classified) return false;
+    // Kanban-sourced entries are read-only from Calendar — editing happens
+    // on the board, where the assignment/date actually lives.
+    if (selectedEvent.is_kanban_task) return false;
     if (projectRole === 'OWNER' || projectRole === 'ADMIN') return true;
     return (
       selectedEvent.created_by === currentUser.id ||
@@ -279,7 +306,7 @@ export default function Calendar({
 
   return (
     <AppLayout project={project}>
-      <Head title={`${project.project_name} - Calendar`} />
+      <Head title={`${project.project_name} - ${t('calendar.pageTitle')}`} />
 
       <div className="flex h-full w-full gap-3 bg-dark-surface-1">
         <CalendarSidebar
@@ -295,8 +322,9 @@ export default function Calendar({
           members={members}
           onToggleMember={handleToggleMember}
           events={visibleEvents}
-          hiddenPriorities={hiddenPriorities}
-          onTogglePriority={handleTogglePriority}
+          cardLabels={cardLabels}
+          hiddenLabelIds={hiddenLabelIds}
+          onToggleLabel={handleToggleLabel}
         />
 
         <div className="relative flex flex-1 flex-col overflow-hidden">
@@ -307,6 +335,8 @@ export default function Calendar({
               members={members}
               onDateClick={handleGridDateClick}
               onEventClick={handleEventClick}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
             />
           ) : (
             <WeekGrid
@@ -315,6 +345,8 @@ export default function Calendar({
               members={members}
               onDateClick={handleGridDateClick}
               onEventClick={handleEventClick}
+              onPrevWeek={handlePrevWeek}
+              onNextWeek={handleNextWeek}
             />
           )}
 
@@ -341,6 +373,7 @@ export default function Calendar({
             : undefined
         }
         members={members}
+        cardLabels={cardLabels}
         currentUser={currentUser}
         projectRole={projectRole}
       />
@@ -353,6 +386,8 @@ export default function Calendar({
         onEdit={handleEditClick}
         onDelete={handleDeleteClick}
         canEdit={canEditSelectedEvent()}
+        accountIndex={accountIndex}
+        projectSlug={project.project_slug}
       />
 
       <RecurrenceEditDialog

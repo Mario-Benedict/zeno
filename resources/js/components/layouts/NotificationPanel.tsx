@@ -1,7 +1,10 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
+import { inertiaJson } from '@/lib/inertiaJson';
 import notifications from '@/routes/notifications';
+import taskConflicts from '@/routes/task-conflicts';
 import type { CurrentProject, NotificationInboxResponse } from '@/types';
 import { initials } from '@/utils/chat';
 import { formatReminderListDate } from '@/utils/reminders';
@@ -13,7 +16,7 @@ interface NotificationPanelProps {
   accountIndex: number;
 }
 
-type Tab = 'inbox' | 'chat';
+type Tab = 'inbox' | 'chat' | 'conflicts';
 
 const NotificationPanel = ({
   open,
@@ -21,6 +24,8 @@ const NotificationPanel = ({
   project,
   accountIndex,
 }: NotificationPanelProps) => {
+  const { locale, t } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const [tab, setTab] = useState<Tab>('inbox');
   const [data, setData] = useState<NotificationInboxResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,19 +45,42 @@ const NotificationPanel = ({
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    fetch(
+    inertiaJson<NotificationInboxResponse>(
+      'get',
       notifications.index.url({ accountIndex, project: project.project_slug }),
-      {
-        headers: { Accept: 'application/json' },
-      },
     )
-      .then((res) => res.json())
       .then((json: NotificationInboxResponse) => setData(json))
       .catch((err: unknown) =>
         console.error('Failed to load notifications', err),
       )
       .finally(() => setLoading(false));
   }, [open, project, accountIndex]);
+
+  const removeConflict = (id: string) => {
+    setData((prev) =>
+      prev
+        ? { ...prev, conflicts: prev.conflicts.filter((c) => c.id !== id) }
+        : prev,
+    );
+  };
+
+  const respondToConflict = (id: string, canDoBoth: boolean) => {
+    removeConflict(id);
+    router.patch(
+      taskConflicts.respond.url({ accountIndex, taskConflict: id }),
+      { can_do_both: canDoBoth },
+      { preserveScroll: true, preserveState: true },
+    );
+  };
+
+  const acknowledgeConflict = (id: string) => {
+    removeConflict(id);
+    router.patch(
+      taskConflicts.acknowledge.url({ accountIndex, taskConflict: id }),
+      {},
+      { preserveScroll: true, preserveState: true },
+    );
+  };
 
   if (!open || !project) return null;
 
@@ -71,7 +99,7 @@ const NotificationPanel = ({
               : 'text-dark-secondary hover:text-dark-primary'
           }`}
         >
-          Inbox
+          {t('header.inbox')}
         </button>
         <button
           type="button"
@@ -82,14 +110,28 @@ const NotificationPanel = ({
               : 'text-dark-secondary hover:text-dark-primary'
           }`}
         >
-          Chat
+          {t('header.chat')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('conflicts')}
+          className={`relative flex-1 py-3 text-small font-semibold transition-colors ${
+            tab === 'conflicts'
+              ? 'border-b-2 border-accent-blue text-dark-primary'
+              : 'text-dark-secondary hover:text-dark-primary'
+          }`}
+        >
+          {t('header.conflicts')}
+          {(data?.conflicts.length ?? 0) > 0 && (
+            <span className="absolute top-2 right-4 h-1.5 w-1.5 rounded-full bg-accent-red" />
+          )}
         </button>
       </div>
 
       <div className="scrollbar-app max-h-96 overflow-y-auto p-2">
         {loading && (
           <p className="py-8 text-center text-xsmall text-white/20">
-            Loading...
+            {t('common.loading')}
           </p>
         )}
 
@@ -97,7 +139,7 @@ const NotificationPanel = ({
           <>
             {(data?.inbox.length ?? 0) === 0 && (
               <p className="py-8 text-center text-xsmall text-white/20">
-                Nothing due soon.
+                {t('header.nothingDueSoon')}
               </p>
             )}
             {data?.inbox.map((item) => (
@@ -117,8 +159,10 @@ const NotificationPanel = ({
                   <p
                     className={`text-xsmall ${item.is_overdue ? 'text-accent-red' : 'text-dark-secondary'}`}
                   >
-                    {item.is_overdue ? 'Overdue · ' : 'Due '}
-                    {formatReminderListDate(item.due_at)}
+                    {item.is_overdue
+                      ? t('header.overduePrefix')
+                      : t('header.duePrefix')}
+                    {formatReminderListDate(item.due_at, localeCode)}
                   </p>
                 </div>
               </Link>
@@ -130,14 +174,15 @@ const NotificationPanel = ({
           <>
             {(data?.chat.length ?? 0) === 0 && (
               <p className="py-8 text-center text-xsmall text-white/20">
-                No unread messages.
+                {t('header.noUnreadMessages')}
               </p>
             )}
             {data?.chat.map((room) => {
               const label =
                 room.type === 'group'
-                  ? (room.name ?? 'Group')
-                  : (room.participants[0]?.name ?? 'Direct Message');
+                  ? (room.name ?? t('header.groupFallback'))
+                  : (room.participants[0]?.name ??
+                    t('header.directMessageFallback'));
 
               return (
                 <Link
@@ -160,6 +205,69 @@ const NotificationPanel = ({
                 </Link>
               );
             })}
+          </>
+        )}
+
+        {!loading && tab === 'conflicts' && (
+          <>
+            {(data?.conflicts.length ?? 0) === 0 && (
+              <p className="py-8 text-center text-xsmall text-white/20">
+                {t('header.noConflicts')}
+              </p>
+            )}
+            {data?.conflicts.map((c) =>
+              c.role === 'assignee' ? (
+                <div
+                  key={c.id}
+                  className="rounded-lg px-3 py-2.5 hover:bg-white/4"
+                >
+                  <p className="text-small text-dark-primary">
+                    {t('header.conflictAssigneePrompt', {
+                      card: c.card_title ?? '',
+                      other: c.conflicting_title,
+                    })}
+                  </p>
+                  <p className="mt-0.5 text-xsmall text-dark-secondary">
+                    {formatReminderListDate(c.conflicting_start, localeCode)}
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => respondToConflict(c.id, true)}
+                      className="hover:bg-opacity-90 rounded-lg bg-accent-blue px-3 py-1 text-xsmall font-semibold text-white transition"
+                    >
+                      {t('common.yes')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => respondToConflict(c.id, false)}
+                      className="rounded-lg border border-dark-border px-3 py-1 text-xsmall text-dark-secondary transition hover:text-dark-primary"
+                    >
+                      {t('common.no')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  key={c.id}
+                  className="rounded-lg px-3 py-2.5 hover:bg-white/4"
+                >
+                  <p className="text-small text-dark-primary">
+                    {t('header.conflictAssignerAlert', {
+                      name: c.assignee_name ?? '',
+                      card: c.card_title ?? '',
+                    })}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => acknowledgeConflict(c.id)}
+                    className="mt-2 rounded-lg border border-dark-border px-3 py-1 text-xsmall text-dark-secondary transition hover:text-dark-primary"
+                  >
+                    {t('common.ok')}
+                  </button>
+                </div>
+              ),
+            )}
           </>
         )}
       </div>
