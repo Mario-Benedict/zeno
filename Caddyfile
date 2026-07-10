@@ -1,0 +1,12 @@
+{
+    email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN} {
+    encode gzip
+    reverse_proxy web:80
+}
+
+{$REVERB_DOMAIN} {
+    reverse_proxy reverb:8080
+}
