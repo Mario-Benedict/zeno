@@ -162,7 +162,7 @@ export const ChatWidgetConversation = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center gap-2 px-3 pt-3 pb-2">
+      <div className="flex shrink-0 items-center gap-2 pt-3 pr-10 pb-2 pl-3">
         <button
           type="button"
           onClick={onBack}

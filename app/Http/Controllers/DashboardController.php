@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChatRoom;
 use App\Models\Note;
 use App\Models\Project;
+use App\Models\Reminder;
 use App\Models\User;
 use App\Models\UserDashboardSetting;
 use App\Services\ChatMessageService;
@@ -21,7 +22,7 @@ class DashboardController extends Controller
 
     // Widgets with a working implementation. Others are surfaced in the
     // widget picker as "coming soon" and can't be assigned to a slot yet.
-    private const VALID_WIDGETS = ['kanban', 'chat', 'notes'];
+    private const VALID_WIDGETS = ['kanban', 'chat', 'notes', 'calendar', 'reminders', 'alarm', 'timeline'];
 
     public function __construct(
         private readonly ChatMessageService $messageService,
@@ -61,6 +62,22 @@ class DashboardController extends Controller
             $props['notesWidgetData'] = $this->loadNotesWidgetData($project);
         }
 
+        if (in_array('calendar', $setting->slots ?? [], true)) {
+            $props['calendarWidgetData'] = $this->loadCalendarWidgetData();
+        }
+
+        if (in_array('reminders', $setting->slots ?? [], true)) {
+            $props['remindersWidgetData'] = $this->loadRemindersWidgetData($project);
+        }
+
+        if (in_array('alarm', $setting->slots ?? [], true)) {
+            $props['alarmWidgetData'] = $this->loadAlarmWidgetData();
+        }
+
+        if (in_array('timeline', $setting->slots ?? [], true)) {
+            $props['timelineWidgetData'] = $this->loadTimelineWidgetData($project);
+        }
+
         return Inertia::render('dashboard', $props);
     }
 
@@ -69,7 +86,9 @@ class DashboardController extends Controller
         // The widget's card detail view is read-only (no editing
         // affordances) but shows everything the full page's detail panel
         // does, so this mirrors KanbanController::show()'s full eager load.
-        $project->load([
+        // loadMissing (not load) so calling this twice — the Timeline widget
+        // reuses it below — doesn't re-query when both widgets are placed.
+        $project->loadMissing([
             'kanbanBoards' => function ($query) {
                 $query->orderBy('kanban_board_position');
             },
@@ -158,6 +177,53 @@ class DashboardController extends Controller
                 'collaboratorsCount' => (int) $note->collaborators_count,
             ])->values()->all(),
         ];
+    }
+
+    private function loadCalendarWidgetData(): array
+    {
+        // The widget fetches events itself on demand (month at a time) via
+        // the existing calendar.events.index JSON endpoint, scoped to just
+        // the viewer's own events — this only needs to hand over who that is.
+        return [
+            'currentUserId' => (int) Auth::id(),
+        ];
+    }
+
+    private function loadRemindersWidgetData(Project $project): array
+    {
+        // Mirrors ReminderController::index()'s query — the widget is
+        // read-only apart from toggling a reminder's own completed state
+        // (reusing the same PATCH endpoint), so no trimming needed here.
+        $reminders = Reminder::where('reminder_project_id', $project->project_id)
+            ->where('reminder_user_id', Auth::id())
+            ->with('steps')
+            ->orderByDesc('is_pinned')
+            ->orderBy('is_completed')
+            ->orderBy('reminder_due_at')
+            ->get();
+
+        return [
+            'reminders' => $reminders,
+        ];
+    }
+
+    private function loadAlarmWidgetData(): array
+    {
+        // Same per-account setting the Reminders page's Pomodoro timer reads
+        // (Auth::user()->pomodoro_settings) — not project-scoped, so there's
+        // nothing else to load here.
+        return [
+            'settings' => Auth::user()->pomodoro_settings,
+        ];
+    }
+
+    private function loadTimelineWidgetData(Project $project): array
+    {
+        // The Timeline widget is a read-only alternate visualisation of the
+        // same board/card tree as the Kanban widget — mirrors how the full
+        // Timeline page reuses KanbanController::show()'s data instead of
+        // having its own tables.
+        return $this->loadKanbanWidgetData($project);
     }
 
     public function update(int $accountIndex, Project $project, Request $request): RedirectResponse

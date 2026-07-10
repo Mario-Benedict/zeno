@@ -4,7 +4,8 @@ export type WidgetId =
   | 'notes'
   | 'calendar'
   | 'reminders'
-  | 'pomodoro';
+  | 'alarm'
+  | 'timeline';
 
 export interface WidgetDefinition {
   id: WidgetId;
@@ -20,7 +21,8 @@ export const WIDGETS: WidgetDefinition[] = [
   { id: 'kanban', available: true },
   { id: 'chat', available: true },
   { id: 'notes', available: true },
-  { id: 'calendar', available: false },
-  { id: 'reminders', available: false },
-  { id: 'pomodoro', available: false },
+  { id: 'calendar', available: true },
+  { id: 'reminders', available: true },
+  { id: 'alarm', available: true },
+  { id: 'timeline', available: true },
 ];
