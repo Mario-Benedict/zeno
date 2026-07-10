@@ -1,0 +1,110 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    command: --innodb-buffer-pool-size=256M --max-connections=50
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks: [backend]
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      # First-ever boot (creating the data dir, zeno database, and users) is much
+      # slower than a warm restart, especially with all 8 containers on this VM
+      # pulling/starting at once and competing for 2 vCPUs. Failures during this
+      # window don't count against the retry budget below.
+      start_period: 60s
+
+  # Daily local mysqldump, 7-day retention. Copy /var/lib/docker/volumes/<project>_mysql_backups
+  # off-box periodically (e.g. rclone to Cloudflare R2) for real disaster recovery -
+  # this alone only protects against bad migrations/accidental deletes, not VM/disk loss.
+  db-backup:
+    image: mysql:8.4
+    restart: unless-stopped
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        while true; do
+          mysqldump -h mysql -u root -p"$$MYSQL_ROOT_PASSWORD" --all-databases | gzip > "/backups/backup-$$(date +%Y%m%d-%H%M%S).sql.gz"
+          find /backups -name '*.sql.gz' -mtime +7 -delete
+          sleep 86400
+        done
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql_backups:/backups
+    networks: [backend]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  app:
+    image: ${REGISTRY_IMAGE}-app:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    networks: [backend]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  web:
+    image: ${REGISTRY_IMAGE}-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on: [app]
+    networks: [backend]
+
+  reverb:
+    image: ${REGISTRY_IMAGE}-app:${IMAGE_TAG:-latest}
+    command: ['php', 'artisan', 'reverb:start', '--host=0.0.0.0', '--port=8080']
+    restart: unless-stopped
+    env_file: .env
+    networks: [backend]
+
+  queue:
+    image: ${REGISTRY_IMAGE}-app:${IMAGE_TAG:-latest}
+    command: ['php', 'artisan', 'queue:work', '--tries=1', '--sleep=3', '--max-time=3600']
+    restart: unless-stopped
+    env_file: .env
+    networks: [backend]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  scheduler:
+    image: ${REGISTRY_IMAGE}-app:${IMAGE_TAG:-latest}
+    command: ['php', 'artisan', 'schedule:work']
+    restart: unless-stopped
+    env_file: .env
+    networks: [backend]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    env_file: .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [backend]
+
+networks:
+  backend:
+
+volumes:
+  mysql_data:
+  mysql_backups:
+  caddy_data:
+  caddy_config:
