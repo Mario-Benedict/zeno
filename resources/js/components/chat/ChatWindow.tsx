@@ -197,15 +197,20 @@ const RoomView = ({
   projectSlug: string;
   onSenderClick?: (senderId: string) => void;
 }) => {
-  const { messages, hasMore, loading, initialLoading, loadMore, pushMessage } =
-    useMessages(projectSlug, room.id);
+  const {
+    messages,
+    hasMore,
+    loading,
+    initialLoading,
+    loadMore,
+    pushMessage,
+    latestMessageId,
+  } = useMessages(projectSlug, room.id);
 
-  const [latestMsgId, setLatestMsgId] = useState<string | undefined>();
   const [showSearch, setShowSearch] = useState(false);
 
   const handleMessageSent = (message: ChatMessage) => {
     pushMessage(message);
-    setLatestMsgId(message._id);
   };
 
   const scrollToMessage = (msgId: string) => {
@@ -240,7 +245,7 @@ const RoomView = ({
         loading={loading}
         initialLoading={initialLoading}
         onLoadMore={loadMore}
-        newMessageSignal={latestMsgId}
+        newMessageSignal={latestMessageId}
         onSenderClick={room.type === 'group' ? onSenderClick : undefined}
       />
 

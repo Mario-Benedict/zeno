@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react';
+import { router } from '@inertiajs/react';
+import { useState, useCallback, useEffect } from 'react';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
+import echo from '@/echo';
 import { useProject } from '@/hooks/useProject';
 import AppLayout from '@/layouts/AppLayout';
 import type { ChatRoom, ChatParticipant, ChatMessage } from '@/types/chat';
@@ -33,24 +35,47 @@ export default function Index({ rooms, currentUser }: Props) {
   const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null);
 
   /**
-   * Tap-to-DM: clicking a member's name in a group chat opens the DM
-   * with that person. All DM rooms are pre-created on join so they
-   * should always be findable in the rooms list.
+   * Open the DM with a given member. All DM rooms are pre-created on join
+   * so they should always be findable in the rooms list — used both by
+   * tap-to-DM (clicking a sender's name in a group chat) and the sidebar's
+   * "new message" member picker.
    */
-  const handleSenderClick = useCallback(
-    (senderId: string) => {
+  const openDmWith = useCallback(
+    (memberId: string) => {
       // Can't DM yourself
-      if (String(senderId) === String(currentUser.id)) return;
+      if (String(memberId) === String(currentUser.id)) return;
 
       const dmRoom = rooms.find(
         (r) =>
           r.type === 'dm' &&
-          r.participants?.some((p) => String(p.id) === String(senderId)),
+          r.participants?.some((p) => String(p.id) === String(memberId)),
       );
       if (dmRoom) setActiveRoom(dmRoom);
     },
     [rooms, currentUser.id],
   );
+
+  // Project membership is derived from the group room's participant list —
+  // every project member is a participant of the (always-present) group room.
+  const members =
+    rooms
+      .find((r) => r.type === 'group')
+      ?.participants?.filter((p) => String(p.id) !== String(currentUser.id)) ??
+    [];
+
+  // When someone else joins the project, refresh the room list so the new
+  // member shows up in the group participant list and their pre-created DM
+  // becomes reachable, without requiring a manual page reload.
+  useEffect(() => {
+    const channel = echo.private(`chat.project.${project.project_id}`);
+    channel.listen('.member.joined', () => {
+      router.reload({ only: ['rooms'] });
+    });
+
+    return () => {
+      echo.leave(`chat.project.${project.project_id}`);
+    };
+  }, [project.project_id]);
 
   return (
     <AppLayout project={project}>
@@ -58,14 +83,16 @@ export default function Index({ rooms, currentUser }: Props) {
       <div className="flex h-full w-full gap-2 overflow-hidden">
         <ChatSidebar
           rooms={rooms}
+          members={members}
           currentUser={currentUser}
           activeRoomId={activeRoom?.id ?? null}
           onSelectRoom={setActiveRoom}
+          onStartDm={openDmWith}
         />
         <ChatWindow
           room={activeRoom}
           currentUser={currentUser}
-          onSenderClick={handleSenderClick}
+          onSenderClick={openDmWith}
         />
       </div>
     </AppLayout>

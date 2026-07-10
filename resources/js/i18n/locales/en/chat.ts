@@ -20,4 +20,7 @@ export const chat = {
   failedToSendMessage: 'Failed to send message.',
   today: 'Today',
   yesterday: 'Yesterday',
+  newMessage: 'New message',
+  newMessageTitle: 'Start a new direct message',
+  noOtherMembers: 'No other project members yet',
 };

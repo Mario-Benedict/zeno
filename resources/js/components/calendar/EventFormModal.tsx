@@ -11,6 +11,7 @@ import type {
 import type { CardLabel } from '@/types/kanban';
 import type { ProjectRole } from '@/types/project';
 import { getRecurrenceLabelParams } from '@/utils/calendar';
+import { EventAssigneePicker } from './EventAssigneePicker';
 import { EventLabelPicker } from './EventLabelPicker';
 
 interface EventFormModalProps {
@@ -49,7 +50,7 @@ export const EventFormModal = ({
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<string | null>(
     null,
   );
-  const [assigneeId, setAssigneeId] = useState<number>(currentUser.id);
+  const [assigneeIds, setAssigneeIds] = useState<number[]>([currentUser.id]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
@@ -80,7 +81,11 @@ export const EventFormModal = ({
         setLabelIds(eventToEdit.labels.map((l) => l.card_label_id));
         setRecurrence(eventToEdit.recurrence);
         setRecurrenceEndDate(eventToEdit.recurrence_end_date);
-        setAssigneeId(eventToEdit.participants[0]?.id || currentUser.id);
+        setAssigneeIds(
+          eventToEdit.participants.length > 0
+            ? eventToEdit.participants.map((p) => p.id)
+            : [currentUser.id],
+        );
       } else {
         setTitle('');
         setDescription('');
@@ -105,7 +110,7 @@ export const EventFormModal = ({
         setLabelIds([]);
         setRecurrence('none');
         setRecurrenceEndDate(null);
-        setAssigneeId(currentUser.id);
+        setAssigneeIds([currentUser.id]);
       }
     }
   }, [isOpen, eventToEdit, initialDate, currentUser.id]);
@@ -152,7 +157,7 @@ export const EventFormModal = ({
         label_ids: labelIds,
         recurrence,
         recurrence_end_date: recurrence === 'none' ? null : recurrenceEndDate,
-        participants: [assigneeId],
+        participants: assigneeIds,
       });
       onClose();
     } catch (error: any) {
@@ -202,10 +207,6 @@ export const EventFormModal = ({
 
     return { value, label: t(key, params) };
   });
-
-  const assigneeOptions = canAssignOthers
-    ? members.map((m) => ({ value: m.id, label: m.name, dotColor: m.color }))
-    : [{ value: currentUser.id, label: currentUser.name }];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -313,11 +314,10 @@ export const EventFormModal = ({
           )}
 
           <div>
-            <SelectPopover
-              label={t('calendar.assignee')}
-              value={assigneeId}
-              options={assigneeOptions}
-              onChange={setAssigneeId}
+            <EventAssigneePicker
+              members={members}
+              selectedIds={assigneeIds}
+              onChange={setAssigneeIds}
               disabled={!canAssignOthers}
             />
             {!canAssignOthers && (

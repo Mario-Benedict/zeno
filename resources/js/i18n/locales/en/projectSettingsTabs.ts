@@ -39,6 +39,7 @@ export const projectSettingsTabs = {
 
   // ProfileTab
   profile: 'Profile',
+  changeProfilePicture: 'Change profile picture',
   displayName: 'Display name',
   yourNamePlaceholder: 'Your name',
   emailAddress: 'Email address',

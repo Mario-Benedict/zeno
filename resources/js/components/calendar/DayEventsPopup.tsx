@@ -111,6 +111,8 @@ export const DayEventsPopup = ({
                   </span>
                   <span className="text-[10px] text-dark-secondary/70">
                     {startTime} · {ev.participants[0]?.name}
+                    {ev.participants.length > 1 &&
+                      ` +${ev.participants.length - 1}`}
                   </span>
                 </div>
               </div>

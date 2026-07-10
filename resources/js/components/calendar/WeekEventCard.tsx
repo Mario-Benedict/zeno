@@ -44,6 +44,10 @@ export const WeekEventCard = ({
 
   const owner = members.find((m) => m.id === event.participants?.[0]?.id);
   const ownerColor = owner?.color ?? '#7B7B7B';
+  const extraParticipantCount = Math.max(
+    (event.participants?.length ?? 0) - 1,
+    0,
+  );
 
   const timeString = `${formatTime(clampedStart)} - ${formatTime(clampedEnd)}`;
 
@@ -76,6 +80,7 @@ export const WeekEventCard = ({
           </span>
           <span className="truncate text-[11px] font-medium text-dark-primary/80">
             {event.participants[0]?.name}
+            {extraParticipantCount > 0 && ` +${extraParticipantCount}`}
           </span>
           {height >= 44 && (
             <span className="mt-auto truncate text-[10px] text-dark-secondary">
@@ -107,7 +112,10 @@ export const WeekEventCard = ({
         </span>
 
         {height >= 34 && (
-          <span className="truncate text-[10px] opacity-70">{timeString}</span>
+          <span className="truncate text-[10px] opacity-70">
+            {timeString}
+            {extraParticipantCount > 0 && ` · +${extraParticipantCount}`}
+          </span>
         )}
 
         {event.is_kanban_task && height >= 58 && (

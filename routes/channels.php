@@ -2,6 +2,7 @@
 
 use App\Models\ChatRoom;
 use App\Models\Note;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -10,6 +11,15 @@ Broadcast::channel('chat.{roomId}', function (User $user, string $roomId) {
     return ChatRoom::where('id', $roomId)
         ->whereHas('participants', fn ($q) => $q->where('user_id', $user->id))
         ->exists();
+});
+
+// Project-wide chat channel — used for events not scoped to a single room,
+// e.g. notifying everyone in the project when a new member joins so their
+// room list (group participants + newly pre-created DM) can refresh.
+Broadcast::channel('chat.project.{projectId}', function (User $user, string $projectId) {
+    $project = Project::where('project_id', $projectId)->first();
+
+    return $project?->isMember($user) ?? false;
 });
 
 Broadcast::channel('calendar.user.{userId}', function (User $user, int $userId) {
