@@ -13,9 +13,14 @@ services:
     networks: [backend]
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      # First-ever boot (creating the data dir, zeno database, and users) is much
+      # slower than a warm restart, especially with all 8 containers on this VM
+      # pulling/starting at once and competing for 2 vCPUs. Failures during this
+      # window don't count against the retry budget below.
+      start_period: 60s
 
   # Daily local mysqldump, 7-day retention. Copy /var/lib/docker/volumes/<project>_mysql_backups
   # off-box periodically (e.g. rclone to Cloudflare R2) for real disaster recovery -
