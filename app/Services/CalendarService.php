@@ -150,7 +150,11 @@ class CalendarService
             ->where('kanban_board_card_due_date', '>=', $rangeStart)
             ->whereHas('members', fn ($q) => $q->whereIn('users.id', $userIds))
             ->with([
-                'members' => fn ($q) => $q->whereIn('users.id', $userIds),
+                // Load every assignee, not just the ones matching the calendar's
+                // member filter — the filter above only decides whether the card
+                // shows up at all; the card's full assignee list must match what
+                // Kanban shows, or the two look out of sync.
+                'members',
                 'labels',
                 'kanbanBoard:kanban_board_id,kanban_board_name',
             ])

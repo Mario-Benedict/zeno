@@ -91,6 +91,7 @@ export const calendar = {
   endsOn: 'Ends on',
   neverEnds: 'Never',
   assignee: 'Assignee',
+  selectAssignees: 'Select assignees',
   assigneeRestrictionNote:
     'Only Owners and Admins can assign schedules to other members.',
   descriptionOptional: 'Description (Optional)',

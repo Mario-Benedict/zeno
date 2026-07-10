@@ -183,7 +183,7 @@ html.light-mode input:-webkit-autofill:focus {
 }
 .prose-chat strong {
   font-weight: 700;
-  color: #ffffff;
+  color: inherit;
 }
 .prose-chat em {
   font-style: italic;

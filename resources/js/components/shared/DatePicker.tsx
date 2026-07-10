@@ -139,6 +139,7 @@ export const DatePicker = ({
           {label}
         </label>
         <button
+          type="button"
           onClick={() => setOpen((v) => !v)}
           className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xsmall transition-all ${
             isOverdue
@@ -174,12 +175,14 @@ export const DatePicker = ({
         <div className="fixed top-1/2 left-1/2 z-50 w-64 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-dark-border bg-dark-surface-1 shadow-2xl">
           <div className="flex items-center justify-between border-b border-dark-border px-4 py-3">
             <button
+              type="button"
               onClick={prevMonth}
               className="flex h-6 w-6 items-center justify-center rounded-lg text-small text-white/30 transition hover:bg-white/10 hover:text-white"
             >
               ‹
             </button>
             <button
+              type="button"
               className="flex items-center gap-1.5 text-small font-semibold text-white/70 transition hover:text-white"
               onClick={() => {
                 setViewMonth(new Date().getMonth());
@@ -190,6 +193,7 @@ export const DatePicker = ({
               {monthLabels[viewMonth]} {viewYear}
             </button>
             <button
+              type="button"
               onClick={nextMonth}
               className="flex h-6 w-6 items-center justify-center rounded-lg text-small text-white/30 transition hover:bg-white/10 hover:text-white"
             >
@@ -221,6 +225,7 @@ export const DatePicker = ({
               return (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => selectDate(date)}
                   className={`relative flex aspect-square w-full items-center justify-center rounded-lg text-xsmall transition-all ${!isCurrentMonth ? 'text-white/10 hover:text-white/20' : ''} ${isCurrentMonth && !isSelected && !isToday ? 'text-white/60 hover:bg-white/8 hover:text-white' : ''} ${isPast && !isSelected ? 'text-white/30' : ''} ${isToday && !isSelected ? 'font-semibold text-accent-blue' : ''} ${isSelected ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]' : ''} `}
                 >
@@ -235,6 +240,7 @@ export const DatePicker = ({
 
           <div className="flex gap-2 px-3 pb-3">
             <button
+              type="button"
               onClick={() => selectDate(today)}
               className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/70"
             >
@@ -242,6 +248,7 @@ export const DatePicker = ({
             </button>
             {selectedDate && onClear && (
               <button
+                type="button"
                 onClick={() => {
                   onClear();
                   setOpen(false);

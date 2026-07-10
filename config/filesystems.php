@@ -47,6 +47,11 @@ return [
             'report' => false,
         ],
 
+        // Also used for Cloudflare R2 in production — R2 is S3-API-compatible,
+        // so no separate disk/driver is needed. Point AWS_ENDPOINT at the R2
+        // endpoint URL, AWS_DEFAULT_REGION=auto, and AWS_USE_PATH_STYLE_ENDPOINT=true,
+        // with the AWS_* credentials being the R2 access key/secret. Set
+        // STORAGE_DRIVER=s3 to route chat attachment storage here.
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

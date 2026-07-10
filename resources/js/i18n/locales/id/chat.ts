@@ -22,4 +22,7 @@ export const chat: typeof en = {
   failedToSendMessage: 'Gagal mengirim pesan.',
   today: 'Hari ini',
   yesterday: 'Kemarin',
+  newMessage: 'Pesan baru',
+  newMessageTitle: 'Mulai pesan langsung baru',
+  noOtherMembers: 'Belum ada anggota proyek lainnya',
 };

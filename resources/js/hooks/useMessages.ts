@@ -23,6 +23,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [latestMessageId, setLatestMessageId] = useState<string | undefined>();
 
   const isLoadingMoreRef = useRef(false);
 
@@ -49,6 +50,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
 
         return [e.message, ...prev];
       });
+      setLatestMessageId(e.message._id);
     });
 
     return () => {
@@ -88,6 +90,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
 
   const pushMessage = (message: ChatMessage) => {
     setLocalMessages((prev) => [message, ...prev]);
+    setLatestMessageId(message._id);
   };
 
   return {
@@ -98,5 +101,6 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     initialLoading,
     loadMore,
     pushMessage,
+    latestMessageId,
   };
 };

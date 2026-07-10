@@ -27,6 +27,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::inertia('account', 'account/show')->name('account.show');
             Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+            Route::post('profile/avatar', [ProfileController::class, 'storeAvatar'])->name('profile.avatar.store');
+            Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
             Route::patch('profile/pomodoro-settings', [PomodoroSettingsController::class, 'update'])
                 ->name('pomodoro.settings.update');
             Route::patch('profile/preferences', [PreferencesController::class, 'update'])

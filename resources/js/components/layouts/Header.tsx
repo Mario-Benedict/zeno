@@ -1,12 +1,12 @@
 import { usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
 import NotificationPanel from '@/components/layouts/NotificationPanel';
 import ProjectSwitcher from '@/components/layouts/ProjectSwitcher';
 import ProjectInvitationModal from '@/components/projects/ProjectInvitationModal';
-import ProjectSettingsModal from '@/components/projects/ProjectSettingsModal';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { NotificationInboxResponse } from '@/types/reminder';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
 import Bell from '@public/icons/small/bell.svg';
 import Gear from '@public/icons/small/gear.svg';
@@ -17,7 +17,7 @@ import Zeno from '@public/logos/logo.svg';
 interface AppHeaderProps {
   onSearch?: (query: string) => void;
   onNotificationClick?: () => void;
-  onSettingsClick?: () => void;
+  onOpenSettings?: (tab?: 'general' | 'profile') => void;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -49,23 +49,29 @@ const IconButton = ({
 const Header = ({
   onSearch,
   onNotificationClick,
-  onSettingsClick,
+  onOpenSettings,
 }: AppHeaderProps) => {
   const { project, projectNavigation, projectShare, account } = usePage().props;
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [settingsInitialTab, setSettingsInitialTab] = useState<
-    'general' | 'profile'
-  >('general');
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const openSettings = (tab: 'general' | 'profile' = 'general') => {
-    setSettingsInitialTab(tab);
-    setSettingsOpen(true);
-  };
+  const handleNotificationDataChange = useCallback(
+    (data: NotificationInboxResponse | null) => {
+      if (!data) {
+        setUnreadCount(0);
+        return;
+      }
+      setUnreadCount(
+        data.inbox.length + data.chat.length + data.conflicts.length,
+      );
+    },
+    [],
+  );
+
   const projectMenuRef = useRef<HTMLDivElement>(null);
 
   // Close project menu on outside click
@@ -119,7 +125,7 @@ const Header = ({
             currentProject={project}
             projects={projectNavigation.projects}
             onClose={() => setProjectMenuOpen(false)}
-            onSettingsOpen={() => openSettings('general')}
+            onSettingsOpen={() => onOpenSettings?.('general')}
           />
         </div>
       </div>
@@ -153,10 +159,16 @@ const Header = ({
             }}
           >
             <Bell />
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-red px-1 text-micro leading-none font-semibold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </IconButton>
           <NotificationPanel
             open={notificationsOpen}
             onClose={() => setNotificationsOpen(false)}
+            onDataChange={handleNotificationDataChange}
             project={project}
             accountIndex={account.index}
           />
@@ -168,7 +180,10 @@ const Header = ({
         >
           <People />
         </IconButton>
-        <IconButton label={t('header.settings')} onClick={onSettingsClick}>
+        <IconButton
+          label={t('header.settings')}
+          onClick={() => onOpenSettings?.('general')}
+        >
           <Gear />
         </IconButton>
 
@@ -177,7 +192,7 @@ const Header = ({
         {/* AccountSwitcher manages its own open state + outside-click */}
         <AccountSwitcher
           onOpen={() => setProjectMenuOpen(false)}
-          onSettingsOpen={() => openSettings('profile')}
+          onSettingsOpen={() => onOpenSettings?.('profile')}
         />
       </div>
 
@@ -186,12 +201,6 @@ const Header = ({
         project={project}
         share={projectShare}
         onClose={() => setInviteOpen(false)}
-      />
-
-      <ProjectSettingsModal
-        open={settingsOpen}
-        initialTab={settingsInitialTab}
-        onClose={() => setSettingsOpen(false)}
       />
     </header>
   );

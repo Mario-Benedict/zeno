@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import echo from '@/echo';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatFileSize } from '@/lib/utils';
@@ -152,6 +152,14 @@ const ChatComposer = ({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const wasSendingRef = useRef(false);
+
+  useEffect(() => {
+    if (wasSendingRef.current && !sending) {
+      textareaRef.current?.focus();
+    }
+    wasSendingRef.current = sending;
+  }, [sending]);
 
   const adjustHeight = () => {
     const el = textareaRef.current;
@@ -236,7 +244,6 @@ const ChatComposer = ({
           });
           if (fileInputRef.current) fileInputRef.current.value = '';
           if (textareaRef.current) textareaRef.current.style.height = 'auto';
-          textareaRef.current?.focus();
         },
         onError: (errors) => {
           setError(Object.values(errors)[0] ?? t('chat.failedToSendMessage'));
