@@ -11,6 +11,7 @@ import { projectPath } from '@/lib/accountRoutes';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
 import type { NoteListItem } from '@/types/notes';
+import type { PomodoroSettings, Reminder } from '@/types/reminder';
 
 interface DashboardSetting {
   template_id: TemplateId | null;
@@ -30,11 +31,31 @@ interface NotesWidgetData {
   notes: NoteListItem[];
 }
 
+interface CalendarWidgetData {
+  currentUserId: number;
+}
+
+interface RemindersWidgetData {
+  reminders: Reminder[];
+}
+
+interface AlarmWidgetData {
+  settings: PomodoroSettings | null;
+}
+
+// Same shape as KanbanWidgetData — the Timeline widget is a read-only
+// alternate visualisation of the same board/card tree.
+type TimelineWidgetData = KanbanWidgetData;
+
 interface Props {
   setting: DashboardSetting;
   kanbanWidgetData?: KanbanWidgetData;
   chatWidgetData?: ChatWidgetData;
   notesWidgetData?: NotesWidgetData;
+  calendarWidgetData?: CalendarWidgetData;
+  remindersWidgetData?: RemindersWidgetData;
+  alarmWidgetData?: AlarmWidgetData;
+  timelineWidgetData?: TimelineWidgetData;
 }
 
 export default function Dashboard({
@@ -42,6 +63,10 @@ export default function Dashboard({
   kanbanWidgetData,
   chatWidgetData,
   notesWidgetData,
+  calendarWidgetData,
+  remindersWidgetData,
+  alarmWidgetData,
+  timelineWidgetData,
 }: Props) {
   const { project, accountIndex } = useProject();
   const { t } = useTranslation();
@@ -109,6 +134,10 @@ export default function Dashboard({
             kanbanWidgetData={kanbanWidgetData}
             chatWidgetData={chatWidgetData}
             notesWidgetData={notesWidgetData}
+            calendarWidgetData={calendarWidgetData}
+            remindersWidgetData={remindersWidgetData}
+            alarmWidgetData={alarmWidgetData}
+            timelineWidgetData={timelineWidgetData}
           />
         )}
       </div>

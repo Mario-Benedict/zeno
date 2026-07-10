@@ -4,14 +4,19 @@ import type { TranslationKey } from '@/i18n/dictionary';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
 import type { KanbanBoard } from '@/types/kanban';
 import type { NoteListItem } from '@/types/notes';
+import type { PomodoroSettings, Reminder } from '@/types/reminder';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import { getTemplate } from './templates';
 import type { TemplateId } from './templates';
 import { WidgetPicker } from './WidgetPicker';
 import type { WidgetId } from './widgets';
+import { AlarmWidget } from './widgets/AlarmWidget';
+import { CalendarWidget } from './widgets/CalendarWidget';
 import { ChatWidget } from './widgets/ChatWidget';
 import { KanbanWidget } from './widgets/KanbanWidget';
 import { NotesWidget } from './widgets/NotesWidget';
+import { RemindersWidget } from './widgets/RemindersWidget';
+import { TimelineWidget } from './widgets/TimelineWidget';
 
 const TEMPLATE_NAME_KEYS: Record<TemplateId, TranslationKey> = {
   '3a': 'dashboard.templateFocusName',
@@ -34,6 +39,22 @@ interface NotesWidgetData {
   notes: NoteListItem[];
 }
 
+interface CalendarWidgetData {
+  currentUserId: number;
+}
+
+interface RemindersWidgetData {
+  reminders: Reminder[];
+}
+
+interface AlarmWidgetData {
+  settings: PomodoroSettings | null;
+}
+
+// Same shape as KanbanWidgetData — the Timeline widget is a read-only
+// alternate visualisation of the same board/card tree.
+type TimelineWidgetData = KanbanWidgetData;
+
 interface Props {
   templateId: TemplateId;
   slots: (WidgetId | null)[];
@@ -42,6 +63,10 @@ interface Props {
   kanbanWidgetData?: KanbanWidgetData;
   chatWidgetData?: ChatWidgetData;
   notesWidgetData?: NotesWidgetData;
+  calendarWidgetData?: CalendarWidgetData;
+  remindersWidgetData?: RemindersWidgetData;
+  alarmWidgetData?: AlarmWidgetData;
+  timelineWidgetData?: TimelineWidgetData;
 }
 
 const PlusIcon = () => (
@@ -102,6 +127,10 @@ const renderWidget = (
   kanbanWidgetData?: KanbanWidgetData,
   chatWidgetData?: ChatWidgetData,
   notesWidgetData?: NotesWidgetData,
+  calendarWidgetData?: CalendarWidgetData,
+  remindersWidgetData?: RemindersWidgetData,
+  alarmWidgetData?: AlarmWidgetData,
+  timelineWidgetData?: TimelineWidgetData,
 ) => {
   if (widgetId === 'kanban' && kanbanWidgetData) {
     return <KanbanWidget {...kanbanWidgetData} />;
@@ -111,6 +140,18 @@ const renderWidget = (
   }
   if (widgetId === 'notes' && notesWidgetData) {
     return <NotesWidget {...notesWidgetData} slotIndex={slotIndex} />;
+  }
+  if (widgetId === 'calendar' && calendarWidgetData) {
+    return <CalendarWidget {...calendarWidgetData} />;
+  }
+  if (widgetId === 'reminders' && remindersWidgetData) {
+    return <RemindersWidget {...remindersWidgetData} />;
+  }
+  if (widgetId === 'alarm' && alarmWidgetData) {
+    return <AlarmWidget {...alarmWidgetData} />;
+  }
+  if (widgetId === 'timeline' && timelineWidgetData) {
+    return <TimelineWidget {...timelineWidgetData} />;
   }
 
   return null;
@@ -124,6 +165,10 @@ export const DashboardGrid = ({
   kanbanWidgetData,
   chatWidgetData,
   notesWidgetData,
+  calendarWidgetData,
+  remindersWidgetData,
+  alarmWidgetData,
+  timelineWidgetData,
 }: Props) => {
   const template = getTemplate(templateId);
   const [pickerOpenIndex, setPickerOpenIndex] = useState<number | null>(null);
@@ -162,6 +207,10 @@ export const DashboardGrid = ({
                 kanbanWidgetData,
                 chatWidgetData,
                 notesWidgetData,
+                calendarWidgetData,
+                remindersWidgetData,
+                alarmWidgetData,
+                timelineWidgetData,
               )
             : null;
 
