@@ -22,6 +22,9 @@ echo \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# Explicit, not assumed - this is what makes containers with `restart: unless-stopped`
+# come back automatically after the VM is deallocated (stopped) and started again.
+systemctl enable docker
 
 # --- Deploy user ------------------------------------------------------------
 # Azure VMs use a custom admin user (not root SSH login), so we copy that
