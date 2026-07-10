@@ -1,1 +1,2 @@
 sh ./scripts/check-branch.sh
+sh ./scripts/check-lockfile.sh
