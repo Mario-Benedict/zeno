@@ -185,9 +185,9 @@ export const EventDetailModal = ({
           </div>
         </div>
 
-        <div className="mb-4 flex items-center gap-3 text-small text-dark-primary">
+        <div className="mb-4 flex items-start gap-3 text-small text-dark-primary">
           <svg
-            className="h-4 w-4 text-dark-secondary"
+            className="mt-0.5 h-4 w-4 shrink-0 text-dark-secondary"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -199,17 +199,25 @@ export const EventDetailModal = ({
               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
             />
           </svg>
-          <span
-            className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/20"
-            style={{
-              backgroundColor:
-                members.find((m) => m.id === fullEvent.participants[0]?.id)
-                  ?.color ?? '#7B7B7B',
-            }}
-          />
-          <span>
-            {fullEvent.participants[0]?.name || t('calendar.unknownMember')}
-          </span>
+          <div className="flex flex-col gap-1.5">
+            {fullEvent.participants.length > 0 ? (
+              fullEvent.participants.map((participant) => (
+                <div key={participant.id} className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/20"
+                    style={{
+                      backgroundColor:
+                        members.find((m) => m.id === participant.id)?.color ??
+                        '#7B7B7B',
+                    }}
+                  />
+                  <span>{participant.name}</span>
+                </div>
+              ))
+            ) : (
+              <span>{t('calendar.unknownMember')}</span>
+            )}
+          </div>
         </div>
 
         {fullEvent.description && (

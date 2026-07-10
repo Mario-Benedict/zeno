@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ProjectRole;
+use App\Events\ChatMemberJoined;
 use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Models\User;
@@ -77,6 +78,9 @@ class ChatRoomService
         }
 
         $existingParticipants = $groupRoom->participants;
+        $isNewJoin = ! $existingParticipants->contains(
+            fn (User $existing) => (string) $existing->id === (string) $user->id,
+        );
         $chatRole = ProjectRole::tryFrom($projectRole)?->chatParticipantRole() ?? 'member';
 
         $groupRoom->participants()->syncWithoutDetaching([
@@ -92,6 +96,12 @@ class ChatRoomService
             if ((string) $existing->id !== (string) $user->id) {
                 $this->findOrCreateDmRoom($project, $user, $existing);
             }
+        }
+
+        // Notify already-connected clients so their room list (group
+        // participants + the new DM) refreshes without a manual reload.
+        if ($isNewJoin) {
+            broadcast(new ChatMemberJoined($project->project_id));
         }
     }
 

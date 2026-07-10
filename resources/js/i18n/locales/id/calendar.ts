@@ -93,6 +93,7 @@ export const calendar: typeof en = {
   endsOn: 'Berakhir pada',
   neverEnds: 'Tidak pernah',
   assignee: 'Ditugaskan ke',
+  selectAssignees: 'Pilih penanggung jawab',
   assigneeRestrictionNote:
     'Hanya Pemilik dan Admin yang dapat menugaskan jadwal ke anggota lain.',
   descriptionOptional: 'Deskripsi (Opsional)',

@@ -54,7 +54,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $this->resolveAuthUser($request),
             ],
             'account' => $this->resolveAccount($request),
             'accountsList' => fn () => AccountSessionService::accountsList($request),
@@ -69,6 +69,28 @@ class HandleInertiaRequests extends Middleware
             'projectNavigation' => fn () => $this->resolveProjectNavigation($request),
             'projectShare' => fn () => $this->resolveProjectShare($request),
             'twoFactor' => fn () => $this->resolveTwoFactor($request),
+        ];
+    }
+
+    /**
+     * The authenticated user, with `avatar_url` resolved from a relative
+     * storage path to a full URL — mirrors how `Project.avatar_url` is
+     * resolved below, since the raw model only stores the relative path.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resolveAuthUser(Request $request): ?array
+    {
+        $user = $request->user();
+        if (! $user) {
+            return null;
+        }
+
+        return [
+            ...$user->toArray(),
+            'avatar_url' => $user->avatar_url
+                ? Storage::disk('public')->url($user->avatar_url)
+                : null,
         ];
     }
 

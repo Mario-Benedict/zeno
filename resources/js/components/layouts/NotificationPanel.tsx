@@ -14,6 +14,7 @@ interface NotificationPanelProps {
   onClose: () => void;
   project: CurrentProject | null;
   accountIndex: number;
+  onDataChange?: (data: NotificationInboxResponse | null) => void;
 }
 
 type Tab = 'inbox' | 'chat' | 'conflicts';
@@ -23,6 +24,7 @@ const NotificationPanel = ({
   onClose,
   project,
   accountIndex,
+  onDataChange,
 }: NotificationPanelProps) => {
   const { locale, t } = useTranslation();
   const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
@@ -41,20 +43,27 @@ const NotificationPanel = ({
   }, [open, onClose]);
 
   useEffect(() => {
-    if (!open || !project) return;
+    if (!project) return;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLoading(true);
+    }
     inertiaJson<NotificationInboxResponse>(
       'get',
       notifications.index.url({ accountIndex, project: project.project_slug }),
     )
-      .then((json: NotificationInboxResponse) => setData(json))
+      .then((json: NotificationInboxResponse) => {
+        setData(json);
+        onDataChange?.(json);
+      })
       .catch((err: unknown) =>
         console.error('Failed to load notifications', err),
       )
-      .finally(() => setLoading(false));
-  }, [open, project, accountIndex]);
+      .finally(() => {
+        if (open) setLoading(false);
+      });
+  }, [open, project, accountIndex, onDataChange]);
 
   const removeConflict = (id: string) => {
     setData((prev) =>

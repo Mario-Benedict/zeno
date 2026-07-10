@@ -306,7 +306,7 @@ export default function Calendar({
 
   return (
     <AppLayout project={project}>
-      <Head title={`${project.project_name} - ${t('calendar.pageTitle')}`} />
+      <Head title={`${t('calendar.pageTitle')} - ${project.project_name}`} />
 
       <div className="flex h-full w-full gap-3 bg-dark-surface-1">
         <CalendarSidebar

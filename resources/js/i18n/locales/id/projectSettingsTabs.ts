@@ -38,6 +38,7 @@ export const projectSettingsTabs: typeof en = {
 
   // ProfileTab
   profile: 'Profil',
+  changeProfilePicture: 'Ubah foto profil',
   displayName: 'Nama tampilan',
   yourNamePlaceholder: 'Nama Anda',
   emailAddress: 'Alamat email',

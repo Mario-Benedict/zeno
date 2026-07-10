@@ -172,11 +172,17 @@ PROMPT;
         ])['question'];
     }
 
-    /** Resolve the preferred LLM model, falling back to any available one. */
+    /**
+     * Resolve the preferred LLM model, creating it if the `llm_models` table
+     * hasn't been seeded yet — without this, a never-seeded deployment makes
+     * `ask()` throw a ModelNotFoundException that renders as an opaque 404.
+     */
     private function resolveModel(): LlmModel
     {
-        return LlmModel::where('llm_model_name', self::DEFAULT_MODEL)->first()
-            ?? LlmModel::firstOrFail();
+        return LlmModel::firstOrCreate(
+            ['llm_model_name' => self::DEFAULT_MODEL],
+            ['llm_model_id' => Str::uuid()->toString(), 'llm_model_provider' => 'google'],
+        );
     }
 
     /**

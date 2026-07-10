@@ -77,8 +77,12 @@ export const MonthDayCell = ({
   const visibleEvents = dayEvents.slice(0, MAX_VISIBLE_EVENTS);
   const hiddenCount = dayEvents.length - MAX_VISIBLE_EVENTS;
 
-  const ownerName = (ev: AnyCalendarEvent) =>
-    ev.participants[0]?.name ?? t('calendar.unknownMember');
+  const ownerName = (ev: AnyCalendarEvent) => {
+    const first = ev.participants[0]?.name ?? t('calendar.unknownMember');
+    const extra = ev.participants.length - 1;
+
+    return extra > 0 ? `${first} +${extra}` : first;
+  };
 
   const dayLabel =
     date.getDate() === 1

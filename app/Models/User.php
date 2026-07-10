@@ -16,7 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
-    'name', 'email', 'password',
+    'name', 'email', 'password', 'avatar_url',
     'email_verified_at',
     'two_factor_secret', 'two_factor_enabled_at', 'two_factor_last_counter',
     'pomodoro_settings', 'locale', 'theme', 'calendar_visibility',

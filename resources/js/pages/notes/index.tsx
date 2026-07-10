@@ -6,6 +6,7 @@ import DeleteNoteDialog from '@/components/notes/DeleteNoteDialog';
 import NoteEditor from '@/components/notes/NoteEditor';
 import NotesSidebarPanel from '@/components/notes/NotesSidebarPanel';
 import ShareNoteDialog from '@/components/notes/ShareNoteDialog';
+import ProjectSettingsModal from '@/components/projects/ProjectSettingsModal';
 import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
 import { inertiaJson } from '@/lib/inertiaJson';
@@ -33,6 +34,15 @@ const NotesPage = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<
+    'general' | 'profile'
+  >('general');
+
+  const openSettings = (tab: 'general' | 'profile' = 'general') => {
+    setSettingsInitialTab(tab);
+    setSettingsOpen(true);
+  };
 
   const isEditable = (note: NoteDetail | null): boolean => {
     if (!note) return false;
@@ -120,10 +130,13 @@ const NotesPage = ({
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-dark-surface-1 font-sans">
       <Head title={t('notes.title')} />
-      <Header />
+      <Header onOpenSettings={openSettings} />
 
       <div className="flex min-h-0 flex-1">
-        <Sidebar projectSlug={projectSlug} />
+        <Sidebar
+          projectSlug={projectSlug}
+          onOpenSettings={() => openSettings('general')}
+        />
 
         <div className="m-2 flex min-h-0 flex-1 gap-2 rounded-xl border-2 border-dark-surface-3 p-2">
           <NotesSidebarPanel
@@ -169,6 +182,12 @@ const NotesPage = ({
           onNoteUpdated={handleSaved}
         />
       )}
+
+      <ProjectSettingsModal
+        open={settingsOpen}
+        initialTab={settingsInitialTab}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 };

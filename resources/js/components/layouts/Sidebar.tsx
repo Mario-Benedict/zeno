@@ -152,16 +152,16 @@ const buildNavItems = (
 
 interface SidebarProps {
   projectSlug: string;
+  onOpenSettings: () => void;
 }
 
-const Sidebar = ({ projectSlug }: SidebarProps) => {
+const Sidebar = ({ projectSlug, onOpenSettings }: SidebarProps) => {
   const { t } = useTranslation();
   const page = usePage();
   const { url } = page;
   const accountIndex = page.props.account.index;
   const navItems = buildNavItems(accountIndex, projectSlug);
   const projectHome = projectPath(accountIndex, projectSlug);
-  const settingsPath = projectPath(accountIndex, projectSlug, '/settings');
 
   const isActive = (href: string) => {
     if (href === projectHome) return url === href;
@@ -203,25 +203,16 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
         </div>
         <div className="flex flex-col items-center pb-1">
           <div className="my-2 h-px w-10 bg-dark-secondary" />
-          <Link
-            className={`group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-micro leading-none font-medium transition-colors duration-150 ${
-              isActive(settingsPath)
-                ? 'text-white'
-                : 'text-dark-secondary hover:text-dark-primary'
-            }`}
-            href={settingsPath}
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-micro leading-none font-medium text-dark-secondary transition-colors duration-150 hover:text-dark-primary"
           >
-            <div
-              className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-150 ${
-                isActive(settingsPath)
-                  ? 'bg-accent-blue text-white'
-                  : 'bg-transparent group-hover:bg-white/[0.07]'
-              }`}
-            >
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-transparent transition-colors duration-150 group-hover:bg-white/[0.07]">
               <SettingsIcon />
             </div>
             <span>{t('nav.settings')}</span>
-          </Link>
+          </button>
         </div>
       </nav>
     </aside>
