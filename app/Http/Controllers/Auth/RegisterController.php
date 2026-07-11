@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Notifications\EmailOtpNotification;
 use App\Services\AccountSessionService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -37,9 +36,8 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        $code = $user->generateEmailOtp();
-        $user->notify(new EmailOtpNotification($code));
-
+        // Laravel's Registered listener calls User::sendEmailVerificationNotification(),
+        // which is overridden to send our OTP instead of the framework link email.
         event(new Registered($user));
 
         Auth::login($user);

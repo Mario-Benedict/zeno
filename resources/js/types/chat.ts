@@ -103,8 +103,10 @@ export interface MessageAttachment {
    * The backend resolves this to a full URL at query time.
    */
   path: string;
-  /** Resolved full URL — populated by backend, not stored in MongoDB */
-  url?: string;
+  /** Resolved preview URL, signed for S3-compatible storage */
+  url?: string | null;
+  /** Resolved download URL with the original filename */
+  downloadUrl?: string | null;
 }
 
 /**

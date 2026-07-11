@@ -409,6 +409,17 @@ Relevant files:
 LLM chat uses Google Gemini and MongoDB. Keep provider/API keys and MongoDB
 connection details out of logs and responses.
 
+Gemini calls run from the PHP-FPM app container through Guzzle. The production
+PHP image must include `ext-curl` and CA certificates; `docker/Dockerfile`
+verifies that cURL loads while building the shared runtime image.
+
+Chat attachments and note images go through `StorageService` and store relative
+paths in MongoDB. Use `CHAT_STORAGE_DISK=public` for local development and
+`CHAT_STORAGE_DISK=s3` in production. The `s3` disk is also used for Cloudflare
+R2 through its standard S3-compatible endpoint; do not add an R2-specific
+library or send public object ACLs. S3-backed previews and downloads use
+short-lived signed URLs, so the bucket can remain private.
+
 ## Agent Workflow
 
 Before editing:

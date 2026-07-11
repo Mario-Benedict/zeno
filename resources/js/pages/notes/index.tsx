@@ -1,14 +1,12 @@
 import { Head } from '@inertiajs/react';
 import React, { useCallback, useState } from 'react';
-import Header from '@/components/layouts/Header';
-import Sidebar from '@/components/layouts/Sidebar';
 import DeleteNoteDialog from '@/components/notes/DeleteNoteDialog';
 import NoteEditor from '@/components/notes/NoteEditor';
 import NotesSidebarPanel from '@/components/notes/NotesSidebarPanel';
 import ShareNoteDialog from '@/components/notes/ShareNoteDialog';
-import ProjectSettingsModal from '@/components/projects/ProjectSettingsModal';
 import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
+import AppLayout from '@/layouts/AppLayout';
 import { inertiaJson } from '@/lib/inertiaJson';
 import notes from '@/routes/notes';
 import type { NoteDetail, NoteListItem, NotesPageProps } from '@/types/notes';
@@ -34,15 +32,6 @@ const NotesPage = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsInitialTab, setSettingsInitialTab] = useState<
-    'general' | 'profile'
-  >('general');
-
-  const openSettings = (tab: 'general' | 'profile' = 'general') => {
-    setSettingsInitialTab(tab);
-    setSettingsOpen(true);
-  };
 
   const isEditable = (note: NoteDetail | null): boolean => {
     if (!note) return false;
@@ -128,41 +117,33 @@ const NotesPage = ({
   }, [accountIndex, projectSlug, deleteTargetId]);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-dark-surface-1 font-sans">
+    <AppLayout project={project}>
       <Head title={t('notes.title')} />
-      <Header onOpenSettings={openSettings} />
 
-      <div className="flex min-h-0 flex-1">
-        <Sidebar
-          projectSlug={projectSlug}
-          onOpenSettings={() => openSettings('general')}
+      <div className="flex h-full w-full min-w-0 gap-2 overflow-hidden p-2">
+        <NotesSidebarPanel
+          notes={noteList}
+          selectedNoteId={selectedNote?.id ?? null}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onSelectNote={(item) => void openNote(item)}
+          onCreateNote={(isShared) => void handleCreate(isShared)}
+          onDeleteRequest={setDeleteTargetId}
         />
 
-        <div className="m-2 flex min-h-0 flex-1 gap-2 rounded-xl border-2 border-dark-surface-3 p-2">
-          <NotesSidebarPanel
-            notes={noteList}
-            selectedNoteId={selectedNote?.id ?? null}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSelectNote={(item) => void openNote(item)}
-            onCreateNote={(isShared) => void handleCreate(isShared)}
-            onDeleteRequest={setDeleteTargetId}
-          />
-
-          <NoteEditor
-            key={selectedNote?.id ?? 'empty'}
-            accountIndex={accountIndex}
-            projectSlug={projectSlug}
-            note={selectedNote}
-            canEdit={isEditable(selectedNote)}
-            currentUserId={currentUserId}
-            onSaved={handleSaved}
-            onShareClick={() => setIsShareDialogOpen(true)}
-            onDeleteClick={() =>
-              selectedNote && setDeleteTargetId(selectedNote.id)
-            }
-          />
-        </div>
+        <NoteEditor
+          key={selectedNote?.id ?? 'empty'}
+          accountIndex={accountIndex}
+          projectSlug={projectSlug}
+          note={selectedNote}
+          canEdit={isEditable(selectedNote)}
+          currentUserId={currentUserId}
+          onSaved={handleSaved}
+          onShareClick={() => setIsShareDialogOpen(true)}
+          onDeleteClick={() =>
+            selectedNote && setDeleteTargetId(selectedNote.id)
+          }
+        />
       </div>
 
       {deleteTargetId && (
@@ -182,13 +163,7 @@ const NotesPage = ({
           onNoteUpdated={handleSaved}
         />
       )}
-
-      <ProjectSettingsModal
-        open={settingsOpen}
-        initialTab={settingsInitialTab}
-        onClose={() => setSettingsOpen(false)}
-      />
-    </div>
+    </AppLayout>
   );
 };
 
