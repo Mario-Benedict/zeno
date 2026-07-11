@@ -407,6 +407,10 @@ class ChatMessageService
                 'size' => (int) ($att['size'] ?? 0),
                 'path' => $att['path'] ?? '',
                 'url' => $this->storage->url($att['path'] ?? null),
+                'downloadUrl' => $this->storage->downloadUrl(
+                    $att['path'] ?? null,
+                    $att['file_name'] ?? $att['fileName'] ?? null,
+                ),
             ];
         }
 

@@ -17,7 +17,7 @@ export const auth: typeof en = {
   },
   register: {
     title: 'Buat akun',
-    description: 'Isi detail Anda untuk memulai',
+    description: 'Isi detail akun Anda untuk mulai menggunakan Zeno.',
     headTitle: 'Daftar',
     firstNameLabel: 'Nama depan',
     lastNameLabel: 'Nama belakang',
@@ -69,14 +69,14 @@ export const auth: typeof en = {
     verifying: 'Memverifikasi…',
   },
   verifyEmail: {
-    title: 'Verifikasi Email Anda',
+    title: 'Periksa email Anda',
     description:
-      'Masukkan kode 6 digit dari email untuk memverifikasi identitas Anda.',
-    headTitle: 'Verifikasi Email',
-    codeSent: 'Kode verifikasi baru telah dikirim ke email Anda.',
+      'Kami mengirim kode 6 digit ke email Anda. Masukkan kodenya di bawah ini.',
+    headTitle: 'Verifikasi email',
+    codeSent: 'Kami sudah mengirim kode baru ke email Anda.',
     verify: 'Verifikasi',
     verifying: 'Memverifikasi…',
-    noCode: 'Tidak menerima kode?',
-    resendCode: 'Kirim Ulang Kode',
+    noCode: 'Belum menerima kode?',
+    resendCode: 'Kirim kode baru',
   },
 };

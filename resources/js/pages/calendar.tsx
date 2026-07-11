@@ -308,7 +308,7 @@ export default function Calendar({
     <AppLayout project={project}>
       <Head title={`${t('calendar.pageTitle')} - ${project.project_name}`} />
 
-      <div className="flex h-full w-full gap-3 bg-dark-surface-1">
+      <div className="flex h-full w-full gap-2 overflow-hidden bg-dark-surface-1 p-2">
         <CalendarSidebar
           viewMode={viewMode}
           onViewModeChange={setViewMode}

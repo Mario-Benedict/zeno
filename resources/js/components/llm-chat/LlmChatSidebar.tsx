@@ -5,7 +5,7 @@ import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
 import type { LlmSession } from '@/types/llm-chat';
-import MoreIcon from '@public/icons/large/more.svg';
+import MoreIcon from '@public/icons/large/others.svg';
 import PlusIcon from '@public/icons/small/plus.svg';
 
 interface Props {

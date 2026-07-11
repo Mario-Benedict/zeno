@@ -31,7 +31,7 @@ const VerifyEmail = ({ status }: VerifyEmailProps) => {
     resendPost('/email/verification-notification');
   };
 
-  const sent = status === 'verification-link-sent';
+  const sent = status === 'verification-code-sent';
 
   return (
     <AuthLayout

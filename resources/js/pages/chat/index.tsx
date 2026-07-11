@@ -80,7 +80,7 @@ export default function Index({ rooms, currentUser }: Props) {
   return (
     <AppLayout project={project}>
       {/* gap-2 separates sidebar and window as two distinct boxes */}
-      <div className="flex h-full w-full gap-2 overflow-hidden">
+      <div className="flex h-full w-full gap-2 overflow-hidden p-2">
         <ChatSidebar
           rooms={rooms}
           members={members}

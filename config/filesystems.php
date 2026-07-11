@@ -47,11 +47,8 @@ return [
             'report' => false,
         ],
 
-        // Also used for Cloudflare R2 in production — R2 is S3-API-compatible,
-        // so no separate disk/driver is needed. Point AWS_ENDPOINT at the R2
-        // endpoint URL, AWS_DEFAULT_REGION=auto, and AWS_USE_PATH_STYLE_ENDPOINT=true,
-        // with the AWS_* credentials being the R2 access key/secret. Set
-        // STORAGE_DRIVER=s3 to route chat attachment storage here.
+        // Also used for Cloudflare R2 in production. R2 implements the S3 API,
+        // so it only needs the standard AWS SDK settings below.
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -81,5 +78,13 @@ return [
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
-    'chat_disk' => env('STORAGE_DRIVER', 'public'),
+    // Local development needs the web-accessible public disk. Production uses
+    // S3 whenever FILESYSTEM_DISK=s3, unless CHAT_STORAGE_DISK overrides it.
+    // STORAGE_DRIVER remains as a fallback for older deployments.
+    'chat_disk' => env(
+        'CHAT_STORAGE_DISK',
+        env('STORAGE_DRIVER', env('FILESYSTEM_DISK', 'local') === 's3' ? 's3' : 'public'),
+    ),
+
+    'temporary_url_ttl' => (int) env('STORAGE_URL_TTL', 60),
 ];

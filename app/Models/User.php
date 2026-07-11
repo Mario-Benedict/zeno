@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\LlmChat\LlmAccount;
 use App\Models\LlmChat\LlmChatSession;
+use App\Notifications\EmailOtpNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -82,6 +83,14 @@ class User extends Authenticatable implements MustVerifyEmail
         ]);
 
         return $code;
+    }
+
+    /**
+     * Send Zeno's verification code instead of Laravel's signed-link email.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new EmailOtpNotification($this->generateEmailOtp()));
     }
 
     public function hasTwoFactorEnabled(): bool

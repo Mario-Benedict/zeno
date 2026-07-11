@@ -82,7 +82,7 @@ const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
       />
 
       <AppLayout project={project}>
-        <div className="flex h-full w-full gap-2 overflow-hidden">
+        <div className="flex h-full w-full gap-2 overflow-hidden p-2">
           <LlmChatSidebar
             sessions={sessions}
             activeSessionId={session?.llm_chat_session_id}

@@ -95,7 +95,7 @@ const ImageAttachment = ({
 );
 
 const FileAttachment = ({ att }: { att: MessageAttachment }) => {
-  const href = att.url ?? `/storage/${att.path}`;
+  const href = att.downloadUrl ?? att.url ?? `/storage/${att.path}`;
 
   return (
     <a
