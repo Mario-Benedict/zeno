@@ -8,6 +8,7 @@ use App\Models\LlmChat\LlmModel;
 use App\Models\Project;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
+use Gemini\Exceptions\ErrorException as GeminiErrorException;
 use Gemini\Laravel\Facades\Gemini;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -230,16 +231,48 @@ PROMPT;
 
             return $response->text();
         } catch (\Throwable $e) {
-            // Do not return or log the raw exception message. HTTP client errors
-            // can contain the request URL, including the Gemini API key.
-            Log::error('Gemini request failed.', [
-                'exception' => $e::class,
-                'code' => $e->getCode(),
-                'model' => $modelName,
-            ]);
+            Log::error('Gemini request failed.', $this->geminiFailureContext($modelName, $e));
 
             return "I couldn't reach Gemini just now. Please try again in a moment.";
         }
+    }
+
+    /**
+     * Build useful provider diagnostics without putting credentials in logs.
+     *
+     * Gemini's ErrorException contains the HTTP/API status and provider
+     * message. Other transport exceptions intentionally retain only their
+     * class and code because their messages may include a request URL.
+     *
+     * @return array<string, int|string>
+     */
+    private function geminiFailureContext(string $modelName, \Throwable $exception): array
+    {
+        $context = [
+            'exception' => $exception::class,
+            'code' => $exception->getCode(),
+            'model' => $modelName,
+        ];
+
+        if ($exception instanceof GeminiErrorException) {
+            $context['api_code'] = $exception->getErrorCode();
+            $context['api_status'] = $exception->getErrorStatus();
+            $context['api_message'] = $this->sanitizeGeminiErrorMessage($exception->getErrorMessage());
+        }
+
+        return $context;
+    }
+
+    private function sanitizeGeminiErrorMessage(string $message): string
+    {
+        $message = preg_replace(
+            '/([?&](?:key|api[_-]?key|token|authorization)=)[^&\\s]+/i',
+            '$1[redacted]',
+            $message,
+        ) ?? $message;
+        $message = preg_replace('/AIza[0-9A-Za-z_-]+/', '[redacted]', $message) ?? $message;
+
+        return Str::limit($message, 500, '…');
     }
 
     /**
