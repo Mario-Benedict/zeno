@@ -11,9 +11,9 @@ FROM php:8.4-cli AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl ca-certificates gnupg \
         libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
-        libssl-dev pkg-config unzip git \
+        libcurl4-openssl-dev libssl-dev pkg-config unzip git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath exif gd zip \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath curl exif gd zip \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
@@ -70,16 +70,17 @@ RUN rm .env
 FROM php:8.4-fpm AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates libcurl4-openssl-dev \
         libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
         libssl-dev pkg-config unzip git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath exif gd pcntl zip opcache \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath curl exif gd pcntl zip opcache \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
-    && apt-get purge -y pkg-config libssl-dev \
-    && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+RUN php -r "exit(extension_loaded('curl') ? 0 : 1);"
 
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf

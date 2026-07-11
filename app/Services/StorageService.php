@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  *   $path = $storage->put($file, 'chats/media');
  *   $url  = $storage->url($path);
  *
- * Migrasi local → S3: cukup ganti STORAGE_DRIVER=s3 di .env, tidak ada
+ * Migrasi local → S3: cukup ganti CHAT_STORAGE_DISK=s3 di .env, tidak ada
  * kode lain yang perlu diubah, dan data lama (path relatif di MongoDB)
  * tetap valid karena URL di-resolve ulang saat dibaca.
  */
@@ -52,11 +52,21 @@ class StorageService
         $filename = Str::uuid().'.'.$extension;
         $path = $folder.'/'.$filename;
 
+        // R2 and many S3-compatible providers do not support object ACLs.
+        // Local public storage still needs explicit public visibility; S3
+        // objects are read through signed URLs instead.
+        $options = $this->usesS3Driver() ? [] : ['visibility' => 'public'];
+
+        if ($this->usesS3Driver() && str_starts_with($folder, 'chats/files')) {
+            $options['ContentDisposition'] = 'attachment; filename="'.
+                $this->safeFilename($file->getClientOriginalName()).'"';
+        }
+
         $stored = Storage::disk($this->disk)->putFileAs(
             $folder,
             $file,
             $filename,
-            'public',
+            $options,
         );
 
         if ($stored === false) {
@@ -104,11 +114,58 @@ class StorageService
             return null;
         }
 
-        return Storage::disk($this->disk)->url($path);
+        $disk = Storage::disk($this->disk);
+
+        if ($this->usesS3Driver()) {
+            return $disk->temporaryUrl($path, $this->temporaryUrlExpiration());
+        }
+
+        return $disk->url($path);
+    }
+
+    /**
+     * Resolve a URL that asks object storage to download with the original name.
+     */
+    public function downloadUrl(?string $path, ?string $filename): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (! $this->usesS3Driver()) {
+            return Storage::disk($this->disk)->url($path);
+        }
+
+        $safeFilename = $this->safeFilename($filename);
+
+        return Storage::disk($this->disk)->temporaryUrl(
+            $path,
+            $this->temporaryUrlExpiration(),
+            ['ResponseContentDisposition' => "attachment; filename=\"{$safeFilename}\""],
+        );
     }
 
     public function disk(): string
     {
         return $this->disk;
+    }
+
+    private function usesS3Driver(): bool
+    {
+        return config("filesystems.disks.{$this->disk}.driver") === 's3';
+    }
+
+    private function temporaryUrlExpiration(): \DateTimeInterface
+    {
+        return now()->addMinutes(max(1, (int) config('filesystems.temporary_url_ttl', 60)));
+    }
+
+    private function safeFilename(?string $filename): string
+    {
+        return preg_replace(
+            '/[^A-Za-z0-9._-]/',
+            '_',
+            Str::ascii($filename ?: 'download'),
+        ) ?: 'download';
     }
 }

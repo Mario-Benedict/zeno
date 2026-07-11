@@ -15,7 +15,7 @@ export const auth = {
   },
   register: {
     title: 'Create an account',
-    description: 'Fill in your details to get started',
+    description: "Tell us a bit about yourself, and we'll set up your account.",
     headTitle: 'Register',
     firstNameLabel: 'First name',
     lastNameLabel: 'Last name',
@@ -65,13 +65,14 @@ export const auth = {
     verifying: 'Verifying…',
   },
   verifyEmail: {
-    title: 'Verify Your Email',
-    description: 'Enter 6-digit code from email to verify your identity.',
-    headTitle: 'Email Verification',
-    codeSent: 'A new verification code has been sent to your email.',
+    title: 'Check your email',
+    description:
+      'We sent you a 6-digit code. Enter it below to verify your email.',
+    headTitle: 'Verify your email',
+    codeSent: 'We sent a fresh code to your email.',
     verify: 'Verify',
     verifying: 'Verifying…',
-    noCode: "Didn't get the code?",
-    resendCode: 'Resend Code',
+    noCode: "Can't find the code?",
+    resendCode: 'Send another code',
   },
 };

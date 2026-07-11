@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -228,8 +229,16 @@ PROMPT;
             $response = $model->generateContent(...$contents);
 
             return $response->text();
-        } catch (\Exception $e) {
-            return 'Error: '.$e->getMessage();
+        } catch (\Throwable $e) {
+            // Do not return or log the raw exception message. HTTP client errors
+            // can contain the request URL, including the Gemini API key.
+            Log::error('Gemini request failed.', [
+                'exception' => $e::class,
+                'code' => $e->getCode(),
+                'model' => $modelName,
+            ]);
+
+            return "I couldn't reach Gemini just now. Please try again in a moment.";
         }
     }
 

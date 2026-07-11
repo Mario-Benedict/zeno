@@ -157,6 +157,26 @@ it('creates a new session and persists both turns to MongoDB on ask', function (
     expect($messages[1]->content)->toBe('Halo, saya AI Gemini!');
 });
 
+it('does not expose Gemini credentials or transport details when the provider fails', function () {
+    $user = User::factory()->create();
+    $project = makeProjectForUser($user);
+    seedDefaultLlmModel();
+    Gemini::fake([
+        new RuntimeException('Request failed for ?key=super-secret-production-key'),
+    ]);
+
+    $this->actingAs($user)->post(
+        "/u/0/p/{$project->project_slug}/llm-chat",
+        ['question' => 'Can you hear me?'],
+    );
+
+    $modelReply = LlmChatMessage::where('role', 'model')->firstOrFail();
+
+    expect($modelReply->content)
+        ->toBe("I couldn't reach Gemini just now. Please try again in a moment.")
+        ->not->toContain('super-secret-production-key');
+});
+
 it('rejects an ask request with no question', function () {
     $user = User::factory()->create();
     $project = makeProjectForUser($user);

@@ -3,10 +3,11 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class EmailOtpNotification extends Notification
+class EmailOtpNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -19,12 +20,14 @@ class EmailOtpNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $name = trim((string) ($notifiable->name ?? ''));
+
         return (new MailMessage)
-            ->subject('Your verification code — '.config('app.name'))
-            ->greeting('Hello!')
-            ->line('Use the code below to verify your email address.')
+            ->subject('Your '.config('app.name').' verification code')
+            ->greeting($name === '' ? 'Hi,' : "Hi {$name},")
+            ->line('Enter this code to finish setting up your account:')
             ->line('**'.$this->otp.'**')
-            ->line('This code expires in 10 minutes.')
-            ->line('If you did not create an account, no further action is required.');
+            ->line('It expires in 10 minutes.')
+            ->line("If you didn't sign up for ".config('app.name').', you can ignore this email.');
     }
 }

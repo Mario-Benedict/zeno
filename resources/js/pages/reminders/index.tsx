@@ -300,7 +300,7 @@ export default function RemindersPage({
     <AppLayout project={project}>
       <Head title={`${t('reminders.title')} - ${project.project_name}`} />
 
-      <div className="flex h-full w-full gap-3 overflow-hidden">
+      <div className="flex h-full w-full gap-2 overflow-hidden p-2">
         <ReminderList
           reminders={reminderList}
           selectedReminderId={selectedId}

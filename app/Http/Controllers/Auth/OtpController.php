@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Notifications\EmailOtpNotification;
 use App\Services\AccountSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,7 +41,7 @@ class OtpController extends Controller
             $seconds = RateLimiter::availableIn($key);
 
             return back()->withErrors([
-                'code' => "Too many attempts. Please try again in {$seconds} seconds.",
+                'code' => "You've tried too many codes. Wait {$seconds} seconds, then try again.",
             ]);
         }
 
@@ -56,7 +55,9 @@ class OtpController extends Controller
         if (! $otp) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
 
-            return back()->withErrors(['code' => 'Invalid or expired verification code.']);
+            return back()->withErrors([
+                'code' => 'That code is invalid or has expired. Request a new code and try again.',
+            ]);
         }
 
         RateLimiter::clear($key);
@@ -74,10 +75,9 @@ class OtpController extends Controller
             return $this->redirectToProjects($request);
         }
 
-        $code = $user->generateEmailOtp();
-        $user->notify(new EmailOtpNotification($code));
+        $user->sendEmailVerificationNotification();
 
-        return back()->with('status', 'verification-link-sent');
+        return back()->with('status', 'verification-code-sent');
     }
 
     private function redirectToProjects(Request $request): RedirectResponse
