@@ -1,6 +1,8 @@
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import echo from '@/echo';
+import { inertiaJson } from '@/lib/inertiaJson';
+import { refreshNotifications } from '@/lib/notificationEvents';
 import chat from '@/routes/chat';
 import type { ChatMessage } from '@/types/chat';
 
@@ -51,6 +53,22 @@ export const useMessages = (projectSlug: string, roomId: string) => {
         return [e.message, ...prev];
       });
       setLatestMessageId(e.message._id);
+
+      void inertiaJson(
+        'get',
+        chat.rooms.messages.index.url(
+          {
+            accountIndex,
+            project: projectSlug,
+            room: roomId,
+          },
+          { query: { limit: 1 } },
+        ),
+      )
+        .then(refreshNotifications)
+        .catch((error: unknown) => {
+          console.error('Failed to mark the incoming message as read', error);
+        });
     });
 
     return () => {

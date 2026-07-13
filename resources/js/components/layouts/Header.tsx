@@ -5,7 +5,9 @@ import AccountSwitcher from '@/components/layouts/AccountSwitcher';
 import NotificationPanel from '@/components/layouts/NotificationPanel';
 import ProjectSwitcher from '@/components/layouts/ProjectSwitcher';
 import ProjectInvitationModal from '@/components/projects/ProjectInvitationModal';
+import echo from '@/echo';
 import { useTranslation } from '@/hooks/useTranslation';
+import { NOTIFICATIONS_REFRESH_EVENT } from '@/lib/notificationEvents';
 import type { NotificationInboxResponse } from '@/types/reminder';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
 import Bell from '@public/icons/small/bell.svg';
@@ -51,12 +53,15 @@ const Header = ({
   onNotificationClick,
   onOpenSettings,
 }: AppHeaderProps) => {
-  const { project, projectNavigation, projectShare, account } = usePage().props;
+  const { auth, project, projectNavigation, projectShare, account } =
+    usePage().props;
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationRefreshVersion, setNotificationRefreshVersion] =
+    useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const handleNotificationDataChange = useCallback(
@@ -73,6 +78,28 @@ const Header = ({
   );
 
   const projectMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const userId = auth.user?.id;
+    if (!userId) return;
+
+    const refresh = () => {
+      setNotificationRefreshVersion((version) => version + 1);
+    };
+    const channelName = `notifications.user.${userId}`;
+    const channel = echo.private(channelName);
+
+    channel.listen('.message.sent', refresh);
+    channel.listen('.task-conflict.created', refresh);
+    window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, refresh);
+
+    return () => {
+      channel.stopListening('.message.sent', refresh);
+      channel.stopListening('.task-conflict.created', refresh);
+      echo.leave(channelName);
+      window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, refresh);
+    };
+  }, [auth.user?.id]);
 
   // Close project menu on outside click
   useEffect(() => {
@@ -171,6 +198,7 @@ const Header = ({
             onDataChange={handleNotificationDataChange}
             project={project}
             accountIndex={account.index}
+            refreshVersion={notificationRefreshVersion}
           />
         </div>
         <IconButton

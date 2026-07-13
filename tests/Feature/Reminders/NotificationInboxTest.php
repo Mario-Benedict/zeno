@@ -83,7 +83,14 @@ it('reports unread chat rooms via the existing chat schema', function () {
         'joined_at' => now(),
     ]);
 
-    $this->mock(ChatMessageService::class, function ($mock) {
+    $this->mock(ChatMessageService::class, function ($mock) use ($room) {
+        $mock->shouldReceive('getLastMessagePreviewsForRooms')->andReturn([
+            $room->id => [
+                'body' => 'The latest group update',
+                'senderName' => 'Other member',
+                'createdAt' => now()->toIso8601String(),
+            ],
+        ]);
         $mock->shouldReceive('countUnread')->andReturn(3);
     });
 
@@ -94,6 +101,7 @@ it('reports unread chat rooms via the existing chat schema', function () {
     $response->assertJsonCount(1, 'chat');
     $response->assertJsonPath('chat.0.id', $room->id);
     $response->assertJsonPath('chat.0.unread_count', 3);
+    $response->assertJsonPath('chat.0.lastMessage.body', 'The latest group update');
 });
 
 it('excludes chat rooms with no unread messages', function () {
@@ -110,6 +118,7 @@ it('excludes chat rooms with no unread messages', function () {
     ]);
 
     $this->mock(ChatMessageService::class, function ($mock) {
+        $mock->shouldReceive('getLastMessagePreviewsForRooms')->andReturn([]);
         $mock->shouldReceive('countUnread')->andReturn(0);
     });
 
@@ -118,4 +127,26 @@ it('excludes chat rooms with no unread messages', function () {
         ->assertOk();
 
     $response->assertJsonCount(0, 'chat');
+});
+
+it('marks a reminder notification as read before opening its detail', function () {
+    /** @var mixed $this */
+    $reminder = Reminder::create([
+        'reminder_project_id' => $this->project->project_id,
+        'reminder_user_id' => $this->user->id,
+        'reminder_title' => 'Open me',
+        'reminder_due_at' => now(),
+        'source' => 'manual',
+    ]);
+
+    $this->actingAs($this->user)
+        ->post("/u/0/p/{$this->project->project_slug}/notifications/reminders/{$reminder->reminder_id}/open")
+        ->assertRedirect("/u/0/p/{$this->project->project_slug}/reminders?reminder={$reminder->reminder_id}");
+
+    expect($reminder->refresh()->notification_read_at)->not->toBeNull();
+
+    $this->actingAs($this->user)
+        ->getJson("/u/0/p/{$this->project->project_slug}/notifications")
+        ->assertOk()
+        ->assertJsonCount(0, 'inbox');
 });

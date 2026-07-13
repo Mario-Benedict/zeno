@@ -20,7 +20,7 @@ export const notes: typeof en = {
     "Pilih catatan dari sidebar, atau buat yang baru. Tekan '/' di mana saja dalam catatan untuk menyisipkan heading, daftar, gambar, dan embed.",
   viewOnlyNotice: 'Anda hanya memiliki akses lihat untuk catatan ini.',
   staleRemoteChangeNotice:
-    'Catatan ini berubah di tempat lain saat Anda sedang mengedit. Perubahan Anda aman — tutup untuk melanjutkan bekerja.',
+    'Kolaborator lain mengubah catatan ini. Perubahannya sedang digabungkan dengan perubahan Anda — tutup untuk melanjutkan bekerja.',
   editorRole: 'Editor',
   viewerRole: 'Penampil',
   collaboratorRoleTitle: '{{name}} · {{role}}',

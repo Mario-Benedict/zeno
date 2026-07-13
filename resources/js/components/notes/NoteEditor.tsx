@@ -63,6 +63,7 @@ const NoteEditor = ({
     useNoteRealtime({
       noteId: note?.id ?? null,
       isShared: note?.isShared ?? false,
+      currentUserId,
       isDirty,
       onRemoteUpdate: handleRemoteUpdate,
     });

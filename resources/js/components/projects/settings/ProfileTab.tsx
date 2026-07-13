@@ -92,7 +92,7 @@ const ProfileTab = ({
         <button
           type="button"
           onClick={() => setUploadModalOpen(true)}
-          className="block shrink-0 transition-opacity hover:opacity-80"
+          className="relative block shrink-0 transition-opacity hover:opacity-80"
           aria-label={t('projectSettingsTabs.changeProfilePicture')}
         >
           {user?.avatar_url ? (
@@ -106,6 +106,9 @@ const ProfileTab = ({
               {getInitials(name || user?.name || 'U')}
             </div>
           )}
+          <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-dark-surface-2 bg-accent-blue text-white">
+            <UploadIcon />
+          </span>
         </button>
         <div className="min-w-0">
           <p className="truncate text-small font-semibold text-dark-primary">
@@ -114,14 +117,6 @@ const ProfileTab = ({
           <p className="truncate text-xsmall text-dark-secondary">
             {user?.email}
           </p>
-          <button
-            type="button"
-            onClick={() => setUploadModalOpen(true)}
-            className="mt-1 flex items-center gap-1.5 text-xsmall text-dark-secondary transition-colors hover:text-dark-primary"
-          >
-            <UploadIcon />
-            {t('projectSettingsTabs.uploadAvatar')}
-          </button>
         </div>
       </div>
 

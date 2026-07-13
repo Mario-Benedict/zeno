@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
     'reminder_description',
     'reminder_due_at',
     'is_completed',
+    'notification_read_at',
     'is_pinned',
     'source',
     'kanban_board_card_id',
@@ -30,6 +31,7 @@ class Reminder extends Model
     protected $casts = [
         'reminder_due_at' => 'datetime',
         'is_completed' => 'boolean',
+        'notification_read_at' => 'datetime',
         'is_pinned' => 'boolean',
     ];
 

@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Services\ChatRoomService;
+use App\Services\StorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProjectSettingsController extends Controller
 {
+    public function __construct(private readonly StorageService $storage) {}
+
     public function update(int $accountIndex, Request $request, Project $project): RedirectResponse
     {
         $validated = $request->validate([
@@ -36,6 +38,10 @@ class ProjectSettingsController extends Controller
             'avatar_color' => ['required', 'string', 'max:30'],
         ]);
 
+        if ($project->avatar_url) {
+            $this->storage->delete($project->avatar_url);
+        }
+
         $project->update([
             'avatar_color' => $validated['avatar_color'],
             'avatar_url' => null,
@@ -51,10 +57,10 @@ class ProjectSettingsController extends Controller
         ]);
 
         if ($project->avatar_url) {
-            Storage::disk('public')->delete($project->avatar_url);
+            $this->storage->delete($project->avatar_url);
         }
 
-        $path = $request->file('avatar')->store('project-avatars', 'public');
+        $path = $this->storage->put($request->file('avatar'), 'project-avatars');
 
         $project->update(['avatar_url' => $path]);
 
@@ -64,7 +70,7 @@ class ProjectSettingsController extends Controller
     public function destroyAvatarImage(int $accountIndex, Project $project): RedirectResponse
     {
         if ($project->avatar_url) {
-            Storage::disk('public')->delete($project->avatar_url);
+            $this->storage->delete($project->avatar_url);
             $project->update(['avatar_url' => null]);
         }
 

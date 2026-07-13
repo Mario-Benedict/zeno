@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -68,4 +69,23 @@ it('resolves the authenticated user from the account index in the url', function
             ->component('projects/index')
             ->where('auth.user.id', $second->id)
             ->where('account.index', 1));
+});
+
+it('shares a storage-backed avatar for the account switcher', function () {
+    Storage::fake('public');
+    Storage::disk('public')->put('user-avatars/account.jpg', 'avatar');
+
+    $user = User::factory()->create([
+        'avatar_url' => 'user-avatars/account.jpg',
+    ]);
+
+    $this->actingAs($user)
+        ->withSession([
+            'accounts' => [['user_id' => $user->id]],
+            'account_active_index' => 0,
+        ])
+        ->get(route('projects.index', ['accountIndex' => 0], false))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('accountsList.0.avatar', Storage::disk('public')->url('user-avatars/account.jpg')));
 });

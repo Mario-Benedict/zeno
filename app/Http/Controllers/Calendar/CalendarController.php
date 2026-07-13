@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CardLabel;
 use App\Models\Project;
 use App\Services\CalendarService;
+use App\Services\StorageService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,10 @@ use Inertia\Response;
 
 class CalendarController extends Controller
 {
-    public function __construct(private readonly CalendarService $calendarService) {}
+    public function __construct(
+        private readonly CalendarService $calendarService,
+        private readonly StorageService $storage,
+    ) {}
 
     public function show(Request $request): Response
     {
@@ -45,7 +49,7 @@ class CalendarController extends Controller
                 'project_name' => $project->project_name,
                 'project_slug' => $project->project_slug,
                 'avatar_color' => $project->avatar_color ?? 'accent-blue',
-                'avatar_url' => $project->avatar_url,
+                'avatar_url' => $this->storage->url($project->avatar_url),
             ],
             'projectRole' => $project->roleFor($user)?->value,
             'projectUsers' => $projectUsers,

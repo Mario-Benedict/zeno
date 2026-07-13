@@ -26,6 +26,8 @@ const echo = new Echo({
   wssPort: parseInt(import.meta.env.VITE_REVERB_PORT ?? '8080'),
   forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
   enabledTransports: ['ws', 'wss'],
+  authEndpoint: '/broadcasting/auth',
+  withCredentials: true,
 });
 
 export default echo;
