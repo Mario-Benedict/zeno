@@ -98,7 +98,13 @@ class ChatMessageController extends Controller
         // Push to all OTHER room participants via WebSocket.
         // The sender receives their own message through the Inertia flash prop
         // (or, for API-style callers like the dashboard chat widget, the JSON body below).
-        broadcast(new MessageSent($message))->toOthers();
+        // toOthers() requires a connected socket's ID (sent via the X-Socket-ID header
+        // by Echo); callers without one - e.g. an API-style client with no active
+        // WebSocket connection - have no socket to exclude, so broadcast to everyone.
+        $broadcast = broadcast(new MessageSent($message));
+        if (request()->hasHeader('X-Socket-ID')) {
+            $broadcast->toOthers();
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['message' => $message]);

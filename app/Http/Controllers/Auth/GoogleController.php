@@ -9,6 +9,7 @@ use App\Services\AccountSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
@@ -63,6 +64,8 @@ class GoogleController extends Controller
 
         $accountIndex = AccountSessionService::addAccount($request, $user->id);
         $request->session()->forget('url.intended');
+
+        Log::info('User logged in', ['user_id' => $user->id, 'method' => 'google']);
 
         return redirect()->route('projects.index', ['accountIndex' => $accountIndex]);
     }
