@@ -79,7 +79,11 @@ services:
       app:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q -O /dev/null http://localhost/up']
+      # Check Nginx itself, not a second copy of the app healthcheck. The app
+      # already has its own health gate above and web cannot start before it
+      # passes. Using 127.0.0.1 also avoids localhost/IPv6 and proxy-env
+      # differences in BusyBox wget.
+      test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1/nginx-health']
       interval: 5s
       timeout: 3s
       retries: 12
