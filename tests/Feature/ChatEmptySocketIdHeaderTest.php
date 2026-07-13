@@ -5,6 +5,7 @@ use App\Events\MessageSent;
 use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\ChatMessageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 
@@ -88,4 +89,57 @@ it('does exclude the sending socket when X-Socket-ID has a real value', function
         ->assertOk();
 
     Event::assertDispatched(MessageSent::class, fn (MessageSent $event) => $event->socket === '123.456');
+});
+
+it('broadcasts chat notifications only to unmuted recipients', function () {
+    Event::fake([MessageSent::class]);
+
+    $sender = User::factory()->create();
+    $recipient = User::factory()->create();
+    $mutedRecipient = User::factory()->create();
+    [$project, $room] = createRoomForUser($sender);
+    $room->participants()->attach($recipient->id, [
+        'role' => 'member',
+        'is_muted' => false,
+        'joined_at' => now(),
+    ]);
+    $room->participants()->attach($mutedRecipient->id, [
+        'role' => 'member',
+        'is_muted' => true,
+        'joined_at' => now(),
+    ]);
+
+    $this->actingAs($sender)
+        ->withSession([
+            'accounts' => [['user_id' => $sender->id]],
+            'account_active_index' => 0,
+        ])
+        ->postJson("/u/0/p/{$project->project_slug}/chat/rooms/{$room->id}/messages", [
+            'type' => 'text',
+            'body' => 'Notify the right people',
+        ])
+        ->assertOk();
+
+    Event::assertDispatched(MessageSent::class, function (MessageSent $event) use ($room, $sender, $recipient, $mutedRecipient): bool {
+        $channels = collect($event->broadcastOn())->pluck('name');
+
+        return $channels->contains('private-chat.'.$room->id)
+            && $channels->contains('private-notifications.user.'.$recipient->id)
+            && ! $channels->contains('private-notifications.user.'.$sender->id)
+            && ! $channels->contains('private-notifications.user.'.$mutedRecipient->id);
+    });
+});
+
+it('never moves a participant read cursor backwards', function () {
+    $user = User::factory()->create();
+    [, $room] = createRoomForUser($user);
+    $newerMessageId = '66a000000000000000000002';
+    $olderMessageId = '66a000000000000000000001';
+    $messageService = app(ChatMessageService::class);
+
+    $messageService->markAsRead($room, (string) $user->id, $newerMessageId);
+    $messageService->markAsRead($room, (string) $user->id, $olderMessageId);
+
+    expect($room->participants()->whereKey($user->id)->firstOrFail()->pivot->last_read_message_id)
+        ->toBe($newerMessageId);
 });

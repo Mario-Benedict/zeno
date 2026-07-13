@@ -123,6 +123,9 @@ class ChatRoomController extends Controller
                 'project_name' => $project->project_name,
                 'project_slug' => $project->project_slug,
             ],
+            // Lets notification deep-links open and mark the intended room as
+            // read instead of landing users on an empty chat pane.
+            'activeRoomId' => $activeRoomId,
             // Optional props: only evaluated + sent when explicitly requested via partial reload.
             // Not included on the initial full page load.
             'messages' => Inertia::optional(fn () => $resolveMessages()['messages']),

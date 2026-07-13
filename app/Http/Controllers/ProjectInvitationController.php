@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ProjectRole;
+use App\Events\ChatMemberJoined;
+use App\Jobs\Chat\CreateMemberDirectMessageRooms;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
@@ -11,6 +13,7 @@ use App\Services\CalendarService;
 use App\Services\ChatRoomService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -145,7 +148,7 @@ class ProjectInvitationController extends Controller
             $role = $invitation->role;
         }
 
-        DB::transaction(function () use ($project, $request, $role, $roomService, $invitation) {
+        $joinedChat = DB::transaction(function () use ($project, $request, $role, $roomService, $invitation): bool {
             $user = $request->user();
 
             if (! $project->isMember($user)) {
@@ -154,21 +157,31 @@ class ProjectInvitationController extends Controller
                     'opened_at' => now(),
                     'color' => CalendarService::assignMemberColor($project->project_id),
                 ]);
-                $roomService->addMemberToGroupRoom($project, $user, $role);
+                $joinedChat = $roomService->addMemberToGroupRoom($project, $user, $role);
             } else {
                 $project->members()->updateExistingPivot($user->id, [
                     'opened_at' => now(),
                 ]);
+                $joinedChat = false;
             }
 
             if ($invitation instanceof ProjectInvitation) {
                 $invitation->forceFill(['accepted_at' => now()])->save();
             }
+
+            return $joinedChat;
         });
+
+        // The membership transaction has committed. Broadcasting now cannot
+        // race its database writes, while the actual Reverb delivery remains
+        // queued via ChatMemberJoined's ShouldBroadcast contract.
+        if ($joinedChat) {
+            $this->dispatchChatJoinSideEffects($project, $request->user());
+        }
 
         $accountIndex = AccountSessionService::getActiveIndex($request);
 
-        return redirect()->route('projects.show', [
+        return redirect()->route('projects.dashboard', [
             'accountIndex' => $accountIndex,
             'project' => $project->project_slug,
         ]);
@@ -208,15 +221,34 @@ class ProjectInvitationController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($project, $user, $role, $roomService) {
+        $joinedChat = DB::transaction(function () use ($project, $user, $role, $roomService): bool {
             $project->members()->attach($user->id, [
                 'role' => $role,
                 'opened_at' => null,
                 'color' => CalendarService::assignMemberColor($project->project_id),
             ]);
 
-            $roomService->addMemberToGroupRoom($project, $user, $role);
+            return $roomService->addMemberToGroupRoom($project, $user, $role);
         });
+
+        if ($joinedChat) {
+            $this->dispatchChatJoinSideEffects($project, $user);
+        }
+    }
+
+    /**
+     * Queue non-critical chat side effects after membership has committed.
+     * Failure to enqueue either task is reported, but cannot turn a successful
+     * invitation into an NGINX 502/failed response.
+     */
+    private function dispatchChatJoinSideEffects(Project $project, User $user): void
+    {
+        rescue(
+            fn () => Bus::dispatch(new CreateMemberDirectMessageRooms($project->project_id, (int) $user->id)),
+            report: true,
+        );
+
+        ChatMemberJoined::dispatch($project->project_id);
     }
 
     private function generateInvitationToken(): string

@@ -50,6 +50,11 @@ export interface NotificationChatItem {
   name: string | null;
   participants: { id: string; name: string }[];
   unread_count: number;
+  lastMessage: {
+    body: string;
+    senderName: string;
+    createdAt: string;
+  } | null;
 }
 
 /**

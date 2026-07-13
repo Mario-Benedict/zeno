@@ -40,3 +40,5 @@ Route::controller(ReminderStepController::class)
 
 Route::get('notifications', [NotificationController::class, 'index'])
     ->name('notifications.index');
+Route::post('notifications/reminders/{reminder}/open', [NotificationController::class, 'openReminder'])
+    ->name('notifications.reminders.open');

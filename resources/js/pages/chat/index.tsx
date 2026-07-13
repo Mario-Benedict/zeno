@@ -25,14 +25,22 @@ import type { ChatRoom, ChatParticipant, ChatMessage } from '@/types/chat';
 interface Props {
   rooms: ChatRoom[];
   currentUser: ChatParticipant;
+  activeRoomId?: string | null;
   messages?: ChatMessage[];
   nextCursor?: string | null;
   hasMore?: boolean;
 }
 
-export default function Index({ rooms, currentUser }: Props) {
+export default function Index({
+  rooms,
+  currentUser,
+  activeRoomId: initialActiveRoomId,
+}: Props) {
   const { project } = useProject();
-  const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(
+    initialActiveRoomId ?? null,
+  );
+  const activeRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
 
   /**
    * Open the DM with a given member. All DM rooms are pre-created on join
@@ -50,7 +58,7 @@ export default function Index({ rooms, currentUser }: Props) {
           r.type === 'dm' &&
           r.participants?.some((p) => String(p.id) === String(memberId)),
       );
-      if (dmRoom) setActiveRoom(dmRoom);
+      if (dmRoom) setSelectedRoomId(dmRoom.id);
     },
     [rooms, currentUser.id],
   );
@@ -86,7 +94,7 @@ export default function Index({ rooms, currentUser }: Props) {
           members={members}
           currentUser={currentUser}
           activeRoomId={activeRoom?.id ?? null}
-          onSelectRoom={setActiveRoom}
+          onSelectRoom={(room) => setSelectedRoomId(room.id)}
           onStartDm={openDmWith}
         />
         <ChatWindow

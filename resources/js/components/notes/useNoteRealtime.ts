@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import echo from '@/echo';
 import type { NoteDetail } from '@/types/notes';
 
@@ -15,6 +15,7 @@ interface RemoteNotePayload {
 interface UseNoteRealtimeOptions {
   noteId: string | null;
   isShared: boolean;
+  currentUserId: number;
   /** Should return true while the local user has unsaved/in-flight edits — remote updates are held back to avoid clobbering them. */
   isDirty: () => boolean;
   onRemoteUpdate: (note: NoteDetail, editedBy: PresenceUser | null) => void;
@@ -29,11 +30,19 @@ interface UseNoteRealtimeOptions {
 export const useNoteRealtime = ({
   noteId,
   isShared,
+  currentUserId,
   isDirty,
   onRemoteUpdate,
 }: UseNoteRealtimeOptions) => {
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
   const [hasStaleRemoteChange, setHasStaleRemoteChange] = useState(false);
+  const isDirtyRef = useRef(isDirty);
+  const onRemoteUpdateRef = useRef(onRemoteUpdate);
+
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+    onRemoteUpdateRef.current = onRemoteUpdate;
+  }, [isDirty, onRemoteUpdate]);
 
   useEffect(() => {
     if (!noteId || !isShared) return;
@@ -54,12 +63,17 @@ export const useNoteRealtime = ({
       );
 
     channel.listen('.NoteUpdated', (payload: RemoteNotePayload) => {
-      if (isDirty()) {
+      // A browser without a connected socket cannot be excluded by Reverb.
+      // Ignore that browser's own broadcast instead of flagging its save as a
+      // remote conflict.
+      if (payload.editedBy?.id === currentUserId) return;
+
+      if (isDirtyRef.current()) {
         setHasStaleRemoteChange(true);
         return;
       }
 
-      onRemoteUpdate(payload.note, payload.editedBy);
+      onRemoteUpdateRef.current(payload.note, payload.editedBy);
     });
 
     // Runs on note switch (deps change) and on unmount — resets presence/stale
@@ -69,8 +83,7 @@ export const useNoteRealtime = ({
       setOnlineUsers([]);
       setHasStaleRemoteChange(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteId, isShared]);
+  }, [noteId, isShared, currentUserId]);
 
   return {
     onlineUsers,

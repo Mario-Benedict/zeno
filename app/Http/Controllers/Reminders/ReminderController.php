@@ -83,6 +83,13 @@ class ReminderController extends Controller
             'is_completed' => 'boolean',
         ]);
 
+        if (
+            array_key_exists('reminder_due_at', $validated)
+            && $validated['reminder_due_at'] !== $reminder->reminder_due_at?->toDateTimeString()
+        ) {
+            $validated['notification_read_at'] = null;
+        }
+
         $reminder->update($validated);
 
         return back();

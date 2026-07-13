@@ -170,4 +170,40 @@ class NoteCollaborationTest extends TestCase
 
         $response->assertStatus(201)->assertJsonStructure(['url']);
     }
+
+    #[Test]
+    public function stale_note_versions_are_rejected_without_overwriting_newer_content()
+    {
+        $owner = User::factory()->create();
+        $project = Project::create(['project_name' => 'Project Zeno', 'project_slug' => 'zeno']);
+        $project->members()->attach($owner->id);
+
+        $note = Note::create([
+            'note_id' => (string) Str::uuid(), 'project_id' => $project->project_id,
+            'user_id' => $owner->id, 'title' => 'Shared Doc', 'content' => $this->doc('before'),
+            'is_shared' => true,
+        ]);
+
+        $this->actingAs($owner)
+            ->patchJson("/u/0/p/{$project->project_slug}/notes/{$note->note_id}", [
+                'title' => 'First edit',
+                'content' => $this->doc('first'),
+                'version' => 1,
+            ])
+            ->assertOk()
+            ->assertJsonPath('note.version', 2);
+
+        $this->actingAs($owner)
+            ->patchJson("/u/0/p/{$project->project_slug}/notes/{$note->note_id}", [
+                'title' => 'Stale edit',
+                'content' => $this->doc('stale'),
+                'version' => 1,
+            ])
+            ->assertStatus(409)
+            ->assertJsonPath('note.version', 2);
+
+        $note->refresh();
+        expect($note->title)->toBe('First edit')
+            ->and($note->content)->toBe($this->doc('first'));
+    }
 }

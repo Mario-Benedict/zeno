@@ -31,7 +31,7 @@ class StorageService
 
     public function __construct()
     {
-        $this->disk = config('filesystems.chat_disk', 'public');
+        $this->disk = config('filesystems.uploads_disk', 'public');
     }
 
     // ──────────────────────────────────────────────────────────────
