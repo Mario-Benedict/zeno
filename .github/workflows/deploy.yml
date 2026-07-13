@@ -107,6 +107,7 @@ jobs:
             cd /opt/zeno
             export REGISTRY_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/zeno
             export IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}
+            trap 'docker compose -f docker-compose.prod.yml ps; docker compose -f docker-compose.prod.yml logs --tail=200 app web' ERR
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --wait mysql
             docker compose -f docker-compose.prod.yml run --rm app php artisan migrate --force
