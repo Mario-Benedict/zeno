@@ -216,6 +216,13 @@ const ChatComposer = ({
       payload[`attachments[${i}][type]`] = pf.type;
     });
 
+    // Only attach the header when Echo has an active socket ID — an empty
+    // string still counts as "present" to the backend (Laravel's
+    // Broadcast::socket() returns it as-is) and Pusher/Reverb's SDK rejects
+    // any non-null socket ID that isn't in the "digits.digits" form,
+    // throwing "Invalid socket ID" instead of just skipping the exclusion.
+    const socketId = echo.socketId();
+
     router.post(
       chat.rooms.messages.store.url({
         accountIndex,
@@ -227,7 +234,7 @@ const ChatComposer = ({
         forceFormData: true,
         preserveState: true,
         preserveScroll: true,
-        headers: { 'X-Socket-ID': echo.socketId() ?? '' },
+        headers: socketId ? { 'X-Socket-ID': socketId } : {},
         onSuccess: (page) => {
           const newMessage = (
             page.props as { flash?: { chat?: { newMessage?: ChatMessage } } }

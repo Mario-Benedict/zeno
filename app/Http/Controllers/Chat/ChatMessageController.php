@@ -100,9 +100,12 @@ class ChatMessageController extends Controller
         // (or, for API-style callers like the dashboard chat widget, the JSON body below).
         // toOthers() requires a connected socket's ID (sent via the X-Socket-ID header
         // by Echo); callers without one - e.g. an API-style client with no active
-        // WebSocket connection - have no socket to exclude, so broadcast to everyone.
+        // WebSocket connection, or Echo itself before its socket connects - have no
+        // socket to exclude, so broadcast to everyone. Check the header's value, not
+        // just its presence: pusher-php-server rejects an empty-but-present socket ID
+        // just as hard as a malformed one.
         $broadcast = broadcast(new MessageSent($message));
-        if (request()->hasHeader('X-Socket-ID')) {
+        if (request()->header('X-Socket-ID')) {
             $broadcast->toOthers();
         }
 
