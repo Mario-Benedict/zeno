@@ -81,12 +81,10 @@ return [
     // All user-uploaded files (chat, notes, and profile/project avatars) use
     // one disk so private S3/R2 objects are consistently resolved through
     // signed URLs. CHAT_STORAGE_DISK remains a backwards-compatible fallback.
-    'uploads_disk' => env(
-        'UPLOADS_STORAGE_DISK',
-        env('CHAT_STORAGE_DISK',
+    'uploads_disk' => env('UPLOADS_STORAGE_DISK')
+        ?: env('CHAT_STORAGE_DISK',
             env('STORAGE_DRIVER', env('FILESYSTEM_DISK', 'local') === 's3' ? 's3' : 'public'),
         ),
-    ),
 
     'temporary_url_ttl' => (int) env('STORAGE_URL_TTL', 60),
 ];
