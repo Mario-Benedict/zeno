@@ -9,6 +9,7 @@ use App\Support\Totp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -42,6 +43,8 @@ class TwoFactorController extends Controller
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($key);
 
+            Log::warning('Two-factor rate limited', ['user_id' => $userId]);
+
             return back()->withErrors([
                 'code' => "Too many attempts. Please try again in {$seconds} seconds.",
             ]);
@@ -55,12 +58,16 @@ class TwoFactorController extends Controller
         if ($counter === false) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
 
+            Log::warning('Failed two-factor attempt', ['user_id' => $user->id, 'reason' => 'invalid_code']);
+
             return back()->withErrors(['code' => 'Invalid authentication code.']);
         }
 
         // Reject replayed codes — same counter window already accepted.
         if ($user->two_factor_last_counter !== null && $user->two_factor_last_counter === $counter) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
+
+            Log::warning('Failed two-factor attempt', ['user_id' => $user->id, 'reason' => 'replayed_code']);
 
             return back()->withErrors(['code' => 'This code has already been used. Wait for the next code.']);
         }
@@ -75,6 +82,8 @@ class TwoFactorController extends Controller
         $request->session()->regenerate();
         $accountIndex = AccountSessionService::addAccount($request, $user->id);
         $request->session()->forget('url.intended');
+
+        Log::info('User logged in', ['user_id' => $user->id, 'method' => 'two_factor']);
 
         return redirect()->route('projects.index', ['accountIndex' => $accountIndex]);
     }

@@ -7,6 +7,7 @@ use App\Services\AccountSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -36,6 +37,8 @@ class LoginController extends Controller
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($key);
 
+            Log::warning('Login rate limited', ['email' => $request->input('email')]);
+
             return back()->withErrors([
                 'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
             ]);
@@ -48,6 +51,8 @@ class LoginController extends Controller
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
+
+            Log::warning('Failed login attempt', ['email' => $credentials['email']]);
 
             return back()->withErrors([
                 'email' => 'The provided credentials do not match our records.',
@@ -72,6 +77,8 @@ class LoginController extends Controller
         $accountIndex = AccountSessionService::addAccount($request, $user->id);
         $request->session()->forget('url.intended');
 
+        Log::info('User logged in', ['user_id' => $user->id, 'method' => 'password']);
+
         return redirect()->route('projects.index', ['accountIndex' => $accountIndex]);
     }
 
@@ -82,6 +89,8 @@ class LoginController extends Controller
         ])['redirect_to'] ?? 'home';
 
         $activeIndex = AccountSessionService::getActiveIndex($request);
+
+        Log::info('User logged out', ['user_id' => $request->user()?->id, 'redirect_to' => $redirectTo]);
 
         // ── Add another account ───────────────────────────────────────────
         // Drop the standard Laravel auth token so the guest middleware lets the
