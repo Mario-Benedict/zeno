@@ -106,7 +106,12 @@ class NoteController extends Controller
         $fresh = $note->fresh();
 
         if ($fresh->is_shared) {
-            broadcast(new NoteUpdated($fresh, (string) Auth::id()))->toOthers();
+            // toOthers() needs a connected socket's ID (X-Socket-ID header, set by Echo);
+            // skip exclusion when the caller has no active WebSocket connection.
+            $broadcast = broadcast(new NoteUpdated($fresh, (string) Auth::id()));
+            if (request()->hasHeader('X-Socket-ID')) {
+                $broadcast->toOthers();
+            }
         }
 
         return response()->json(['note' => $this->formatDetail($fresh)]);

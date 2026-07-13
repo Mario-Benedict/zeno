@@ -100,6 +100,26 @@ services:
       - caddy_config:/config
     networks: [backend]
 
+  # Collects every other container's stdout/stderr (Laravel logs JSON there,
+  # see LOG_CHANNEL=stderr) and ships it to Datadog. Without a DD_API_KEY set,
+  # this container fails to start and idles in Docker's restart backoff -
+  # harmless to the rest of the stack, just not collecting anything. Adds real
+  # RAM/CPU overhead on top of the app stack - worth watching on a small VM.
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7
+    restart: unless-stopped
+    environment:
+      DD_API_KEY: ${DD_API_KEY}
+      DD_SITE: ${DD_SITE:-datadoghq.com}
+      DD_LOGS_ENABLED: 'true'
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: 'true'
+      DD_CONTAINER_EXCLUDE: 'name:datadog-agent'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+    networks: [backend]
+
 networks:
   backend:
 
