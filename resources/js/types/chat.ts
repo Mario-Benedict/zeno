@@ -71,6 +71,9 @@ export interface ChatRoom {
    */
   lastMessage?: ChatMessagePreview | null;
 
+  /** Number of messages from other users after this participant's read cursor. */
+  unreadCount: number;
+
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FILE_SIZE_LIMITS, isFileTooLarge } from '@/lib/fileUploads';
 import CancelIcon from '@public/icons/small/cancel.svg';
 
 export const UploadIcon = () => (
@@ -49,16 +50,21 @@ export const AvatarUploadModal = ({
   onRemove,
   hasImage,
   uploading,
+  error: requestError = null,
+  onErrorClear,
 }: {
   onClose: () => void;
   onUpload: (file: File) => void;
   onRemove: () => void;
   hasImage: boolean;
   uploading: boolean;
+  error?: string | null;
+  onErrorClear?: () => void;
 }) => {
   const { t } = useTranslation();
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(
@@ -71,6 +77,13 @@ export const AvatarUploadModal = ({
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
     if (!picked) return;
+    onErrorClear?.();
+    if (isFileTooLarge(picked, FILE_SIZE_LIMITS.avatar)) {
+      setSelectionError(t('projectSettingsTabs.avatarFileTooLarge'));
+      e.target.value = '';
+      return;
+    }
+    setSelectionError(null);
     if (preview) URL.revokeObjectURL(preview);
     setPreview(URL.createObjectURL(picked));
     setFile(picked);
@@ -143,6 +156,14 @@ export const AvatarUploadModal = ({
             className="hidden"
             onChange={handleFileChange}
           />
+          {(selectionError || requestError) && (
+            <div
+              role="alert"
+              className="mt-3 rounded-lg border border-status-error/30 bg-status-error/10 px-3 py-2 text-xsmall text-status-error"
+            >
+              {selectionError ?? requestError}
+            </div>
+          )}
           {hasImage && (
             <button
               type="button"

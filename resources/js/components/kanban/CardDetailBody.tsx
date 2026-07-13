@@ -34,6 +34,7 @@ export interface AttachmentState {
   local: LocalAttachment[];
   adding: boolean;
   uploading: boolean;
+  error: string | null;
   dragOver: boolean;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   zoneRef: React.RefObject<HTMLDivElement | null>;
@@ -41,6 +42,7 @@ export interface AttachmentState {
   onProcess: (files: FileList | File[]) => void;
   onDownload: (att: LocalAttachment) => void;
   onDelete: (id: string) => void;
+  onDismissError: () => void;
   onCancel: () => void;
 }
 
@@ -105,6 +107,7 @@ export const CardDetailBody = ({
     local: attachmentsLocal,
     adding: attachmentsAdding,
     uploading: attachmentsUploading,
+    error: attachmentsError,
     dragOver: attachmentsDragOver,
     fileInputRef: attachmentsFileInputRef,
     zoneRef: attachmentsZoneRef,
@@ -112,6 +115,7 @@ export const CardDetailBody = ({
     onProcess: attachmentsOnProcess,
     onDownload: attachmentsOnDownload,
     onDelete: attachmentsOnDelete,
+    onDismissError: attachmentsOnDismissError,
     onCancel: attachmentsOnCancel,
   } = attachments;
 
@@ -357,6 +361,23 @@ export const CardDetailBody = ({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {attachmentsError && (
+        <div
+          role="alert"
+          className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-status-error/30 bg-status-error/10 px-3 py-2"
+        >
+          <p className="text-xsmall text-status-error">{attachmentsError}</p>
+          <button
+            type="button"
+            onClick={attachmentsOnDismissError}
+            aria-label={t('common.close')}
+            className="shrink-0 text-status-error transition-opacity hover:opacity-70"
+          >
+            <CloseIcon className="h-3 w-3" />
+          </button>
         </div>
       )}
 

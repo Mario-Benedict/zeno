@@ -101,6 +101,7 @@ export const notes: typeof en = {
   orPasteImageUrl: 'atau tempel URL gambar',
   imageUrlPlaceholder: 'https://...',
   imageUploadFailed: 'Unggahan gagal — coba lagi.',
+  imageTooLarge: 'Gambar ini melebihi batas 5 MB.',
   editorContentPlaceholder: "Tulis sesuatu, atau tekan '/' untuk perintah…",
   slashCommandText: 'Teks',
   slashCommandTextDescription: 'Teks paragraf biasa',

@@ -1,9 +1,10 @@
 import { router } from '@inertiajs/react';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
 import echo from '@/echo';
 import { useProject } from '@/hooks/useProject';
+import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import type { ChatRoom, ChatParticipant, ChatMessage } from '@/types/chat';
 
@@ -37,10 +38,60 @@ export default function Index({
   activeRoomId: initialActiveRoomId,
 }: Props) {
   const { project } = useProject();
+  const { t } = useTranslation();
+  const [liveRooms, setLiveRooms] = useState(rooms);
+  const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(
     initialActiveRoomId ?? null,
   );
-  const activeRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
+  const selectedRoomIdRef = useRef(selectedRoomId);
+  const activeRoom =
+    liveRooms.find((room) => room.id === selectedRoomId) ?? null;
+
+  useEffect(() => {
+    selectedRoomIdRef.current = selectedRoomId;
+  }, [selectedRoomId]);
+
+  useEffect(() => {
+    // Server reloads replace room membership and authoritative unread counts.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLiveRooms(rooms);
+  }, [rooms]);
+
+  const updateRoomFromMessage = useCallback(
+    (message: ChatMessage) => {
+      setLiveRooms((currentRooms) =>
+        currentRooms
+          .map((room) => {
+            if (room.id !== message.roomId) return room;
+
+            const isOwnMessage =
+              String(message.senderId) === String(currentUser.id);
+            const isOpen = room.id === selectedRoomIdRef.current;
+            const body =
+              message.body ||
+              (message.type === 'image'
+                ? t('chat.sentAnImage')
+                : t('chat.sentAFile'));
+
+            return {
+              ...room,
+              lastMessage: {
+                body,
+                senderName:
+                  message.sender?.name ??
+                  (isOwnMessage ? currentUser.name : t('common.unknown')),
+                createdAt: message.createdAt,
+              },
+              unreadCount: isOwnMessage || isOpen ? 0 : room.unreadCount + 1,
+              updatedAt: message.createdAt,
+            };
+          })
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+      );
+    },
+    [currentUser.id, currentUser.name, t],
+  );
 
   /**
    * Open the DM with a given member. All DM rooms are pre-created on join
@@ -53,20 +104,20 @@ export default function Index({
       // Can't DM yourself
       if (String(memberId) === String(currentUser.id)) return;
 
-      const dmRoom = rooms.find(
+      const dmRoom = liveRooms.find(
         (r) =>
           r.type === 'dm' &&
           r.participants?.some((p) => String(p.id) === String(memberId)),
       );
       if (dmRoom) setSelectedRoomId(dmRoom.id);
     },
-    [rooms, currentUser.id],
+    [liveRooms, currentUser.id],
   );
 
   // Project membership is derived from the group room's participant list —
   // every project member is a participant of the (always-present) group room.
   const members =
-    rooms
+    liveRooms
       .find((r) => r.type === 'group')
       ?.participants?.filter((p) => String(p.id) !== String(currentUser.id)) ??
     [];
@@ -85,22 +136,57 @@ export default function Index({
     };
   }, [project.project_id]);
 
+  useEffect(() => {
+    const subscriptions = rooms.map((room) => {
+      const channel = echo.private(`chat.${room.id}`);
+      const listener = (event: { message: ChatMessage }) => {
+        updateRoomFromMessage(event.message);
+        setRealtimeMessages((current) => [
+          ...current.slice(-99),
+          event.message,
+        ]);
+      };
+      channel.listen('.message.sent', listener);
+
+      return { channel, listener, roomId: room.id };
+    });
+
+    return () => {
+      subscriptions.forEach(({ channel, listener, roomId }) => {
+        channel.stopListening('.message.sent', listener);
+        echo.leave(`chat.${roomId}`);
+      });
+    };
+  }, [rooms, updateRoomFromMessage]);
+
+  const selectRoom = useCallback((room: ChatRoom) => {
+    selectedRoomIdRef.current = room.id;
+    setSelectedRoomId(room.id);
+    setLiveRooms((currentRooms) =>
+      currentRooms.map((item) =>
+        item.id === room.id ? { ...item, unreadCount: 0 } : item,
+      ),
+    );
+  }, []);
+
   return (
     <AppLayout project={project}>
       {/* gap-2 separates sidebar and window as two distinct boxes */}
       <div className="flex h-full w-full gap-2 overflow-hidden p-2">
         <ChatSidebar
-          rooms={rooms}
+          rooms={liveRooms}
           members={members}
           currentUser={currentUser}
           activeRoomId={activeRoom?.id ?? null}
-          onSelectRoom={(room) => setSelectedRoomId(room.id)}
+          onSelectRoom={selectRoom}
           onStartDm={openDmWith}
         />
         <ChatWindow
           room={activeRoom}
           currentUser={currentUser}
           onSenderClick={openDmWith}
+          onMessageSent={updateRoomFromMessage}
+          realtimeMessages={realtimeMessages}
         />
       </div>
     </AppLayout>

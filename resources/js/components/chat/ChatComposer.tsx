@@ -2,6 +2,7 @@ import { router, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import echo from '@/echo';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FILE_SIZE_LIMITS, isFileTooLarge } from '@/lib/fileUploads';
 import { formatFileSize } from '@/lib/utils';
 import chat from '@/routes/chat';
 import type { ChatMessage } from '@/types/chat';
@@ -171,13 +172,27 @@ const ChatComposer = ({
   const addFiles = useCallback(
     (list: FileList | null) => {
       if (!list) return;
-      const MAX_SIZE = 50 * 1024 * 1024;
       const toAdd: PendingFile[] = [];
+      const pendingSize = pendingFiles.reduce(
+        (total, pendingFile) => total + pendingFile.file.size,
+        0,
+      );
 
       for (const file of Array.from(list)) {
         if (pendingFiles.length + toAdd.length >= 10) break;
-        if (file.size > MAX_SIZE) {
+        if (isFileTooLarge(file, FILE_SIZE_LIMITS.chatAttachment)) {
           setError(t('chat.fileExceedsSizeLimit', { name: file.name }));
+          continue;
+        }
+        const addedSize = toAdd.reduce(
+          (total, pendingFile) => total + pendingFile.file.size,
+          0,
+        );
+        if (
+          pendingSize + addedSize + file.size >
+          FILE_SIZE_LIMITS.chatRequest
+        ) {
+          setError(t('chat.attachmentsExceedTotalSizeLimit'));
           continue;
         }
         const type = getAttachmentType(file);
@@ -187,7 +202,7 @@ const ChatComposer = ({
       }
       setPendingFiles((prev) => [...prev, ...toAdd]);
     },
-    [pendingFiles.length, t],
+    [pendingFiles, t],
   );
 
   const removeFile = useCallback((id: string) => {

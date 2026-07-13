@@ -15,6 +15,8 @@ interface Props {
   room: ChatRoom | null;
   currentUser: ChatParticipant;
   onSenderClick?: (senderId: string) => void;
+  onMessageSent?: (message: ChatMessage) => void;
+  realtimeMessages?: ChatMessage[];
 }
 
 interface PageProps {
@@ -191,11 +193,15 @@ const RoomView = ({
   currentUser,
   projectSlug,
   onSenderClick,
+  onMessageSent,
+  realtimeMessages = [],
 }: {
   room: ChatRoom;
   currentUser: ChatParticipant;
   projectSlug: string;
   onSenderClick?: (senderId: string) => void;
+  onMessageSent?: (message: ChatMessage) => void;
+  realtimeMessages?: ChatMessage[];
 }) => {
   const {
     messages,
@@ -204,13 +210,28 @@ const RoomView = ({
     initialLoading,
     loadMore,
     pushMessage,
+    receiveMessage,
     latestMessageId,
   } = useMessages(projectSlug, room.id);
 
   const [showSearch, setShowSearch] = useState(false);
+  const processedRealtimeMessageIds = useRef(new Set<string>());
+
+  useEffect(() => {
+    for (const message of realtimeMessages) {
+      if (
+        message.roomId === room.id &&
+        !processedRealtimeMessageIds.current.has(message._id)
+      ) {
+        processedRealtimeMessageIds.current.add(message._id);
+        receiveMessage(message);
+      }
+    }
+  }, [realtimeMessages, receiveMessage, room.id]);
 
   const handleMessageSent = (message: ChatMessage) => {
     pushMessage(message);
+    onMessageSent?.(message);
   };
 
   const scrollToMessage = (msgId: string) => {
@@ -258,7 +279,13 @@ const RoomView = ({
   );
 };
 
-const ChatWindow = ({ room, currentUser, onSenderClick }: Props) => {
+const ChatWindow = ({
+  room,
+  currentUser,
+  onSenderClick,
+  onMessageSent,
+  realtimeMessages,
+}: Props) => {
   const { project } = usePage<PageProps>().props;
   const projectSlug = project?.project_slug ?? '';
 
@@ -271,6 +298,8 @@ const ChatWindow = ({ room, currentUser, onSenderClick }: Props) => {
       currentUser={currentUser}
       projectSlug={projectSlug}
       onSenderClick={onSenderClick}
+      onMessageSent={onMessageSent}
+      realtimeMessages={realtimeMessages}
     />
   );
 };

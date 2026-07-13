@@ -323,17 +323,64 @@ export const useNoteEditor = ({
   const isDirty = useCallback(() => dirtyRef.current, []);
 
   const applyRemoteContent = useCallback(
-    (remoteNote: NoteDetail) => {
-      if (!editor || remoteNote.id !== noteId) return;
+    (remoteNote: NoteDetail): boolean => {
+      if (!editor || remoteNote.id !== noteId) return false;
 
-      editor.commands.setContent(remoteNote.content, { emitUpdate: false });
-      setTitleState(remoteNote.title);
-      setSavedAt(remoteNote.updatedAt);
-      versionRef.current = remoteNote.version;
-      baseTitleRef.current = remoteNote.title;
-      baseContentRef.current = JSON.stringify(remoteNote.content);
+      if (!dirtyRef.current) {
+        editor.commands.setContent(remoteNote.content, { emitUpdate: false });
+        setTitleState(remoteNote.title);
+        setSavedAt(remoteNote.updatedAt);
+        setSaveStatus('saved');
+        versionRef.current = remoteNote.version;
+        baseTitleRef.current = remoteNote.title;
+        baseContentRef.current = JSON.stringify(remoteNote.content);
+
+        return true;
+      }
+
+      const mergedContentJson = mergeTextChanges(
+        baseContentRef.current,
+        JSON.stringify(editor.getJSON()),
+        JSON.stringify(remoteNote.content),
+      );
+      const mergedTitle = mergeTextChanges(
+        baseTitleRef.current,
+        titleRef.current,
+        remoteNote.title,
+      );
+
+      if (!mergedContentJson || mergedTitle === null) return false;
+
+      try {
+        const selection = editor.state.selection;
+        const mergedContent = JSON.parse(mergedContentJson) as NoteContent;
+
+        editor.commands.setContent(mergedContent, { emitUpdate: false });
+        const maxPosition = editor.state.doc.content.size;
+        editor.commands.setTextSelection({
+          from: Math.min(selection.from, maxPosition),
+          to: Math.min(selection.to, maxPosition),
+        });
+        setTitleState(mergedTitle);
+        titleRef.current = mergedTitle;
+        setSavedAt(remoteNote.updatedAt);
+
+        // The remote document is now the merge base. The merged local result
+        // remains dirty and is saved as the next version, so concurrent edits
+        // converge instead of overwriting either collaborator's work.
+        versionRef.current = remoteNote.version;
+        baseTitleRef.current = remoteNote.title;
+        baseContentRef.current = JSON.stringify(remoteNote.content);
+        dirtyRef.current = true;
+        setSaveStatus('dirty');
+        scheduleSave(editor);
+
+        return true;
+      } catch {
+        return false;
+      }
     },
-    [editor, noteId],
+    [editor, noteId, scheduleSave],
   );
 
   return {
