@@ -2,6 +2,7 @@ import { NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import React, { useRef, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FILE_SIZE_LIMITS, isFileTooLarge } from '@/lib/fileUploads';
 
 type UploadImage = (file: File) => Promise<string>;
 
@@ -23,6 +24,11 @@ const ImageBlock = ({
   const uploadImage = extension.options.uploadImage as UploadImage;
 
   const handleFile = async (file: File): Promise<void> => {
+    if (isFileTooLarge(file, FILE_SIZE_LIMITS.noteImage)) {
+      setError(t('notes.imageTooLarge'));
+      return;
+    }
+
     setUploading(true);
     setError(null);
     try {

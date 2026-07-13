@@ -99,4 +99,5 @@ export const kanban: typeof en = {
   failedToCreateBoard: 'Gagal membuat papan.',
   failedToCreateLabel: 'Gagal membuat label.',
   fileTooLarge: '{{name}} terlalu besar. Maks 20 MB.',
+  failedToProcessFile: 'File tidak dapat dilampirkan. Silakan coba lagi.',
 };

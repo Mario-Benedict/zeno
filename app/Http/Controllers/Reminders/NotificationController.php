@@ -79,7 +79,7 @@ class NotificationController extends Controller
                     'unread_count' => $this->messageService->countUnread(
                         $room->id,
                         $lastReadMessageId,
-                        (string) $user->id,
+                        $user->getKey(),
                     ),
                     'lastMessage' => $lastMessageMap[$room->id] ?? null,
                 ];

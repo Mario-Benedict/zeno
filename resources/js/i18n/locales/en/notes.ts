@@ -97,6 +97,7 @@ export const notes = {
   orPasteImageUrl: 'or paste an image URL',
   imageUrlPlaceholder: 'https://...',
   imageUploadFailed: 'Upload failed — try again.',
+  imageTooLarge: 'This image exceeds the 5 MB limit.',
   editorContentPlaceholder: "Write something, or press '/' for commands…",
   slashCommandText: 'Text',
   slashCommandTextDescription: 'Plain paragraph text',

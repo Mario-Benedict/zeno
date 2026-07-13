@@ -114,6 +114,7 @@ const GeneralTab = ({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
 
   // Reset the local draft when the project itself changes (not on every
@@ -180,6 +181,7 @@ const GeneralTab = ({
 
   const handleUpload = (file: File) => {
     setUploading(true);
+    setUploadError(null);
     const form = new FormData();
     form.append('avatar', file);
     router.post(
@@ -189,6 +191,11 @@ const GeneralTab = ({
         preserveScroll: true,
         forceFormData: true,
         onSuccess: () => setUploadModalOpen(false),
+        onError: (errors) =>
+          setUploadError(
+            (errors.avatar as string | undefined) ??
+              t('projectSettingsTabs.avatarUploadFailed'),
+          ),
         onFinish: () => setUploading(false),
       },
     );
@@ -311,6 +318,8 @@ const GeneralTab = ({
           onRemove={handleRemoveImage}
           hasImage={project.avatar_url !== null}
           uploading={uploading}
+          error={uploadError}
+          onErrorClear={() => setUploadError(null)}
         />
       )}
     </>

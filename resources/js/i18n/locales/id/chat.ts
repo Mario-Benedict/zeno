@@ -19,7 +19,12 @@ export const chat: typeof en = {
   send: 'Kirim',
   noMessagesYet: 'Belum ada pesan. Sapa duluan!',
   fileExceedsSizeLimit: '"{{name}}" melebihi batas 50 MB.',
+  attachmentsExceedTotalSizeLimit:
+    'Total ukuran lampiran tidak boleh melebihi 50 MB.',
   failedToSendMessage: 'Gagal mengirim pesan.',
+  sentAnImage: 'Mengirim gambar',
+  sentAFile: 'Mengirim file',
+  unreadMessages: '{{count}} pesan belum dibaca',
   today: 'Hari ini',
   yesterday: 'Kemarin',
   newMessage: 'Pesan baru',

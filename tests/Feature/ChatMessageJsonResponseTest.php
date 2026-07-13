@@ -5,6 +5,7 @@ use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 
 uses(RefreshDatabase::class);
 
@@ -39,7 +40,7 @@ it('returns the created message as json for api-style callers like the dashboard
         ])
         ->assertOk()
         ->assertJsonPath('message.body', 'Hello from the dashboard widget')
-        ->assertJsonPath('message.senderId', $user->id);
+        ->assertJsonPath('message.senderId', (string) $user->id);
 });
 
 it('still redirects back for a normal (non-json) inertia-style request', function () {
@@ -72,4 +73,40 @@ it('still redirects back for a normal (non-json) inertia-style request', functio
             'body' => 'Hello from the full chat page',
         ])
         ->assertRedirect();
+});
+
+it('returns a validation error when combined chat attachments exceed 50 MB', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'project_name' => 'Test Project',
+        'project_slug' => Project::generateUniqueSlug('Test Project'),
+        'avatar_color' => 'accent-blue',
+    ]);
+    $project->members()->attach($user->id, ['role' => ProjectRole::Owner->value]);
+
+    $room = ChatRoom::create([
+        'project_id' => $project->project_id,
+        'type' => 'group',
+        'name' => $project->project_name,
+    ]);
+    $room->participants()->attach($user->id, [
+        'role' => 'admin',
+        'is_muted' => false,
+        'joined_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->withSession([
+            'accounts' => [['user_id' => $user->id]],
+            'account_active_index' => 0,
+        ])
+        ->postJson("/u/0/p/{$project->project_slug}/chat/rooms/{$room->id}/messages", [
+            'type' => 'file',
+            'attachments' => [
+                ['type' => 'file', 'file' => UploadedFile::fake()->create('first.zip', 30 * 1024)],
+                ['type' => 'file', 'file' => UploadedFile::fake()->create('second.zip', 30 * 1024)],
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('attachments');
 });

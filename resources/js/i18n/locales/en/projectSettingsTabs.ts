@@ -15,6 +15,8 @@ export const projectSettingsTabs = {
   clickToSelectImage: 'Click to select an image',
   imagePreviewAlt: 'Image preview',
   imageFormatsHint: 'JPEG, PNG, WebP or GIF · max 2 MB',
+  avatarFileTooLarge: 'This image exceeds the 2 MB avatar limit.',
+  avatarUploadFailed: 'Could not upload this image. Please try again.',
   removeCurrentAvatar: 'Remove current avatar',
   avatar: 'Avatar',
   changeProjectAvatar: 'Change project avatar',
