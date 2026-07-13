@@ -11,6 +11,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     networks: [backend]
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "mysql", "service": "zeno-mysql"}]'
     healthcheck:
       test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
       interval: 5s
@@ -45,6 +47,14 @@ services:
       mysql:
         condition: service_healthy
 
+  # Every service below carries a com.datadoghq.ad.logs label so the
+  # datadog-agent's Docker Autodiscovery (DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+  # below) can tag each container's logs with the right "source" instead of
+  # shipping everything generically. Without this, Datadog has no pipeline to
+  # parse app/php's JSON (LOG_CHANNEL=stderr, see config/logging.php) or
+  # web/nginx's access log, and falls back to flagging every line by which
+  # stream (stdout/stderr) it arrived on — which is why healthy 200/303
+  # responses were showing up marked as errors.
   app:
     image: ${REGISTRY_IMAGE}-app:${IMAGE_TAG:-latest}
     restart: unless-stopped
@@ -53,12 +63,16 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "php", "service": "zeno-app"}]'
 
   web:
     image: ${REGISTRY_IMAGE}-web:${IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on: [app]
     networks: [backend]
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "nginx", "service": "zeno-web"}]'
 
   reverb:
     image: ${REGISTRY_IMAGE}-app:${IMAGE_TAG:-latest}
@@ -66,6 +80,8 @@ services:
     restart: unless-stopped
     env_file: .env
     networks: [backend]
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "php", "service": "zeno-reverb"}]'
 
   queue:
     image: ${REGISTRY_IMAGE}-app:${IMAGE_TAG:-latest}
@@ -76,6 +92,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "php", "service": "zeno-queue"}]'
 
   scheduler:
     image: ${REGISTRY_IMAGE}-app:${IMAGE_TAG:-latest}
@@ -86,6 +104,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "php", "service": "zeno-scheduler"}]'
 
   caddy:
     image: caddy:2-alpine
@@ -99,6 +119,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     networks: [backend]
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "caddy", "service": "zeno-caddy"}]'
 
   # Collects every other container's stdout/stderr (Laravel logs JSON there,
   # see LOG_CHANNEL=stderr) and ships it to Datadog. Without a DD_API_KEY set,
