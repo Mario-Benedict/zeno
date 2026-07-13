@@ -47,7 +47,7 @@ class NoteShareController extends Controller
         // the header's value, not just its presence: pusher-php-server rejects an
         // empty-but-present socket ID just as hard as a malformed one.
         $broadcast = broadcast(new NoteUpdated($fresh, (string) Auth::id()));
-        if (request()->header('X-Socket-ID')) {
+        if (preg_match('/^\d+\.\d+$/', (string) request()->header('X-Socket-ID')) === 1) {
             $broadcast->toOthers();
         }
 

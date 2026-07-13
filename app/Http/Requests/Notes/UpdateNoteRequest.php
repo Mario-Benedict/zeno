@@ -17,6 +17,7 @@ class UpdateNoteRequest extends FormRequest
         return [
             'title' => ['sometimes', 'required', 'string', 'max:255'],
             'content' => ['nullable', 'array'],
+            'version' => ['sometimes', 'integer', 'min:1'],
         ];
     }
 }

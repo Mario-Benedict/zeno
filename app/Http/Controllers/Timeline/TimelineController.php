@@ -6,13 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\KanbanController;
 use App\Models\CardLabel;
 use App\Models\Project;
+use App\Services\StorageService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TimelineController extends Controller
 {
+    public function __construct(private readonly StorageService $storage) {}
+
     /**
      * Render the per-project Timeline view.
      *
@@ -58,9 +60,7 @@ class TimelineController extends Controller
                 'project_name' => $project->project_name,
                 'project_slug' => $project->project_slug,
                 'avatar_color' => $project->avatar_color ?? 'accent-blue',
-                'avatar_url' => $project->avatar_url
-                    ? Storage::disk('public')->url($project->avatar_url)
-                    : null,
+                'avatar_url' => $this->storage->url($project->avatar_url),
             ],
             'kanbanBoards' => $project->kanbanBoards,
             'cardLabels' => $cardLabels,

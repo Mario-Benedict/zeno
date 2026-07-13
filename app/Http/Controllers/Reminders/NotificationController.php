@@ -10,6 +10,8 @@ use App\Models\TaskConflict;
 use App\Models\User;
 use App\Services\ChatMessageService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -35,6 +37,7 @@ class NotificationController extends Controller
         $inbox = Reminder::where('reminder_project_id', $project->project_id)
             ->where('reminder_user_id', $user->id)
             ->where('is_completed', false)
+            ->whereNull('notification_read_at')
             ->whereNotNull('reminder_due_at')
             ->where('reminder_due_at', '<=', now()->addDay())
             ->orderBy('reminder_due_at')
@@ -53,8 +56,11 @@ class NotificationController extends Controller
             ->with('participants')
             ->get();
 
+        $lastMessageMap = $this->messageService
+            ->getLastMessagePreviewsForRooms($rooms->pluck('id')->all());
+
         $chat = $rooms
-            ->map(function (ChatRoom $room) use ($user) {
+            ->map(function (ChatRoom $room) use ($user, $lastMessageMap) {
                 // Already eager-loaded on $room->participants — avoids a
                 // redundant `chat_room_participants` query per room.
                 $lastReadMessageId = $room->participants
@@ -70,7 +76,12 @@ class NotificationController extends Controller
                         'id' => (string) $p->id,
                         'name' => $p->name,
                     ])->values()->all(),
-                    'unread_count' => $this->messageService->countUnread($room->id, $lastReadMessageId),
+                    'unread_count' => $this->messageService->countUnread(
+                        $room->id,
+                        $lastReadMessageId,
+                        (string) $user->id,
+                    ),
+                    'lastMessage' => $lastMessageMap[$room->id] ?? null,
                 ];
             })
             ->filter(fn (array $r) => $r['unread_count'] > 0)
@@ -107,6 +118,28 @@ class NotificationController extends Controller
             'inbox' => $inbox,
             'chat' => $chat,
             'conflicts' => $pendingConflicts->concat($declineAlerts)->values(),
+        ]);
+    }
+
+    /** Mark a reminder notification as read, then open its detail pane. */
+    public function openReminder(
+        int $accountIndex,
+        Request $request,
+        Project $project,
+        Reminder $reminder,
+    ): RedirectResponse {
+        abort_unless(
+            $reminder->reminder_project_id === $project->project_id
+                && $reminder->reminder_user_id === $request->user()->id,
+            403,
+        );
+
+        $reminder->update(['notification_read_at' => now()]);
+
+        return redirect()->route('reminders.index', [
+            'accountIndex' => $accountIndex,
+            'project' => $project->project_slug,
+            'reminder' => $reminder->reminder_id,
         ]);
     }
 }

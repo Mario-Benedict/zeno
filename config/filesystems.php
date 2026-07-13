@@ -78,13 +78,13 @@ return [
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
-    // Local development needs the web-accessible public disk. Production uses
-    // S3 whenever FILESYSTEM_DISK=s3, unless CHAT_STORAGE_DISK overrides it.
-    // STORAGE_DRIVER remains as a fallback for older deployments.
-    'chat_disk' => env(
-        'CHAT_STORAGE_DISK',
-        env('STORAGE_DRIVER', env('FILESYSTEM_DISK', 'local') === 's3' ? 's3' : 'public'),
-    ),
+    // All user-uploaded files (chat, notes, and profile/project avatars) use
+    // one disk so private S3/R2 objects are consistently resolved through
+    // signed URLs. CHAT_STORAGE_DISK remains a backwards-compatible fallback.
+    'uploads_disk' => env('UPLOADS_STORAGE_DISK')
+        ?: env('CHAT_STORAGE_DISK',
+            env('STORAGE_DRIVER', env('FILESYSTEM_DISK', 'local') === 's3' ? 's3' : 'public'),
+        ),
 
     'temporary_url_ttl' => (int) env('STORAGE_URL_TTL', 60),
 ];

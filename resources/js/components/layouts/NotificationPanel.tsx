@@ -14,6 +14,7 @@ interface NotificationPanelProps {
   onClose: () => void;
   project: CurrentProject | null;
   accountIndex: number;
+  refreshVersion?: number;
   onDataChange?: (data: NotificationInboxResponse | null) => void;
 }
 
@@ -24,6 +25,7 @@ const NotificationPanel = ({
   onClose,
   project,
   accountIndex,
+  refreshVersion = 0,
   onDataChange,
 }: NotificationPanelProps) => {
   const { locale, t } = useTranslation();
@@ -63,7 +65,7 @@ const NotificationPanel = ({
       .finally(() => {
         if (open) setLoading(false);
       });
-  }, [open, project, accountIndex, onDataChange]);
+  }, [open, project, accountIndex, refreshVersion, onDataChange]);
 
   const removeConflict = (id: string) => {
     setData((prev) =>
@@ -154,9 +156,15 @@ const NotificationPanel = ({
             {data?.inbox.map((item) => (
               <Link
                 key={item.reminder_id}
-                href={`${projectPath(accountIndex, project.project_slug, '/reminders')}?reminder=${item.reminder_id}`}
+                as="button"
+                method="post"
+                href={projectPath(
+                  accountIndex,
+                  project.project_slug,
+                  `/notifications/reminders/${item.reminder_id}/open`,
+                )}
                 onClick={onClose}
-                className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition hover:bg-white/4"
+                className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-white/4"
               >
                 <span
                   className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.is_overdue ? 'bg-accent-red' : 'bg-accent-yellow'}`}
@@ -192,6 +200,11 @@ const NotificationPanel = ({
                   ? (room.name ?? t('header.groupFallback'))
                   : (room.participants[0]?.name ??
                     t('header.directMessageFallback'));
+              const preview = room.lastMessage
+                ? room.type === 'group'
+                  ? `${room.lastMessage.senderName}: ${room.lastMessage.body}`
+                  : room.lastMessage.body
+                : null;
 
               return (
                 <Link
@@ -207,6 +220,11 @@ const NotificationPanel = ({
                     <p className="truncate text-small text-dark-primary">
                       {label}
                     </p>
+                    {preview && (
+                      <p className="mt-0.5 truncate text-xsmall text-dark-secondary">
+                        {preview}
+                      </p>
+                    )}
                   </div>
                   <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent-blue px-1.5 text-micro font-semibold text-white">
                     {room.unread_count}
