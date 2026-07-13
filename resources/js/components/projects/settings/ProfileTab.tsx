@@ -25,6 +25,7 @@ const ProfileTab = ({
   const [error, setError] = useState<string | null>(null);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const hasChanged = name.trim() !== '' && name.trim() !== user?.name;
 
@@ -66,12 +67,18 @@ const ProfileTab = ({
 
   const handleUpload = (file: File) => {
     setUploading(true);
+    setUploadError(null);
     const form = new FormData();
     form.append('avatar', file);
     router.post(accountPath(accountIndex, '/profile/avatar'), form, {
       preserveScroll: true,
       forceFormData: true,
       onSuccess: () => setUploadModalOpen(false),
+      onError: (errors) =>
+        setUploadError(
+          (errors.avatar as string | undefined) ??
+            t('projectSettingsTabs.avatarUploadFailed'),
+        ),
       onFinish: () => setUploading(false),
     });
   };
@@ -127,6 +134,8 @@ const ProfileTab = ({
           onRemove={handleRemoveImage}
           hasImage={!!user?.avatar_url}
           uploading={uploading}
+          error={uploadError}
+          onErrorClear={() => setUploadError(null)}
         />
       )}
       <form onSubmit={handleSave} className="space-y-5">

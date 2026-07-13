@@ -83,6 +83,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN php -r "exit(extension_loaded('curl') ? 0 : 1);"
 
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
 COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

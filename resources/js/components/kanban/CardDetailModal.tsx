@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FILE_SIZE_LIMITS, isFileTooLarge } from '@/lib/fileUploads';
 import projects from '@/routes/projects';
 import type {
   KanbanBoardCard,
@@ -82,6 +83,7 @@ const CardDetailModal = ({
   );
   const [addingAttachment, setAddingAttachment] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentZoneRef = useRef<HTMLDivElement>(null);
@@ -141,6 +143,7 @@ const CardDetailModal = ({
     setSavingLabel(false);
     setSaving(false);
     setUploadingFile(false);
+    setAttachmentError(null);
     setDragOver(false);
     setLabelPopoverOpen(false);
     // Only reset when the card itself switches, not on every card update
@@ -629,9 +632,10 @@ const CardDetailModal = ({
   };
 
   const processFiles = async (files: FileList | File[]) => {
+    setAttachmentError(null);
     for (const file of Array.from(files)) {
-      if (file.size > 20 * 1024 * 1024) {
-        alert(t('kanban.fileTooLarge', { name: file.name }));
+      if (isFileTooLarge(file, FILE_SIZE_LIMITS.cardAttachment)) {
+        setAttachmentError(t('kanban.fileTooLarge', { name: file.name }));
         continue;
       }
       setUploadingFile(true);
@@ -654,6 +658,7 @@ const CardDetailModal = ({
         setLocalAttachments((prev) => [...prev, att]);
       } catch (err) {
         console.error('Failed to process file', err);
+        setAttachmentError(t('kanban.failedToProcessFile'));
       } finally {
         setUploadingFile(false);
       }
@@ -762,6 +767,7 @@ const CardDetailModal = ({
               local: localAttachments,
               adding: addingAttachment,
               uploading: uploadingFile,
+              error: attachmentError,
               dragOver,
               fileInputRef,
               zoneRef: attachmentZoneRef,
@@ -769,6 +775,7 @@ const CardDetailModal = ({
               onProcess: processFiles,
               onDownload: downloadAttachment,
               onDelete: deleteLocalAttachment,
+              onDismissError: () => setAttachmentError(null),
               onCancel: () => setAddingAttachment(false),
             }}
             checklists={{

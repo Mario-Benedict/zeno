@@ -17,7 +17,12 @@ export const chat = {
   send: 'Send',
   noMessagesYet: 'No messages yet. Say hello!',
   fileExceedsSizeLimit: '"{{name}}" exceeds the 50 MB limit.',
+  attachmentsExceedTotalSizeLimit:
+    'The combined attachment size cannot exceed 50 MB.',
   failedToSendMessage: 'Failed to send message.',
+  sentAnImage: 'Sent an image',
+  sentAFile: 'Sent a file',
+  unreadMessages: '{{count}} unread messages',
   today: 'Today',
   yesterday: 'Yesterday',
   newMessage: 'New message',

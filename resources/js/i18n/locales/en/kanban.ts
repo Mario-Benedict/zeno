@@ -97,4 +97,5 @@ export const kanban = {
   failedToCreateBoard: 'Failed to create board.',
   failedToCreateLabel: 'Failed to create label.',
   fileTooLarge: '{{name}} is too large. Max 20 MB.',
+  failedToProcessFile: 'Could not attach this file. Please try again.',
 };

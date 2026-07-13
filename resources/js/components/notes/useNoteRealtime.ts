@@ -16,33 +16,29 @@ interface UseNoteRealtimeOptions {
   noteId: string | null;
   isShared: boolean;
   currentUserId: number;
-  /** Should return true while the local user has unsaved/in-flight edits — remote updates are held back to avoid clobbering them. */
-  isDirty: () => boolean;
-  onRemoteUpdate: (note: NoteDetail, editedBy: PresenceUser | null) => void;
+  /** Returns false only when the editor cannot safely merge the remote update. */
+  onRemoteUpdate: (note: NoteDetail, editedBy: PresenceUser | null) => boolean;
 }
 
 /**
  * Joins the note's presence channel (see `routes/channels.php`) while a
- * shared note is open. Remote `NoteUpdated` events are applied immediately
- * unless the local user is mid-edit, in which case we just flag that the
- * note changed elsewhere rather than overwriting their in-progress typing.
+ * shared note is open. Remote `NoteUpdated` events are applied immediately;
+ * the editor rebases any unsaved local changes onto the incoming version so
+ * multiple collaborators converge without overwriting each other's typing.
  */
 export const useNoteRealtime = ({
   noteId,
   isShared,
   currentUserId,
-  isDirty,
   onRemoteUpdate,
 }: UseNoteRealtimeOptions) => {
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
   const [hasStaleRemoteChange, setHasStaleRemoteChange] = useState(false);
-  const isDirtyRef = useRef(isDirty);
   const onRemoteUpdateRef = useRef(onRemoteUpdate);
 
   useEffect(() => {
-    isDirtyRef.current = isDirty;
     onRemoteUpdateRef.current = onRemoteUpdate;
-  }, [isDirty, onRemoteUpdate]);
+  }, [onRemoteUpdate]);
 
   useEffect(() => {
     if (!noteId || !isShared) return;
@@ -68,12 +64,8 @@ export const useNoteRealtime = ({
       // remote conflict.
       if (payload.editedBy?.id === currentUserId) return;
 
-      if (isDirtyRef.current()) {
-        setHasStaleRemoteChange(true);
-        return;
-      }
-
-      onRemoteUpdateRef.current(payload.note, payload.editedBy);
+      const applied = onRemoteUpdateRef.current(payload.note, payload.editedBy);
+      setHasStaleRemoteChange(!applied);
     });
 
     // Runs on note switch (deps change) and on unmount — resets presence/stale

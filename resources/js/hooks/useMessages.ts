@@ -1,6 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
-import echo from '@/echo';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { inertiaJson } from '@/lib/inertiaJson';
 import { refreshNotifications } from '@/lib/notificationEvents';
 import chat from '@/routes/chat';
@@ -29,30 +28,14 @@ export const useMessages = (projectSlug: string, roomId: string) => {
 
   const isLoadingMoreRef = useRef(false);
 
-  useEffect(() => {
-    if (!roomId) return;
-
-    isLoadingMoreRef.current = false;
-
-    router.get(
-      chat.index.url({ accountIndex, project: projectSlug }),
-      { room: roomId },
-      {
-        only: ['messages', 'nextCursor', 'hasMore'],
-        preserveState: true,
-        preserveScroll: true,
-        onFinish: () => setInitialLoading(false),
-      },
-    );
-
-    const channel = echo.private(`chat.${roomId}`);
-    channel.listen('.message.sent', (e: { message: ChatMessage }) => {
+  const receiveMessage = useCallback(
+    (message: ChatMessage) => {
       setLocalMessages((prev) => {
-        if (prev.some((m) => m._id === e.message._id)) return prev;
+        if (prev.some((item) => item._id === message._id)) return prev;
 
-        return [e.message, ...prev];
+        return [message, ...prev];
       });
-      setLatestMessageId(e.message._id);
+      setLatestMessageId(message._id);
 
       void inertiaJson(
         'get',
@@ -69,11 +52,26 @@ export const useMessages = (projectSlug: string, roomId: string) => {
         .catch((error: unknown) => {
           console.error('Failed to mark the incoming message as read', error);
         });
-    });
+    },
+    [accountIndex, projectSlug, roomId],
+  );
 
-    return () => {
-      echo.leave(`chat.${roomId}`);
-    };
+  useEffect(() => {
+    if (!roomId) return;
+
+    isLoadingMoreRef.current = false;
+
+    router.get(
+      chat.index.url({ accountIndex, project: projectSlug }),
+      { room: roomId },
+      {
+        only: ['messages', 'nextCursor', 'hasMore'],
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => refreshNotifications(),
+        onFinish: () => setInitialLoading(false),
+      },
+    );
   }, [accountIndex, projectSlug, roomId]);
 
   useEffect(() => {
@@ -119,6 +117,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     initialLoading,
     loadMore,
     pushMessage,
+    receiveMessage,
     latestMessageId,
   };
 };

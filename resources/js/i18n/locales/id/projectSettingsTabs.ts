@@ -14,6 +14,8 @@ export const projectSettingsTabs: typeof en = {
   clickToSelectImage: 'Klik untuk memilih gambar',
   imagePreviewAlt: 'Pratinjau gambar',
   imageFormatsHint: 'JPEG, PNG, WebP, atau GIF · maks 2 MB',
+  avatarFileTooLarge: 'Gambar ini melebihi batas avatar 2 MB.',
+  avatarUploadFailed: 'Gambar tidak dapat diunggah. Silakan coba lagi.',
   removeCurrentAvatar: 'Hapus avatar saat ini',
   avatar: 'Avatar',
   changeProjectAvatar: 'Ubah avatar proyek',

@@ -36,9 +36,21 @@ const ChatRoomItem = ({ room, currentUser, isActive, onClick }: Props) => {
       <RoomAvatar room={room} currentUser={currentUser} size={32} />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-small leading-snug font-medium text-dark-primary">
-          {displayName}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="min-w-0 flex-1 truncate text-small leading-snug font-medium text-dark-primary">
+            {displayName}
+          </p>
+          {room.unreadCount > 0 && !isActive && (
+            <span
+              aria-label={t('chat.unreadMessages', {
+                count: room.unreadCount,
+              })}
+              className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-accent-blue px-1 text-micro leading-none font-semibold text-white"
+            >
+              {room.unreadCount > 99 ? '99+' : room.unreadCount}
+            </span>
+          )}
+        </div>
         <p className="mt-0.5 truncate text-xsmall leading-snug text-dark-secondary">
           {preview}
         </p>
