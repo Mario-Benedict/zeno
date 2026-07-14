@@ -289,30 +289,37 @@ const ProjectInvitationModal = ({
     );
   };
 
-  const saveLink = () => {
+  const createLink = () => {
     if (!canManage) return;
 
     setLinkProcessing(true);
-    const options = {
-      preserveScroll: true,
-      onSuccess: () => setSelectedLinkRole(null),
-      onFinish: () => setLinkProcessing(false),
-    };
-
-    if (invitationLink) {
-      router.patch(
-        projectPath(accountIndex, project.project_slug, '/invitations/link'),
-        { role: linkRole },
-        options,
-      );
-
-      return;
-    }
-
     router.post(
       projectPath(accountIndex, project.project_slug, '/invitations/link'),
       { role: linkRole },
-      options,
+      {
+        preserveScroll: true,
+        onSuccess: () => setSelectedLinkRole(null),
+        onFinish: () => setLinkProcessing(false),
+      },
+    );
+  };
+
+  // The role picker for an existing link applies immediately — there's no
+  // separate "Save" step, since the primary button next to it is dedicated
+  // to copying the link instead.
+  const updateLinkRole = (role: AssignableProjectRole) => {
+    setSelectedLinkRole(role);
+    if (!canManage || !invitationLink) return;
+
+    setLinkProcessing(true);
+    router.patch(
+      projectPath(accountIndex, project.project_slug, '/invitations/link'),
+      { role },
+      {
+        preserveScroll: true,
+        onSuccess: () => setSelectedLinkRole(null),
+        onFinish: () => setLinkProcessing(false),
+      },
     );
   };
 
@@ -433,15 +440,7 @@ const ProjectInvitationModal = ({
                 <p className="text-sm font-semibold text-dark-primary">
                   {t('projectSettingsTabs.shareWithLink')}
                 </p>
-                {invitationLink ? (
-                  <button
-                    type="button"
-                    onClick={() => copyLink(invitationLink.url)}
-                    className="mt-1 max-w-full truncate text-left text-sm font-medium text-status-info hover:underline"
-                  >
-                    {copied ? t('common.copied') : invitationLink.url}
-                  </button>
-                ) : (
+                {!invitationLink && (
                   <p className="mt-1 text-sm text-dark-secondary">
                     {t('projectSettingsTabs.linkDisabled')}
                   </p>
@@ -450,19 +449,29 @@ const ProjectInvitationModal = ({
               <RoleSelect
                 value={linkRole}
                 roles={roles}
-                disabled={!canManage}
-                onChange={setSelectedLinkRole}
-              />
-              <button
-                type="button"
-                onClick={saveLink}
                 disabled={!canManage || linkProcessing}
-                className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {invitationLink
-                  ? t('projectSettingsTabs.save')
-                  : t('projectSettingsTabs.create')}
-              </button>
+                onChange={updateLinkRole}
+              />
+              {invitationLink ? (
+                <button
+                  type="button"
+                  onClick={() => copyLink(invitationLink.url)}
+                  className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07]"
+                >
+                  {copied
+                    ? t('common.copied')
+                    : t('projectSettingsTabs.copyLink')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={createLink}
+                  disabled={!canManage || linkProcessing}
+                  className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t('projectSettingsTabs.create')}
+                </button>
+              )}
               {invitationLink && (
                 <button
                   type="button"

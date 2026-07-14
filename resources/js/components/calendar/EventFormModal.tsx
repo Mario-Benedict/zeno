@@ -14,6 +14,18 @@ import { getRecurrenceLabelParams } from '@/utils/calendar';
 import { EventAssigneePicker } from './EventAssigneePicker';
 import { EventLabelPicker } from './EventLabelPicker';
 
+// Both the start and end of a date/time pair must be read off the same
+// (local) basis — mixing toISOString() (UTC) for the date with
+// toTimeString() (local) for the time silently shifts the saved instant by
+// up to a day whenever the viewer's local day differs from the UTC day.
+const toLocalDateStr = (d: Date) => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 interface EventFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -71,11 +83,11 @@ export const EventFormModal = ({
         setDescription(eventToEdit.description || '');
 
         const start = new Date(eventToEdit.start_time);
-        setStartDate(start.toISOString().split('T')[0]);
+        setStartDate(toLocalDateStr(start));
         setStartTime(start.toTimeString().slice(0, 5));
 
         const end = new Date(eventToEdit.end_time);
-        setEndDate(end.toISOString().split('T')[0]);
+        setEndDate(toLocalDateStr(end));
         setEndTime(end.toTimeString().slice(0, 5));
 
         setLabelIds(eventToEdit.labels.map((l) => l.card_label_id));
@@ -91,10 +103,7 @@ export const EventFormModal = ({
         setDescription('');
 
         const initD = initialDate ? new Date(initialDate) : new Date();
-        const yyyy = initD.getFullYear();
-        const mm = String(initD.getMonth() + 1).padStart(2, '0');
-        const dd = String(initD.getDate()).padStart(2, '0');
-        const dateStr = `${yyyy}-${mm}-${dd}`;
+        const dateStr = toLocalDateStr(initD);
 
         setStartDate(dateStr);
         setEndDate(dateStr);

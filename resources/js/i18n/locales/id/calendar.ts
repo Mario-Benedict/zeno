@@ -108,6 +108,7 @@ export const calendar: typeof en = {
   saveScheduleError: 'Gagal menyimpan jadwal.',
 
   // Delete confirmation
+  deleteScheduleTitle: 'Hapus Jadwal',
   deleteScheduleConfirm: 'Apakah Anda yakin ingin menghapus jadwal ini?',
 
   // Recurrence edit dialog

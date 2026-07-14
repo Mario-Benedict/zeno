@@ -56,12 +56,30 @@ export const CardDetailSidebar = ({
   const startDt = card.kanban_board_card_start_date;
   const dueDt = card.kanban_board_card_due_date;
 
-  // Dates are stored as timestamps: the picker edits the calendar day and the
-  // time input edits the wall-clock time, recombined into one datetime string.
-  const datePart = (dt: string | null) => (dt ? dt.slice(0, 10) : null);
-  const timePart = (dt: string | null) => (dt ? dt.slice(11, 16) : '');
-  const combine = (date: string | null, time: string) =>
-    date ? `${date}T${time || '00:00'}` : '';
+  // Dates are stored as absolute UTC timestamps on the wire. The picker
+  // edits the calendar day and wall-clock time in the viewer's local
+  // timezone, so both parts must be read off a real Date's local getters
+  // (not sliced directly out of the UTC ISO string), and combine() must go
+  // back through a local Date so the saved instant matches what was
+  // actually typed rather than reinterpreting local-looking digits as UTC.
+  const datePart = (dt: string | null) => {
+    if (!dt) return null;
+    const d = new Date(dt);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd}`;
+  };
+  const timePart = (dt: string | null) =>
+    dt ? new Date(dt).toTimeString().slice(0, 5) : '';
+  const combine = (date: string | null, time: string) => {
+    if (!date) return '';
+    const [y, m, d] = date.split('-').map(Number);
+    const [h, min] = (time || '00:00').split(':').map(Number);
+
+    return new Date(y, m - 1, d, h, min).toISOString();
+  };
 
   return (
     <div className="scrollbar-app w-52 shrink-0 space-y-4 overflow-y-auto border-l border-dark-border px-4 py-4">
