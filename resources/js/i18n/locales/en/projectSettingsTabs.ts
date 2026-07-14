@@ -105,7 +105,7 @@ export const projectSettingsTabs = {
   sharing: 'Sharing',
   shareWithLink: 'Share this project with a link',
   linkDisabled: 'Link disabled',
-  save: 'Save',
+  copyLink: 'Copy Link',
   create: 'Create',
   disable: 'Disable',
   pendingInvitations: 'Pending invitations',

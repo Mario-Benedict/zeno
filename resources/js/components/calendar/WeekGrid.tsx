@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useWheelStepNavigation } from '@/hooks/useWheelStepNavigation';
 import type { TranslationKey } from '@/i18n/dictionary';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 import { WeekEventCard } from './WeekEventCard';
@@ -11,8 +10,6 @@ interface WeekGridProps {
   members: CalendarMember[];
   onDateClick: (date: Date) => void;
   onEventClick: (event: AnyCalendarEvent) => void;
-  onPrevWeek: () => void;
-  onNextWeek: () => void;
 }
 
 const DAY_KEYS: TranslationKey[] = [
@@ -36,19 +33,13 @@ export const WeekGrid = ({
   members,
   onDateClick,
   onEventClick,
-  onPrevWeek,
-  onNextWeek,
 }: WeekGridProps) => {
   const { t } = useTranslation();
-  // Scrolling the hour grid works normally (browsing hours within the visible
-  // week); only once it's already scrolled to the very top or bottom does
-  // scrolling further step to the previous/next week, so this never fights
-  // with the grid's own vertical scroll.
-  const scrollRef = useWheelStepNavigation<HTMLDivElement>({
-    onPrev: onPrevWeek,
-    onNext: onNextWeek,
-    requireScrollBoundary: true,
-  });
+  // Scrolling the hour grid only ever browses hours within the visible week —
+  // it used to also step to the prev/next week once scrolled to the top/
+  // bottom boundary, but that made normal scrolling unpredictably jump weeks,
+  // so week navigation now happens only through explicit date selection.
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const startOfWeek = new Date(currentDate);
   startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());

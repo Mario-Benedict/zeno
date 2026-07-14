@@ -106,6 +106,7 @@ export const calendar = {
   saveScheduleError: 'Failed to save schedule.',
 
   // Delete confirmation
+  deleteScheduleTitle: 'Delete Schedule',
   deleteScheduleConfirm: 'Are you sure you want to delete this schedule?',
 
   // Recurrence edit dialog

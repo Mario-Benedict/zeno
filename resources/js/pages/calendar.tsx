@@ -6,6 +6,7 @@ import { EventFormModal } from '@/components/calendar/EventFormModal';
 import { MonthGrid } from '@/components/calendar/MonthGrid';
 import { RecurrenceEditDialog } from '@/components/calendar/RecurrenceEditDialog';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
@@ -46,6 +47,7 @@ export default function Calendar({
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [recurrenceDialogOpen, setRecurrenceDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEvent, setSelectedEvent] = useState<AnyCalendarEvent | null>(
@@ -131,20 +133,14 @@ export default function Calendar({
     );
   };
 
-  const handlePrevWeek = () => {
-    setCurrentDate((prev) => {
-      const next = new Date(prev);
-      next.setDate(next.getDate() - 7);
-      return next;
-    });
-  };
-
-  const handleNextWeek = () => {
-    setCurrentDate((prev) => {
-      const next = new Date(prev);
-      next.setDate(next.getDate() + 7);
-      return next;
-    });
+  // Switching into week view should land on the week actually containing
+  // today, not whatever week month-navigation last happened to pin
+  // currentDate to (month prev/next always resets the day to the 1st).
+  const handleViewModeChange = (mode: CalendarViewMode) => {
+    if (mode === 'week' && viewMode !== 'week') {
+      setCurrentDate(new Date());
+    }
+    setViewMode(mode);
   };
 
   const handleToggleMember = (id: number) => {
@@ -196,10 +192,14 @@ export default function Calendar({
       });
       setRecurrenceDialogOpen(true);
     } else {
-      if (confirm(t('calendar.deleteScheduleConfirm'))) {
-        submitDelete(selectedEvent as CalendarEventFull, 'single');
-      }
+      setDeleteConfirmOpen(true);
     }
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteConfirmOpen(false);
+    if (!selectedEvent || selectedEvent.is_classified) return;
+    submitDelete(selectedEvent as CalendarEventFull, 'single');
   };
 
   const handleRecurrenceConfirm = (scope: 'single' | 'all') => {
@@ -311,7 +311,7 @@ export default function Calendar({
       <div className="flex h-full w-full gap-2 overflow-hidden bg-dark-surface-1 p-2">
         <CalendarSidebar
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={handleViewModeChange}
           onRefresh={refetch}
           isLoading={loading}
           onCreate={handleCreate}
@@ -345,8 +345,6 @@ export default function Calendar({
               members={members}
               onDateClick={handleGridDateClick}
               onEventClick={handleEventClick}
-              onPrevWeek={handlePrevWeek}
-              onNextWeek={handleNextWeek}
             />
           )}
 
@@ -399,6 +397,17 @@ export default function Calendar({
         onConfirm={handleRecurrenceConfirm}
         action={pendingAction?.type || 'edit'}
       />
+
+      {deleteConfirmOpen && (
+        <ConfirmModal
+          title={t('calendar.deleteScheduleTitle')}
+          description={t('calendar.deleteScheduleConfirm')}
+          confirmLabel={t('calendar.delete')}
+          cancelLabel={t('calendar.cancel')}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteConfirmOpen(false)}
+        />
+      )}
     </AppLayout>
   );
 }

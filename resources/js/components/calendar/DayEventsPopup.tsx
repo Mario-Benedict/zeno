@@ -63,7 +63,7 @@ export const DayEventsPopup = ({
         </button>
       </div>
 
-      <div className="flex max-h-[300px] scrollbar-thin scrollbar-thumb-dark-surface-3 scrollbar-track-transparent flex-col gap-1 overflow-y-auto pr-1">
+      <div className="scrollbar-app flex max-h-[300px] flex-col gap-1 overflow-y-auto pr-1">
         {events.map((ev) => {
           const startTime = new Date(ev.start_time).toLocaleTimeString(
             'en-US',
