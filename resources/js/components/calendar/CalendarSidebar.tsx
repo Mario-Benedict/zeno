@@ -20,11 +20,14 @@ interface CalendarSidebarProps {
   onNextMonth: () => void;
   members: CalendarMember[];
   onToggleMember: (id: number) => void;
+  onToggleAllMembers: (ids: number[], checked: boolean) => void;
   events: AnyCalendarEvent[];
   cardLabels: CardLabel[];
   hiddenLabelIds: Set<string>;
   onToggleLabel: (labelId: string) => void;
 }
+
+const MAX_VISIBLE_LABELS = 8;
 
 const PlusIcon = () => (
   <svg
@@ -86,6 +89,7 @@ export const CalendarSidebar = ({
   onNextMonth,
   members,
   onToggleMember,
+  onToggleAllMembers,
   events,
   cardLabels,
   hiddenLabelIds,
@@ -93,10 +97,18 @@ export const CalendarSidebar = ({
 }: CalendarSidebarProps) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
+  const [labelsExpanded, setLabelsExpanded] = useState(false);
 
   const filteredMembers = members.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase()),
   );
+  const checkedCount = members.filter((m) => m.checked).length;
+  const allFilteredChecked =
+    filteredMembers.length > 0 && filteredMembers.every((m) => m.checked);
+
+  const visibleLabels = labelsExpanded
+    ? cardLabels
+    : cardLabels.slice(0, MAX_VISIBLE_LABELS);
 
   return (
     <div className="scrollbar-app flex w-72 shrink-0 flex-col gap-3 overflow-y-auto">
@@ -143,7 +155,7 @@ export const CalendarSidebar = ({
 
         {cardLabels.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2 border-t border-dark-border pt-3">
-            {cardLabels.map((label) => {
+            {visibleLabels.map((label) => {
               const active = !hiddenLabelIds.has(label.card_label_id);
 
               return (
@@ -173,6 +185,18 @@ export const CalendarSidebar = ({
                 </button>
               );
             })}
+            {cardLabels.length > MAX_VISIBLE_LABELS && (
+              <button
+                onClick={() => setLabelsExpanded((v) => !v)}
+                className="rounded-full px-3 py-1 text-xsmall font-medium text-dark-secondary transition hover:text-dark-primary"
+              >
+                {labelsExpanded
+                  ? t('calendar.showLessLabels')
+                  : t('calendar.moreLabels', {
+                      count: cardLabels.length - MAX_VISIBLE_LABELS,
+                    })}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -207,12 +231,35 @@ export const CalendarSidebar = ({
           </span>
         </div>
 
+        <div className="mb-2 flex items-center justify-between px-1">
+          <span className="text-xsmall text-dark-secondary">
+            {t('calendar.membersSelectedCount', {
+              checked: checkedCount,
+              total: members.length,
+            })}
+          </span>
+          <button
+            onClick={() =>
+              onToggleAllMembers(
+                filteredMembers.map((m) => m.id),
+                !allFilteredChecked,
+              )
+            }
+            disabled={filteredMembers.length === 0}
+            className="text-xsmall font-semibold text-dark-secondary transition hover:text-dark-primary disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {allFilteredChecked
+              ? t('calendar.deselectAll')
+              : t('calendar.selectAll')}
+          </button>
+        </div>
+
         <div className="scrollbar-app -mr-1 flex-1 overflow-y-auto pr-1">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-0.5">
             {filteredMembers.map((member) => (
               <label
                 key={member.id}
-                className="relative flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-dark-surface-3"
+                className="relative flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-dark-surface-3"
               >
                 <input
                   type="checkbox"

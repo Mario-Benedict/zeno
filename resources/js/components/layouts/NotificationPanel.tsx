@@ -16,6 +16,7 @@ interface NotificationPanelProps {
   accountIndex: number;
   refreshVersion?: number;
   onDataChange?: (data: NotificationInboxResponse | null) => void;
+  currentUserId: number;
 }
 
 type Tab = 'inbox' | 'chat' | 'conflicts';
@@ -27,6 +28,7 @@ const NotificationPanel = ({
   accountIndex,
   refreshVersion = 0,
   onDataChange,
+  currentUserId,
 }: NotificationPanelProps) => {
   const { locale, t } = useTranslation();
   const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
@@ -198,8 +200,9 @@ const NotificationPanel = ({
               const label =
                 room.type === 'group'
                   ? (room.name ?? t('header.groupFallback'))
-                  : (room.participants[0]?.name ??
-                    t('header.directMessageFallback'));
+                  : (room.participants.find(
+                      (p) => String(p.id) !== String(currentUserId),
+                    )?.name ?? t('header.directMessageFallback'));
               const preview = room.lastMessage
                 ? room.type === 'group'
                   ? `${room.lastMessage.senderName}: ${room.lastMessage.body}`
