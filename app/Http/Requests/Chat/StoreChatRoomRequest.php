@@ -23,7 +23,7 @@ class StoreChatRoomRequest extends FormRequest
     {
         return [
 
-            'recipient_id' => ['required', 'uuid', 'exists:users,id'],
+            'recipient_id' => ['required', 'integer', 'exists:users,id'],
         ];
     }
 

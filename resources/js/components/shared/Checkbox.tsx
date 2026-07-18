@@ -1,24 +1,11 @@
+import CheckIcon from '@public/icons/small/check.svg';
+
 interface CheckboxProps {
   id: string;
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
 }
-
-const Checkmark = () => (
-  <svg
-    width="10"
-    height="10"
-    viewBox="0 0 10 10"
-    fill="none"
-    stroke="white"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="1.5,5 4,7.5 8.5,2.5" />
-  </svg>
-);
 
 const Checkbox = ({ id, label, checked, onChange }: CheckboxProps) => (
   <label htmlFor={id} className="flex cursor-pointer items-center gap-2">
@@ -36,7 +23,7 @@ const Checkbox = ({ id, label, checked, onChange }: CheckboxProps) => (
           : 'border-dark-border bg-dark-surface-3'
       }`}
     >
-      {checked && <Checkmark />}
+      {checked && <CheckIcon className="h-2.5 w-2.5 text-white" />}
     </div>
     <span className="text-sm text-dark-secondary">{label}</span>
   </label>

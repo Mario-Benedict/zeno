@@ -9,6 +9,7 @@ import type { ChatMessage, ChatParticipant, ChatRoom } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
 import MoreIcon from '@public/icons/large/more.svg';
 import CancelIcon from '@public/icons/small/cancel.svg';
+import ChatPlaceholderIcon from '@public/icons/small/chat_placeholder.svg';
 import SearchIcon from '@public/icons/small/search.svg';
 
 interface Props {
@@ -30,26 +31,7 @@ const EmptyState = () => {
   return (
     <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 rounded-lg bg-dark-surface-2 select-none">
       <span className="text-dark-secondary opacity-30">
-        <svg
-          width="36"
-          height="36"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M3 6a3 3 0 0 1 3-3h2" />
-          <path d="M11 3h2" />
-          <path d="M16 3h2a3 3 0 0 1 3 3" />
-          <path d="M21 10v2" />
-          <path d="M21 15v1a3 3 0 0 1-3 3h-1" />
-          <path d="M14 19h-2" />
-          <path d="M9 19H8a3 3 0 0 1-3-3v-1" />
-          <path d="M3 12v-2" />
-          <path d="M3 17v2l3-2" />
-        </svg>
+        <ChatPlaceholderIcon />
       </span>
       <p className="text-normal font-medium text-dark-secondary opacity-40">
         {t('chat.sendAMessage')}

@@ -2,6 +2,7 @@ import React from 'react';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteListItem as NoteListItemType } from '@/types/notes';
+import TrashIcon from '@public/icons/small/trash.svg';
 
 interface NoteListItemProps {
   note: NoteListItemType;
@@ -50,21 +51,7 @@ const NoteListItem = ({
         title={t('notes.deleteNote')}
         className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-dark-secondary opacity-0 transition-opacity group-hover:opacity-100 hover:text-dark-primary"
       >
-        <svg
-          width="13"
-          height="13"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="3 6 5 6 21 6" />
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-          <path d="M10 11v6" />
-          <path d="M14 11v6" />
-        </svg>
+        <TrashIcon className="h-[13px] w-[13px]" />
       </button>
     </div>
   );

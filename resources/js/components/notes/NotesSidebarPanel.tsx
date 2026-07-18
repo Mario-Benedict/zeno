@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteListItem as NoteListItemType } from '@/types/notes';
+import PlusIcon from '@public/icons/small/plus.svg';
+import SearchIcon from '@public/icons/small/search.svg';
 import NoteListItem from './NoteListItem';
 
 interface NotesSidebarPanelProps {
@@ -93,19 +95,7 @@ const NotesSidebarPanel = ({
               title={t('notes.newNote')}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-none bg-dark-surface-3 text-dark-secondary transition-colors duration-150 hover:bg-dark-surface-1 hover:text-dark-primary"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <PlusIcon className="h-5 w-5" />
             </button>
 
             {isCreateMenuOpen && (
@@ -147,20 +137,7 @@ const NotesSidebarPanel = ({
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-full flex-1 border-none bg-transparent pl-3 text-small font-medium text-dark-secondary outline-none placeholder:text-dark-secondary/40"
           />
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-3 shrink-0 text-dark-secondary"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+          <SearchIcon className="mr-3 h-4 w-4 shrink-0 text-dark-secondary" />
         </div>
       </div>
 
