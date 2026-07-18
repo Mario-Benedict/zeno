@@ -6,6 +6,11 @@ import type {
   CalendarViewMode,
 } from '@/types/calendar';
 import type { CardLabel } from '@/types/kanban';
+import CheckIcon from '@public/icons/small/check.svg';
+import PeopleIcon from '@public/icons/small/people.svg';
+import PlusIcon from '@public/icons/small/plus.svg';
+import RestartIcon from '@public/icons/small/restart.svg';
+import SearchIcon from '@public/icons/small/search.svg';
 import { MiniCalendar } from './MiniCalendar';
 
 interface CalendarSidebarProps {
@@ -27,55 +32,7 @@ interface CalendarSidebarProps {
   onToggleLabel: (labelId: string) => void;
 }
 
-const MAX_VISIBLE_LABELS = 8;
-
-const PlusIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.4"
-    strokeLinecap="round"
-  >
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-);
-
-const RefreshIcon = ({ spinning }: { spinning?: boolean }) => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={spinning ? 'animate-spin' : ''}
-  >
-    <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-    <path d="M21 3v6h-6" />
-  </svg>
-);
-
-const PeopleIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-);
+const MAX_VISIBLE_LABELS = 6;
 
 export const CalendarSidebar = ({
   viewMode,
@@ -119,7 +76,7 @@ export const CalendarSidebar = ({
             onClick={onCreate}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-dark-primary px-4 py-2 text-small font-semibold text-dark-surface-1 transition hover:opacity-90"
           >
-            <PlusIcon />
+            <PlusIcon className="h-4 w-4" />
             {t('calendar.create')}
           </button>
           <button
@@ -140,7 +97,9 @@ export const CalendarSidebar = ({
               title={t('calendar.refresh')}
               className="text-dark-secondary transition hover:text-dark-primary"
             >
-              <RefreshIcon spinning={isLoading} />
+              <RestartIcon
+                className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`}
+              />
             </span>
           </button>
         </div>
@@ -154,7 +113,7 @@ export const CalendarSidebar = ({
         />
 
         {cardLabels.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 border-t border-dark-border pt-3">
+          <div className="mt-3 flex flex-wrap gap-1.5 border-t border-dark-border pt-3">
             {visibleLabels.map((label) => {
               const active = !hiddenLabelIds.has(label.card_label_id);
 
@@ -171,24 +130,24 @@ export const CalendarSidebar = ({
                           label: label.card_label_name,
                         })
                   }
-                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xsmall font-medium transition ${
+                  className={`flex max-w-[8.5rem] items-center gap-1.5 rounded-full border px-2.5 py-1 text-xsmall font-medium transition ${
                     active
                       ? 'border-dark-border bg-dark-surface-3 text-dark-primary'
                       : 'border-transparent bg-transparent text-dark-secondary/60 line-through'
                   }`}
                 >
                   <span
-                    className="h-2.5 w-2.5 rounded-full"
+                    className="h-2 w-2 shrink-0 rounded-full"
                     style={{ backgroundColor: label.card_label_color_hex }}
                   />
-                  {label.card_label_name}
+                  <span className="truncate">{label.card_label_name}</span>
                 </button>
               );
             })}
             {cardLabels.length > MAX_VISIBLE_LABELS && (
               <button
                 onClick={() => setLabelsExpanded((v) => !v)}
-                className="rounded-full px-3 py-1 text-xsmall font-medium text-dark-secondary transition hover:text-dark-primary"
+                className="rounded-full px-2.5 py-1 text-xsmall font-medium text-dark-secondary transition hover:text-dark-primary"
               >
                 {labelsExpanded
                   ? t('calendar.showLessLabels')
@@ -202,10 +161,13 @@ export const CalendarSidebar = ({
       </div>
 
       {/* --- Bottom card: people search + member list --- */}
-      <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-dark-border bg-dark-surface-2 p-3">
+      {/* A min-height floor keeps the member list usable even when the
+          legend above grows tall (many labels) — the outer sidebar already
+          scrolls as a whole, so this card is never squeezed to nothing. */}
+      <div className="flex min-h-[17rem] flex-1 flex-col rounded-2xl border border-dark-border bg-dark-surface-2 p-3">
         <div className="relative mb-3">
           <span className="absolute top-1/2 left-3 -translate-y-1/2 text-dark-secondary">
-            <PeopleIcon />
+            <PeopleIcon className="h-4 w-4" />
           </span>
           <input
             type="text"
@@ -215,19 +177,7 @@ export const CalendarSidebar = ({
             className="w-full rounded-full border border-dark-border bg-dark-surface-1 py-2 pr-9 pl-10 text-small text-dark-primary transition outline-none placeholder:text-dark-secondary focus:border-dark-border-focus"
           />
           <span className="absolute top-1/2 right-3 -translate-y-1/2 text-dark-secondary">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <SearchIcon className="h-4 w-4" />
           </span>
         </div>
 
@@ -275,24 +225,12 @@ export const CalendarSidebar = ({
                   }`}
                 >
                   {member.checked && (
-                    <svg
-                      className="h-3.5 w-3.5 text-dark-primary"
-                      viewBox="0 0 14 14"
-                      fill="none"
-                    >
-                      <path
-                        d="M3 7.5L5.5 10L11 4"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <CheckIcon className="h-3 w-3 text-dark-primary" />
                   )}
                 </div>
 
                 <span className="text-dark-secondary">
-                  <PeopleIcon />
+                  <PeopleIcon className="h-4 w-4" />
                 </span>
 
                 <span className="flex-1 truncate text-small font-medium text-dark-primary">

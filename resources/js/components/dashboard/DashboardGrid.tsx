@@ -6,6 +6,7 @@ import type { KanbanBoard } from '@/types/kanban';
 import type { NoteListItem } from '@/types/notes';
 import type { PomodoroSettings, Reminder } from '@/types/reminder';
 import CloseIcon from '@public/icons/small/cancel.svg';
+import PlusIcon from '@public/icons/small/plus.svg';
 import { getTemplate } from './templates';
 import type { TemplateId } from './templates';
 import { WidgetPicker } from './WidgetPicker';
@@ -69,22 +70,6 @@ interface Props {
   timelineWidgetData?: TimelineWidgetData;
 }
 
-const PlusIcon = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
 const EmptySlot = ({
   index,
   pickerOpen,
@@ -115,7 +100,7 @@ const EmptySlot = ({
       className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-surface-3 bg-dark-surface-2 text-dark-secondary transition-colors hover:border-dark-secondary/40 hover:bg-dark-surface-3 hover:text-dark-primary"
       aria-label={t('dashboard.addWidget', { index: index + 1 })}
     >
-      <PlusIcon />
+      <PlusIcon className="h-6 w-6" />
       <span className="text-xsmall font-medium">
         {t('dashboard.addWidgetLabel')}
       </span>

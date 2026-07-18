@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
@@ -6,6 +6,7 @@ import echo from '@/echo';
 import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
+import chatRooms from '@/routes/chat/rooms';
 import type { ChatRoom, ChatParticipant, ChatMessage } from '@/types/chat';
 
 /**
@@ -37,7 +38,8 @@ export default function Index({
   currentUser,
   activeRoomId: initialActiveRoomId,
 }: Props) {
-  const { project } = useProject();
+  const { project, accountIndex } = useProject();
+  const { projectShare } = usePage().props;
   const { t } = useTranslation();
   const [liveRooms, setLiveRooms] = useState(rooms);
   const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
@@ -57,6 +59,15 @@ export default function Index({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLiveRooms(rooms);
   }, [rooms]);
+
+  // Picks up the room a fresh find-or-create POST (see openDmWith below)
+  // flashes back as `activeRoomId`, since that prop only seeds state once on
+  // mount otherwise.
+  useEffect(() => {
+    if (!initialActiveRoomId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedRoomId(initialActiveRoomId);
+  }, [initialActiveRoomId]);
 
   const updateRoomFromMessage = useCallback(
     (message: ChatMessage) => {
@@ -94,10 +105,12 @@ export default function Index({
   );
 
   /**
-   * Open the DM with a given member. All DM rooms are pre-created on join
-   * so they should always be findable in the rooms list — used both by
-   * tap-to-DM (clicking a sender's name in a group chat) and the sidebar's
-   * "new message" member picker.
+   * Open the DM with a given member. DM rooms are normally pre-created on
+   * join, so the common case is just finding it in the rooms list already
+   * loaded — used both by tap-to-DM (clicking a sender's name in a group
+   * chat) and the sidebar's "new message" member picker. If one isn't found
+   * (e.g. the pre-creation pass hasn't run for this member yet), fall back
+   * to the find-or-create endpoint instead of silently doing nothing.
    */
   const openDmWith = useCallback(
     (memberId: string) => {
@@ -109,18 +122,30 @@ export default function Index({
           r.type === 'dm' &&
           r.participants?.some((p) => String(p.id) === String(memberId)),
       );
-      if (dmRoom) setSelectedRoomId(dmRoom.id);
+      if (dmRoom) {
+        setSelectedRoomId(dmRoom.id);
+        return;
+      }
+
+      router.post(
+        chatRooms.store.url({ accountIndex, project: project.project_slug }),
+        { recipient_id: memberId },
+        { preserveScroll: true },
+      );
     },
-    [liveRooms, currentUser.id],
+    [liveRooms, currentUser.id, accountIndex, project.project_slug],
   );
 
-  // Project membership is derived from the group room's participant list —
-  // every project member is a participant of the (always-present) group room.
-  const members =
-    liveRooms
-      .find((r) => r.type === 'group')
-      ?.participants?.filter((p) => String(p.id) !== String(currentUser.id)) ??
-    [];
+  // Project membership comes from projectShare (authoritative project_user
+  // membership), not the group room's participant list — a member can exist
+  // in the project before the group room's participant sync has caught up.
+  const members: ChatParticipant[] = (projectShare?.members ?? [])
+    .filter((m) => !m.is_current_user)
+    .map((m) => ({
+      id: String(m.id),
+      name: m.name,
+      email: m.email,
+    }));
 
   // When someone else joins the project, refresh the room list so the new
   // member shows up in the group participant list and their pre-created DM
