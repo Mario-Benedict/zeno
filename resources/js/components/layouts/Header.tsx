@@ -199,6 +199,7 @@ const Header = ({
             project={project}
             accountIndex={account.index}
             refreshVersion={notificationRefreshVersion}
+            currentUserId={auth.user?.id ?? 0}
           />
         </div>
         <IconButton

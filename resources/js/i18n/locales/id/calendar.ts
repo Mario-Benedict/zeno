@@ -47,6 +47,13 @@ export const calendar: typeof en = {
   // Sidebar member list
   searchForPeople: 'Cari orang',
   noMembersFound: 'Tidak ada anggota yang ditemukan.',
+  membersSelectedCount: '{{checked}}/{{total}} dipilih',
+  selectAll: 'Pilih semua',
+  deselectAll: 'Batalkan semua',
+
+  // Sidebar label legend
+  moreLabels: '+ {{count}} lainnya',
+  showLessLabels: 'Tampilkan lebih sedikit',
 
   // Month grid
   moreEvents: '+ {{count}} lainnya',

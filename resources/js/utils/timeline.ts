@@ -29,17 +29,20 @@ export const RANGE_PADDING_DAYS = 4;
 // ─── Date parsing ────────────────────────────────────────────────────────────
 
 /**
- * Parse a stored card date (ISO datetime string) into a local calendar day.
- * Mirrors the `.slice(0, 10)` + `T00:00:00` approach the Kanban DatePicker
- * uses, so the timeline and the card modal agree on which day a date lands on
- * regardless of timezone.
+ * Parse a stored card date (UTC ISO datetime string) into a local calendar
+ * day. The string must be converted through a real Date first so the UTC
+ * instant resolves to the viewer's local day — slicing the ISO string's date
+ * portion directly reads the *UTC* day, which is one day off for any viewer
+ * whose local day differs from the UTC day (e.g. evening events in positive
+ * UTC offsets). Mirrors the local-getters approach `CardDetailSidebar.tsx`
+ * and `CardDetailBody.tsx` use, so the timeline agrees with the card modal.
  */
 export const parseCardDate = (iso: string | null | undefined): Date | null => {
   if (!iso || typeof iso !== 'string') return null;
-  const day = iso.slice(0, 10);
-  const parsed = new Date(`${day}T00:00:00`);
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
 
-  return isNaN(parsed.getTime()) ? null : parsed;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 };
 
 // ─── Flattening boards → tasks ───────────────────────────────────────────────
