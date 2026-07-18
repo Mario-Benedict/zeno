@@ -16,8 +16,14 @@ import { TimelineBar } from './TimelineBar';
 interface TimelineChartProps {
   tasks: TimelineTask[];
   range: TimelineRange;
+  openTaskId: string | null;
   onOpenCard: (task: TimelineTask) => void;
 }
+
+/** How long the card-detail panel's width transition takes to settle (see
+ * CardDetailModal's `duration-300`) — the scroll-to-task effect waits this
+ * long so it measures the chart's post-narrowing width, not its pre-open one. */
+const CARD_PANEL_TRANSITION_MS = 320;
 
 const BAR_TOP_OFFSET = (ROW_HEIGHT - BAR_HEIGHT) / 2;
 
@@ -30,6 +36,7 @@ const BAR_TOP_OFFSET = (ROW_HEIGHT - BAR_HEIGHT) / 2;
 export const TimelineChart = ({
   tasks,
   range,
+  openTaskId,
   onOpenCard,
 }: TimelineChartProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -67,6 +74,29 @@ export const TimelineChart = ({
     el.scrollLeft = Math.max(0, todayCenterX - viewportWidth / 2);
     centeredRef.current = true;
   }, [viewportWidth, todayCenterX]);
+
+  // Opening a task's detail panel narrows this chart (the panel is a flex
+  // sibling, not an overlay — see CardDetailModal), so the bar the user just
+  // clicked can end up mostly hidden behind it. Pan so it's centred in
+  // whatever width remains, mirroring how the Kanban card modal brings its
+  // target into view. Waits for the panel's width transition to finish so it
+  // measures the settled (post-narrowing) width, not the pre-open one.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !openTaskId) return;
+
+    const task = tasks.find((t) => t.cardId === openTaskId);
+    const geometry = task && getBarGeometry(task, display.start);
+    if (!geometry) return;
+
+    const timer = window.setTimeout(() => {
+      const barCenter = geometry.left + geometry.width / 2;
+      const target = Math.max(0, barCenter - el.clientWidth / 2);
+      el.scrollTo({ left: target, behavior: 'smooth' });
+    }, CARD_PANEL_TRANSITION_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [openTaskId, tasks, display]);
 
   return (
     <div

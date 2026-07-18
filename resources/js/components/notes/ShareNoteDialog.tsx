@@ -8,6 +8,8 @@ import type {
   NoteProjectUser,
 } from '@/types/notes';
 import CancelIcon from '@public/icons/small/cancel.svg';
+import ChevronDownIcon from '@public/icons/small/chevron_down.svg';
+import TrashIcon from '@public/icons/small/trash.svg';
 import MemberPicker from './MemberPicker';
 
 interface ShareNoteDialogProps {
@@ -26,38 +28,6 @@ interface PendingInvite {
 
 const roleFromCanEdit = (canEdit: boolean): NoteCollaboratorRole =>
   canEdit ? 'Editor' : 'Viewer';
-
-const ChevronDownIcon = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 6h18" />
-    <path d="M8 6V4h8v2" />
-    <path d="M19 6l-1 14H6L5 6" />
-  </svg>
-);
 
 const getInitials = (name: string): string =>
   name

@@ -6,8 +6,11 @@ import { FILE_SIZE_LIMITS, isFileTooLarge } from '@/lib/fileUploads';
 import { formatFileSize } from '@/lib/utils';
 import chat from '@/routes/chat';
 import type { ChatMessage } from '@/types/chat';
+import ArrowUpIcon from '@public/icons/small/arrow_up.svg';
 import CancelSmallIcon from '@public/icons/small/cancel.svg';
+import FileIcon from '@public/icons/small/file.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
+import SpinnerIcon from '@public/icons/small/spinner.svg';
 
 interface Props {
   projectSlug: string;
@@ -34,38 +37,6 @@ const getMessageType = (files: PendingFile[]): 'text' | 'image' | 'file' => {
 
 let _idCounter = 0;
 const nextId = () => `pf-${++_idCounter}`;
-
-const ArrowUpIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="12" y1="19" x2="12" y2="5" />
-    <polyline points="5 12 12 5 19 12" />
-  </svg>
-);
-
-const FileIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-  </svg>
-);
 
 const AttachmentStrip = ({
   files,
@@ -362,17 +333,7 @@ const ChatComposer = ({
             ].join(' ')}
           >
             {sending ? (
-              <svg
-                className="animate-spin"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
+              <SpinnerIcon className="animate-spin" />
             ) : (
               <ArrowUpIcon />
             )}

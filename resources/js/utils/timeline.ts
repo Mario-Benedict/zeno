@@ -5,7 +5,6 @@ import {
   format,
   isWeekend,
   max,
-  min,
   startOfDay,
   startOfWeek,
 } from 'date-fns';
@@ -118,11 +117,14 @@ export const getTimelineRange = (tasks: TimelineTask[]): TimelineRange => {
 };
 
 /**
- * Widen the data-driven range so the grid always fills the viewport and
- * "today" can sit in the horizontal centre. Given the measured viewport width
- * (px), guarantee at least a full screen of day columns on each side of today
- * while still covering the task span. Returns the base range untouched until
- * the viewport has been measured (width 0), then extends it.
+ * Widen the data-driven range so the grid always reaches at least a full
+ * screen past "today" — keeping the today marker reachable and giving the
+ * chart room to scroll forward. The *start* stays anchored to `base.start`
+ * (already task-driven, see `getTimelineRange`) rather than also padding
+ * backward to fill the viewport: doing that used to open the chart on a wall
+ * of empty days before the first scheduled task whenever today sat far from
+ * it. Returns the base range untouched until the viewport has been measured
+ * (width 0).
  */
 export const buildDisplayRange = (
   base: TimelineRange,
@@ -132,10 +134,13 @@ export const buildDisplayRange = (
 
   const today = startOfDay(new Date());
   const cols = Math.ceil(viewportWidth / DAY_WIDTH) + 2;
-  const start = min([base.start, addDays(today, -cols)]);
   const end = max([base.end, addDays(today, cols)]);
 
-  return { start, end, days: eachDayOfInterval({ start, end }) };
+  return {
+    start: base.start,
+    end,
+    days: eachDayOfInterval({ start: base.start, end }),
+  };
 };
 
 /** Horizontal offset (px) of the left edge of a given day. */

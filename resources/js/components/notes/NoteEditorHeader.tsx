@@ -3,6 +3,7 @@ import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { TranslationKey } from '@/i18n/dictionary';
 import type { NoteDetail, NoteSaveStatus } from '@/types/notes';
+import MoreHorizontalIcon from '@public/icons/small/more_horizontal.svg';
 
 const AVATAR_COLORS = [
   'bg-accent-red',
@@ -119,11 +120,7 @@ const NoteEditorHeader = ({
             title={t('notes.more')}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="5" cy="12" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="19" cy="12" r="2" />
-            </svg>
+            <MoreHorizontalIcon />
           </button>
 
           {menuOpen && (
