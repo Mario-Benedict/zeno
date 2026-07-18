@@ -149,6 +149,12 @@ export default function Calendar({
     );
   };
 
+  const handleToggleAllMembers = (ids: number[], checked: boolean) => {
+    setMembers((prev) =>
+      prev.map((m) => (ids.includes(m.id) ? { ...m, checked } : m)),
+    );
+  };
+
   const handleCreate = () => {
     setSelectedDate(currentDate);
     setSelectedEvent(null);
@@ -321,6 +327,7 @@ export default function Calendar({
           onNextMonth={handleNextMonth}
           members={members}
           onToggleMember={handleToggleMember}
+          onToggleAllMembers={handleToggleAllMembers}
           events={visibleEvents}
           cardLabels={cardLabels}
           hiddenLabelIds={hiddenLabelIds}

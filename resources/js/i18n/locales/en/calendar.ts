@@ -45,6 +45,13 @@ export const calendar = {
   // Sidebar member list
   searchForPeople: 'Search for people',
   noMembersFound: 'No members found.',
+  membersSelectedCount: '{{checked}}/{{total}} selected',
+  selectAll: 'Select all',
+  deselectAll: 'Deselect all',
+
+  // Sidebar label legend
+  moreLabels: '+ {{count}} more',
+  showLessLabels: 'Show less',
 
   // Month grid
   moreEvents: '+ {{count}} more',
