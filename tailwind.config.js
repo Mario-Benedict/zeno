@@ -108,6 +108,52 @@ export default {
           warning: '#E2B93B',
           error: '#EB5757',
         },
+
+        // --- LANDING (marketing) — dark-only, isolated from light mode ---
+        // The public landing (welcome.tsx) must stay dark regardless of the
+        // visitor's saved theme. app.tsx applies `html.light-mode` on every
+        // page from localStorage, which recolors the adaptive `dark.*` tokens
+        // (declared as CSS variables in app.css). These `landing.*` values are
+        // literal hex, so Tailwind's @config compat layer bakes them per class
+        // and the light-mode variable overrides never touch them — same
+        // isolation technique as `static-dark`/`light` above and `.prose-note`
+        // in app.css. Glow *gradients* live in app.css (`.landing-*`) for the
+        // same reason. Do NOT move these into the @theme dark-* namespace.
+        landing: {
+          bg: '#0A0A0D',
+          surface: '#131318',
+          // surface-2/3 mirror the real product's dark-surface-2 (#242424) and
+          // dark-surface-3 (#2E2E2E) so the self-made feature mockups read like
+          // the actual app, while staying literal hex (immune to light mode).
+          'surface-2': '#1C1C22',
+          'surface-3': '#26262E',
+          border: '#282830',
+          'border-hover': '#3C3C48',
+          primary: '#F3F3F6',
+          secondary: '#A7A7B4',
+          muted: '#6C6C7A',
+          // Glow hues: brighter/more saturated cyan→blue→purple derived from
+          // accent.cyan/blue/purple. Also mirrored as literal hex in the WebGL
+          // hero canvas (HeroCanvas.tsx) and the glow gradients in app.css.
+          glow: {
+            cyan: '#22D3EE',
+            blue: '#4F8BFF',
+            purple: '#A970FF',
+          },
+          // Exact mirror of the real app's dark palette (the `--color-dark-*`
+          // values in app.css). The embedded feature mockups use these so they
+          // render identically to the live product, while staying literal hex
+          // and therefore immune to the light-mode flip. Classes read as
+          // bg-landing-app-1/2/3, text-landing-app-fg/sub, border-landing-app-line.
+          app: {
+            1: '#111111',
+            2: '#242424',
+            3: '#2E2E2E',
+            fg: '#F0F0F0',
+            sub: '#7B7B7B',
+            line: '#3A3A3A',
+          },
+        },
       },
     },
   },
