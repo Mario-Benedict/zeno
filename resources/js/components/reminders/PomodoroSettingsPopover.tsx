@@ -38,12 +38,12 @@ export const PomodoroSettingsPopover = ({
       ref={ref}
       className="absolute top-full right-0 z-50 mt-2 w-56 rounded-xl border border-dark-border bg-dark-surface-1 p-4 shadow-2xl"
     >
-      <p className="mb-3 text-xsmall font-semibold tracking-wider text-white/40 uppercase">
+      <p className="mb-3 text-xsmall font-semibold tracking-wider text-dark-secondary uppercase">
         {t('reminders.timerSettings')}
       </p>
       <div className="space-y-3">
         <div>
-          <label className="mb-1 block text-xsmall text-white/40">
+          <label className="mb-1 block text-xsmall text-dark-secondary">
             {t('reminders.focusMinutesLabel')}
           </label>
           <input
@@ -52,11 +52,11 @@ export const PomodoroSettingsPopover = ({
             max={180}
             value={focusMinutes}
             onChange={(e) => setFocusMinutes(Number(e.target.value))}
-            className="w-full [appearance:textfield] rounded-lg border border-dark-border bg-dark-surface-2 px-2.5 py-1.5 text-small text-white outline-none focus:border-dark-border-focus [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-full [appearance:textfield] rounded-lg border border-dark-border bg-dark-surface-2 px-2.5 py-1.5 text-small text-dark-primary outline-none focus:border-dark-border-focus [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xsmall text-white/40">
+          <label className="mb-1 block text-xsmall text-dark-secondary">
             {t('reminders.breakMinutesLabel')}
           </label>
           <input
@@ -65,7 +65,7 @@ export const PomodoroSettingsPopover = ({
             max={60}
             value={breakMinutes}
             onChange={(e) => setBreakMinutes(Number(e.target.value))}
-            className="w-full [appearance:textfield] rounded-lg border border-dark-border bg-dark-surface-2 px-2.5 py-1.5 text-small text-white outline-none focus:border-dark-border-focus [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-full [appearance:textfield] rounded-lg border border-dark-border bg-dark-surface-2 px-2.5 py-1.5 text-small text-dark-primary outline-none focus:border-dark-border-focus [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
         <button

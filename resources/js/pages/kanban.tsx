@@ -407,7 +407,7 @@ export default function Kanban({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xsmall text-white/20">
+              <span className="text-xsmall text-dark-secondary/70">
                 {t('kanban.boardCount', { count: boards.length })}
               </span>
             </div>

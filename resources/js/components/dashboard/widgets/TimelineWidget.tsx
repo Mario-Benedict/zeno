@@ -160,11 +160,11 @@ export const TimelineWidget = ({ kanbanBoards }: Props) => {
       />
 
       {scheduledTasks.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-white/30">
+        <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-dark-secondary/80">
           {t('dashboard.noScheduledTasks')}
         </div>
       ) : visibleTasks.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-white/30">
+        <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-dark-secondary/80">
           {t('dashboard.noTasksMatch')}
         </div>
       ) : (
@@ -251,7 +251,7 @@ export const TimelineWidget = ({ kanbanBoards }: Props) => {
                     title={task.title}
                   >
                     <span
-                      className={`truncate text-micro font-semibold text-white ${
+                      className={`truncate text-micro font-semibold text-dark-primary ${
                         task.isCompleted ? 'line-through' : ''
                       }`}
                     >

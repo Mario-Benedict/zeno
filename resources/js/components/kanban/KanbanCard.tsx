@@ -92,8 +92,8 @@ export const KanbanCard = ({
                 <span
                   className={`text-small leading-snug font-medium ${
                     card.is_completed
-                      ? 'text-white/30 line-through'
-                      : 'text-white/90'
+                      ? 'text-dark-secondary/80 line-through'
+                      : 'text-dark-primary'
                   }`}
                 >
                   {card.kanban_board_card_title}
@@ -105,7 +105,7 @@ export const KanbanCard = ({
                   e.stopPropagation();
                   setShowDeleteConfirm(true);
                 }}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white/0 transition-all group-hover:text-white/30 hover:bg-accent-red/10 hover:text-accent-red!"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white/0 transition-all group-hover:text-dark-secondary/80 hover:bg-accent-red/10 hover:text-accent-red!"
                 title={t('kanban.deleteCard')}
               >
                 ✕

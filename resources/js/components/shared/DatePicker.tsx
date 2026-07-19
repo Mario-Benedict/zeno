@@ -135,7 +135,7 @@ export const DatePicker = ({
   return (
     <div ref={ref} className="relative">
       <div className="mb-1">
-        <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
+        <label className="mb-1 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
           {label}
         </label>
         <button
@@ -147,8 +147,8 @@ export const DatePicker = ({
               : isDueSoon
                 ? 'border-accent-yellow/40 bg-accent-yellow/10 text-accent-yellow hover:border-accent-yellow/70'
                 : selectedDate
-                  ? 'border-dark-border bg-dark-surface-2 text-white/70 hover:border-dark-border-focus'
-                  : 'border-dark-border bg-dark-surface-2 text-white/25 hover:border-dark-border-focus hover:text-white/40'
+                  ? 'border-dark-border bg-dark-surface-2 text-dark-primary hover:border-dark-border-focus'
+                  : 'border-dark-border bg-dark-surface-2 text-dark-secondary/70 hover:border-dark-border-focus hover:text-dark-secondary'
           }`}
         >
           <span className="flex-1 truncate">
@@ -163,7 +163,7 @@ export const DatePicker = ({
                 e.stopPropagation();
                 onClear();
               }}
-              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-xsmall text-white/20 transition hover:bg-white/10 hover:text-white/60"
+              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-xsmall text-dark-secondary/70 transition hover:bg-dark-surface-3 hover:text-dark-secondary"
             >
               ✕
             </span>
@@ -177,13 +177,13 @@ export const DatePicker = ({
             <button
               type="button"
               onClick={prevMonth}
-              className="flex h-6 w-6 items-center justify-center rounded-lg text-small text-white/30 transition hover:bg-white/10 hover:text-white"
+              className="flex h-6 w-6 items-center justify-center rounded-lg text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
             >
               ‹
             </button>
             <button
               type="button"
-              className="flex items-center gap-1.5 text-small font-semibold text-white/70 transition hover:text-white"
+              className="flex items-center gap-1.5 text-small font-semibold text-dark-primary transition hover:text-dark-primary"
               onClick={() => {
                 setViewMonth(new Date().getMonth());
                 setViewYear(new Date().getFullYear());
@@ -195,7 +195,7 @@ export const DatePicker = ({
             <button
               type="button"
               onClick={nextMonth}
-              className="flex h-6 w-6 items-center justify-center rounded-lg text-small text-white/30 transition hover:bg-white/10 hover:text-white"
+              className="flex h-6 w-6 items-center justify-center rounded-lg text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
             >
               ›
             </button>
@@ -205,7 +205,7 @@ export const DatePicker = ({
             {dayLabels.map((d) => (
               <div
                 key={d}
-                className="py-1 text-center text-xsmall font-semibold tracking-wider text-white/20 uppercase"
+                className="py-1 text-center text-xsmall font-semibold tracking-wider text-dark-secondary/70 uppercase"
               >
                 {d}
               </div>
@@ -227,7 +227,7 @@ export const DatePicker = ({
                   key={i}
                   type="button"
                   onClick={() => selectDate(date)}
-                  className={`relative flex aspect-square w-full items-center justify-center rounded-lg text-xsmall transition-all ${!isCurrentMonth ? 'text-white/10 hover:text-white/20' : ''} ${isCurrentMonth && !isSelected && !isToday ? 'text-white/60 hover:bg-white/8 hover:text-white' : ''} ${isPast && !isSelected ? 'text-white/30' : ''} ${isToday && !isSelected ? 'font-semibold text-accent-blue' : ''} ${isSelected ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]' : ''} `}
+                  className={`relative flex aspect-square w-full items-center justify-center rounded-lg text-xsmall transition-all ${!isCurrentMonth ? 'text-dark-secondary/50 hover:text-dark-secondary/70' : ''} ${isCurrentMonth && !isSelected && !isToday ? 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary' : ''} ${isPast && !isSelected ? 'text-dark-secondary/80' : ''} ${isToday && !isSelected ? 'font-semibold text-accent-blue' : ''} ${isSelected ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]' : ''} `}
                 >
                   {isToday && !isSelected && (
                     <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-accent-blue" />
@@ -242,7 +242,7 @@ export const DatePicker = ({
             <button
               type="button"
               onClick={() => selectDate(today)}
-              className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/70"
+              className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
             >
               {t('common.today')}
             </button>
@@ -253,7 +253,7 @@ export const DatePicker = ({
                   onClear();
                   setOpen(false);
                 }}
-                className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-white/40 transition hover:border-accent-red/30 hover:bg-accent-red/10 hover:text-accent-red"
+                className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-dark-secondary transition hover:border-accent-red/30 hover:bg-accent-red/10 hover:text-accent-red"
               >
                 {t('common.clear')}
               </button>

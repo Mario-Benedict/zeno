@@ -166,7 +166,7 @@ export const CardDetailBody = ({
       {!!card.members?.length && (
         <div className="flex items-center gap-2">
           <AvatarStack members={card.members} />
-          <span className="text-xsmall text-white/30">
+          <span className="text-xsmall text-dark-secondary/80">
             {card.members.length === 1
               ? t('kanban.memberCount', { count: card.members.length })
               : t('kanban.membersCount', { count: card.members.length })}
@@ -180,11 +180,11 @@ export const CardDetailBody = ({
         <div className="flex items-center gap-4">
           {card.kanban_board_card_start_date && (
             <div className="flex items-center gap-1.5">
-              <CalendarIcon className="h-3.5 w-3.5 text-white/30" />
-              <span className="text-xsmall text-white/40">
+              <CalendarIcon className="h-3.5 w-3.5 text-dark-secondary/80" />
+              <span className="text-xsmall text-dark-secondary">
                 {t('kanban.startLabel')}
               </span>
-              <span className="text-xsmall font-medium text-white/60">
+              <span className="text-xsmall font-medium text-dark-secondary">
                 {new Date(card.kanban_board_card_start_date).toLocaleDateString(
                   'en-US',
                   {
@@ -206,10 +206,10 @@ export const CardDetailBody = ({
               }`}
             >
               <CalendarIcon
-                className={`h-3.5 w-3.5 ${isOverdue ? 'text-accent-red' : isDueSoon ? 'text-accent-yellow' : 'text-white/30'}`}
+                className={`h-3.5 w-3.5 ${isOverdue ? 'text-accent-red' : isDueSoon ? 'text-accent-yellow' : 'text-dark-secondary/80'}`}
               />
               <span
-                className={`text-xsmall font-medium ${isOverdue ? 'text-accent-red' : isDueSoon ? 'text-accent-yellow' : 'text-white/60'}`}
+                className={`text-xsmall font-medium ${isOverdue ? 'text-accent-red' : isDueSoon ? 'text-accent-yellow' : 'text-dark-secondary'}`}
               >
                 {isOverdue
                   ? t('kanban.overdue')
@@ -253,7 +253,7 @@ export const CardDetailBody = ({
               onChange={(e) => descOnChange(e.target.value)}
               rows={5}
               placeholder={t('kanban.descriptionPlaceholder')}
-              className="scrollbar-app w-full resize-none rounded-xl border border-dark-border-focus bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed text-dark-primary placeholder-white/20 focus:outline-none"
+              className="scrollbar-app w-full resize-none rounded-xl border border-dark-border-focus bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed text-dark-primary placeholder-dark-secondary focus:outline-none"
             />
             <div className="mt-2 flex gap-2">
               <button
@@ -264,7 +264,7 @@ export const CardDetailBody = ({
               </button>
               <button
                 onClick={descOnDiscard}
-                className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/50 transition hover:bg-white/5 hover:text-white"
+                className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
               >
                 {t('kanban.discard')}
               </button>
@@ -276,11 +276,11 @@ export const CardDetailBody = ({
             className="min-h-15 cursor-pointer rounded-xl bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed transition hover:bg-dark-surface-3"
           >
             {card.kanban_board_card_description ? (
-              <span className="whitespace-pre-wrap text-white/70">
+              <span className="whitespace-pre-wrap text-dark-primary">
                 {card.kanban_board_card_description}
               </span>
             ) : (
-              <span className="text-white/20">
+              <span className="text-dark-secondary/70">
                 {t('kanban.descriptionPlaceholder')}
               </span>
             )}
@@ -304,7 +304,7 @@ export const CardDetailBody = ({
                 href={att.kanban_board_card_attachment_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-3 rounded-xl border border-dark-border bg-dark-surface-2 px-3.5 py-2.5 text-small text-white/60 transition hover:bg-dark-surface-3 hover:text-white"
+                className="group flex items-center gap-3 rounded-xl border border-dark-border bg-dark-surface-2 px-3.5 py-2.5 text-small text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
               >
                 <span className="shrink-0 text-normal">📎</span>
                 <span className="flex-1 truncate">
@@ -331,10 +331,10 @@ export const CardDetailBody = ({
                   </span>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-small text-white/70">
+                  <p className="truncate text-small text-dark-primary">
                     {att.name}
                   </p>
-                  <p className="mt-0.5 text-xsmall text-white/25">
+                  <p className="mt-0.5 text-xsmall text-dark-secondary/70">
                     {formatFileSize(att.size)} ·{' '}
                     {new Date(att.uploadedAt).toLocaleDateString('en-US', {
                       month: 'short',
@@ -345,14 +345,14 @@ export const CardDetailBody = ({
                 <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover/att:opacity-100">
                   <button
                     onClick={() => attachmentsOnDownload(att)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-xsmall text-white/30 transition hover:bg-white/10 hover:text-white"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-xsmall text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
                     title={t('kanban.download')}
                   >
                     ↓
                   </button>
                   <button
                     onClick={() => attachmentsOnDelete(att.id)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:bg-accent-red/10 hover:text-accent-red"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-dark-secondary/80 transition hover:bg-accent-red/10 hover:text-accent-red"
                     title={t('common.delete')}
                   >
                     <CloseIcon className="h-3 w-3" />
@@ -387,7 +387,7 @@ export const CardDetailBody = ({
           ref={attachmentsZoneRef}
           className="space-y-2 rounded-xl border border-dark-border bg-dark-surface-2 p-4"
         >
-          <p className="mb-2 text-xsmall font-semibold text-white/40">
+          <p className="mb-2 text-xsmall font-semibold text-dark-secondary">
             {t('kanban.addAttachment')}
           </p>
           <div
@@ -405,7 +405,7 @@ export const CardDetailBody = ({
             className={`flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-6 transition-all ${
               attachmentsDragOver
                 ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                : 'border-dark-border text-white/25 hover:border-dark-border-focus hover:text-white/40'
+                : 'border-dark-border text-dark-secondary/70 hover:border-dark-border-focus hover:text-dark-secondary'
             }`}
           >
             <PaperclipIcon className="h-5 w-5" />
@@ -414,7 +414,7 @@ export const CardDetailBody = ({
                 ? t('kanban.uploading')
                 : t('kanban.dropFileHere')}
             </p>
-            <p className="text-xsmall text-white/20">
+            <p className="text-xsmall text-dark-secondary/70">
               {t('kanban.maxFileSize')}
             </p>
           </div>
@@ -430,7 +430,7 @@ export const CardDetailBody = ({
           />
           <button
             onClick={attachmentsOnCancel}
-            className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
+            className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             {t('common.cancel')}
           </button>
@@ -447,8 +447,8 @@ export const CardDetailBody = ({
           <div key={checklist.kanban_board_card_checklist_id}>
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ChecklistIcon className="h-4 w-4 text-white/30" />
-                <span className="text-xsmall font-semibold tracking-wider text-white/50 uppercase">
+                <ChecklistIcon className="h-4 w-4 text-dark-secondary/80" />
+                <span className="text-xsmall font-semibold tracking-wider text-dark-secondary uppercase">
                   {checklist.kanban_board_card_checklist_name}
                 </span>
               </div>
@@ -458,7 +458,7 @@ export const CardDetailBody = ({
                     checklist.kanban_board_card_checklist_id,
                   )
                 }
-                className="rounded px-2 py-0.5 text-xsmall text-white/20 transition hover:bg-accent-red/10 hover:text-accent-red"
+                className="rounded px-2 py-0.5 text-xsmall text-dark-secondary/70 transition hover:bg-accent-red/10 hover:text-accent-red"
               >
                 {t('kanban.deleteChecklist')}
               </button>
@@ -466,7 +466,7 @@ export const CardDetailBody = ({
 
             {prog.total > 0 && (
               <div className="mb-3 flex items-center gap-2.5">
-                <span className="w-7 text-right text-xsmall text-white/30 tabular-nums">
+                <span className="w-7 text-right text-xsmall text-dark-secondary/80 tabular-nums">
                   {pct}%
                 </span>
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-dark-surface-2">
@@ -475,7 +475,7 @@ export const CardDetailBody = ({
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                <span className="text-xsmall text-white/20 tabular-nums">
+                <span className="text-xsmall text-dark-secondary/70 tabular-nums">
                   {prog.done}/{prog.total}
                 </span>
               </div>
@@ -485,7 +485,7 @@ export const CardDetailBody = ({
               {(checklist.items || []).map((item) => (
                 <div
                   key={item.kanban_board_card_checklist_item_id}
-                  className="group/item flex items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-white/3"
+                  className="group/item flex items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-dark-surface-3"
                 >
                   <button
                     onClick={() =>
@@ -498,7 +498,7 @@ export const CardDetailBody = ({
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-all ${
                       item.is_completed
                         ? 'border-accent-blue bg-accent-blue'
-                        : 'border-white/20 hover:border-accent-blue'
+                        : 'border-dark-border-focus hover:border-accent-blue'
                     }`}
                   >
                     {item.is_completed && (
@@ -508,8 +508,8 @@ export const CardDetailBody = ({
                   <span
                     className={`flex-1 text-small leading-snug transition-all ${
                       item.is_completed
-                        ? 'text-white/25 line-through'
-                        : 'text-white/75'
+                        ? 'text-dark-secondary/70 line-through'
+                        : 'text-dark-primary'
                     }`}
                   >
                     {item.kanban_board_card_checklist_item_name}
@@ -521,7 +521,7 @@ export const CardDetailBody = ({
                         item.kanban_board_card_checklist_item_id,
                       )
                     }
-                    className="flex h-5 w-5 items-center justify-center rounded text-xsmall text-white/20 opacity-0 transition group-hover/item:opacity-100 hover:text-accent-red"
+                    className="flex h-5 w-5 items-center justify-center rounded text-xsmall text-dark-secondary/70 opacity-0 transition group-hover/item:opacity-100 hover:text-accent-red"
                   >
                     ✕
                   </button>
@@ -556,7 +556,7 @@ export const CardDetailBody = ({
                 onClick={() =>
                   checklistsOnAddItem(checklist.kanban_board_card_checklist_id)
                 }
-                className="rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-white/50 transition hover:bg-dark-surface-3 hover:text-white"
+                className="rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
               >
                 {t('common.add')}
               </button>
@@ -568,7 +568,7 @@ export const CardDetailBody = ({
       {/* Add checklist form */}
       {checklistsAdding && (
         <div className="space-y-2 rounded-xl border border-dark-border bg-dark-surface-2 p-4">
-          <p className="mb-2 text-xsmall font-semibold text-white/40">
+          <p className="mb-2 text-xsmall font-semibold text-dark-secondary">
             {t('kanban.newChecklist')}
           </p>
           <input
@@ -580,7 +580,7 @@ export const CardDetailBody = ({
               if (e.key === 'Escape') checklistsOnCancel();
             }}
             placeholder={t('kanban.checklistTitlePlaceholder')}
-            className="w-full rounded-lg border border-dark-border-focus bg-dark-surface-1 px-3 py-2 text-small text-white placeholder-white/20 focus:outline-none"
+            className="w-full rounded-lg border border-dark-border-focus bg-dark-surface-1 px-3 py-2 text-small text-dark-primary placeholder-dark-secondary focus:outline-none"
           />
           <div className="flex gap-2">
             <button
@@ -592,7 +592,7 @@ export const CardDetailBody = ({
             </button>
             <button
               onClick={checklistsOnCancel}
-              className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
+              className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
             >
               {t('common.cancel')}
             </button>
@@ -628,7 +628,7 @@ export const CardDetailBody = ({
               }}
               placeholder={t('kanban.commentPlaceholder')}
               rows={commentsNewComment ? 3 : 2}
-              className="w-full resize-none rounded-xl border border-dark-border bg-dark-surface-2 px-3.5 py-2.5 text-small text-white placeholder-white/20 transition-all focus:border-dark-border-focus focus:outline-none"
+              className="w-full resize-none rounded-xl border border-dark-border bg-dark-surface-2 px-3.5 py-2.5 text-small text-dark-primary placeholder-dark-secondary transition-all focus:border-dark-border-focus focus:outline-none"
             />
             {commentsNewComment.trim() && (
               <div className="mt-2 flex gap-2">
@@ -640,7 +640,7 @@ export const CardDetailBody = ({
                 </button>
                 <button
                   onClick={commentsOnDiscard}
-                  className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
+                  className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
                 >
                   {t('kanban.discard')}
                 </button>
@@ -667,10 +667,10 @@ export const CardDetailBody = ({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="text-xsmall font-semibold text-white/70">
+                  <span className="text-xsmall font-semibold text-dark-primary">
                     {comment.user?.name || t('common.unknown')}
                   </span>
-                  <span className="text-xsmall text-white/20">
+                  <span className="text-xsmall text-dark-secondary/70">
                     {new Date(comment.created_at).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -679,7 +679,7 @@ export const CardDetailBody = ({
                     })}
                   </span>
                 </div>
-                <div className="rounded-xl bg-dark-surface-3 px-3.5 py-2.5 text-small leading-relaxed text-white/65">
+                <div className="rounded-xl bg-dark-surface-3 px-3.5 py-2.5 text-small leading-relaxed text-dark-primary">
                   {comment.kanban_board_card_comment_message}
                 </div>
               </div>
@@ -688,7 +688,7 @@ export const CardDetailBody = ({
                   onClick={() =>
                     commentsOnDelete(comment.kanban_board_card_comment_id)
                   }
-                  className="mt-2 flex h-5 w-5 items-center justify-center self-start rounded text-xsmall text-white/20 opacity-0 transition group-hover/comment:opacity-100 hover:text-accent-red"
+                  className="mt-2 flex h-5 w-5 items-center justify-center self-start rounded text-xsmall text-dark-secondary/70 opacity-0 transition group-hover/comment:opacity-100 hover:text-accent-red"
                 >
                   <CloseIcon />
                 </button>
@@ -696,7 +696,7 @@ export const CardDetailBody = ({
             </div>
           ))}
           {!card.comments?.length && (
-            <p className="py-4 text-center text-xsmall text-white/15">
+            <p className="py-4 text-center text-xsmall text-dark-secondary/60">
               {t('kanban.noActivityYet')}
             </p>
           )}

@@ -93,16 +93,16 @@ export const KanbanColumn = ({
                     setEditingName(false);
                   }
                 }}
-                className="w-50 rounded-lg border border-dark-border-focus bg-dark-surface-3 px-2 py-1 text-medium font-bold text-white focus:outline-none"
+                className="w-50 rounded-lg border border-dark-border-focus bg-dark-surface-3 px-2 py-1 text-medium font-bold text-dark-primary focus:outline-none"
               />
             ) : (
               <p
-                className="flex-1 cursor-pointer truncate text-medium font-bold tracking-tight text-white transition hover:text-white/80"
+                className="flex-1 cursor-pointer truncate text-medium font-bold tracking-tight text-dark-primary transition hover:text-dark-primary/80"
                 onClick={() => setEditingName(true)}
                 title={t('kanban.clickToRename')}
               >
                 {board.kanban_board_name}
-                <span className="ml-2 text-xsmall font-normal text-white/20">
+                <span className="ml-2 text-xsmall font-normal text-dark-secondary/70">
                   {board.cards?.length || 0}
                 </span>
               </p>
@@ -143,7 +143,7 @@ export const KanbanColumn = ({
                 className="scrollbar-app flex min-h-0 flex-col gap-2 overflow-y-auto px-3 pb-3 transition-colors"
               >
                 {filteredCards.length === 0 && (
-                  <div className="rounded-xl py-8 text-center text-xsmall text-white/20">
+                  <div className="rounded-xl py-8 text-center text-xsmall text-dark-secondary/70">
                     {t('kanban.noCardsYet')}
                   </div>
                 )}
@@ -169,7 +169,7 @@ export const KanbanColumn = ({
           <div className="shrink-0 px-3 pb-3">
             <button
               onClick={() => onAddCard(board.kanban_board_id)}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-small text-white/30 transition hover:bg-white/5 hover:text-white/70"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
             >
               <AddIcon className="h-4 w-4" />
               {t('kanban.addACard')}

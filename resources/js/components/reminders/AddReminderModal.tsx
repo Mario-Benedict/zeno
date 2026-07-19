@@ -32,12 +32,12 @@ export const AddReminderModal = ({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-sm rounded-2xl border border-dark-border bg-dark-surface-2 p-5 shadow-2xl">
-        <h3 className="mb-4 text-base font-bold text-white">
+        <h3 className="mb-4 text-base font-bold text-dark-primary">
           {t('reminders.addReminder')}
         </h3>
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-white/50">
+            <label className="mb-1 block text-xs text-dark-secondary">
               {t('reminders.reminderTitleLabel')}
             </label>
             <input
@@ -46,7 +46,7 @@ export const AddReminderModal = ({
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder={t('reminders.reminderTitlePlaceholder')}
-              className="w-full rounded-xl border border-dark-border bg-dark-input px-3 py-2 text-sm text-white placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
+              className="w-full rounded-xl border border-dark-border bg-dark-input px-3 py-2 text-sm text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
             />
           </div>
           <div className="flex items-end gap-2">
@@ -58,7 +58,7 @@ export const AddReminderModal = ({
               placeholder={t('reminders.optional')}
             />
             <div>
-              <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
+              <label className="mb-1 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
                 {t('reminders.time')}
               </label>
               <TimePicker
@@ -74,7 +74,7 @@ export const AddReminderModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-dark-border py-2 text-sm text-white/50 transition hover:bg-white/5 hover:text-white"
+            className="flex-1 rounded-xl border border-dark-border py-2 text-sm text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             {t('reminders.cancel')}
           </button>

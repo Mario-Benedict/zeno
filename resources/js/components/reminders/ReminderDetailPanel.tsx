@@ -137,7 +137,7 @@ export const ReminderDetailPanel = ({
         <button
           type="button"
           onClick={onClose}
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/10 hover:text-white"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
           title={t('reminders.close')}
         >
           <CloseIcon className="h-6 w-6" />
@@ -147,14 +147,14 @@ export const ReminderDetailPanel = ({
       <div className="scrollbar-app flex-1 space-y-5 overflow-y-auto px-5 py-4">
         {/* Steps */}
         <div>
-          <div className="mb-2 flex items-center gap-2 text-xsmall font-semibold tracking-wider text-white/50 uppercase">
+          <div className="mb-2 flex items-center gap-2 text-xsmall font-semibold tracking-wider text-dark-secondary uppercase">
             <span>{t('reminders.steps')}</span>
           </div>
           <div className="space-y-1">
             {(reminder.steps || []).map((step) => (
               <div
                 key={step.reminder_step_id}
-                className="group/step flex items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-white/3"
+                className="group/step flex items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-dark-surface-3"
               >
                 <button
                   type="button"
@@ -164,7 +164,7 @@ export const ReminderDetailPanel = ({
                   className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-all ${
                     step.is_completed
                       ? 'border-accent-blue bg-accent-blue'
-                      : 'border-white/20 hover:border-accent-blue'
+                      : 'border-dark-border-focus hover:border-accent-blue'
                   }`}
                 >
                   {step.is_completed && (
@@ -174,8 +174,8 @@ export const ReminderDetailPanel = ({
                 <span
                   className={`flex-1 text-small leading-snug ${
                     step.is_completed
-                      ? 'text-white/25 line-through'
-                      : 'text-white/75'
+                      ? 'text-dark-secondary/70 line-through'
+                      : 'text-dark-primary'
                   }`}
                 >
                   {step.reminder_step_name}
@@ -183,7 +183,7 @@ export const ReminderDetailPanel = ({
                 <button
                   type="button"
                   onClick={() => onDeleteStep(step.reminder_step_id)}
-                  className="flex h-5 w-5 items-center justify-center rounded text-xsmall text-white/20 opacity-0 transition group-hover/step:opacity-100 hover:text-accent-red"
+                  className="flex h-5 w-5 items-center justify-center rounded text-xsmall text-dark-secondary/70 opacity-0 transition group-hover/step:opacity-100 hover:text-accent-red"
                 >
                   ✕
                 </button>
@@ -216,7 +216,7 @@ export const ReminderDetailPanel = ({
                 placeholder={t('reminders.setDueDate')}
               />
               <div>
-                <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
+                <label className="mb-1 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
                   {t('reminders.time')}
                 </label>
                 <TimePicker
@@ -229,7 +229,7 @@ export const ReminderDetailPanel = ({
               <button
                 type="button"
                 onClick={() => setEditingDate(false)}
-                className="rounded-lg border border-dark-border px-3 py-1.5 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
+                className="rounded-lg border border-dark-border px-3 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
               >
                 {t('reminders.done')}
               </button>
@@ -253,7 +253,7 @@ export const ReminderDetailPanel = ({
         {/* Description */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xsmall font-semibold tracking-wider text-white/50 uppercase">
+            <span className="text-xsmall font-semibold tracking-wider text-dark-secondary uppercase">
               {t('reminders.description')}
             </span>
             {!editingDesc && (
@@ -274,7 +274,7 @@ export const ReminderDetailPanel = ({
                 onChange={(e) => setDescValue(e.target.value)}
                 rows={5}
                 placeholder={t('reminders.descriptionPlaceholder')}
-                className="scrollbar-app w-full resize-none rounded-xl border border-dark-border-focus bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed text-dark-primary placeholder-white/20 focus:outline-none"
+                className="scrollbar-app w-full resize-none rounded-xl border border-dark-border-focus bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed text-dark-primary placeholder-dark-secondary focus:outline-none"
               />
               <div className="mt-2 flex gap-2">
                 <button
@@ -290,7 +290,7 @@ export const ReminderDetailPanel = ({
                     setDescValue(reminder.reminder_description ?? '');
                     setEditingDesc(false);
                   }}
-                  className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-white/50 transition hover:bg-white/5 hover:text-white"
+                  className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
                 >
                   {t('reminders.discard')}
                 </button>
@@ -302,11 +302,11 @@ export const ReminderDetailPanel = ({
               className="min-h-15 cursor-pointer rounded-xl bg-dark-surface-1 px-3.5 py-3 text-small leading-relaxed transition hover:bg-dark-surface-3"
             >
               {reminder.reminder_description ? (
-                <span className="whitespace-pre-wrap text-white/70">
+                <span className="whitespace-pre-wrap text-dark-primary">
                   {reminder.reminder_description}
                 </span>
               ) : (
-                <span className="text-white/20">
+                <span className="text-dark-secondary/70">
                   {t('reminders.descriptionPlaceholder')}
                 </span>
               )}

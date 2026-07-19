@@ -144,7 +144,7 @@ export const AlarmWidget = ({ settings }: Props) => {
             type="button"
             onClick={() => setSettingsOpen((v) => !v)}
             aria-label={t('reminders.timerSettings')}
-            className="rounded p-1 text-white/40 transition hover:bg-white/10 hover:text-white"
+            className="rounded p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             <MoreIcon className="h-4 w-4" />
           </button>
@@ -186,7 +186,7 @@ export const AlarmWidget = ({ settings }: Props) => {
             <button
               type="button"
               onClick={() => setRunning(false)}
-              className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-3 py-1.5 text-xsmall font-semibold text-white transition hover:bg-dark-secondary"
+              className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-3 py-1.5 text-xsmall font-semibold text-dark-primary transition hover:bg-dark-secondary"
             >
               <StopIcon className="h-3 w-3" />
               {t('reminders.stop')}
@@ -195,7 +195,7 @@ export const AlarmWidget = ({ settings }: Props) => {
           <button
             type="button"
             onClick={handleReset}
-            className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-3 py-1.5 text-xsmall font-semibold text-white transition hover:bg-dark-secondary"
+            className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-3 py-1.5 text-xsmall font-semibold text-dark-primary transition hover:bg-dark-secondary"
           >
             <RestartIcon className="h-3 w-3" />
             {t('reminders.reset')}

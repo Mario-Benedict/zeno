@@ -55,20 +55,20 @@ export const CalendarWidgetEventDetail = ({ event, onClose }: Props) => {
             className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
             style={{ backgroundColor: getEventLabelColor(event.labels) }}
           />
-          <p className="flex-1 text-small leading-snug font-semibold text-white">
+          <p className="flex-1 text-small leading-snug font-semibold text-dark-primary">
             {event.title}
           </p>
           <button
             type="button"
             onClick={onClose}
             aria-label={t('calendar.close')}
-            className="shrink-0 rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-white"
+            className="shrink-0 rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
-        <p className="mb-3 text-micro text-white/40">
+        <p className="mb-3 text-micro text-dark-secondary">
           {dateLabel} · {timeLabel}
           {!event.is_kanban_task && event.recurrence !== 'none' && (
             <> · {t(getRecurrenceShortLabelKey(event.recurrence))}</>
@@ -76,13 +76,13 @@ export const CalendarWidgetEventDetail = ({ event, onClose }: Props) => {
         </p>
 
         {event.is_kanban_task && (
-          <p className="mb-3 text-micro text-white/40">
+          <p className="mb-3 text-micro text-dark-secondary">
             {t('calendar.fromBoard', { board: event.kanban_board_name })}
           </p>
         )}
 
         {event.description && (
-          <p className="mb-3 text-xsmall whitespace-pre-wrap text-white/60">
+          <p className="mb-3 text-xsmall whitespace-pre-wrap text-dark-secondary">
             {event.description}
           </p>
         )}
@@ -105,7 +105,7 @@ export const CalendarWidgetEventDetail = ({ event, onClose }: Props) => {
         )}
 
         {!!event.participants.length && (
-          <p className="text-micro text-white/40">
+          <p className="text-micro text-dark-secondary">
             {event.participants.map((p) => p.name).join(', ')}
           </p>
         )}

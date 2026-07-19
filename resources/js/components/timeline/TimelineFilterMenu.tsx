@@ -16,7 +16,7 @@ const toggle = <T,>(list: T[], value: T): T[] =>
   list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
 const SectionLabel = ({ children }: { children: string }) => (
-  <p className="mb-1.5 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
+  <p className="mb-1.5 text-xsmall font-semibold tracking-wider text-dark-secondary/70 uppercase">
     {children}
   </p>
 );
@@ -33,8 +33,8 @@ const FilterRow = ({ active, onClick, children }: FilterRowProps) => (
     onClick={onClick}
     className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition ${
       active
-        ? 'border border-white/10 bg-white/5'
-        : 'border border-transparent hover:bg-white/5'
+        ? 'border border-dark-border bg-dark-surface-3'
+        : 'border border-transparent hover:bg-dark-surface-3'
     }`}
   >
     <span className="min-w-0 flex-1">{children}</span>
@@ -63,7 +63,7 @@ export const TimelineFilterMenu = ({
   return (
     <div className="scrollbar-app absolute top-full right-0 z-40 mt-2 max-h-[70vh] w-64 overflow-y-auto rounded-xl border border-dark-border bg-dark-surface-2 p-3 shadow-2xl">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-small font-semibold text-white">
+        <span className="text-small font-semibold text-dark-primary">
           {t('timeline.filter')}
         </span>
         {hasFilters && (
@@ -72,7 +72,7 @@ export const TimelineFilterMenu = ({
             onClick={() =>
               onChange({ labelIds: [], memberIds: [], boardIds: [] })
             }
-            className="text-xsmall text-white/40 transition hover:text-accent-red"
+            className="text-xsmall text-dark-secondary transition hover:text-accent-red"
           >
             {t('timeline.clearAll')}
           </button>
@@ -102,7 +102,7 @@ export const TimelineFilterMenu = ({
                       className="h-3 w-3 shrink-0 rounded-sm"
                       style={{ backgroundColor: hex }}
                     />
-                    <span className="truncate text-xsmall text-white/70">
+                    <span className="truncate text-xsmall text-dark-primary">
                       {label.card_label_name}
                     </span>
                   </span>
@@ -137,7 +137,7 @@ export const TimelineFilterMenu = ({
                   >
                     {generateInitials(user.name)}
                   </span>
-                  <span className="truncate text-xsmall text-white/70">
+                  <span className="truncate text-xsmall text-dark-primary">
                     {user.name}
                   </span>
                 </span>
@@ -162,7 +162,7 @@ export const TimelineFilterMenu = ({
                   })
                 }
               >
-                <span className="truncate text-xsmall text-white/70">
+                <span className="truncate text-xsmall text-dark-primary">
                   {board.kanban_board_name}
                 </span>
               </FilterRow>
