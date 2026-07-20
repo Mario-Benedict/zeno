@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { TranslationKey } from '@/i18n/dictionary';
 import type { PomodoroSettings } from '@/types/reminder';
-import MoreIcon from '@public/icons/large/more.svg';
+import MoreIcon from '@public/icons/small/more_horizontal.svg';
 import PlayIcon from '@public/icons/small/play.svg';
 import RestartIcon from '@public/icons/small/restart.svg';
 import StopIcon from '@public/icons/small/stop.svg';

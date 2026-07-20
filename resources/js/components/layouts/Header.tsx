@@ -116,7 +116,6 @@ const Header = ({ onNotificationClick, onOpenSettings }: AppHeaderProps) => {
             currentProject={project}
             projects={projectNavigation.projects}
             onClose={() => setProjectMenuOpen(false)}
-            onSettingsOpen={() => onOpenSettings?.('general')}
           />
         </div>
       </div>

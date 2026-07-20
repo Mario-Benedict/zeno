@@ -5,7 +5,7 @@ import type { landing as en } from '../en/landing';
 export const landing: typeof en = {
   meta: {
     title: 'Satu ruang kerja untuk setiap proyek',
-    ogTitle: 'Zeno — satu ruang kerja untuk setiap proyek',
+    ogTitle: 'Zeno: satu ruang kerja untuk setiap proyek',
     description:
       'Zeno menyatukan papan, obrolan tim, catatan, kalender, dan asisten AI dalam satu ruang kerja proyek, supaya tim berhenti berpindah antaraplikasi untuk menyelesaikan pekerjaan.',
     ogImageAlt: 'Ruang kerja proyek Zeno',

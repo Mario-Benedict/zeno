@@ -11,7 +11,7 @@ export const landing = {
     // Tab title only — Inertia's title callback appends " - {app name}", so the
     // brand is not repeated here. The OG/social title carries the full brand.
     title: 'One workspace for every project',
-    ogTitle: 'Zeno — one workspace for every project',
+    ogTitle: 'Zeno: one workspace for every project',
     description:
       'Zeno brings your board, team chat, notes, calendar, and AI assistant into one project workspace, so your team stops jumping between separate apps to get work done.',
     ogImageAlt: 'The Zeno project workspace',

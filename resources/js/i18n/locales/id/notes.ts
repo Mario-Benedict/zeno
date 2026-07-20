@@ -29,7 +29,7 @@ export const notes: typeof en = {
   more: 'Lainnya',
   savingStatus: 'Menyimpan…',
   editingStatus: 'Mengedit…',
-  saveFailedStatus: 'Perubahan belum tersimpan. Silakan coba lagi.',
+  saveFailedStatus: 'Perubahan belum tersimpan.',
   savedStatus: 'Tersimpan {{when}}',
   manageAccess: 'Kelola akses',
   shareThisNote: 'Bagikan catatan ini',

@@ -95,6 +95,7 @@ const NoteEditor = ({
           onlineUserIds={onlineUsers.map((u) => u.id)}
           onShareClick={onShareClick}
           onDeleteClick={onDeleteClick}
+          onRetrySave={flushSave}
         />
 
         {!canEdit && (

@@ -35,7 +35,7 @@ const FeatureCard = ({
       {title}
     </h3>
     <p className="mt-2 text-small text-landing-secondary">{body}</p>
-    <div className="mt-5">{children}</div>
+    <div className="mt-5 flex flex-1 flex-col">{children}</div>
   </article>
 );
 

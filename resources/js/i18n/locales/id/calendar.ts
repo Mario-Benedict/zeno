@@ -100,7 +100,7 @@ export const calendar: typeof en = {
   endTime: 'Waktu Selesai',
   labels: 'Label',
   selectLabels: 'Pilih label',
-  noLabelsInProject: 'Belum ada label di proyek ini — buat dari Board.',
+  noLabelsInProject: 'Belum ada label di proyek ini. Buat dari Board.',
   recurrence: 'Pengulangan',
   doesNotRepeat: 'Tidak berulang',
   weeklyOn: 'Setiap minggu pada {{weekday}}',

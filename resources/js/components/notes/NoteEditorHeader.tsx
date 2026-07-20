@@ -42,6 +42,7 @@ interface NoteEditorHeaderProps {
   onlineUserIds: number[];
   onShareClick: () => void;
   onDeleteClick: () => void;
+  onRetrySave: () => void;
 }
 
 const NoteEditorHeader = ({
@@ -56,6 +57,7 @@ const NoteEditorHeader = ({
   onlineUserIds,
   onShareClick,
   onDeleteClick,
+  onRetrySave,
 }: NoteEditorHeaderProps): React.ReactElement => {
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -80,6 +82,18 @@ const NoteEditorHeader = ({
       <div className="flex shrink-0 items-center gap-3 pt-2">
         <span className={`text-xsmall whitespace-nowrap ${statusColor}`}>
           {statusLabel}
+          {saveStatus === 'error' && (
+            <>
+              {' '}
+              <button
+                type="button"
+                onClick={onRetrySave}
+                className="font-semibold text-status-error underline underline-offset-2 hover:text-dark-primary"
+              >
+                {t('common.retry')}
+              </button>
+            </>
+          )}
         </span>
 
         {note.isShared && note.collaborators.length > 0 && (

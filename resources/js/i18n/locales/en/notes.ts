@@ -27,7 +27,7 @@ export const notes = {
   more: 'More',
   savingStatus: 'Saving…',
   editingStatus: 'Editing…',
-  saveFailedStatus: "We couldn't save your changes. Please try again.",
+  saveFailedStatus: "We couldn't save your changes.",
   savedStatus: 'Saved {{when}}',
   manageAccess: 'Manage access',
   shareThisNote: 'Share this note',
