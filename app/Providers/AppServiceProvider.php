@@ -6,9 +6,12 @@ use App\Models\KanbanBoardCard;
 use App\Models\Project;
 use App\Observers\KanbanBoardCardObserver;
 use App\Policies\ProjectPolicy;
+use App\Services\AccountSessionService;
 use App\Services\MongoDB\MongoConnection;
 use App\Services\StorageService;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->configureDefaults();
         $this->configureQueueLogging();
+        $this->configureAuthRedirects();
 
         KanbanBoardCard::observe(KanbanBoardCardObserver::class);
     }
@@ -81,6 +85,23 @@ class AppServiceProvider extends ServiceProvider
                     ->symbols()
                     ->uncompromised()
                 : null,
+        );
+    }
+
+    /**
+     * Laravel's `guest` middleware sends an already-authenticated user who
+     * hits a guest-only route (e.g. clicking "Log in" on the landing page
+     * while already signed in) to the `dashboard` or `home` named route by
+     * default. This app has no `dashboard` route and `home` is the public
+     * marketing landing page, so without this override they'd bounce back
+     * to `/` instead of their project list.
+     */
+    protected function configureAuthRedirects(): void
+    {
+        RedirectIfAuthenticated::redirectUsing(
+            fn (Request $request) => route('projects.index', [
+                'accountIndex' => max(0, AccountSessionService::getActiveIndex($request)),
+            ])
         );
     }
 
