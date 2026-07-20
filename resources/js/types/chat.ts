@@ -153,6 +153,16 @@ export interface ChatMessage {
   /** ISO 8601 timestamp */
   createdAt: string;
   updatedAt: string;
+
+  /**
+   * Client-only fields, never present on a server-fetched message — set
+   * while a message the current user just sent is optimistically shown
+   * ahead of the server confirming it (see ChatComposer's `send()`).
+   */
+  /** True while this message is still saving. */
+  pending?: boolean;
+  /** True if the send request failed. */
+  failed?: boolean;
 }
 
 /**

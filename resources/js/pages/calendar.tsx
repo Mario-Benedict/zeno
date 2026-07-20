@@ -18,6 +18,7 @@ import type {
   CalendarMember,
   AnyCalendarEvent,
   CalendarEventFull,
+  CalendarTaskSourceFilter,
 } from '@/types/calendar';
 
 export default function Calendar({
@@ -42,6 +43,11 @@ export default function Calendar({
   const [hiddenLabelIds, setHiddenLabelIds] = useState<Set<string>>(
     () => new Set(),
   );
+
+  // Narrows Kanban-task entries to this project's own assignments or ones
+  // assigned in another project; manually-created events are never affected.
+  const [taskSourceFilter, setTaskSourceFilter] =
+    useState<CalendarTaskSourceFilter>('all');
 
   // Modals state
   const [formOpen, setFormOpen] = useState(false);
@@ -98,16 +104,30 @@ export default function Calendar({
     members,
   );
 
-  // Apply the label filter. Classified busy-blocks and unlabeled events are
+  // Apply the label filter (classified busy-blocks and unlabeled events are
   // always shown; a labeled event shows if at least one of its labels is
-  // still visible.
+  // still visible) and the task-source filter (only Kanban-task entries are
+  // affected — a task belongs to "this project" only when it isn't a
+  // classified cross-project block AND its project_id matches the one being
+  // viewed, since an entry can be non-classified yet still from another
+  // project when the viewer participates directly in it).
   const visibleEvents = useMemo(
     () =>
       events.filter((ev) => {
-        if (ev.is_classified || ev.labels.length === 0) return true;
-        return ev.labels.some((l) => !hiddenLabelIds.has(l.card_label_id));
+        const labelVisible =
+          ev.is_classified ||
+          ev.labels.length === 0 ||
+          ev.labels.some((l) => !hiddenLabelIds.has(l.card_label_id));
+
+        if (!labelVisible) return false;
+        if (taskSourceFilter === 'all' || !ev.is_kanban_task) return true;
+
+        const isOwnProject =
+          !ev.is_classified && ev.project_id === project.project_id;
+
+        return taskSourceFilter === 'own' ? isOwnProject : !isOwnProject;
       }),
-    [events, hiddenLabelIds],
+    [events, hiddenLabelIds, taskSourceFilter, project.project_id],
   );
 
   // --- Handlers ---
@@ -332,6 +352,8 @@ export default function Calendar({
           cardLabels={cardLabels}
           hiddenLabelIds={hiddenLabelIds}
           onToggleLabel={handleToggleLabel}
+          taskSourceFilter={taskSourceFilter}
+          onTaskSourceFilterChange={setTaskSourceFilter}
         />
 
         <div className="relative flex flex-1 flex-col overflow-hidden">

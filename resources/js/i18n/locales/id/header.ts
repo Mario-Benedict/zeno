@@ -15,6 +15,7 @@ export const header: typeof en = {
   inbox: 'Kotak masuk',
   chat: 'Obrolan',
   nothingDueSoon: 'Tidak ada yang jatuh tempo segera.',
+  assignedToCard: 'Anda ditugaskan ke "{{card}}".',
   noUnreadMessages: 'Tidak ada pesan belum dibaca.',
   overduePrefix: 'Terlambat · ',
   duePrefix: 'Jatuh tempo ',

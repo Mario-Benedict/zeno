@@ -3,6 +3,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type {
   AnyCalendarEvent,
   CalendarMember,
+  CalendarTaskSourceFilter,
   CalendarViewMode,
 } from '@/types/calendar';
 import type { CardLabel } from '@/types/kanban';
@@ -30,6 +31,8 @@ interface CalendarSidebarProps {
   cardLabels: CardLabel[];
   hiddenLabelIds: Set<string>;
   onToggleLabel: (labelId: string) => void;
+  taskSourceFilter: CalendarTaskSourceFilter;
+  onTaskSourceFilterChange: (filter: CalendarTaskSourceFilter) => void;
 }
 
 const MAX_VISIBLE_LABELS = 6;
@@ -51,10 +54,21 @@ export const CalendarSidebar = ({
   cardLabels,
   hiddenLabelIds,
   onToggleLabel,
+  taskSourceFilter,
+  onTaskSourceFilterChange,
 }: CalendarSidebarProps) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [labelsExpanded, setLabelsExpanded] = useState(false);
+
+  const taskSourceOptions: {
+    value: CalendarTaskSourceFilter;
+    label: string;
+  }[] = [
+    { value: 'all', label: t('calendar.taskSourceAll') },
+    { value: 'own', label: t('calendar.taskSourceThisProject') },
+    { value: 'other', label: t('calendar.taskSourceOtherProjects') },
+  ];
 
   const filteredMembers = members.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase()),
@@ -158,6 +172,27 @@ export const CalendarSidebar = ({
             )}
           </div>
         )}
+
+        <div className="mt-3 border-t border-dark-border pt-3">
+          <p className="mb-1.5 text-xsmall font-medium text-dark-secondary">
+            {t('calendar.taskSourceFilterLabel')}
+          </p>
+          <div className="flex rounded-full border border-dark-border bg-dark-surface-3 p-0.5">
+            {taskSourceOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => onTaskSourceFilterChange(option.value)}
+                className={`flex-1 rounded-full px-2 py-1 text-xsmall font-semibold transition ${
+                  taskSourceFilter === option.value
+                    ? 'bg-dark-primary text-dark-surface-1'
+                    : 'text-dark-secondary hover:text-dark-primary'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* --- Bottom card: people search + member list --- */}

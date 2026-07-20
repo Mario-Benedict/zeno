@@ -55,6 +55,12 @@ export const calendar: typeof en = {
   moreLabels: '+ {{count}} lainnya',
   showLessLabels: 'Tampilkan lebih sedikit',
 
+  // Sidebar task-source filter
+  taskSourceFilterLabel: 'Tugas',
+  taskSourceAll: 'Semua',
+  taskSourceThisProject: 'Proyek ini',
+  taskSourceOtherProjects: 'Proyek lain',
+
   // Month grid
   moreEvents: '+ {{count}} lainnya',
   classified: 'RAHASIA',
