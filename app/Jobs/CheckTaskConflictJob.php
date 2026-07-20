@@ -16,10 +16,12 @@ use Illuminate\Queue\SerializesModels;
  * Runs async after a Kanban card gets both an assignee and a due date
  * (dispatched from KanbanCardDetailController::addMember()/updateDates()),
  * so assignment itself never blocks on this check. Looks for an overlap
- * between the card's due-date window and the assignee's existing calendar
- * commitments — both real CalendarEvents they participate in and other
- * Kanban cards due-dated and assigned to them — and, if found, creates a
- * pending TaskConflict for the assignee to accept or decline.
+ * between the card's due date and the assignee's existing commitments on
+ * that same calendar day — both real CalendarEvents they participate in and
+ * other Kanban cards due-dated and assigned to them, regardless of time of
+ * day — and, if found, creates a pending TaskConflict for the assignee to
+ * accept or decline. A pending conflict already open for this card/assignee
+ * pair short-circuits the check instead of piling up duplicates.
  */
 class CheckTaskConflictJob implements ShouldQueue
 {
@@ -39,8 +41,17 @@ class CheckTaskConflictJob implements ShouldQueue
             return;
         }
 
-        $windowStart = $card->kanban_board_card_due_date->copy();
-        $windowEnd = $windowStart->copy()->addHour();
+        $alreadyPending = TaskConflict::where('kanban_board_card_id', $card->kanban_board_card_id)
+            ->where('assignee_user_id', $this->assigneeUserId)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($alreadyPending) {
+            return;
+        }
+
+        $windowStart = $card->kanban_board_card_due_date->copy()->startOfDay();
+        $windowEnd = $card->kanban_board_card_due_date->copy()->endOfDay();
 
         $conflict = $this->findCalendarConflict($windowStart, $windowEnd)
             ?? $this->findKanbanConflict($card, $windowStart, $windowEnd);
@@ -95,7 +106,7 @@ class CheckTaskConflictJob implements ShouldQueue
             ->whereHas('members', fn ($q) => $q->where('users.id', $this->assigneeUserId))
             ->whereNotNull('kanban_board_card_due_date')
             ->where('kanban_board_card_due_date', '<', $windowEnd)
-            ->where('kanban_board_card_due_date', '>=', $windowStart->copy()->subHour())
+            ->where('kanban_board_card_due_date', '>=', $windowStart)
             ->first();
 
         if (! $card) {
