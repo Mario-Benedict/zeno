@@ -42,3 +42,5 @@ Route::get('notifications', [NotificationController::class, 'index'])
     ->name('notifications.index');
 Route::post('notifications/reminders/{reminder}/open', [NotificationController::class, 'openReminder'])
     ->name('notifications.reminders.open');
+Route::post('notifications/assignments/{notice}/open', [NotificationController::class, 'openCardAssignment'])
+    ->name('notifications.assignments.open');

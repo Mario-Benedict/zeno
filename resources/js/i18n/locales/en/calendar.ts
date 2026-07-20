@@ -53,6 +53,12 @@ export const calendar = {
   moreLabels: '+ {{count}} more',
   showLessLabels: 'Show less',
 
+  // Sidebar task-source filter
+  taskSourceFilterLabel: 'Tasks',
+  taskSourceAll: 'All',
+  taskSourceThisProject: 'This project',
+  taskSourceOtherProjects: 'Other projects',
+
   // Month grid
   moreEvents: '+ {{count}} more',
   classified: 'CLASSIFIED',

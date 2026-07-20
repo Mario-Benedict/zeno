@@ -20,6 +20,7 @@ export const chat = {
   attachmentsExceedTotalSizeLimit:
     'The combined attachment size cannot exceed 50 MB.',
   failedToSendMessage: 'Failed to send message.',
+  messageFailedToSend: 'Failed to send',
   sentAnImage: 'Sent an image',
   sentAFile: 'Sent a file',
   unreadMessages: '{{count}} unread messages',
@@ -28,4 +29,11 @@ export const chat = {
   newMessage: 'New message',
   newMessageTitle: 'Start a new direct message',
   noOtherMembers: 'No other project members yet',
+  newGroupAction: 'New group',
+  newGroupTitle: 'New group chat',
+  groupNamePlaceholder: 'Group name',
+  selectMembers: 'Select members',
+  creatingGroup: 'Creating…',
+  groupNameRequiredError: 'Please enter a group name.',
+  selectAtLeastOneMemberError: 'Please select at least one member.',
 };

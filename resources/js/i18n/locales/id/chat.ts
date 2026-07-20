@@ -22,6 +22,7 @@ export const chat: typeof en = {
   attachmentsExceedTotalSizeLimit:
     'Total ukuran lampiran tidak boleh melebihi 50 MB.',
   failedToSendMessage: 'Gagal mengirim pesan.',
+  messageFailedToSend: 'Gagal terkirim',
   sentAnImage: 'Mengirim gambar',
   sentAFile: 'Mengirim file',
   unreadMessages: '{{count}} pesan belum dibaca',
@@ -30,4 +31,11 @@ export const chat: typeof en = {
   newMessage: 'Pesan baru',
   newMessageTitle: 'Mulai pesan langsung baru',
   noOtherMembers: 'Belum ada anggota proyek lainnya',
+  newGroupAction: 'Grup baru',
+  newGroupTitle: 'Grup obrolan baru',
+  groupNamePlaceholder: 'Nama grup',
+  selectMembers: 'Pilih anggota',
+  creatingGroup: 'Membuat…',
+  groupNameRequiredError: 'Silakan masukkan nama grup.',
+  selectAtLeastOneMemberError: 'Silakan pilih minimal satu anggota.',
 };

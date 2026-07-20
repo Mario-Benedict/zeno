@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Chat\StoreChatGroupRequest;
 use App\Http\Requests\Chat\StoreChatRoomRequest;
 use App\Http\Resources\ChatRoomResource;
 use App\Models\ChatRoom;
@@ -174,6 +175,40 @@ class ChatRoomController extends Controller
         ]);
 
         $room = $this->roomService->findOrCreateDmRoom($project, $user, $recipient);
+
+        return redirect()
+            ->route('chat.index', [
+                'accountIndex' => $accountIndex,
+                'project' => $project->project_slug,
+            ])
+            ->with('activeRoomId', $room->id);
+    }
+
+    /**
+     * POST /projects/{project}/chat/rooms/group
+     *
+     * Create a new group room with an explicit subset of project members
+     * (chosen via the chat "+" button), distinct from the auto-created
+     * project-wide group room every member already belongs to.
+     */
+    public function storeGroup(int $accountIndex, StoreChatGroupRequest $request, Project $project): RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $this->authorize('createGroup', [
+            ChatRoom::query()
+                ->where('project_id', $project->project_id)
+                ->where('type', 'group')
+                ->firstOrFail(),
+        ]);
+
+        $room = $this->roomService->createCustomGroupRoom(
+            $project,
+            $user,
+            $request->validated('name'),
+            $request->validated('participant_ids'),
+        );
 
         return redirect()
             ->route('chat.index', [

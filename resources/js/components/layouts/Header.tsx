@@ -91,11 +91,13 @@ const Header = ({
 
     channel.listen('.message.sent', refresh);
     channel.listen('.task-conflict.created', refresh);
+    channel.listen('.card-assignment.created', refresh);
     window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, refresh);
 
     return () => {
       channel.stopListening('.message.sent', refresh);
       channel.stopListening('.task-conflict.created', refresh);
+      channel.stopListening('.card-assignment.created', refresh);
       echo.leave(channelName);
       window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, refresh);
     };

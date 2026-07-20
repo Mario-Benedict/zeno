@@ -193,7 +193,9 @@ const RoomView = ({
     loadMore,
     pushMessage,
     receiveMessage,
-    latestMessageId,
+    confirmMessage,
+    failMessage,
+    scrollSignal,
   } = useMessages(projectSlug, room.id);
 
   const [showSearch, setShowSearch] = useState(false);
@@ -248,14 +250,17 @@ const RoomView = ({
         loading={loading}
         initialLoading={initialLoading}
         onLoadMore={loadMore}
-        newMessageSignal={latestMessageId}
+        scrollSignal={scrollSignal}
         onSenderClick={room.type === 'group' ? onSenderClick : undefined}
       />
 
       <ChatComposer
         projectSlug={projectSlug}
         roomId={room.id}
+        currentUser={currentUser}
         onMessageSent={handleMessageSent}
+        onMessageConfirmed={confirmMessage}
+        onMessageFailed={failMessage}
       />
     </div>
   );

@@ -20,6 +20,15 @@ export type CalendarRecurrence =
   | 'yearly';
 export type CalendarViewMode = 'month' | 'week';
 
+/**
+ * Filters Kanban-task-sourced calendar entries by which project assigned
+ * them — `own` for the project currently being viewed, `other` for tasks
+ * assigned in a different project (surfaced per the assignee's
+ * `calendar_visibility`). Non-task entries (manually-created CalendarEvents)
+ * are unaffected by this filter regardless of its value.
+ */
+export type CalendarTaskSourceFilter = 'all' | 'own' | 'other';
+
 export interface CalendarMember {
   id: number;
   name: string;
@@ -66,6 +75,13 @@ export interface CalendarEventClassified extends CalendarEventBase {
    * the coloured block with no label at all.
    */
   visibility: 'masked' | 'busy_only';
+  /**
+   * True when this classified block came from a Kanban card's due date
+   * (another project) rather than a manually-created CalendarEvent — lets
+   * the "this project vs other project" task filter tell them apart even
+   * though neither carries a `project_id`.
+   */
+  is_kanban_task?: boolean;
 }
 
 /**

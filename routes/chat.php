@@ -49,6 +49,11 @@ Route::prefix('chat')
             Route::post('/', [ChatRoomController::class, 'store'])
                 ->name('store');
 
+            // POST /p/{project:project_slug}/chat/rooms/group
+            // Create a new group room with a chosen subset of project members.
+            Route::post('/group', [ChatRoomController::class, 'storeGroup'])
+                ->name('group.store');
+
             // GET /p/{project:project_slug}/chat/rooms/{room}
             // Return a single room as JSON (used by the frontend on deep-link open).
             Route::get('/{room}', [ChatRoomController::class, 'show'])
