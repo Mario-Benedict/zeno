@@ -60,6 +60,32 @@ class ChatRoomService
     }
 
     /**
+     * Create a new group room with an explicit subset of project members,
+     * chosen via the chat "+" button — distinct from createProjectGroupRoom(),
+     * which auto-attaches every project member to the project-wide room.
+     * The creator is always attached as admin, even if not in $participantIds.
+     */
+    public function createCustomGroupRoom(Project $project, User $creator, string $name, array $participantIds): ChatRoom
+    {
+        /** @var ChatRoom $room */
+        $room = ChatRoom::create([
+            'project_id' => $project->project_id,
+            'type' => 'group',
+            'name' => $name,
+        ]);
+
+        $attachData = [];
+        foreach ($participantIds as $id) {
+            $attachData[(int) $id] = ['role' => 'member', 'joined_at' => now()];
+        }
+        $attachData[$creator->id] = ['role' => 'admin', 'joined_at' => now()];
+
+        $room->participants()->attach($attachData);
+
+        return $room;
+    }
+
+    /**
      * Tambah member baru ke group room sebuah project and return whether the
      * room membership changed. Callers broadcast only after their surrounding
      * membership transaction commits.

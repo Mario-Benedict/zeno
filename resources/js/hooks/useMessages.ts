@@ -12,6 +12,17 @@ interface ChatPageProps {
   [key: string]: unknown;
 }
 
+/**
+ * `force: true` means the message list should always scroll to bottom
+ * (the current user just sent this themselves) — `force: false` means it
+ * should only scroll if the user was already near the bottom (a message
+ * arrived from someone else while they may be reading older history).
+ */
+export interface ScrollSignal {
+  id: string;
+  force: boolean;
+}
+
 export const useMessages = (projectSlug: string, roomId: string) => {
   const {
     messages: serverMessages,
@@ -24,7 +35,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [latestMessageId, setLatestMessageId] = useState<string | undefined>();
+  const [scrollSignal, setScrollSignal] = useState<ScrollSignal | undefined>();
 
   const isLoadingMoreRef = useRef(false);
 
@@ -35,7 +46,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
 
         return [message, ...prev];
       });
-      setLatestMessageId(message._id);
+      setScrollSignal({ id: message._id, force: false });
 
       void inertiaJson(
         'get',
@@ -104,9 +115,26 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     );
   };
 
+  /** Adds a message immediately and force-scrolls — the current user's own optimistic send. */
   const pushMessage = (message: ChatMessage) => {
     setLocalMessages((prev) => [message, ...prev]);
-    setLatestMessageId(message._id);
+    setScrollSignal({ id: message._id, force: true });
+  };
+
+  /** Replaces an optimistic message with the server-confirmed one once the send succeeds. */
+  const confirmMessage = (tempId: string, message: ChatMessage) => {
+    setLocalMessages((prev) =>
+      prev.map((m) => (m._id === tempId ? message : m)),
+    );
+  };
+
+  /** Marks an optimistic message as failed instead of silently dropping it. */
+  const failMessage = (tempId: string) => {
+    setLocalMessages((prev) =>
+      prev.map((m) =>
+        m._id === tempId ? { ...m, pending: false, failed: true } : m,
+      ),
+    );
   };
 
   return {
@@ -118,6 +146,8 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     loadMore,
     pushMessage,
     receiveMessage,
-    latestMessageId,
+    confirmMessage,
+    failMessage,
+    scrollSignal,
   };
 };
