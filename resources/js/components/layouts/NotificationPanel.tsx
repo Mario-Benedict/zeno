@@ -155,37 +155,61 @@ const NotificationPanel = ({
                 {t('header.nothingDueSoon')}
               </p>
             )}
-            {data?.inbox.map((item) => (
-              <Link
-                key={item.reminder_id}
-                as="button"
-                method="post"
-                href={projectPath(
-                  accountIndex,
-                  project.project_slug,
-                  `/notifications/reminders/${item.reminder_id}/open`,
-                )}
-                onClick={onClose}
-                className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-dark-surface-3"
-              >
-                <span
-                  className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.is_overdue ? 'bg-accent-red' : 'bg-accent-yellow'}`}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-small text-dark-primary">
-                    {item.title}
-                  </p>
-                  <p
-                    className={`text-xsmall ${item.is_overdue ? 'text-accent-red' : 'text-dark-secondary'}`}
-                  >
-                    {item.is_overdue
-                      ? t('header.overduePrefix')
-                      : t('header.duePrefix')}
-                    {formatReminderListDate(item.due_at, localeCode)}
-                  </p>
-                </div>
-              </Link>
-            ))}
+            {data?.inbox.map((item) =>
+              item.type === 'assignment' ? (
+                <Link
+                  key={item.id}
+                  as="button"
+                  method="post"
+                  href={projectPath(
+                    accountIndex,
+                    project.project_slug,
+                    `/notifications/assignments/${item.id}/open`,
+                  )}
+                  onClick={onClose}
+                  className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-dark-surface-3"
+                >
+                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-accent-blue" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-small text-dark-primary">
+                      {t('header.assignedToCard', {
+                        card: item.card_title ?? '',
+                      })}
+                    </p>
+                  </div>
+                </Link>
+              ) : (
+                <Link
+                  key={item.reminder_id}
+                  as="button"
+                  method="post"
+                  href={projectPath(
+                    accountIndex,
+                    project.project_slug,
+                    `/notifications/reminders/${item.reminder_id}/open`,
+                  )}
+                  onClick={onClose}
+                  className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-dark-surface-3"
+                >
+                  <span
+                    className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.is_overdue ? 'bg-accent-red' : 'bg-accent-yellow'}`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-small text-dark-primary">
+                      {item.title}
+                    </p>
+                    <p
+                      className={`text-xsmall ${item.is_overdue ? 'text-accent-red' : 'text-dark-secondary'}`}
+                    >
+                      {item.is_overdue
+                        ? t('header.overduePrefix')
+                        : t('header.duePrefix')}
+                      {formatReminderListDate(item.due_at, localeCode)}
+                    </p>
+                  </div>
+                </Link>
+              ),
+            )}
           </>
         )}
 

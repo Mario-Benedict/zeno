@@ -43,6 +43,7 @@ export default function Index({
   const { t } = useTranslation();
   const [liveRooms, setLiveRooms] = useState(rooms);
   const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
+  const [creatingGroup, setCreatingGroup] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(
     initialActiveRoomId ?? null,
   );
@@ -136,6 +137,25 @@ export default function Index({
     [liveRooms, currentUser.id, accountIndex, project.project_slug],
   );
 
+  /** Creates a new group room with a chosen subset of project members. */
+  const createGroup = useCallback(
+    (name: string, participantIds: string[]) => {
+      setCreatingGroup(true);
+      router.post(
+        chatRooms.group.store.url({
+          accountIndex,
+          project: project.project_slug,
+        }),
+        { name, participant_ids: participantIds },
+        {
+          preserveScroll: true,
+          onFinish: () => setCreatingGroup(false),
+        },
+      );
+    },
+    [accountIndex, project.project_slug],
+  );
+
   // Project membership comes from projectShare (authoritative project_user
   // membership), not the group room's participant list — a member can exist
   // in the project before the group room's participant sync has caught up.
@@ -205,6 +225,8 @@ export default function Index({
           activeRoomId={activeRoom?.id ?? null}
           onSelectRoom={selectRoom}
           onStartDm={openDmWith}
+          onCreateGroup={createGroup}
+          creatingGroup={creatingGroup}
         />
         <ChatWindow
           room={activeRoom}

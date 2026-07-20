@@ -65,46 +65,74 @@ const SenderAvatar = ({
  * Image attachment — WhatsApp-style.
  * Renders the image as the bubble itself when standalone (no caption);
  * when a caption is present it sits flush at the top of a captioned bubble.
+ * While `pending` (an optimistic send still saving), renders as a plain
+ * `div` instead of a link — the local blob preview isn't a real URL to
+ * navigate to yet.
  */
 const ImageAttachment = ({
   att,
   withCaption = false,
   timestamp,
+  pending = false,
 }: {
   att: MessageAttachment;
   withCaption?: boolean;
   timestamp?: string;
-}) => (
-  <a
-    href={att.url ?? att.path}
-    target="_blank"
-    rel="noopener noreferrer"
-    className={`relative block overflow-hidden ${
-      withCaption ? 'rounded-t-2xl' : 'rounded-2xl'
-    }`}
-  >
-    <img
-      src={att.url ?? att.path}
-      alt={att.fileName}
-      className="block max-h-80 min-h-30 max-w-70 min-w-45 object-cover transition-opacity hover:opacity-90"
-    />
-    {timestamp && !withCaption && (
-      <span className="pointer-events-none absolute right-2 bottom-2 rounded-md bg-black/55 px-1.5 py-0.5 text-micro font-medium text-dark-primary backdrop-blur-sm">
-        {timestamp}
-      </span>
-    )}
-  </a>
-);
+  pending?: boolean;
+}) => {
+  const className = `relative block overflow-hidden ${
+    withCaption ? 'rounded-t-2xl' : 'rounded-2xl'
+  }`;
+  const content = (
+    <>
+      <img
+        src={att.url ?? att.path}
+        alt={att.fileName}
+        className={`block max-h-80 min-h-30 max-w-70 min-w-45 object-cover transition-opacity ${
+          pending ? 'opacity-60' : 'hover:opacity-90'
+        }`}
+      />
+      {timestamp && !withCaption && (
+        <span className="pointer-events-none absolute right-2 bottom-2 rounded-md bg-black/55 px-1.5 py-0.5 text-micro font-medium text-dark-primary backdrop-blur-sm">
+          {timestamp}
+        </span>
+      )}
+    </>
+  );
 
-const FileAttachment = ({ att }: { att: MessageAttachment }) => {
-  const href = att.downloadUrl ?? att.url ?? `/storage/${att.path}`;
+  if (pending) {
+    return <div className={className}>{content}</div>;
+  }
 
   return (
     <a
-      href={href}
-      download={att.fileName}
-      className="mt-1.5 flex max-w-60 items-center gap-2.5 rounded-lg border border-dark-border bg-dark-surface-1 p-2.5 transition-colors hover:border-dark-border-focus"
+      href={att.url ?? att.path}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
     >
+      {content}
+    </a>
+  );
+};
+
+/**
+ * While `pending`, renders as a plain `div` instead of a link — the
+ * attachment has no real download URL until the send is confirmed.
+ */
+const FileAttachment = ({
+  att,
+  pending = false,
+}: {
+  att: MessageAttachment;
+  pending?: boolean;
+}) => {
+  const href = att.downloadUrl ?? att.url ?? `/storage/${att.path}`;
+  const className = `mt-1.5 flex max-w-60 items-center gap-2.5 rounded-lg border border-dark-border bg-dark-surface-1 p-2.5 transition-colors ${
+    pending ? '' : 'hover:border-dark-border-focus'
+  }`;
+  const content = (
+    <>
       <span className="shrink-0 text-dark-secondary">
         <FileIcon className="h-[18px] w-[18px]" />
       </span>
@@ -119,6 +147,16 @@ const FileAttachment = ({ att }: { att: MessageAttachment }) => {
       <span className="shrink-0 text-dark-secondary">
         <DownloadIcon />
       </span>
+    </>
+  );
+
+  if (pending) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <a href={href} download={att.fileName} className={className}>
+      {content}
     </a>
   );
 };
@@ -166,9 +204,19 @@ const MessageBubble = ({
               {t('chat.messageDeleted')}
             </p>
           ) : isImageOnly ? (
-            <ImageAttachment att={attachments[0]} timestamp={formattedTime} />
+            <ImageAttachment
+              att={attachments[0]}
+              timestamp={formattedTime}
+              pending={message.pending}
+            />
           ) : (
-            <div className="overflow-hidden rounded-2xl rounded-br-sm bg-dark-surface-3">
+            <div
+              className={[
+                'overflow-hidden rounded-2xl rounded-br-sm bg-dark-surface-3',
+                message.pending ? 'opacity-60' : '',
+                message.failed ? 'ring-1 ring-status-error' : '',
+              ].join(' ')}
+            >
               {hasAttachments && (
                 <div className="flex flex-col">
                   {attachments.map((att) =>
@@ -177,10 +225,14 @@ const MessageBubble = ({
                         key={att.id}
                         att={att}
                         withCaption={hasText}
+                        pending={message.pending}
                       />
                     ) : (
-                      <div key={att.id} className="flex items-center px-3 py-2">
-                        <FileAttachment att={att} />
+                      <div
+                        key={att.id}
+                        className="flex items-center justify-center px-3 py-2"
+                      >
+                        <FileAttachment att={att} pending={message.pending} />
                       </div>
                     ),
                   )}
@@ -192,6 +244,12 @@ const MessageBubble = ({
                 </p>
               )}
             </div>
+          )}
+
+          {message.failed && (
+            <p className="mt-1 pr-1 text-right text-xsmall text-status-error">
+              {t('chat.messageFailedToSend')}
+            </p>
           )}
         </div>
       </div>
@@ -258,7 +316,7 @@ const MessageBubble = ({
           <div className="inline-block max-w-full overflow-hidden rounded-2xl rounded-bl-sm bg-dark-surface-3">
             {hasAttachments && (
               <div className="flex flex-col">
-                {attachments.map((att) =>
+                {attachments.map((att, i) =>
                   att.type === 'image' ? (
                     <ImageAttachment
                       key={att.id}
@@ -266,7 +324,13 @@ const MessageBubble = ({
                       withCaption={hasText}
                     />
                   ) : (
-                    <div key={att.id} className="px-3.5 pt-2 first:pt-2">
+                    <div
+                      key={att.id}
+                      className={[
+                        'flex justify-center px-3.5 pt-2',
+                        i === attachments.length - 1 && !hasText ? 'pb-2' : '',
+                      ].join(' ')}
+                    >
                       <FileAttachment att={att} />
                     </div>
                   ),

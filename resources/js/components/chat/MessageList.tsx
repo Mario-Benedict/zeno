@@ -6,6 +6,7 @@ import {
   useRef,
 } from 'react';
 import MessageBubble from '@/components/chat/MessageBubble';
+import type { ScrollSignal } from '@/hooks/useMessages';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatMessage, ChatParticipant } from '@/types/chat';
 import MessageIcon from '@public/icons/small/message.svg';
@@ -18,7 +19,7 @@ interface Props {
   loading: boolean;
   initialLoading: boolean;
   onLoadMore: () => void;
-  newMessageSignal?: string;
+  scrollSignal?: ScrollSignal;
   onSenderClick?: (senderId: string) => void;
 }
 
@@ -80,7 +81,7 @@ const MessageList = ({
   loading,
   initialLoading,
   onLoadMore,
-  newMessageSignal,
+  scrollSignal,
   onSenderClick,
 }: Props) => {
   const { t } = useTranslation();
@@ -122,15 +123,15 @@ const MessageList = ({
 
   useLayoutEffect(() => {
     const el = containerRef.current;
-    if (!el || !newMessageSignal) return;
+    if (!el || !scrollSignal) return;
 
     const { scrollTop, scrollHeight, clientHeight } = el;
     const distFromBottom = scrollHeight - scrollTop - clientHeight;
 
-    if (distFromBottom < 150) {
+    if (scrollSignal.force || distFromBottom < 150) {
       el.scrollTop = scrollHeight;
     }
-  }, [newMessageSignal]);
+  }, [scrollSignal]);
 
   useEffect(() => {
     const sentinel = topSentinelRef.current;

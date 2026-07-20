@@ -71,6 +71,16 @@ class ChatRoomPolicy
         return $this->isParticipant($user, $groupRoom);
     }
 
+    /**
+     * createGroup — can the user create a new custom group room in this
+     * project? Same requirement as createDm: must be a participant of the
+     * project's main group room (i.e., an active project member).
+     */
+    public function createGroup(User $user, ChatRoom $groupRoom): bool
+    {
+        return $this->isParticipant($user, $groupRoom);
+    }
+
     private function isParticipant(User $user, ChatRoom $room): bool
     {
         return $room->participants()

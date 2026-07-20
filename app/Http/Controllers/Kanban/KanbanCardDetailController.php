@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Kanban;
 use App\Events\CalendarEventChanged;
 use App\Http\Controllers\Controller;
 use App\Jobs\CheckTaskConflictJob;
+use App\Jobs\NotifyCardAssignedJob;
 use App\Models\CardLabel;
 use App\Models\KanbanBoardCard;
 use App\Models\Project;
@@ -145,6 +146,8 @@ class KanbanCardDetailController extends Controller
         if (! $card->members()->where('kanban_board_card_account_id', $validated['user_id'])->exists()) {
             $card->members()->attach($validated['user_id']);
             KanbanBoardCardObserver::syncReminders($card);
+
+            NotifyCardAssignedJob::dispatch($card->kanban_board_card_id, (int) $validated['user_id'], $request->user()->id);
 
             if ($card->kanban_board_card_due_date) {
                 CheckTaskConflictJob::dispatch($card->kanban_board_card_id, (int) $validated['user_id'], $request->user()->id);

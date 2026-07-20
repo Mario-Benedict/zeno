@@ -6,6 +6,7 @@ import { common as commonEn } from './locales/en/common';
 import { dashboard as dashboardEn } from './locales/en/dashboard';
 import { header as headerEn } from './locales/en/header';
 import { kanban as kanbanEn } from './locales/en/kanban';
+import { landing as landingEn } from './locales/en/landing';
 import { llmChat as llmChatEn } from './locales/en/llmChat';
 import { nav as navEn } from './locales/en/nav';
 import { notes as notesEn } from './locales/en/notes';
@@ -22,6 +23,7 @@ import { common as commonId } from './locales/id/common';
 import { dashboard as dashboardId } from './locales/id/dashboard';
 import { header as headerId } from './locales/id/header';
 import { kanban as kanbanId } from './locales/id/kanban';
+import { landing as landingId } from './locales/id/landing';
 import { llmChat as llmChatId } from './locales/id/llmChat';
 import { nav as navId } from './locales/id/nav';
 import { notes as notesId } from './locales/id/notes';
@@ -46,6 +48,7 @@ const en = {
   auth: authEn,
   projects: projectsEn,
   kanban: kanbanEn,
+  landing: landingEn,
   chat: chatEn,
   llmChat: llmChatEn,
   notes: notesEn,
@@ -65,6 +68,7 @@ const id: typeof en = {
   auth: authId,
   projects: projectsId,
   kanban: kanbanId,
+  landing: landingId,
   chat: chatId,
   llmChat: llmChatId,
   notes: notesId,

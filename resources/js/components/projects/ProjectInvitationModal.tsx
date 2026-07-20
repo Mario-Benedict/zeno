@@ -1,6 +1,7 @@
 import { router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { FloatingMenu } from '@/components/shared/FloatingMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
 import type {
@@ -52,21 +53,13 @@ const RoleSelect = ({
   onChange: (role: AssignableProjectRole) => void;
 }) => {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const roleLabels = useRoleLabels();
 
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
-
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
@@ -82,35 +75,36 @@ const RoleSelect = ({
         </span>
       </button>
 
-      {open && (
-        <div
-          role="listbox"
-          className="absolute top-full right-0 z-50 mt-1 min-w-28 overflow-hidden rounded-lg border border-dark-border bg-dark-surface-2 py-1 shadow-2xl"
-        >
-          {roles.map((role) => (
-            <button
-              key={role}
-              type="button"
-              role="option"
-              aria-selected={role === value}
-              onClick={() => {
-                onChange(role);
-                setOpen(false);
-              }}
-              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
-                role === value ? 'text-dark-primary' : 'text-dark-secondary'
-              }`}
-            >
-              {role === value && (
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-blue" />
-              )}
-              {role !== value && <span className="h-1.5 w-1.5 shrink-0" />}
-              {roleLabels[role]}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      <FloatingMenu
+        open={open}
+        onClose={() => setOpen(false)}
+        triggerRef={triggerRef}
+        role="listbox"
+        className="min-w-28"
+      >
+        {roles.map((role) => (
+          <button
+            key={role}
+            type="button"
+            role="option"
+            aria-selected={role === value}
+            onClick={() => {
+              onChange(role);
+              setOpen(false);
+            }}
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
+              role === value ? 'text-dark-primary' : 'text-dark-secondary'
+            }`}
+          >
+            {role === value && (
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-blue" />
+            )}
+            {role !== value && <span className="h-1.5 w-1.5 shrink-0" />}
+            {roleLabels[role]}
+          </button>
+        ))}
+      </FloatingMenu>
+    </>
   );
 };
 

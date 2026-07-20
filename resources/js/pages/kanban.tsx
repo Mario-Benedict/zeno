@@ -1,7 +1,7 @@
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   KanbanColumn,
   CardDetailModalWrapper,
@@ -40,6 +40,7 @@ export default function Kanban({
   projectUsers,
   currentUser,
   cardLabels,
+  activeCardId,
 }: KanbanProps) {
   const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
@@ -51,6 +52,27 @@ export default function Kanban({
     card: KanbanBoardCard;
     boardId: string;
   } | null>(null);
+
+  // Opens the deep-linked card once per `activeCardId` value — a plain
+  // useState initializer only runs on first mount, so it would miss this
+  // when navigating here from a notification while the Kanban page (this
+  // same component instance) is already open.
+  const autoOpenedCardId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!activeCardId || autoOpenedCardId.current === activeCardId) return;
+
+    for (const board of boards) {
+      const card = board.cards?.find(
+        (c) => c.kanban_board_card_id === activeCardId,
+      );
+      if (card) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setOpenCard({ card, boardId: board.kanban_board_id });
+        autoOpenedCardId.current = activeCardId;
+        break;
+      }
+    }
+  }, [activeCardId, boards]);
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;

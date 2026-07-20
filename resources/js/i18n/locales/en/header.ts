@@ -13,6 +13,7 @@ export const header = {
   inbox: 'Inbox',
   chat: 'Chat',
   nothingDueSoon: 'Nothing due soon.',
+  assignedToCard: 'You were assigned to "{{card}}".',
   noUnreadMessages: 'No unread messages.',
   overduePrefix: 'Overdue · ',
   duePrefix: 'Due ',
