@@ -68,7 +68,7 @@ export const KanbanCard = ({
             className={`group cursor-pointer rounded-lg p-3 ${
               snapshot.isDragging
                 ? 'z-50 rotate-2 bg-dark-surface-2 shadow-2xl ring-1 ring-accent-blue/50'
-                : 'bg-dark-surface-3 transition-all hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]'
+                : 'bg-dark-surface-3 transition-all hover:-translate-y-px hover:shadow-[0_8px_24px] hover:shadow-black/40'
             }`}
           >
             {/* Title row */}

@@ -95,7 +95,7 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
               onClick={() => onSelect(item.value)}
               className={`w-full rounded-lg py-1.5 text-center text-xsmall transition ${
                 active
-                  ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]'
+                  ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px] shadow-accent-blue/40'
                   : 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary'
               }`}
             >
@@ -234,7 +234,7 @@ export const TimePicker = ({
                       onClick={() => emit({ period: p })}
                       className={`flex-1 rounded-lg text-xsmall font-semibold transition ${
                         active
-                          ? 'bg-accent-blue text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]'
+                          ? 'bg-accent-blue text-white shadow-[0_0_12px] shadow-accent-blue/40'
                           : 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary'
                       }`}
                     >

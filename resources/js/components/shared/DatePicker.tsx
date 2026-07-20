@@ -227,7 +227,7 @@ export const DatePicker = ({
                   key={i}
                   type="button"
                   onClick={() => selectDate(date)}
-                  className={`relative flex aspect-square w-full items-center justify-center rounded-lg text-xsmall transition-all ${!isCurrentMonth ? 'text-dark-secondary/50 hover:text-dark-secondary/70' : ''} ${isCurrentMonth && !isSelected && !isToday ? 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary' : ''} ${isPast && !isSelected ? 'text-dark-secondary/80' : ''} ${isToday && !isSelected ? 'font-semibold text-accent-blue' : ''} ${isSelected ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]' : ''} `}
+                  className={`relative flex aspect-square w-full items-center justify-center rounded-lg text-xsmall transition-all ${!isCurrentMonth ? 'text-dark-secondary/50 hover:text-dark-secondary/70' : ''} ${isCurrentMonth && !isSelected && !isToday ? 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary' : ''} ${isPast && !isSelected ? 'text-dark-secondary/80' : ''} ${isToday && !isSelected ? 'font-semibold text-accent-blue' : ''} ${isSelected ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px] shadow-accent-blue/40' : ''} `}
                 >
                   {isToday && !isSelected && (
                     <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-accent-blue" />
