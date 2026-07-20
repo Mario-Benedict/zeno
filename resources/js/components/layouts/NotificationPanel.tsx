@@ -95,6 +95,11 @@ const NotificationPanel = ({
     );
   };
 
+  const totalChatUnread = (data?.chat ?? []).reduce(
+    (sum, room) => sum + (room.unread_count ?? 0),
+    0,
+  );
+
   if (!open || !project) return null;
 
   return (
@@ -117,13 +122,18 @@ const NotificationPanel = ({
         <button
           type="button"
           onClick={() => setTab('chat')}
-          className={`flex-1 py-3 text-small font-semibold transition-colors ${
+          className={`relative flex-1 py-3 text-small font-semibold transition-colors ${
             tab === 'chat'
               ? 'border-b-2 border-accent-blue text-dark-primary'
               : 'text-dark-secondary hover:text-dark-primary'
           }`}
         >
           {t('header.chat')}
+          {totalChatUnread > 0 && (
+            <span className="absolute top-1.5 right-4 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-red px-1 text-micro leading-none font-semibold text-white">
+              {totalChatUnread > 9 ? '9+' : totalChatUnread}
+            </span>
+          )}
         </button>
         <button
           type="button"

@@ -267,21 +267,6 @@ const Timeline = ({
     <AppLayout project={project}>
       <Head title={`${t('nav.timeline')} - ${project.project_name}`} />
 
-      {openCard && (
-        <CardDetailModalWrapper
-          isOpen={true}
-          card={openCard.card}
-          boardId={openCard.boardId}
-          cardLabels={cardLabels}
-          projectUsers={projectUsers}
-          currentUser={currentUser}
-          project={project}
-          canEdit={canEdit}
-          onClose={() => setOpenCard(null)}
-          onUpdate={handleCardUpdate}
-        />
-      )}
-
       <div className="flex h-full w-full min-w-0 flex-col overflow-hidden bg-dark-surface-1">
         <TimelineHeader
           searchQuery={searchQuery}
@@ -298,25 +283,45 @@ const Timeline = ({
           onAddTask={() => setAddingTask(true)}
         />
 
-        <div className="relative m-2 mt-0 flex min-h-0 flex-1 overflow-hidden rounded-lg border border-dark-border">
-          <TimelineChart
-            tasks={visibleTasks}
-            range={range}
-            openTaskId={openCard?.card.kanban_board_card_id ?? null}
-            onOpenCard={(task) =>
-              setOpenCard({ card: task.card, boardId: task.boardId })
-            }
-          />
-
-          {visibleTasks.length === 0 && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 text-center">
-              <p className="max-w-xs text-small text-dark-secondary">
-                {hasAnyScheduled
-                  ? t('timeline.noTasksMatchFilters')
-                  : t('timeline.noScheduledTasks')}
-              </p>
-            </div>
+        {/* Card panel and chart share this row so opening a card only narrows
+            the chart below — the header above always stays full width and
+            its buttons stay clickable. */}
+        <div className="flex min-h-0 flex-1">
+          {openCard && (
+            <CardDetailModalWrapper
+              isOpen={true}
+              card={openCard.card}
+              boardId={openCard.boardId}
+              cardLabels={cardLabels}
+              projectUsers={projectUsers}
+              currentUser={currentUser}
+              project={project}
+              canEdit={canEdit}
+              onClose={() => setOpenCard(null)}
+              onUpdate={handleCardUpdate}
+            />
           )}
+
+          <div className="relative m-2 mt-0 flex min-h-0 flex-1 overflow-hidden rounded-lg border border-dark-border">
+            <TimelineChart
+              tasks={visibleTasks}
+              range={range}
+              openTaskId={openCard?.card.kanban_board_card_id ?? null}
+              onOpenCard={(task) =>
+                setOpenCard({ card: task.card, boardId: task.boardId })
+              }
+            />
+
+            {visibleTasks.length === 0 && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 text-center">
+                <p className="max-w-xs text-small text-dark-secondary">
+                  {hasAnyScheduled
+                    ? t('timeline.noTasksMatchFilters')
+                    : t('timeline.noScheduledTasks')}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

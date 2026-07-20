@@ -58,11 +58,11 @@ export const projectSettingsTabs: typeof en = {
     'Lindungi akun Anda dengan kata sandi sekali pakai berbasis waktu (TOTP) dari aplikasi autentikator.',
   disabling: 'Menonaktifkan…',
   disable2fa: 'Nonaktifkan 2FA',
-  step1ScanQrCode: 'Langkah 1 — Pindai kode QR',
+  step1ScanQrCode: 'Langkah 1: Pindai kode QR',
   step1Description:
     'Buka aplikasi autentikator Anda (Google Authenticator, Authy, 1Password, dll.) lalu pindai kode di bawah ini.',
   qrCodeAlt: 'Kode QR 2FA',
-  step2EnterCode: 'Langkah 2 — Masukkan kode 6 digit',
+  step2EnterCode: 'Langkah 2: Masukkan kode 6 digit',
   step2Description:
     'Masukkan kode yang ditampilkan di aplikasi autentikator Anda untuk mengonfirmasi pengaturan.',
   invalidCode: 'Kode tidak valid.',

@@ -9,7 +9,6 @@ export const chat: typeof en = {
   searchMessagesPlaceholder: 'Cari pesan…',
   searchChatPlaceholder: 'Cari chat',
   noChatsFound: 'Chat tidak ditemukan',
-  moreOptions: 'Opsi lainnya',
   startTypingToSearch: 'Mulai mengetik untuk mencari…',
   noMessagesFound: 'Pesan tidak ditemukan',
   messageDeleted: 'Pesan ini telah dihapus.',

@@ -26,7 +26,6 @@ export const header: typeof en = {
   yourProjects: 'Proyek Anda',
   seeAllProjects: 'Lihat semua proyek',
   createAProject: 'Buat proyek',
-  projectSettings: 'Pengaturan proyek',
   inbox: 'Kotak masuk',
   chat: 'Obrolan',
   nothingDueSoon: 'Tidak ada yang jatuh tempo segera.',

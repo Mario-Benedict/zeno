@@ -9,5 +9,4 @@ export const nav = {
   notes: 'Notes',
   reminders: 'Reminders',
   more: 'More',
-  settings: 'Settings',
 };

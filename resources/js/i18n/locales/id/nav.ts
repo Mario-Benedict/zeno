@@ -11,5 +11,4 @@ export const nav: typeof en = {
   notes: 'Catatan',
   reminders: 'Pengingat',
   more: 'Lainnya',
-  settings: 'Pengaturan',
 };

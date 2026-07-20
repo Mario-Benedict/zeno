@@ -7,7 +7,6 @@ export const chat = {
   searchMessagesPlaceholder: 'Search messages…',
   searchChatPlaceholder: 'Search chat',
   noChatsFound: 'No chats found',
-  moreOptions: 'More options',
   startTypingToSearch: 'Start typing to search…',
   noMessagesFound: 'No messages found',
   messageDeleted: 'This message was deleted.',

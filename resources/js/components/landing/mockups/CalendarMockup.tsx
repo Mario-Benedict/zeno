@@ -36,7 +36,7 @@ const CalendarMockup = ({ className }: { className?: string }) => {
     <WidgetFrame
       title={t('nav.calendar')}
       actions={<CloseIcon className="h-3.5 w-3.5 text-white/40" />}
-      className={className}
+      className={`flex-1 ${className ?? ''}`}
     >
       {/* Week strip */}
       <div className="px-3">
@@ -86,21 +86,21 @@ const CalendarMockup = ({ className }: { className?: string }) => {
       </div>
 
       {/* Day timeline */}
-      <div className="flex px-3 pb-3">
-        <div className="relative h-28 w-8 shrink-0">
-          {['1 PM', '2 PM', '3 PM'].map((label, i) => (
+      <div className="flex flex-1 px-3 pb-3">
+        <div className="relative w-8 shrink-0">
+          {['12 PM', '1 PM', '2 PM', '3 PM'].map((label, i) => (
             <span
               key={label}
               className="absolute right-1.5 -translate-y-1/2 text-micro whitespace-nowrap text-white/25"
-              style={{ top: `${10 + i * 30}%` }}
+              style={{ top: `${8 + i * 28}%` }}
             >
               {label}
             </span>
           ))}
         </div>
 
-        <div className="relative h-28 flex-1 border-l border-white/5">
-          {[10, 40, 70].map((top) => (
+        <div className="relative flex-1 border-l border-white/5">
+          {[8, 36, 64, 92].map((top) => (
             <div
               key={top}
               className="absolute inset-x-0 border-b border-white/5"

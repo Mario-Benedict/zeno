@@ -24,7 +24,7 @@ export const kanban: typeof en = {
   addNewCard: 'Tambah Kartu Baru',
   addCardDetailsHelp:
     'Pilih board lalu isi detail tugas, checklist, dan file yang sudah tersedia.',
-  boardLabel: 'Board',
+  boardLabel: 'Papan',
   cardTitleLabel: 'Judul',
   cardTitlePlaceholder: 'Judul kartu...',
   labelsLabel: 'Label',
