@@ -59,7 +59,7 @@ export const SelectPopover = <T extends string | number>({
   return (
     <div ref={ref} className="relative">
       <div className="mb-1">
-        <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
+        <label className="mb-1 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
           {label}
         </label>
         <button
@@ -68,8 +68,8 @@ export const SelectPopover = <T extends string | number>({
           onClick={() => setOpen((v) => !v)}
           className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xsmall transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
             selected
-              ? 'border-dark-border bg-dark-surface-2 text-white/70 hover:border-dark-border-focus'
-              : 'border-dark-border bg-dark-surface-2 text-white/25 hover:border-dark-border-focus hover:text-white/40'
+              ? 'border-dark-border bg-dark-surface-2 text-dark-primary hover:border-dark-border-focus'
+              : 'border-dark-border bg-dark-surface-2 text-dark-secondary/70 hover:border-dark-border-focus hover:text-dark-secondary'
           }`}
         >
           {selected?.dotColor && (
@@ -90,7 +90,7 @@ export const SelectPopover = <T extends string | number>({
             align === 'right' ? 'right-0' : 'left-0'
           }`}
         >
-          <div className="border-b border-dark-border px-4 py-3 text-small font-semibold text-white/80">
+          <div className="border-b border-dark-border px-4 py-3 text-small font-semibold text-dark-primary">
             {label}
           </div>
           <div className="scrollbar-app max-h-72 overflow-y-auto p-2">
@@ -108,7 +108,7 @@ export const SelectPopover = <T extends string | number>({
                   className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xsmall transition ${
                     active
                       ? 'bg-accent-blue font-semibold text-white'
-                      : 'text-white/60 hover:bg-white/8 hover:text-white'
+                      : 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary'
                   }`}
                 >
                   {option.dotColor && (

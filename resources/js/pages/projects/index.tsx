@@ -44,7 +44,7 @@ const ProjectRow = ({
 }: ProjectRowProps) => (
   <Link
     href={projectPath(accountIndex, project.project_slug)}
-    className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-white/4"
+    className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-dark-surface-3"
   >
     <div className="min-w-0">
       <p className="truncate text-sm font-medium text-dark-primary">

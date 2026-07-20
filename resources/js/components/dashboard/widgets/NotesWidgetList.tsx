@@ -20,7 +20,7 @@ export const NotesWidgetList = ({ notes, onSelectNote }: Props) => {
   return (
     <div className="scrollbar-app flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-1.5 pb-2">
       {notes.length === 0 ? (
-        <p className="px-3 py-6 text-center text-xsmall text-white/30">
+        <p className="px-3 py-6 text-center text-xsmall text-dark-secondary/80">
           {t('dashboard.noNotesYet')}
         </p>
       ) : (
@@ -29,10 +29,10 @@ export const NotesWidgetList = ({ notes, onSelectNote }: Props) => {
             key={note.id}
             type="button"
             onClick={() => onSelectNote(note)}
-            className="flex flex-col items-start gap-0.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-white/5"
+            className="flex flex-col items-start gap-0.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-dark-surface-3"
           >
             <div className="flex w-full items-center gap-2">
-              <p className="min-w-0 flex-1 truncate text-xsmall font-medium text-white/90">
+              <p className="min-w-0 flex-1 truncate text-xsmall font-medium text-dark-primary">
                 {note.title || t('dashboard.untitled')}
               </p>
               {note.isShared && (
@@ -40,12 +40,12 @@ export const NotesWidgetList = ({ notes, onSelectNote }: Props) => {
                   {t('dashboard.shared')}
                 </span>
               )}
-              <span className="shrink-0 text-micro text-white/30">
+              <span className="shrink-0 text-micro text-dark-secondary/80">
                 {formatUpdatedAt(note.updatedAt)}
               </span>
             </div>
             {note.excerpt && (
-              <p className="w-full truncate text-micro text-white/40">
+              <p className="w-full truncate text-micro text-dark-secondary">
                 {note.excerpt}
               </p>
             )}

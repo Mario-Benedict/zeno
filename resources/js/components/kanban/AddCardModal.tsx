@@ -47,12 +47,12 @@ export const AddCardModal = ({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-sm rounded-2xl border border-dark-border bg-dark-surface-2 p-5 shadow-2xl">
-        <h3 className="mb-4 text-base font-bold text-white">
+        <h3 className="mb-4 text-base font-bold text-dark-primary">
           {t('kanban.addNewCard')}
         </h3>
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-white/50">
+            <label className="mb-1 block text-xs text-dark-secondary">
               {t('kanban.cardTitleLabel')}
             </label>
             <input
@@ -61,12 +61,12 @@ export const AddCardModal = ({
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder={t('kanban.cardTitlePlaceholder')}
-              className="w-full rounded-xl border border-dark-border bg-dark-input px-3 py-2 text-sm text-white placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
+              className="w-full rounded-xl border border-dark-border bg-dark-input px-3 py-2 text-sm text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
             />
           </div>
           {(cardLabels || []).length > 0 && (
             <div>
-              <label className="mb-1 block text-xs text-white/50">
+              <label className="mb-1 block text-xs text-dark-secondary">
                 {t('kanban.labelsLabel')}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -104,7 +104,7 @@ export const AddCardModal = ({
         <div className="mt-5 flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 rounded-xl border border-dark-border py-2 text-sm text-white/50 transition hover:bg-white/5 hover:text-white"
+            className="flex-1 rounded-xl border border-dark-border py-2 text-sm text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             {t('common.cancel')}
           </button>

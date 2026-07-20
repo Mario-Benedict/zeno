@@ -169,7 +169,7 @@ export const PomodoroTimer = ({
           <button
             type="button"
             onClick={() => setRunning(false)}
-            className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-semibold text-white transition hover:bg-dark-secondary"
+            className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-semibold text-dark-primary transition hover:bg-dark-secondary"
           >
             <StopIcon className="h-3.5 w-3.5" />
             {t('reminders.stop')}
@@ -178,7 +178,7 @@ export const PomodoroTimer = ({
         <button
           type="button"
           onClick={handleReset}
-          className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-semibold text-white transition hover:bg-dark-secondary"
+          className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-4 py-2 text-small font-semibold text-dark-primary transition hover:bg-dark-secondary"
         >
           <RestartIcon className="h-3.5 w-3.5" />
           {t('reminders.reset')}

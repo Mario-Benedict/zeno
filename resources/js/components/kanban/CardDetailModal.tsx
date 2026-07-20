@@ -738,7 +738,7 @@ const CardDetailModal = ({
 
           <button
             onClick={handleClose}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/10 hover:text-white"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
             title={t('kanban.closeEsc')}
           >
             <CloseIcon className="h-6 w-6" />

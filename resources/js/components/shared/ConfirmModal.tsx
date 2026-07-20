@@ -63,15 +63,17 @@ const ConfirmModal = ({
         className="w-full max-w-sm rounded-xl border border-dark-border bg-dark-surface-2 p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-2 text-normal font-semibold text-white">{title}</h3>
-        <p className="mb-6 text-small leading-relaxed text-white/60">
+        <h3 className="mb-2 text-normal font-semibold text-dark-primary">
+          {title}
+        </h3>
+        <p className="mb-6 text-small leading-relaxed text-dark-secondary">
           {description}
         </p>
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg px-4 py-2 text-small font-medium text-white/50 transition hover:bg-white/10 hover:text-white"
+            className="rounded-lg px-4 py-2 text-small font-medium text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             {cancelLabel}
           </button>

@@ -153,7 +153,7 @@ export const CalendarWidgetDayTimeline = ({
             h === 0 ? null : (
               <div
                 key={h}
-                className="absolute right-1.5 -translate-y-1/2 text-micro whitespace-nowrap text-white/25"
+                className="absolute right-1.5 -translate-y-1/2 text-micro whitespace-nowrap text-dark-secondary/70"
                 style={{ top: `${h * HOUR_HEIGHT}px` }}
               >
                 {new Intl.DateTimeFormat(localeCode, {
@@ -164,11 +164,11 @@ export const CalendarWidgetDayTimeline = ({
           )}
         </div>
 
-        <div className="relative flex-1 border-l border-white/5">
+        <div className="relative flex-1 border-l border-dark-border">
           {HOURS.map((h) => (
             <div
               key={h}
-              className="absolute w-full border-b border-white/5"
+              className="absolute w-full border-b border-dark-border"
               style={{
                 top: `${h * HOUR_HEIGHT}px`,
                 height: `${HOUR_HEIGHT}px`,

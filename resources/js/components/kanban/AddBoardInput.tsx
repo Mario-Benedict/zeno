@@ -33,7 +33,7 @@ export const AddBoardInput = ({ onAdd, onCancel }: AddBoardInputProps) => {
           if (e.key === 'Escape') onCancel();
         }}
         placeholder={t('kanban.boardNamePlaceholder')}
-        className="mb-2 w-full rounded-xl border border-dark-border-focus bg-dark-input px-3 py-2 text-sm text-white placeholder-dark-secondary focus:outline-none"
+        className="mb-2 w-full rounded-xl border border-dark-border-focus bg-dark-input px-3 py-2 text-sm text-dark-primary placeholder-dark-secondary focus:outline-none"
       />
       <div className="flex gap-2">
         <button
@@ -45,7 +45,7 @@ export const AddBoardInput = ({ onAdd, onCancel }: AddBoardInputProps) => {
         </button>
         <button
           onClick={onCancel}
-          className="flex-1 rounded-lg border border-dark-border py-1.5 text-xs text-white/50 transition hover:bg-white/5 hover:text-white"
+          className="flex-1 rounded-lg border border-dark-border py-1.5 text-xs text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
         >
           {t('common.cancel')}
         </button>

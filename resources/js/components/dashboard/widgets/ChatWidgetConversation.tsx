@@ -152,7 +152,7 @@ export const ChatWidgetConversation = ({
           type="button"
           onClick={onBack}
           aria-label={t('dashboard.backToChats')}
-          className="rounded-lg p-1 text-white/50 transition hover:bg-white/10 hover:text-white"
+          className="rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
         >
           <BackIcon className="h-4 w-4" />
         </button>
@@ -166,11 +166,11 @@ export const ChatWidgetConversation = ({
         className="scrollbar-app flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-2"
       >
         {loading ? (
-          <p className="py-6 text-center text-xsmall text-white/30">
+          <p className="py-6 text-center text-xsmall text-dark-secondary/80">
             {t('dashboard.loadingMessages')}
           </p>
         ) : ordered.length === 0 ? (
-          <p className="py-6 text-center text-xsmall text-white/30">
+          <p className="py-6 text-center text-xsmall text-dark-secondary/80">
             {t('dashboard.noMessagesYet')}
           </p>
         ) : (
@@ -183,7 +183,7 @@ export const ChatWidgetConversation = ({
                 className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}
               >
                 {!isMine && room.type === 'group' && (
-                  <span className="mb-0.5 px-1 text-micro text-white/30">
+                  <span className="mb-0.5 px-1 text-micro text-dark-secondary/80">
                     {msg.sender?.name ?? t('dashboard.unknownSender')}
                   </span>
                 )}
@@ -191,11 +191,11 @@ export const ChatWidgetConversation = ({
                   className={`max-w-[85%] rounded-xl px-3 py-1.5 text-xsmall ${
                     isMine
                       ? 'bg-accent-blue text-white'
-                      : 'bg-dark-surface-3 text-white/90'
+                      : 'bg-dark-surface-3 text-dark-primary'
                   }`}
                 >
                   {msg.isDeleted ? (
-                    <span className="text-white/50 italic">
+                    <span className="text-dark-secondary italic">
                       {t('dashboard.messageDeleted')}
                     </span>
                   ) : msg.type === 'text' ? (
@@ -225,7 +225,7 @@ export const ChatWidgetConversation = ({
             }
           }}
           placeholder={t('dashboard.messagePlaceholder')}
-          className="min-w-0 flex-1 rounded-full bg-dark-surface-3 px-3 py-1.5 text-xsmall text-white placeholder-white/30 focus:outline-none"
+          className="min-w-0 flex-1 rounded-full bg-dark-surface-3 px-3 py-1.5 text-xsmall text-dark-primary placeholder-dark-secondary focus:outline-none"
         />
         <button
           type="button"

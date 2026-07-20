@@ -93,7 +93,7 @@ const ImageAttachment = ({
         }`}
       />
       {timestamp && !withCaption && (
-        <span className="pointer-events-none absolute right-2 bottom-2 rounded-md bg-black/55 px-1.5 py-0.5 text-micro font-medium text-white/90 backdrop-blur-sm">
+        <span className="pointer-events-none absolute right-2 bottom-2 rounded-md bg-black/55 px-1.5 py-0.5 text-micro font-medium text-dark-primary backdrop-blur-sm">
           {timestamp}
         </span>
       )}

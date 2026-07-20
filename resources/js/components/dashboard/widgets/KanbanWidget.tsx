@@ -105,11 +105,11 @@ export const KanbanWidget = ({ kanbanBoards }: Props) => {
       />
 
       {boards.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-white/30">
+        <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-dark-secondary/80">
           {t('dashboard.noBoardsYet')}
         </div>
       ) : visibleBoards.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-white/30">
+        <div className="flex flex-1 items-center justify-center px-4 text-center text-xsmall text-dark-secondary/80">
           {t('dashboard.noCardsMatch')}
         </div>
       ) : (

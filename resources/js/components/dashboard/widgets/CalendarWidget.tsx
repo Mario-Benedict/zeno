@@ -127,7 +127,7 @@ export const CalendarWidget = ({ currentUserId }: Props) => {
           <button
             type="button"
             onClick={goToToday}
-            className="rounded-full bg-dark-surface-3 px-2 py-0.5 text-micro font-medium text-white/60 transition hover:bg-white/10 hover:text-white"
+            className="rounded-full bg-dark-surface-3 px-2 py-0.5 text-micro font-medium text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             {t('dashboard.today')}
           </button>
@@ -143,8 +143,8 @@ export const CalendarWidget = ({ currentUserId }: Props) => {
         onNextWeek={() => shiftWeek(1)}
       />
 
-      <div className="mt-2 flex min-h-0 flex-1 flex-col border-t border-white/5 pt-2">
-        <p className="px-3 pb-1 text-micro font-medium text-white/30">
+      <div className="mt-2 flex min-h-0 flex-1 flex-col border-t border-dark-border pt-2">
+        <p className="px-3 pb-1 text-micro font-medium text-dark-secondary/80">
           {loading
             ? t('dashboard.loadingMessages')
             : t(

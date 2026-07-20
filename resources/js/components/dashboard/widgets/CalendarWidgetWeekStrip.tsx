@@ -84,14 +84,14 @@ export const CalendarWidgetWeekStrip = ({
           <button
             type="button"
             onClick={onPrevWeek}
-            className="flex h-5 w-5 items-center justify-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white"
+            className="flex h-5 w-5 items-center justify-center rounded-full text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             ‹
           </button>
           <button
             type="button"
             onClick={onNextWeek}
-            className="flex h-5 w-5 items-center justify-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white"
+            className="flex h-5 w-5 items-center justify-center rounded-full text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             ›
           </button>
@@ -104,11 +104,11 @@ export const CalendarWidgetWeekStrip = ({
           const isSelected = date.getTime() === selectedMidnight.getTime();
           const hasEvent = eventDates.has(dayKey(date));
 
-          let stateClass = 'text-white/80 hover:bg-white/10';
+          let stateClass = 'text-dark-primary hover:bg-dark-surface-3';
           if (isSelected) {
             stateClass = 'bg-accent-blue font-semibold text-white';
           } else if (isToday) {
-            stateClass = 'font-semibold text-white/80 ring-1 ring-white/25';
+            stateClass = 'font-semibold text-dark-primary ring-1 ring-white/25';
           }
 
           return (
@@ -118,7 +118,7 @@ export const CalendarWidgetWeekStrip = ({
               onClick={() => onSelectDate(date)}
               className={`flex flex-col items-center gap-0.5 rounded-lg py-1.5 transition-colors ${stateClass}`}
             >
-              <span className="text-micro text-white/30">
+              <span className="text-micro text-dark-secondary/80">
                 {t(DAY_LETTER_KEYS[date.getDay()])}
               </span>
               <span className="text-micro">{date.getDate()}</span>

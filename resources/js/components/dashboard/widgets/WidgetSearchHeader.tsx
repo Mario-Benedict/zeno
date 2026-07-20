@@ -43,20 +43,20 @@ export const WidgetSearchHeader = ({
     <div className="flex shrink-0 items-center gap-2 pt-3 pr-10 pb-2 pl-3">
       {searchOpen ? (
         <>
-          <SearchIcon className="h-3.5 w-3.5 shrink-0 text-white/40" />
+          <SearchIcon className="h-3.5 w-3.5 shrink-0 text-dark-secondary" />
           <input
             autoFocus
             type="text"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder={placeholder}
-            className="min-w-0 flex-1 bg-transparent text-xsmall text-white placeholder-white/30 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-xsmall text-dark-primary placeholder-dark-secondary focus:outline-none"
           />
           <button
             type="button"
             onClick={onCloseSearch}
             aria-label={t('dashboard.closeSearch')}
-            className="shrink-0 rounded p-1 text-white/40 transition hover:bg-white/10 hover:text-white"
+            className="shrink-0 rounded p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             <CloseIcon className="h-3.5 w-3.5" />
           </button>
@@ -66,12 +66,14 @@ export const WidgetSearchHeader = ({
           <span className="flex-1 text-small font-semibold text-dark-primary">
             {title}
           </span>
-          <span className="text-xsmall text-white/30">{countLabel}</span>
+          <span className="text-xsmall text-dark-secondary/80">
+            {countLabel}
+          </span>
           <button
             type="button"
             onClick={onOpenSearch}
             aria-label={searchLabel}
-            className="shrink-0 rounded p-1 text-white/40 transition hover:bg-white/10 hover:text-white"
+            className="shrink-0 rounded p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             <SearchIcon className="h-3.5 w-3.5" />
           </button>
