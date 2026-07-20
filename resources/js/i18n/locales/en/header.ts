@@ -2,7 +2,22 @@
 export const header = {
   selectProject: 'Select project',
   projectsFallback: 'Projects',
-  search: 'Search',
+  search: 'Search this project',
+  searchShortcut: 'Ctrl K',
+  searchHint:
+    'Type at least two characters to search navigation, tasks, chat, notes, events, and reminders.',
+  searching: 'Searching...',
+  noSearchResults: 'No results found for "{{query}}".',
+  searchType: {
+    navigation: 'Navigation',
+    board: 'Board',
+    card: 'Task',
+    chat: 'Chat',
+    message: 'Message',
+    note: 'Note',
+    calendar: 'Event',
+    reminder: 'Reminder',
+  },
   notifications: 'Notifications',
   inviteMembers: 'Invite members',
   settings: 'Settings',

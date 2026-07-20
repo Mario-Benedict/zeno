@@ -9,6 +9,7 @@ use App\Models\Reminder;
 use App\Models\User;
 use App\Models\UserDashboardSetting;
 use App\Services\ChatMessageService;
+use App\Support\Kanban\KanbanAttachmentUrlResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +27,7 @@ class DashboardController extends Controller
 
     public function __construct(
         private readonly ChatMessageService $messageService,
+        private readonly KanbanAttachmentUrlResolver $attachmentUrlResolver,
     ) {}
 
     public function show(int $accountIndex, Project $project): Response
@@ -103,6 +105,7 @@ class DashboardController extends Controller
                     ]);
             },
         ]);
+        $this->attachmentUrlResolver->resolveForProject($project);
 
         return [
             'kanbanBoards' => $project->kanbanBoards,

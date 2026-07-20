@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FloatingMenu } from '@/components/shared/FloatingMenu';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { inertiaJson } from '@/lib/inertiaJson';
 import notes from '@/routes/notes';
@@ -9,9 +8,8 @@ import type {
   NoteProjectUser,
 } from '@/types/notes';
 import CancelIcon from '@public/icons/small/cancel.svg';
-import ChevronDownIcon from '@public/icons/small/chevron_down.svg';
-import TrashIcon from '@public/icons/small/trash.svg';
 import MemberPicker from './MemberPicker';
+import NoteCollaboratorRow from './NoteCollaboratorRow';
 
 interface ShareNoteDialogProps {
   accountIndex: number;
@@ -29,120 +27,6 @@ interface PendingInvite {
 
 const roleFromCanEdit = (canEdit: boolean): NoteCollaboratorRole =>
   canEdit ? 'Editor' : 'Viewer';
-
-const getInitials = (name: string): string =>
-  name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
-/** Role dropdown for a collaborator row — mirrors ProjectInvitationModal's RoleSelect. */
-const RoleSelect = ({
-  value,
-  disabled,
-  onChange,
-  roleLabels,
-}: {
-  value: NoteCollaboratorRole;
-  disabled?: boolean;
-  onChange: (role: NoteCollaboratorRole) => void;
-  roleLabels: Record<NoteCollaboratorRole, string>;
-}) => {
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        className="flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {roleLabels[value]}
-        <span
-          className={`text-dark-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
-        >
-          <ChevronDownIcon />
-        </span>
-      </button>
-
-      <FloatingMenu
-        open={open}
-        onClose={() => setOpen(false)}
-        triggerRef={triggerRef}
-        role="listbox"
-        className="min-w-24"
-      >
-        {(['Editor', 'Viewer'] as NoteCollaboratorRole[]).map((role) => (
-          <button
-            key={role}
-            type="button"
-            role="option"
-            aria-selected={role === value}
-            onClick={() => {
-              onChange(role);
-              setOpen(false);
-            }}
-            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
-              role === value ? 'text-dark-primary' : 'text-dark-secondary'
-            }`}
-          >
-            <span
-              className={`h-1.5 w-1.5 shrink-0 rounded-full ${role === value ? 'bg-accent-blue' : ''}`}
-            />
-            {roleLabels[role]}
-          </button>
-        ))}
-      </FloatingMenu>
-    </>
-  );
-};
-
-/** One collaborator (pending or already-shared) row — mirrors ProjectInvitationModal's MemberRow. */
-const CollaboratorRow = ({
-  name,
-  email,
-  role,
-  onRoleChange,
-  onRemove,
-  roleLabels,
-  removeLabel,
-}: {
-  name: string;
-  email: string;
-  role: NoteCollaboratorRole;
-  onRoleChange: (role: NoteCollaboratorRole) => void;
-  onRemove: () => void;
-  roleLabels: Record<NoteCollaboratorRole, string>;
-  removeLabel: string;
-}) => (
-  <div className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-white/[0.04]">
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-blue text-xsmall font-bold text-white">
-      {getInitials(name)}
-    </div>
-    <div className="min-w-0 flex-1">
-      <p className="truncate text-small font-semibold text-dark-primary">
-        {name}
-      </p>
-      <p className="truncate text-xsmall text-dark-secondary">{email}</p>
-    </div>
-    <RoleSelect value={role} onChange={onRoleChange} roleLabels={roleLabels} />
-    <button
-      type="button"
-      aria-label={removeLabel}
-      onClick={onRemove}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
-    >
-      <TrashIcon />
-    </button>
-  </div>
-);
 
 /**
  * Doubles as the "migrate to shared" flow (personal notes) and the ongoing
@@ -309,7 +193,7 @@ const ShareNoteDialog = ({
           <div className="mt-4 space-y-1">
             {!note.isShared &&
               pending.map(({ user, canEdit }) => (
-                <CollaboratorRow
+                <NoteCollaboratorRow
                   key={user.id}
                   name={user.name}
                   email={user.email}
@@ -337,7 +221,7 @@ const ShareNoteDialog = ({
 
             {note.isShared &&
               note.collaborators.map((c) => (
-                <CollaboratorRow
+                <NoteCollaboratorRow
                   key={c.id}
                   name={c.name}
                   email={c.email}

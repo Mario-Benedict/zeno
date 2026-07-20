@@ -10,4 +10,5 @@ export const nav: typeof en = {
   llm: 'LLM',
   notes: 'Catatan',
   reminders: 'Pengingat',
+  more: 'Lainnya',
 };

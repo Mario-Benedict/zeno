@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
 use App\Services\AccountSessionService;
+use App\Services\ProjectSearchService;
 use App\Services\StorageService;
 use App\Support\Totp;
 use Illuminate\Http\Request;
@@ -68,6 +69,7 @@ class HandleInertiaRequests extends Middleware
             'projectRole' => $projectRole,
             'projectNavigation' => fn () => $this->resolveProjectNavigation($request),
             'projectShare' => fn () => $this->resolveProjectShare($request),
+            'globalSearch' => fn () => $this->resolveGlobalSearch($request),
             'twoFactor' => fn () => $this->resolveTwoFactor($request),
         ];
     }
@@ -263,5 +265,28 @@ class HandleInertiaRequests extends Middleware
             'members' => $members,
             'pending_invitations' => $pendingInvitations,
         ];
+    }
+
+    /**
+     * @return array{query: string, results: list<array<string, mixed>>}
+     */
+    private function resolveGlobalSearch(Request $request): array
+    {
+        $routeProject = $request->route()?->parameter('project');
+        $project = $routeProject instanceof Project
+            ? $routeProject
+            : (is_string($routeProject) && $routeProject !== ''
+                ? Project::where('project_slug', $routeProject)->first()
+                : null);
+        $user = $request->user();
+        $query = $request->query('global_search', '');
+
+        if (! $project instanceof Project || ! $user instanceof User || ! is_string($query)) {
+            return ['query' => '', 'results' => []];
+        }
+
+        $accountIndex = max(0, (int) $request->attributes->get('account.index', 0));
+
+        return app(ProjectSearchService::class)->search($project, $user, $accountIndex, $query);
     }
 }

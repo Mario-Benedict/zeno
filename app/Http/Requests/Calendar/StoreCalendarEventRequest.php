@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests\Calendar;
 
+use App\Enums\ProjectRole;
 use App\Models\Project;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreCalendarEventRequest extends FormRequest
 {
@@ -31,13 +34,19 @@ class StoreCalendarEventRequest extends FormRequest
             return false;
         }
 
+        $role = ProjectRole::tryFrom((string) $membership->pivot->role);
+        if ($role === null || $role === ProjectRole::Viewer) {
+            return false;
+        }
+
         // If assigning someone other than yourself, you must be OWNER or ADMIN
         $assignees = $this->input('participants', []);
         if (
-            count($assignees) > 1 ||
-            (count($assignees) === 1 && (int) $assignees[0] !== $user->id)
+            is_array($assignees)
+            && (count($assignees) > 1
+                || (count($assignees) === 1 && (int) $assignees[0] !== $user->id))
         ) {
-            if (! in_array($membership->pivot->role, ['OWNER', 'ADMIN'], true)) {
+            if (! in_array($role, [ProjectRole::Owner, ProjectRole::Admin], true)) {
                 return false; // MEMBERS can only assign themselves
             }
         }
@@ -73,9 +82,47 @@ class StoreCalendarEventRequest extends FormRequest
                     ->where('card_label_project_id', $this->project?->project_id),
             ],
             'recurrence' => ['required', 'in:none,daily,weekly,monthly,yearly'],
-            'recurrence_end_date' => ['nullable', 'date', 'after_or_equal:start_time'],
+            'recurrence_end_date' => ['nullable', 'date'],
             'participants' => ['required', 'array', 'min:1'],
-            'participants.*' => ['required', 'integer', 'exists:users,id'],
+            'participants.*' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('project_user', 'user_id')
+                    ->where('project_id', $this->project?->project_id),
+            ],
         ];
+    }
+
+    /**
+     * A recurrence boundary is a calendar day, not a timestamp. Comparing it
+     * with Laravel's `after_or_equal:start_time` would treat the chosen day as
+     * midnight and incorrectly reject a boundary on the event's start day.
+     *
+     * @return array<int, callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            if (
+                $validator->errors()->hasAny(['start_time', 'recurrence_end_date'])
+                || ! $this->filled('recurrence_end_date')
+            ) {
+                return;
+            }
+
+            $startDate = CarbonImmutable::parse($this->input('start_time'))->startOfDay();
+            $recurrenceEndDate = CarbonImmutable::parse($this->input('recurrence_end_date'))->startOfDay();
+
+            if ($recurrenceEndDate->lt($startDate)) {
+                $validator->errors()->add(
+                    'recurrence_end_date',
+                    __('validation.after_or_equal', [
+                        'attribute' => 'recurrence end date',
+                        'date' => 'start date',
+                    ])
+                );
+            }
+        }];
     }
 }

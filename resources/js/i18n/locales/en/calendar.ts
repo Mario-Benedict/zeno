@@ -39,6 +39,10 @@ export const calendar = {
   refresh: 'Refresh',
   month: 'Month',
   week: 'Week',
+  previousMonth: 'Previous month',
+  nextMonth: 'Next month',
+  previousWeek: 'Previous week',
+  nextWeek: 'Next week',
   hideLabel: 'Hide "{{label}}" events',
   showLabel: 'Show "{{label}}" events',
 
@@ -53,8 +57,8 @@ export const calendar = {
   moreLabels: '+ {{count}} more',
   showLessLabels: 'Show less',
 
-  // Sidebar task-source filter
-  taskSourceFilterLabel: 'Tasks',
+  // Sidebar event-source filter
+  eventSourceFilterLabel: 'Events',
   taskSourceAll: 'All',
   taskSourceThisProject: 'This project',
   taskSourceOtherProjects: 'Other projects',

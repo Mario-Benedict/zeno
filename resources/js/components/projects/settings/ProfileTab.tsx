@@ -8,7 +8,9 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath } from '@/lib/accountRoutes';
 import type { User } from '@/types/auth';
-import { FieldLabel, SavedBadge, getInitials, inputClass } from './shared';
+import FieldLabel from './FieldLabel';
+import SavedBadge from './SavedBadge';
+import { getInitials, inputClass } from './shared';
 
 const ProfileTab = ({
   user,

@@ -4,7 +4,22 @@ import type { header as en } from '../en/header';
 export const header: typeof en = {
   selectProject: 'Pilih proyek',
   projectsFallback: 'Proyek',
-  search: 'Cari',
+  search: 'Cari di proyek ini',
+  searchShortcut: 'Ctrl K',
+  searchHint:
+    'Ketik minimal dua karakter untuk mencari navigasi, tugas, chat, catatan, acara, dan pengingat.',
+  searching: 'Mencari...',
+  noSearchResults: 'Tidak ada hasil untuk "{{query}}".',
+  searchType: {
+    navigation: 'Navigasi',
+    board: 'Board',
+    card: 'Tugas',
+    chat: 'Chat',
+    message: 'Pesan',
+    note: 'Catatan',
+    calendar: 'Acara',
+    reminder: 'Pengingat',
+  },
   notifications: 'Notifikasi',
   inviteMembers: 'Undang anggota',
   settings: 'Pengaturan',

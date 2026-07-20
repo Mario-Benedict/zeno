@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Events\NoteUpdated;
 use App\Models\Note;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
@@ -205,5 +207,36 @@ class NoteCollaborationTest extends TestCase
         $note->refresh();
         expect($note->title)->toBe('First edit')
             ->and($note->content)->toBe($this->doc('first'));
+    }
+
+    #[Test]
+    public function an_unchanged_note_payload_does_not_create_a_new_version_or_broadcast()
+    {
+        Event::fake([NoteUpdated::class]);
+
+        $owner = User::factory()->create();
+        $project = Project::create(['project_name' => 'Project Zeno', 'project_slug' => 'zeno']);
+        $project->members()->attach($owner->id);
+
+        $note = Note::create([
+            'note_id' => (string) Str::uuid(), 'project_id' => $project->project_id,
+            'user_id' => $owner->id, 'title' => 'Unchanged', 'content' => $this->doc('same'),
+            'is_shared' => true,
+        ]);
+        $updatedAt = $note->updated_at->copy();
+
+        $this->actingAs($owner)
+            ->patchJson("/u/0/p/{$project->project_slug}/notes/{$note->note_id}", [
+                'title' => 'Unchanged',
+                'content' => $this->doc('same'),
+                'version' => 1,
+            ])
+            ->assertOk()
+            ->assertJsonPath('note.version', 1);
+
+        $note->refresh();
+        expect($note->version)->toBe(1)
+            ->and($note->updated_at->equalTo($updatedAt))->toBeTrue();
+        Event::assertNotDispatched(NoteUpdated::class);
     }
 }

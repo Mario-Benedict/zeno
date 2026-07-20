@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DatePicker } from '@/components/shared/DatePicker';
 import { TimePicker } from '@/components/shared/TimePicker';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -6,8 +7,8 @@ import { generateInitials, memberColor } from '@/utils/kanban';
 import CheckIcon from '@public/icons/small/check.svg';
 import ChecklistIcon from '@public/icons/small/checkbox.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
-import { SidebarButton } from './CardDetailComponents';
 import { LabelPopover } from './LabelPopover';
+import { SidebarButton } from './SidebarButton';
 
 interface LabelState {
   popoverOpen: boolean;
@@ -53,6 +54,7 @@ export const CardDetailSidebar = ({
   onToggleMember,
 }: CardDetailSidebarProps) => {
   const { t } = useTranslation();
+  const [dateError, setDateError] = useState<string | null>(null);
   const startDt = card.kanban_board_card_start_date;
   const dueDt = card.kanban_board_card_due_date;
 
@@ -81,6 +83,28 @@ export const CardDetailSidebar = ({
     return new Date(y, m - 1, d, h, min).toISOString();
   };
 
+  const updateDate = (
+    field: 'kanban_board_card_start_date' | 'kanban_board_card_due_date',
+    value: string,
+  ) => {
+    const nextStart =
+      field === 'kanban_board_card_start_date' ? value || null : startDt;
+    const nextDue =
+      field === 'kanban_board_card_due_date' ? value || null : dueDt;
+
+    if (
+      nextStart &&
+      nextDue &&
+      new Date(nextDue).getTime() <= new Date(nextStart).getTime()
+    ) {
+      setDateError(t('kanban.dueMustBeAfterStart'));
+      return;
+    }
+
+    setDateError(null);
+    onUpdateDates(field, value);
+  };
+
   return (
     <div className="scrollbar-app w-52 shrink-0 space-y-4 overflow-y-auto border-l border-dark-border px-4 py-4">
       {/* Dates */}
@@ -94,12 +118,12 @@ export const CardDetailSidebar = ({
               label={t('kanban.startDate')}
               value={datePart(startDt)}
               onChange={(v) =>
-                onUpdateDates(
+                updateDate(
                   'kanban_board_card_start_date',
                   combine(v, timePart(startDt)),
                 )
               }
-              onClear={() => onUpdateDates('kanban_board_card_start_date', '')}
+              onClear={() => updateDate('kanban_board_card_start_date', '')}
               placeholder={t('kanban.setStartDate')}
             />
             <TimePicker
@@ -107,7 +131,7 @@ export const CardDetailSidebar = ({
               value={timePart(startDt) || null}
               disabled={!startDt}
               onChange={(time) =>
-                onUpdateDates(
+                updateDate(
                   'kanban_board_card_start_date',
                   combine(datePart(startDt), time),
                 )
@@ -118,13 +142,18 @@ export const CardDetailSidebar = ({
             <DatePicker
               label={t('kanban.dueDate')}
               value={datePart(dueDt)}
+              minDate={datePart(startDt) ?? undefined}
               onChange={(v) =>
-                onUpdateDates(
+                updateDate(
                   'kanban_board_card_due_date',
-                  combine(v, timePart(dueDt)),
+                  combine(
+                    v,
+                    timePart(dueDt) ||
+                      (v === datePart(startDt) ? '23:59' : '00:00'),
+                  ),
                 )
               }
-              onClear={() => onUpdateDates('kanban_board_card_due_date', '')}
+              onClear={() => updateDate('kanban_board_card_due_date', '')}
               placeholder={t('kanban.setDueDate')}
               highlightOverdue
             />
@@ -133,13 +162,16 @@ export const CardDetailSidebar = ({
               value={timePart(dueDt) || null}
               disabled={!dueDt}
               onChange={(time) =>
-                onUpdateDates(
+                updateDate(
                   'kanban_board_card_due_date',
                   combine(datePart(dueDt), time),
                 )
               }
             />
           </div>
+          {dateError && (
+            <p className="text-xsmall text-status-error">{dateError}</p>
+          )}
         </div>
       </div>
 

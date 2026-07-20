@@ -19,19 +19,34 @@ class NoteExcerptExtractor
      */
     public static function extract(?array $document): ?string
     {
-        if (empty($document)) {
-            return null;
-        }
-
-        $text = trim(preg_replace('/\s+/', ' ', self::collectText($document)) ?? '');
-
-        if ($text === '') {
+        $text = self::plainText($document);
+        if ($text === null) {
             return null;
         }
 
         return mb_strlen($text) > self::MAX_LENGTH
             ? mb_substr($text, 0, self::MAX_LENGTH).'…'
             : $text;
+    }
+
+    /**
+     * Return the complete normalized text of a ProseMirror document.
+     *
+     * Sidebar previews intentionally use `extract()`'s short form, while
+     * project-wide search needs every text node so content beyond the first
+     * 180 characters remains discoverable.
+     *
+     * @param  array<string, mixed>|null  $document
+     */
+    public static function plainText(?array $document): ?string
+    {
+        if (empty($document)) {
+            return null;
+        }
+
+        $text = trim(preg_replace('/\s+/', ' ', self::collectText($document)) ?? '');
+
+        return $text === '' ? null : $text;
     }
 
     /**

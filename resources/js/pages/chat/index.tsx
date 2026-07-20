@@ -28,6 +28,7 @@ interface Props {
   rooms: ChatRoom[];
   currentUser: ChatParticipant;
   activeRoomId?: string | null;
+  activeMessageId?: string | null;
   messages?: ChatMessage[];
   nextCursor?: string | null;
   hasMore?: boolean;
@@ -37,6 +38,7 @@ export default function Index({
   rooms,
   currentUser,
   activeRoomId: initialActiveRoomId,
+  activeMessageId,
 }: Props) {
   const { project, accountIndex } = useProject();
   const { projectShare } = usePage().props;
@@ -233,6 +235,11 @@ export default function Index({
         <ChatWindow
           room={activeRoom}
           currentUser={currentUser}
+          targetMessageId={
+            activeRoom?.id === initialActiveRoomId
+              ? (activeMessageId ?? null)
+              : null
+          }
           onSenderClick={openDmWith}
           onMessageSent={updateRoomFromMessage}
           realtimeMessages={realtimeMessages}

@@ -108,6 +108,7 @@ export const useNoteEditor = ({
   );
 
   const dirtyRef = useRef(false);
+  const canEditRef = useRef(canEdit);
   const editRevisionRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleRef = useRef(title);
@@ -123,6 +124,18 @@ export const useNoteEditor = ({
   useEffect(() => {
     titleRef.current = title;
   }, [title]);
+
+  useEffect(() => {
+    canEditRef.current = canEdit;
+
+    if (!canEdit) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      dirtyRef.current = false;
+      // Reset a stale error/dirty indicator if edit access is revoked.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSaveStatus('idle');
+    }
+  }, [canEdit]);
 
   useEffect(
     () => () => {
@@ -155,7 +168,19 @@ export const useNoteEditor = ({
 
   const performSave = useCallback(
     async (activeEditor: Editor) => {
-      if (!noteId) return;
+      if (!noteId || !canEditRef.current || !dirtyRef.current) return;
+
+      const pendingTitle = titleRef.current.trim() || t('notes.untitled');
+      const pendingContent = JSON.stringify(activeEditor.getJSON());
+
+      if (
+        pendingTitle === baseTitleRef.current &&
+        pendingContent === baseContentRef.current
+      ) {
+        dirtyRef.current = false;
+        setSaveStatus('idle');
+        return;
+      }
 
       setSaveStatus('saving');
 
@@ -173,6 +198,12 @@ export const useNoteEditor = ({
           transientAttempt <= TRANSIENT_RETRY_DELAYS_MS.length;
           transientAttempt++
         ) {
+          if (!canEditRef.current) {
+            dirtyRef.current = false;
+            setSaveStatus('idle');
+            return;
+          }
+
           try {
             data = await inertiaJson<{ note: NoteDetail }>(
               'patch',
@@ -222,6 +253,12 @@ export const useNoteEditor = ({
             );
           }
 
+          return;
+        }
+
+        if (!canEditRef.current) {
+          dirtyRef.current = false;
+          setSaveStatus('idle');
           return;
         }
 
@@ -308,10 +345,30 @@ export const useNoteEditor = ({
       ],
       content: note?.content ?? emptyNoteDocument(),
       editable: canEdit,
+      onCreate: ({ editor: activeEditor }) => {
+        // Use Tiptap's normalized representation as the initial comparison
+        // baseline. Parsing the server document must never count as an edit.
+        baseContentRef.current = JSON.stringify(activeEditor.getJSON());
+      },
       editorProps: {
         attributes: { class: 'prose-note focus:outline-none' },
       },
       onUpdate: ({ editor: activeEditor }) => {
+        if (!canEditRef.current) return;
+
+        const currentTitle = titleRef.current.trim() || t('notes.untitled');
+        const currentContent = JSON.stringify(activeEditor.getJSON());
+
+        if (
+          currentTitle === baseTitleRef.current &&
+          currentContent === baseContentRef.current
+        ) {
+          if (timerRef.current) clearTimeout(timerRef.current);
+          dirtyRef.current = false;
+          setSaveStatus('idle');
+          return;
+        }
+
         editRevisionRef.current += 1;
         dirtyRef.current = true;
         setSaveStatus('dirty');
@@ -327,20 +384,34 @@ export const useNoteEditor = ({
 
   const setTitle = useCallback(
     (value: string) => {
-      setTitleState(value);
+      if (!canEditRef.current) return;
 
-      if (!editor || !canEdit) return;
+      setTitleState(value);
+      titleRef.current = value;
+
+      if (!editor) return;
+
+      const normalizedTitle = value.trim() || t('notes.untitled');
+      const contentIsUnchanged =
+        JSON.stringify(editor.getJSON()) === baseContentRef.current;
+
+      if (normalizedTitle === baseTitleRef.current && contentIsUnchanged) {
+        if (timerRef.current) clearTimeout(timerRef.current);
+        dirtyRef.current = false;
+        setSaveStatus('idle');
+        return;
+      }
 
       editRevisionRef.current += 1;
       dirtyRef.current = true;
       setSaveStatus('dirty');
       scheduleSave(editor);
     },
-    [editor, canEdit, scheduleSave],
+    [editor, scheduleSave, t],
   );
 
   const flushSave = useCallback(() => {
-    if (!editor || !dirtyRef.current) return;
+    if (!editor || !canEditRef.current || !dirtyRef.current) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     void performSave(editor);
   }, [editor, performSave]);

@@ -1,11 +1,16 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AddCardModal, CardDetailModalWrapper } from '@/components/kanban';
 import { TimelineChart, TimelineHeader } from '@/components/timeline';
+import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import projects from '@/routes/projects';
-import type { KanbanBoard, KanbanBoardCard } from '@/types/kanban';
+import type {
+  CreateKanbanCardInput,
+  KanbanBoard,
+  KanbanBoardCard,
+} from '@/types/kanban';
 import type {
   TimelineFilters,
   TimelineProps,
@@ -40,8 +45,12 @@ const Timeline = ({
   projectUsers,
   currentUser,
 }: TimelineProps) => {
-  const accountIndex = usePage().props.account.index;
+  const { accountIndex, projectRole } = useProject();
   const { t } = useTranslation();
+  const canEdit =
+    projectRole === 'OWNER' ||
+    projectRole === 'ADMIN' ||
+    projectRole === 'MEMBER';
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<TimelineFilters>(EMPTY_FILTERS);
@@ -51,6 +60,16 @@ const Timeline = ({
     card: KanbanBoardCard;
     boardId: string;
   } | null>(null);
+  const optimisticAttachmentUrlsRef = useRef(new Set<string>());
+
+  useEffect(() => {
+    const optimisticAttachmentUrls = optimisticAttachmentUrlsRef.current;
+
+    return () => {
+      optimisticAttachmentUrls.forEach((url) => URL.revokeObjectURL(url));
+      optimisticAttachmentUrls.clear();
+    };
+  }, []);
 
   // Flatten the board tree, then derive the filtered + sorted list of rows and
   // the visible date window. All layout maths downstream reads from `range`.
@@ -70,34 +89,72 @@ const Timeline = ({
 
   // ── Reused Kanban write flows ──────────────────────────────────────────────
 
-  // Card creation is 100% the Kanban flow: same optimistic insert, same
-  // payload, same `boards.board.cards.store` endpoint. After inserting we open
-  // the reused card-detail modal so the brand-new (still undated) task can be
-  // given its start / due dates right away and appear on the timeline.
-  const handleAddCard = async (
-    boardId: string,
-    title: string,
-    labelIds: string[],
-  ) => {
+  // Card creation reuses the Kanban endpoint and keeps the complete modal
+  // payload in the optimistic row, including its initial checklist and files.
+  const handleAddCard = async (input: CreateKanbanCardInput) => {
+    if (!canEdit) return;
+
+    const {
+      boardId,
+      title,
+      description,
+      startAt,
+      dueAt,
+      labelIds,
+      memberIds,
+      checklist,
+      attachments,
+    } = input;
     const cardId = crypto.randomUUID();
     const now = new Date().toISOString();
 
     const selectedLabels = (cardLabels || []).filter((l) =>
       labelIds.includes(l.card_label_id),
     );
+    const optimisticAttachmentUrls = attachments.map((attachment) =>
+      URL.createObjectURL(attachment.file),
+    );
+    optimisticAttachmentUrls.forEach((url) =>
+      optimisticAttachmentUrlsRef.current.add(url),
+    );
 
     const optimisticCard: KanbanBoardCard = {
       kanban_board_card_id: cardId,
       kanban_board_id: boardId,
       kanban_board_card_title: title,
-      kanban_board_card_description: null,
+      kanban_board_card_description: description,
       is_completed: false,
-      kanban_board_card_start_date: null,
-      kanban_board_card_due_date: null,
+      kanban_board_card_start_date: startAt,
+      kanban_board_card_due_date: dueAt,
       labels: selectedLabels,
-      members: [],
-      checklists: [],
-      attachments: [],
+      members: projectUsers.filter((member) => memberIds.includes(member.id)),
+      checklists: checklist
+        ? [
+            {
+              kanban_board_card_checklist_id: checklist.id,
+              kanban_board_card_id: cardId,
+              kanban_board_card_checklist_name: checklist.name,
+              items: checklist.items.map((item) => ({
+                kanban_board_card_checklist_item_id: item.id,
+                kanban_board_card_checklist_id: checklist.id,
+                kanban_board_card_checklist_item_name: item.name,
+                is_completed: false,
+                created_at: now,
+                updated_at: now,
+              })),
+              created_at: now,
+              updated_at: now,
+            },
+          ]
+        : [],
+      attachments: attachments.map((attachment, index) => ({
+        kanban_board_card_attachment_id: attachment.id,
+        kanban_board_card_id: cardId,
+        kanban_board_card_attachment_name: attachment.file.name,
+        kanban_board_card_attachment_url: optimisticAttachmentUrls[index],
+        created_at: now,
+        updated_at: now,
+      })),
       comments: [],
       created_at: now,
       updated_at: now,
@@ -110,41 +167,68 @@ const Timeline = ({
           : { ...b, cards: [...(b.cards || []), optimisticCard] },
       ),
     );
-    setAddingTask(false);
-    setOpenCard({ card: optimisticCard, boardId });
 
-    router.post(
-      projects.kanban.boards.board.cards.store.url({
-        accountIndex,
-        project: project.project_slug,
-        board: boardId,
-      }),
-      {
-        kanban_board_card_id: cardId,
-        title,
-        label_ids: labelIds,
-      },
-      {
-        ...inertiaWriteOptions,
-        onError: (errors) => {
-          setBoards((prev) =>
-            prev.map((b) =>
-              b.kanban_board_id !== boardId
-                ? b
-                : {
-                    ...b,
-                    cards: b.cards?.filter(
-                      (c) => c.kanban_board_card_id !== cardId,
-                    ),
-                  },
-            ),
-          );
-          setOpenCard(null);
-          console.error('Failed to add card', errors);
-          alert(t('timeline.failedToCreateTask'));
+    return new Promise<void>((resolve) => {
+      router.post(
+        projects.kanban.boards.board.cards.store.url({
+          accountIndex,
+          project: project.project_slug,
+          board: boardId,
+        }),
+        {
+          kanban_board_card_id: cardId,
+          title,
+          description,
+          kanban_board_card_start_date: startAt,
+          kanban_board_card_due_date: dueAt,
+          label_ids: labelIds,
+          member_ids: memberIds,
+          checklist: checklist
+            ? {
+                id: checklist.id,
+                name: checklist.name,
+                items: checklist.items.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                })),
+              }
+            : null,
+          attachments: attachments.map((attachment) => ({
+            id: attachment.id,
+            file: attachment.file,
+          })),
         },
-      },
-    );
+        {
+          ...inertiaWriteOptions,
+          forceFormData: attachments.length > 0,
+          onSuccess: () => {
+            setAddingTask(false);
+            setOpenCard({ card: optimisticCard, boardId });
+          },
+          onError: (errors) => {
+            optimisticAttachmentUrls.forEach((url) => {
+              URL.revokeObjectURL(url);
+              optimisticAttachmentUrlsRef.current.delete(url);
+            });
+            setBoards((prev) =>
+              prev.map((b) =>
+                b.kanban_board_id !== boardId
+                  ? b
+                  : {
+                      ...b,
+                      cards: b.cards?.filter(
+                        (c) => c.kanban_board_card_id !== cardId,
+                      ),
+                    },
+              ),
+            );
+            console.error('Failed to add card', errors);
+            alert(t('timeline.failedToCreateTask'));
+          },
+          onFinish: () => resolve(),
+        },
+      );
+    });
   };
 
   // Merge an update coming back from the reused Kanban card-detail modal.
@@ -194,7 +278,8 @@ const Timeline = ({
           cardLabels={cardLabels}
           projectUsers={projectUsers}
           boards={boards}
-          canAddTask={boards.length > 0}
+          showAddTask={canEdit}
+          canAddTask={canEdit && boards.length > 0}
           onAddTask={() => setAddingTask(true)}
         />
 
@@ -211,6 +296,7 @@ const Timeline = ({
               projectUsers={projectUsers}
               currentUser={currentUser}
               project={project}
+              canEdit={canEdit}
               onClose={() => setOpenCard(null)}
               onUpdate={handleCardUpdate}
             />
@@ -239,10 +325,11 @@ const Timeline = ({
         </div>
       </div>
 
-      {addingTask && (
+      {canEdit && addingTask && (
         <AddCardModal
           boards={boards}
           cardLabels={cardLabels}
+          projectUsers={projectUsers}
           defaultBoardId={defaultBoardId}
           onClose={() => setAddingTask(false)}
           onSubmit={handleAddCard}

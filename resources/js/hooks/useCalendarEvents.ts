@@ -2,19 +2,24 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import echo from '@/echo';
 import { projectPath } from '@/lib/accountRoutes';
 import { inertiaJson } from '@/lib/inertiaJson';
-import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
+import type {
+  AnyCalendarEvent,
+  CalendarEventSourceFilter,
+  CalendarMember,
+} from '@/types/calendar';
 
 export const useCalendarEvents = (
   accountIndex: number,
   projectSlug: string,
   projectId: string,
-  currentUserId: number,
   viewStart: Date,
   viewEnd: Date,
   members: CalendarMember[],
+  sourceFilter: CalendarEventSourceFilter,
 ) => {
   const [events, setEvents] = useState<AnyCalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const requestSequenceRef = useRef(0);
 
   // Keep refs of current inputs to avoid stale closures in Echo listeners
   const rangeRef = useRef({ start: viewStart, end: viewEnd });
@@ -30,6 +35,8 @@ export const useCalendarEvents = (
   const selectedUserIdsStr = selectedUserIds.join(',');
 
   const fetchEvents = useCallback(async () => {
+    const requestSequence = ++requestSequenceRef.current;
+
     if (selectedUserIds.length === 0) {
       setEvents([]);
       setLoading(false);
@@ -46,18 +53,30 @@ export const useCalendarEvents = (
             start: viewStart.toISOString(),
             end: viewEnd.toISOString(),
             users: selectedUserIds,
+            source: sourceFilter,
           },
         },
       );
-      setEvents(data);
+      if (requestSequence === requestSequenceRef.current) {
+        setEvents(data);
+      }
     } catch (error) {
       console.error('Failed to fetch calendar events:', error);
     } finally {
-      setLoading(false);
+      if (requestSequence === requestSequenceRef.current) {
+        setLoading(false);
+      }
     }
     // selectedUserIdsStr is the stable key for the selectedUserIds array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountIndex, projectSlug, viewStart, viewEnd, selectedUserIdsStr]);
+  }, [
+    accountIndex,
+    projectSlug,
+    sourceFilter,
+    viewStart,
+    viewEnd,
+    selectedUserIdsStr,
+  ]);
 
   // Fetch when range or selected members change. The state updates here live
   // inside the async fetch (loading/results), which is the intended pattern.

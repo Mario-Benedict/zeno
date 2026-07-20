@@ -41,6 +41,10 @@ export const calendar: typeof en = {
   refresh: 'Segarkan',
   month: 'Bulan',
   week: 'Minggu',
+  previousMonth: 'Bulan sebelumnya',
+  nextMonth: 'Bulan berikutnya',
+  previousWeek: 'Minggu sebelumnya',
+  nextWeek: 'Minggu berikutnya',
   hideLabel: 'Sembunyikan acara "{{label}}"',
   showLabel: 'Tampilkan acara "{{label}}"',
 
@@ -55,8 +59,8 @@ export const calendar: typeof en = {
   moreLabels: '+ {{count}} lainnya',
   showLessLabels: 'Tampilkan lebih sedikit',
 
-  // Sidebar task-source filter
-  taskSourceFilterLabel: 'Tugas',
+  // Sidebar event-source filter
+  eventSourceFilterLabel: 'Acara',
   taskSourceAll: 'Semua',
   taskSourceThisProject: 'Proyek ini',
   taskSourceOtherProjects: 'Proyek lain',

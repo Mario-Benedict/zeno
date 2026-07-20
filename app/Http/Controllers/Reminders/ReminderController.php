@@ -16,7 +16,7 @@ class ReminderController extends Controller
     /**
      * GET /u/{accountIndex}/p/{project}/reminders
      */
-    public function index(int $accountIndex, Project $project): Response
+    public function index(int $accountIndex, Request $request, Project $project): Response
     {
         $reminders = Reminder::where('reminder_project_id', $project->project_id)
             ->where('reminder_user_id', Auth::id())
@@ -26,9 +26,18 @@ class ReminderController extends Controller
             ->orderBy('reminder_due_at')
             ->get();
 
+        $requestedReminderId = $request->query('reminder');
+        $activeReminderId = is_string($requestedReminderId)
+            && $reminders->contains(
+                fn (Reminder $reminder) => $reminder->reminder_id === $requestedReminderId,
+            )
+                ? $requestedReminderId
+                : null;
+
         return Inertia::render('reminders/index', [
             'reminders' => $reminders,
             'pomodoroSettings' => Auth::user()->pomodoro_settings,
+            'activeReminderId' => $activeReminderId,
         ]);
     }
 

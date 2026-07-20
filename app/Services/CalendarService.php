@@ -96,6 +96,7 @@ class CalendarService
      * @param  array  $userIds  Members whose events to show
      * @param  Carbon  $rangeStart  Query window start (UTC)
      * @param  Carbon  $rangeEnd  Query window end (UTC)
+     * @param  string  $sourceFilter  `all`, `own`, or `other`
      * @return array Array of event data (full detail + classified)
      */
     public function getEventsForView(
@@ -103,27 +104,27 @@ class CalendarService
         int $viewerId,
         array $userIds,
         Carbon $rangeStart,
-        Carbon $rangeEnd
+        Carbon $rangeEnd,
+        string $sourceFilter = 'all'
     ): array {
         if (empty($userIds)) {
             return [];
         }
 
-        // 1) Full-detail events from the current project
-        $projectEvents = $this->getProjectEvents($projectId, $userIds, $rangeStart, $rangeEnd);
+        $projectEvents = [];
+        $classifiedEvents = [];
+        $kanbanTasks = [];
+        $classifiedKanbanTasks = [];
 
-        // 2) CLASSIFIED busy-blocks from other projects
-        $classifiedEvents = $this->getClassifiedEvents($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
+        if ($sourceFilter !== 'other') {
+            $projectEvents = $this->getProjectEvents($projectId, $userIds, $rangeStart, $rangeEnd);
+            $kanbanTasks = $this->getAssignedKanbanTasks($projectId, $userIds, $rangeStart, $rangeEnd);
+        }
 
-        // 3) Kanban cards assigned to the selected members, so a due/start
-        // date with an assignment shows up on the calendar without needing
-        // a separate manually-created schedule.
-        $kanbanTasks = $this->getAssignedKanbanTasks($projectId, $userIds, $rangeStart, $rangeEnd);
-
-        // 4) CLASSIFIED Kanban-task busy-blocks from other projects — the
-        // Kanban-sourced counterpart to (2), so a task due elsewhere shows
-        // up here too, subject to the same calendar_visibility rules.
-        $classifiedKanbanTasks = $this->getClassifiedKanbanTasks($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
+        if ($sourceFilter !== 'own') {
+            $classifiedEvents = $this->getClassifiedEvents($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
+            $classifiedKanbanTasks = $this->getClassifiedKanbanTasks($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
+        }
 
         return array_merge($projectEvents, $classifiedEvents, $kanbanTasks, $classifiedKanbanTasks);
     }

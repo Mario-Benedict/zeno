@@ -1,9 +1,9 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
 import CreateProjectPanel from '@/components/projects/CreateProjectPanel';
+import ProjectListRow from '@/components/projects/ProjectListRow';
 import ProjectSettingsModal from '@/components/projects/ProjectSettingsModal';
-import { PinButton } from '@/components/shared/PinButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath, projectPath } from '@/lib/accountRoutes';
 import type { PaginatedProjects, ProjectSummary } from '@/types';
@@ -16,54 +16,6 @@ interface ProjectsPageProps {
   projects: PaginatedProjects;
   [key: string]: unknown;
 }
-
-const SearchIcon = () => (
-  <SearchIconSvg className="h-[15px] w-[15px] text-dark-secondary" />
-);
-
-const ChevronIcon = ({ dir }: { dir: 'left' | 'right' }) => (
-  <ChevronLeftIcon
-    className={`h-3.5 w-3.5 ${dir === 'right' ? 'rotate-180' : ''}`}
-  />
-);
-
-interface ProjectRowProps {
-  project: ProjectSummary;
-  accountIndex: number;
-  onPin: (slug: string, current: boolean) => void;
-  pinning?: boolean;
-  showPin?: boolean;
-}
-
-const ProjectRow = ({
-  project,
-  accountIndex,
-  onPin,
-  pinning = false,
-  showPin = true,
-}: ProjectRowProps) => (
-  <Link
-    href={projectPath(accountIndex, project.project_slug)}
-    className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-dark-surface-3"
-  >
-    <div className="min-w-0">
-      <p className="truncate text-sm font-medium text-dark-primary">
-        {project.project_name}
-      </p>
-      <p className="truncate text-xs text-dark-secondary">
-        {project.project_slug}
-      </p>
-    </div>
-    {showPin && (
-      <PinButton
-        pinned={project.is_pinned}
-        onToggle={() => onPin(project.project_slug, project.is_pinned)}
-        disabled={pinning}
-        className="ml-3"
-      />
-    )}
-  </Link>
-);
 
 const sortProjects = (items: ProjectSummary[]) => {
   return [...items].sort((a, b) => {
@@ -212,7 +164,7 @@ const ProjectsPage = () => {
               ) : (
                 <div className="flex flex-col gap-0.5">
                   {recentProjects.map((project) => (
-                    <ProjectRow
+                    <ProjectListRow
                       key={project.project_id}
                       project={project}
                       accountIndex={accountIndex}
@@ -230,7 +182,7 @@ const ProjectsPage = () => {
             {/* Search */}
             <div className="relative mb-4">
               <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
-                <SearchIcon />
+                <SearchIconSvg className="h-[15px] w-[15px] text-dark-secondary" />
               </span>
               <input
                 type="text"
@@ -254,7 +206,7 @@ const ProjectsPage = () => {
               ) : (
                 <div className="flex flex-col gap-0.5">
                   {filteredProjects.map((project) => (
-                    <ProjectRow
+                    <ProjectListRow
                       key={project.project_id}
                       project={project}
                       accountIndex={accountIndex}
@@ -284,7 +236,7 @@ const ProjectsPage = () => {
                   disabled={!canGoPrev}
                   className="flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-white/[0.07] disabled:opacity-30"
                 >
-                  <ChevronIcon dir="left" />
+                  <ChevronLeftIcon className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
@@ -294,7 +246,7 @@ const ProjectsPage = () => {
                   disabled={!canGoNext}
                   className="flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-white/[0.07] disabled:opacity-30"
                 >
-                  <ChevronIcon dir="right" />
+                  <ChevronLeftIcon className="h-3.5 w-3.5 rotate-180" />
                 </button>
               </div>
             )}
