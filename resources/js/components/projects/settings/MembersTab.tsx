@@ -8,7 +8,8 @@ import type {
   ProjectShare,
 } from '@/types';
 import TrashIcon from '@public/icons/small/trash.svg';
-import { RoleSelect, getInitials } from './shared';
+import RoleSelect from './RoleSelect';
+import { getInitials } from './shared';
 
 const MembersTab = ({
   share,

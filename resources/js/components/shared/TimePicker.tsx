@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import TimePickerColumn from '@/components/shared/TimePickerColumn';
 import { useTranslation } from '@/hooks/useTranslation';
 import ClockIcon from '@public/icons/small/time.svg';
 
@@ -47,65 +48,6 @@ const to24 = (hour12: number, minute: number, period: Period): string => {
   const hour = period === 'PM' ? base + 12 : base;
 
   return `${pad(hour)}:${pad(minute)}`;
-};
-
-interface TimeColumnProps {
-  label: string;
-  items: { value: number; label: string }[];
-  selected: number | null;
-  onSelect: (value: number) => void;
-}
-
-/** A single vertically-scrollable column of selectable time values. */
-const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const selectedRef = useRef<HTMLButtonElement>(null);
-
-  // Centre the selected row within the column when it first mounts (on open).
-  useEffect(() => {
-    const container = containerRef.current;
-    const item = selectedRef.current;
-    if (!container || !item) return;
-    const containerRect = container.getBoundingClientRect();
-    const itemRect = item.getBoundingClientRect();
-    container.scrollTop +=
-      itemRect.top -
-      containerRect.top -
-      container.clientHeight / 2 +
-      item.clientHeight / 2;
-  }, []);
-
-  return (
-    <div className="flex min-w-0 flex-1 flex-col">
-      <p className="mb-1 text-center text-micro font-semibold tracking-wider text-dark-secondary/70 uppercase">
-        {label}
-      </p>
-      <div
-        ref={containerRef}
-        className="scrollbar-app h-44 overflow-y-auto rounded-lg border border-dark-border bg-dark-surface-2 p-1"
-      >
-        {items.map((item) => {
-          const active = item.value === selected;
-
-          return (
-            <button
-              key={item.value}
-              ref={active ? selectedRef : null}
-              type="button"
-              onClick={() => onSelect(item.value)}
-              className={`w-full rounded-lg py-1.5 text-center text-xsmall transition ${
-                active
-                  ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px] shadow-accent-blue/40'
-                  : 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary'
-              }`}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
 };
 
 /**
@@ -207,13 +149,13 @@ export const TimePicker = ({
           </div>
 
           <div className="flex gap-2 px-3 py-3">
-            <TimeColumn
+            <TimePickerColumn
               label={t('common.hour')}
               items={HOURS.map((h) => ({ value: h, label: String(h) }))}
               selected={value ? current.hour12 : null}
               onSelect={(h) => emit({ hour12: h })}
             />
-            <TimeColumn
+            <TimePickerColumn
               label={t('common.minute')}
               items={MINUTES.map((m) => ({ value: m, label: pad(m) }))}
               selected={value ? current.minute : null}

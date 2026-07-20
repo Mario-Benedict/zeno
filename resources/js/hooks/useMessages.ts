@@ -23,7 +23,11 @@ export interface ScrollSignal {
   force: boolean;
 }
 
-export const useMessages = (projectSlug: string, roomId: string) => {
+export const useMessages = (
+  projectSlug: string,
+  roomId: string,
+  targetMessageId?: string | null,
+) => {
   const {
     messages: serverMessages,
     nextCursor: serverNextCursor,
@@ -71,10 +75,17 @@ export const useMessages = (projectSlug: string, roomId: string) => {
     if (!roomId) return;
 
     isLoadingMoreRef.current = false;
+    // A second global-search result can target a different message in the
+    // room while this page component stays mounted.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInitialLoading(true);
 
     router.get(
       chat.index.url({ accountIndex, project: projectSlug }),
-      { room: roomId },
+      {
+        room: roomId,
+        ...(targetMessageId ? { message: targetMessageId } : {}),
+      },
       {
         only: ['messages', 'nextCursor', 'hasMore'],
         preserveState: true,
@@ -83,7 +94,7 @@ export const useMessages = (projectSlug: string, roomId: string) => {
         onFinish: () => setInitialLoading(false),
       },
     );
-  }, [accountIndex, projectSlug, roomId]);
+  }, [accountIndex, projectSlug, roomId, targetMessageId]);
 
   useEffect(() => {
     if (serverMessages === undefined) return;

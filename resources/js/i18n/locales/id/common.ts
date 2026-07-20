@@ -12,6 +12,8 @@ export const common: typeof en = {
   create: 'Buat',
   creating: 'Membuat…',
   add: 'Tambah',
+  pin: 'Sematkan',
+  unpin: 'Lepas sematan',
   remove: 'Hapus',
   confirm: 'Konfirmasi',
   done: 'Selesai',

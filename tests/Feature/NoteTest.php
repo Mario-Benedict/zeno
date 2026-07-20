@@ -89,6 +89,32 @@ it('only lists your own personal notes but every shared note in the project', fu
         );
 });
 
+it('only exposes an accessible note as the requested deep-link target', function () {
+    /** @var mixed $this */
+    $mine = Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user1->id, 'title' => 'Mine', 'content' => noteDoc('mine'),
+        'is_shared' => false,
+    ]);
+    $private = Note::create([
+        'note_id' => (string) Str::uuid(), 'project_id' => $this->project->project_id,
+        'user_id' => $this->user2->id, 'title' => 'Private', 'content' => noteDoc('private'),
+        'is_shared' => false,
+    ]);
+
+    $this->actingAs($this->user1)
+        ->get("/u/0/p/{$this->project->project_slug}/notes?note={$mine->note_id}")
+        ->assertInertia(fn ($page) => $page
+            ->where('activeNoteId', $mine->note_id)
+        );
+
+    $this->actingAs($this->user1)
+        ->get("/u/0/p/{$this->project->project_slug}/notes?note={$private->note_id}")
+        ->assertInertia(fn ($page) => $page
+            ->where('activeNoteId', null)
+        );
+});
+
 /* ==========================================================================
    2. CRUD (JSON endpoints)
    ========================================================================== */

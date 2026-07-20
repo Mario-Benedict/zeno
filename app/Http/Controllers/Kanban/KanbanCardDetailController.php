@@ -12,6 +12,8 @@ use App\Models\Project;
 use App\Observers\KanbanBoardCardObserver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class KanbanCardDetailController extends Controller
 {
@@ -32,7 +34,8 @@ class KanbanCardDetailController extends Controller
      */
     public function update(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'kanban_board_card_title' => 'string|max:255',
@@ -50,15 +53,15 @@ class KanbanCardDetailController extends Controller
      */
     public function addLabel(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
-        $cardProject = $card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $cardProject), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'label_id' => 'required|string',
         ]);
 
         $label = CardLabel::where('card_label_id', $validated['label_id'])
-            ->where('card_label_project_id', $cardProject->project_id)
+            ->where('card_label_project_id', $project->project_id)
             ->first();
 
         abort_if($label === null, 404);
@@ -75,9 +78,15 @@ class KanbanCardDetailController extends Controller
      */
     public function removeLabel(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card, string $labelId): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
-        $card->labels()->detach($labelId);
+        $label = CardLabel::query()
+            ->where('card_label_project_id', $project->project_id)
+            ->find($labelId);
+        abort_if($label === null, 404);
+
+        $card->labels()->detach($label->card_label_id);
 
         return back();
     }
@@ -87,9 +96,14 @@ class KanbanCardDetailController extends Controller
      */
     public function deleteLabel(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card, string $labelId): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
-        CardLabel::findOrFail($labelId)->delete();
+        $label = CardLabel::query()
+            ->where('card_label_project_id', $project->project_id)
+            ->find($labelId);
+        abort_if($label === null, 404);
+        $label->delete();
 
         return back();
     }
@@ -102,8 +116,8 @@ class KanbanCardDetailController extends Controller
      */
     public function createLabel(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
-        $cardProject = $card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $cardProject), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'card_label_id' => ['nullable', 'string', 'uuid'],
@@ -112,7 +126,7 @@ class KanbanCardDetailController extends Controller
         ]);
 
         $label = new CardLabel([
-            'card_label_project_id' => $cardProject->project_id,
+            'card_label_project_id' => $project->project_id,
             'card_label_color_hex' => strtoupper($validated['card_label_color_hex']),
             'card_label_name' => $validated['card_label_name'],
         ]);
@@ -133,14 +147,14 @@ class KanbanCardDetailController extends Controller
      */
     public function addMember(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
-        $cardProject = $card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $cardProject), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'user_id' => 'required|integer',
         ]);
 
-        $isMember = $cardProject->members()->where('user_id', $validated['user_id'])->exists();
+        $isMember = $project->members()->where('user_id', $validated['user_id'])->exists();
         abort_unless($isMember, 404);
 
         if (! $card->members()->where('kanban_board_card_account_id', $validated['user_id'])->exists()) {
@@ -157,7 +171,7 @@ class KanbanCardDetailController extends Controller
                 // Broadcast so an open Calendar view picks up the new
                 // assignee immediately instead of only on its next refetch.
                 broadcast(new CalendarEventChanged(
-                    $cardProject->project_id,
+                    $project->project_id,
                     $card->members()->pluck('users.id')->all(),
                     'updated'
                 ));
@@ -172,8 +186,12 @@ class KanbanCardDetailController extends Controller
      */
     public function removeMember(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card, int $memberId): RedirectResponse
     {
-        $cardProject = $card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $cardProject), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
+        abort_unless(
+            $project->members()->where('users.id', $memberId)->exists(),
+            404,
+        );
 
         // Captured before detaching so the removed member's own Calendar
         // view (if open) also refreshes and drops the now-unassigned task.
@@ -184,7 +202,7 @@ class KanbanCardDetailController extends Controller
 
         if ($card->kanban_board_card_due_date) {
             broadcast(new CalendarEventChanged(
-                $cardProject->project_id,
+                $project->project_id,
                 $affectedMemberIds,
                 'updated'
             ));
@@ -198,13 +216,26 @@ class KanbanCardDetailController extends Controller
      */
     public function updateDates(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
-        $cardProject = $card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $cardProject), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'kanban_board_card_start_date' => 'nullable|date',
             'kanban_board_card_due_date' => 'nullable|date',
         ]);
+
+        $nextStart = array_key_exists('kanban_board_card_start_date', $validated)
+            ? $validated['kanban_board_card_start_date']
+            : $card->kanban_board_card_start_date;
+        $nextDue = array_key_exists('kanban_board_card_due_date', $validated)
+            ? $validated['kanban_board_card_due_date']
+            : $card->kanban_board_card_due_date;
+
+        if ($nextStart !== null && $nextDue !== null && Carbon::parse($nextDue)->lessThanOrEqualTo(Carbon::parse($nextStart))) {
+            throw ValidationException::withMessages([
+                'kanban_board_card_due_date' => 'The due date must be after the start date.',
+            ]);
+        }
 
         $dueDateKeySubmitted = array_key_exists('kanban_board_card_due_date', $validated);
         $dueDateSubmitted = $dueDateKeySubmitted && $validated['kanban_board_card_due_date'] !== null;
@@ -223,12 +254,20 @@ class KanbanCardDetailController extends Controller
         // Calendar view, not just wait for its next manual refetch.
         if ($dueDateKeySubmitted) {
             broadcast(new CalendarEventChanged(
-                $cardProject->project_id,
+                $project->project_id,
                 $card->members()->pluck('users.id')->all(),
                 'updated'
             ));
         }
 
         return back();
+    }
+
+    private function assertCardBelongsToProject(Project $project, KanbanBoardCard $card): void
+    {
+        abort_unless(
+            $card->kanbanBoard->kanban_board_project_id === $project->project_id,
+            404,
+        );
     }
 }

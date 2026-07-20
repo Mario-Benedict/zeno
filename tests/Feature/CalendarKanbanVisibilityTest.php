@@ -11,10 +11,9 @@ uses(RefreshDatabase::class);
 
 /**
  * Two projects: Zeno (viewer's project) and Atlas (owns the Kanban card
- * under test). The viewer is in Zeno only (plus Atlas as a bystander
- * member, not an assignee), so any Atlas-assigned task they see must go
- * through CalendarService::getClassifiedKanbanTasks()'s cross-project
- * branch — mirrors CalendarVisibilityTest.php for CalendarEvents.
+ * under test). Both users are in Zeno so the assignee is a valid member-filter
+ * target. The card belongs to Atlas, so it still goes through
+ * CalendarService::getClassifiedKanbanTasks()'s cross-project branch.
  */
 function seedKanbanVisibilityScenario(string $assigneeVisibility): array
 {
@@ -23,6 +22,7 @@ function seedKanbanVisibilityScenario(string $assigneeVisibility): array
 
     $zeno = Project::create(['project_name' => 'Zeno', 'project_slug' => 'zeno-kanban-vis']);
     $zeno->members()->attach($viewer->id, ['role' => 'OWNER', 'color' => '#D7CCC8']);
+    $zeno->members()->attach($assignee->id, ['role' => 'MEMBER', 'color' => '#7B7B7B']);
 
     $atlas = Project::create(['project_name' => 'Atlas', 'project_slug' => 'atlas-kanban-vis']);
     $atlas->members()->attach($assignee->id, ['role' => 'OWNER', 'color' => '#D7CCC8']);

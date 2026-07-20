@@ -2,7 +2,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { CardLabel, KanbanBoard, KanbanUser } from '@/types/kanban';
 import type { TimelineFilters } from '@/types/timeline';
 import { generateInitials, memberColor } from '@/utils/kanban';
-import CheckIcon from '@public/icons/small/check.svg';
+import TimelineFilterRow from './TimelineFilterRow';
+import TimelineFilterSectionLabel from './TimelineFilterSectionLabel';
 
 interface TimelineFilterMenuProps {
   cardLabels: CardLabel[];
@@ -14,33 +15,6 @@ interface TimelineFilterMenuProps {
 
 const toggle = <T,>(list: T[], value: T): T[] =>
   list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
-
-const SectionLabel = ({ children }: { children: string }) => (
-  <p className="mb-1.5 text-xsmall font-semibold tracking-wider text-dark-secondary/70 uppercase">
-    {children}
-  </p>
-);
-
-interface FilterRowProps {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}
-
-const FilterRow = ({ active, onClick, children }: FilterRowProps) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition ${
-      active
-        ? 'border border-dark-border bg-dark-surface-3'
-        : 'border border-transparent hover:bg-dark-surface-3'
-    }`}
-  >
-    <span className="min-w-0 flex-1">{children}</span>
-    {active && <CheckIcon className="h-3 w-3 shrink-0 text-accent-blue" />}
-  </button>
-);
 
 /**
  * Dropdown of every filterable dimension — Labels, Assignee and Status
@@ -81,13 +55,15 @@ export const TimelineFilterMenu = ({
 
       {cardLabels.length > 0 && (
         <div className="mb-3">
-          <SectionLabel>{t('timeline.labels')}</SectionLabel>
+          <TimelineFilterSectionLabel>
+            {t('timeline.labels')}
+          </TimelineFilterSectionLabel>
           <div className="space-y-0.5">
             {cardLabels.map((label) => {
               const hex = label.card_label_color_hex ?? '#7B7B7B';
 
               return (
-                <FilterRow
+                <TimelineFilterRow
                   key={label.card_label_id}
                   active={filters.labelIds.includes(label.card_label_id)}
                   onClick={() =>
@@ -106,7 +82,7 @@ export const TimelineFilterMenu = ({
                       {label.card_label_name}
                     </span>
                   </span>
-                </FilterRow>
+                </TimelineFilterRow>
               );
             })}
           </div>
@@ -115,10 +91,12 @@ export const TimelineFilterMenu = ({
 
       {projectUsers.length > 0 && (
         <div className="mb-3">
-          <SectionLabel>{t('timeline.assignee')}</SectionLabel>
+          <TimelineFilterSectionLabel>
+            {t('timeline.assignee')}
+          </TimelineFilterSectionLabel>
           <div className="space-y-0.5">
             {projectUsers.map((user) => (
-              <FilterRow
+              <TimelineFilterRow
                 key={user.id}
                 active={filters.memberIds.includes(user.id)}
                 onClick={() =>
@@ -141,7 +119,7 @@ export const TimelineFilterMenu = ({
                     {user.name}
                   </span>
                 </span>
-              </FilterRow>
+              </TimelineFilterRow>
             ))}
           </div>
         </div>
@@ -149,10 +127,12 @@ export const TimelineFilterMenu = ({
 
       {boards.length > 0 && (
         <div>
-          <SectionLabel>{t('timeline.status')}</SectionLabel>
+          <TimelineFilterSectionLabel>
+            {t('timeline.status')}
+          </TimelineFilterSectionLabel>
           <div className="space-y-0.5">
             {boards.map((board) => (
-              <FilterRow
+              <TimelineFilterRow
                 key={board.kanban_board_id}
                 active={filters.boardIds.includes(board.kanban_board_id)}
                 onClick={() =>
@@ -165,7 +145,7 @@ export const TimelineFilterMenu = ({
                 <span className="truncate text-xsmall text-dark-primary">
                   {board.kanban_board_name}
                 </span>
-              </FilterRow>
+              </TimelineFilterRow>
             ))}
           </div>
         </div>

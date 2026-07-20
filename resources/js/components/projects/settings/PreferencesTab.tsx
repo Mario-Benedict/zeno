@@ -6,7 +6,7 @@ import EyeOffIcon from '@public/icons/small/eye_off.svg';
 import GlobeIcon from '@public/icons/small/globe.svg';
 import MoonIcon from '@public/icons/small/moon.svg';
 import SunIcon from '@public/icons/small/sun.svg';
-import { FieldLabel } from './shared';
+import FieldLabel from './FieldLabel';
 
 // ── PreferencesTab ────────────────────────────────────────────────────────
 //

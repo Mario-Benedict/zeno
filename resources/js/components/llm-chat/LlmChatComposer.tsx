@@ -11,8 +11,6 @@ interface Props {
   disabled: boolean;
 }
 
-const SpinnerIcon = () => <SpinnerIconSvg className="animate-spin" />;
-
 const LlmChatComposer = ({ value, onChange, onSubmit, disabled }: Props) => {
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -73,7 +71,11 @@ const LlmChatComposer = ({ value, onChange, onSubmit, disabled }: Props) => {
               : 'cursor-not-allowed bg-dark-surface-2 text-dark-secondary',
           ].join(' ')}
         >
-          {disabled ? <SpinnerIcon /> : <SendIcon />}
+          {disabled ? (
+            <SpinnerIconSvg className="animate-spin" />
+          ) : (
+            <SendIcon />
+          )}
         </button>
       </form>
     </div>

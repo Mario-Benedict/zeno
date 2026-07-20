@@ -9,10 +9,6 @@ interface Props {
   size?: number;
 }
 
-const UsersIcon = ({ size }: { size: number }) => (
-  <UsersIconSvg width={size} height={size} aria-hidden />
-);
-
 const RoomAvatar = ({ room, currentUser, size = 36 }: Props) => {
   const { t } = useTranslation();
   const dim = { width: size, height: size };
@@ -37,7 +33,11 @@ const RoomAvatar = ({ room, currentUser, size = 36 }: Props) => {
         style={style}
         className={`inline-flex items-center justify-center rounded-full ${bg} shrink-0`}
       >
-        <UsersIcon size={Math.round(size * 0.44)} />
+        <UsersIconSvg
+          width={Math.round(size * 0.44)}
+          height={Math.round(size * 0.44)}
+          aria-hidden
+        />
       </span>
     );
   }
