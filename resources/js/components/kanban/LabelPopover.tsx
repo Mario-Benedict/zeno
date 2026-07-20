@@ -60,7 +60,7 @@ export const LabelPopover = ({
       {!creatingLabel ? (
         <>
           <div className="flex items-center justify-between border-b border-dark-border px-4 py-3">
-            <span className="text-xsmall font-semibold text-white/60">
+            <span className="text-xsmall font-semibold text-dark-secondary">
               {t('kanban.labelsLabel')}
             </span>
             <button
@@ -73,7 +73,7 @@ export const LabelPopover = ({
 
           <div className="scrollbar-app max-h-52 space-y-0.5 overflow-y-auto p-2">
             {cardLabels.length === 0 && (
-              <p className="py-4 text-center text-xsmall text-white/20">
+              <p className="py-4 text-center text-xsmall text-dark-secondary/70">
                 {t('kanban.noLabelsYet')}
               </p>
             )}
@@ -86,7 +86,7 @@ export const LabelPopover = ({
               return (
                 <div
                   key={label.card_label_id}
-                  className="group/lbl flex items-center gap-2 rounded-lg px-2 py-1.5 transition hover:bg-white/4"
+                  className="group/lbl flex items-center gap-2 rounded-lg px-2 py-1.5 transition hover:bg-dark-surface-3"
                 >
                   <button
                     onClick={() => onToggle(label)}
@@ -107,7 +107,7 @@ export const LabelPopover = ({
                       className="h-5 w-5 shrink-0 rounded-sm"
                       style={{ backgroundColor: hex }}
                     />
-                    <span className="flex-1 truncate text-xsmall text-white/60">
+                    <span className="flex-1 truncate text-xsmall text-dark-secondary">
                       {label.card_label_name}
                     </span>
                   </button>
@@ -116,7 +116,7 @@ export const LabelPopover = ({
                       e.stopPropagation();
                       onDelete(label.card_label_id);
                     }}
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xsmall text-white/20 opacity-0 transition group-hover/lbl:opacity-100 hover:bg-accent-red/10 hover:text-accent-red"
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xsmall text-dark-secondary/70 opacity-0 transition group-hover/lbl:opacity-100 hover:bg-accent-red/10 hover:text-accent-red"
                     title={t('kanban.deleteLabel')}
                   >
                     <CloseIcon />
@@ -129,7 +129,7 @@ export const LabelPopover = ({
           <div className="border-t border-dark-border px-2 pt-1 pb-2">
             <button
               onClick={() => setCreatingLabel(true)}
-              className="flex w-full items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-2 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/60"
+              className="flex w-full items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-2 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-secondary"
             >
               <span className="text-normal leading-none">+</span>
               <span>{t('kanban.createNewLabel')}</span>
@@ -145,11 +145,11 @@ export const LabelPopover = ({
                 setNewName('');
                 setNewColor(null);
               }}
-              className="text-small text-white/30 transition hover:text-white/60"
+              className="text-small text-dark-secondary/80 transition hover:text-dark-secondary"
             >
               ←
             </button>
-            <span className="text-xsmall font-semibold text-white/60">
+            <span className="text-xsmall font-semibold text-dark-secondary">
               {t('kanban.createLabel')}
             </span>
           </div>
@@ -176,7 +176,7 @@ export const LabelPopover = ({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xsmall tracking-wider text-white/30 uppercase">
+              <label className="mb-1.5 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
                 {t('kanban.nameLabel')}
               </label>
               <input
@@ -187,12 +187,12 @@ export const LabelPopover = ({
                   if (e.key === 'Enter') onCreate();
                 }}
                 placeholder={t('kanban.labelNamePlaceholder')}
-                className="w-full rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-2 text-small text-white placeholder-white/20 transition focus:border-dark-border-focus focus:outline-none"
+                className="w-full rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-2 text-small text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xsmall tracking-wider text-white/30 uppercase">
+              <label className="mb-1.5 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
                 {t('kanban.colorLabel')}
               </label>
               <div className="grid grid-cols-5 gap-1.5">
@@ -228,7 +228,7 @@ export const LabelPopover = ({
                   setNewName('');
                   setNewColor(null);
                 }}
-                className="rounded-lg border border-dark-border px-3 py-2 text-xsmall text-white/40 transition hover:bg-white/5 hover:text-white"
+                className="rounded-lg border border-dark-border px-3 py-2 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
               >
                 {t('common.cancel')}
               </button>

@@ -57,8 +57,8 @@ export const RemindersWidgetDetail = ({
           <p
             className={`flex-1 text-small leading-snug font-semibold ${
               reminder.is_completed
-                ? 'text-white/40 line-through'
-                : 'text-white'
+                ? 'text-dark-secondary line-through'
+                : 'text-dark-primary'
             }`}
           >
             {reminder.reminder_title}
@@ -68,13 +68,13 @@ export const RemindersWidgetDetail = ({
             type="button"
             onClick={onClose}
             aria-label={t('reminders.close')}
-            className="shrink-0 rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-white"
+            className="shrink-0 rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
-        <p className="mb-3 text-micro text-white/40">
+        <p className="mb-3 text-micro text-dark-secondary">
           {formatReminderDetailDateTime(
             reminder.reminder_due_at,
             localeCode,
@@ -83,14 +83,14 @@ export const RemindersWidgetDetail = ({
         </p>
 
         {reminder.reminder_description && (
-          <p className="mb-3 text-xsmall whitespace-pre-wrap text-white/60">
+          <p className="mb-3 text-xsmall whitespace-pre-wrap text-dark-secondary">
             {reminder.reminder_description}
           </p>
         )}
 
         {!!reminder.steps?.length && (
           <div>
-            <p className="mb-1.5 text-micro text-white/40">
+            <p className="mb-1.5 text-micro text-dark-secondary">
               {t('reminders.steps')}
             </p>
             <div className="space-y-1">
@@ -106,7 +106,7 @@ export const RemindersWidgetDetail = ({
                       className={`flex h-3 w-3 shrink-0 items-center justify-center rounded-sm border ${
                         step.is_completed
                           ? 'border-accent-blue bg-accent-blue'
-                          : 'border-white/25'
+                          : 'border-dark-border-focus'
                       }`}
                     >
                       {step.is_completed && (
@@ -116,8 +116,8 @@ export const RemindersWidgetDetail = ({
                     <span
                       className={`text-xsmall ${
                         step.is_completed
-                          ? 'text-white/30 line-through'
-                          : 'text-white/70'
+                          ? 'text-dark-secondary/80 line-through'
+                          : 'text-dark-primary'
                       }`}
                     >
                       {step.reminder_step_name}

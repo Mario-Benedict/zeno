@@ -143,7 +143,7 @@ const NotificationPanel = ({
 
       <div className="scrollbar-app max-h-96 overflow-y-auto p-2">
         {loading && (
-          <p className="py-8 text-center text-xsmall text-white/20">
+          <p className="py-8 text-center text-xsmall text-dark-secondary/70">
             {t('common.loading')}
           </p>
         )}
@@ -151,7 +151,7 @@ const NotificationPanel = ({
         {!loading && tab === 'inbox' && (
           <>
             {(data?.inbox.length ?? 0) === 0 && (
-              <p className="py-8 text-center text-xsmall text-white/20">
+              <p className="py-8 text-center text-xsmall text-dark-secondary/70">
                 {t('header.nothingDueSoon')}
               </p>
             )}
@@ -167,7 +167,7 @@ const NotificationPanel = ({
                     `/notifications/assignments/${item.id}/open`,
                   )}
                   onClick={onClose}
-                  className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-white/4"
+                  className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-dark-surface-3"
                 >
                   <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-accent-blue" />
                   <div className="min-w-0 flex-1">
@@ -189,7 +189,7 @@ const NotificationPanel = ({
                     `/notifications/reminders/${item.reminder_id}/open`,
                   )}
                   onClick={onClose}
-                  className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-white/4"
+                  className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-dark-surface-3"
                 >
                   <span
                     className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.is_overdue ? 'bg-accent-red' : 'bg-accent-yellow'}`}
@@ -216,7 +216,7 @@ const NotificationPanel = ({
         {!loading && tab === 'chat' && (
           <>
             {(data?.chat.length ?? 0) === 0 && (
-              <p className="py-8 text-center text-xsmall text-white/20">
+              <p className="py-8 text-center text-xsmall text-dark-secondary/70">
                 {t('header.noUnreadMessages')}
               </p>
             )}
@@ -238,7 +238,7 @@ const NotificationPanel = ({
                   key={room.id}
                   href={`${projectPath(accountIndex, project.project_slug, '/chat')}?room=${room.id}`}
                   onClick={onClose}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-white/4"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-dark-surface-3"
                 >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-blue text-xsmall font-bold text-white">
                     {initials(label)}
@@ -265,7 +265,7 @@ const NotificationPanel = ({
         {!loading && tab === 'conflicts' && (
           <>
             {(data?.conflicts.length ?? 0) === 0 && (
-              <p className="py-8 text-center text-xsmall text-white/20">
+              <p className="py-8 text-center text-xsmall text-dark-secondary/70">
                 {t('header.noConflicts')}
               </p>
             )}
@@ -273,7 +273,7 @@ const NotificationPanel = ({
               c.role === 'assignee' ? (
                 <div
                   key={c.id}
-                  className="rounded-lg px-3 py-2.5 hover:bg-white/4"
+                  className="rounded-lg px-3 py-2.5 hover:bg-dark-surface-3"
                 >
                   <p className="text-small text-dark-primary">
                     {t('header.conflictAssigneePrompt', {
@@ -304,7 +304,7 @@ const NotificationPanel = ({
               ) : (
                 <div
                   key={c.id}
-                  className="rounded-lg px-3 py-2.5 hover:bg-white/4"
+                  className="rounded-lg px-3 py-2.5 hover:bg-dark-surface-3"
                 >
                   <p className="text-small text-dark-primary">
                     {t('header.conflictAssignerAlert', {

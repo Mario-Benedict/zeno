@@ -135,7 +135,7 @@ export const ReminderList = ({
 
       <div className="scrollbar-app flex-1 space-y-2 overflow-y-auto">
         {active.length === 0 && completed.length === 0 && (
-          <p className="py-8 text-center text-small text-white/20">
+          <p className="py-8 text-center text-small text-dark-secondary/70">
             {t('reminders.noRemindersYet')}
           </p>
         )}

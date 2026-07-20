@@ -34,7 +34,7 @@ const ReminderRow = ({
     !reminder.is_completed && isReminderDueSoon(reminder.reminder_due_at);
 
   return (
-    <div className="flex items-start gap-2.5 rounded-lg bg-dark-surface-3 px-3 py-2 transition hover:bg-white/10">
+    <div className="flex items-start gap-2.5 rounded-lg bg-dark-surface-3 px-3 py-2 transition hover:bg-dark-surface-3">
       <button
         type="button"
         onClick={(e) => {
@@ -66,8 +66,8 @@ const ReminderRow = ({
           <p
             className={`truncate text-small font-medium ${
               reminder.is_completed
-                ? 'text-white/30 line-through'
-                : 'text-white/90'
+                ? 'text-dark-secondary/80 line-through'
+                : 'text-dark-primary'
             }`}
           >
             {reminder.reminder_title}
@@ -85,7 +85,7 @@ const ReminderRow = ({
                 ? 'text-accent-red'
                 : dueSoon
                   ? 'text-accent-yellow'
-                  : 'text-white/40'
+                  : 'text-dark-secondary'
             }`}
           >
             {formatReminderListDate(reminder.reminder_due_at, localeCode)}
@@ -111,7 +111,7 @@ export const RemindersWidgetList = ({
   return (
     <div className="scrollbar-app flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3 pb-3">
       {reminders.length === 0 ? (
-        <p className="px-1 py-6 text-center text-xsmall text-white/30">
+        <p className="px-1 py-6 text-center text-xsmall text-dark-secondary/80">
           {t('reminders.noRemindersYet')}
         </p>
       ) : (
@@ -131,7 +131,7 @@ export const RemindersWidgetList = ({
               <button
                 type="button"
                 onClick={() => setCompletedOpen((v) => !v)}
-                className="mb-1.5 flex w-full items-center gap-1.5 rounded-lg bg-dark-surface-3/60 px-3 py-1.5 text-xsmall font-medium text-white/50 transition hover:bg-dark-surface-3"
+                className="mb-1.5 flex w-full items-center gap-1.5 rounded-lg bg-dark-surface-3/60 px-3 py-1.5 text-xsmall font-medium text-dark-secondary transition hover:bg-dark-surface-3"
               >
                 <ArrowDownIcon
                   className={`h-3 w-3 transition-transform ${

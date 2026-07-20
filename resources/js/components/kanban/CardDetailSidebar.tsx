@@ -85,7 +85,7 @@ export const CardDetailSidebar = ({
     <div className="scrollbar-app w-52 shrink-0 space-y-4 overflow-y-auto border-l border-dark-border px-4 py-4">
       {/* Dates */}
       <div>
-        <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
+        <p className="mb-2 text-xsmall font-semibold tracking-wider text-dark-secondary/70 uppercase">
           {t('kanban.dates')}
         </p>
         <div className="space-y-3">
@@ -147,7 +147,7 @@ export const CardDetailSidebar = ({
 
       {/* Add to card */}
       <div>
-        <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
+        <p className="mb-2 text-xsmall font-semibold tracking-wider text-dark-secondary/70 uppercase">
           {t('kanban.addToCard')}
         </p>
         <div className="space-y-1.5">
@@ -176,7 +176,7 @@ export const CardDetailSidebar = ({
 
       {/* Labels */}
       <div>
-        <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
+        <p className="mb-2 text-xsmall font-semibold tracking-wider text-dark-secondary/70 uppercase">
           {t('kanban.labelsLabel')}
         </p>
 
@@ -225,7 +225,7 @@ export const CardDetailSidebar = ({
         <div className="relative">
           <button
             onClick={() => labels.setPopoverOpen(!labels.popoverOpen)}
-            className="flex w-full items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-1.5 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/60"
+            className="flex w-full items-center gap-2 rounded-lg border border-dark-border bg-dark-surface-2 px-3 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-secondary"
           >
             <PaperclipIcon className="h-3.5 w-3.5" />
             <span>{t('kanban.editLabels')}</span>
@@ -258,7 +258,7 @@ export const CardDetailSidebar = ({
 
       {/* Members */}
       <div>
-        <p className="mb-2 text-xsmall font-semibold tracking-wider text-white/20 uppercase">
+        <p className="mb-2 text-xsmall font-semibold tracking-wider text-dark-secondary/70 uppercase">
           {t('kanban.members')}
         </p>
         <div className="space-y-1">
@@ -271,8 +271,8 @@ export const CardDetailSidebar = ({
                 onClick={() => onToggleMember(user)}
                 className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all ${
                   isMember
-                    ? 'border border-white/10 bg-white/5'
-                    : 'border border-transparent hover:bg-white/4'
+                    ? 'border border-dark-border bg-dark-surface-3'
+                    : 'border border-transparent hover:bg-dark-surface-3'
                 }`}
               >
                 <div
@@ -283,7 +283,7 @@ export const CardDetailSidebar = ({
                 >
                   {generateInitials(user.name)}
                 </div>
-                <span className="flex-1 truncate text-xsmall text-white/50">
+                <span className="flex-1 truncate text-xsmall text-dark-secondary">
                   {user.name}
                 </span>
                 {isMember && (
@@ -293,7 +293,7 @@ export const CardDetailSidebar = ({
             );
           })}
           {(!projectUsers || projectUsers.length === 0) && (
-            <p className="px-2 text-xsmall text-white/30 italic">
+            <p className="px-2 text-xsmall text-dark-secondary/80 italic">
               {t('kanban.noMembersInProject')}
             </p>
           )}

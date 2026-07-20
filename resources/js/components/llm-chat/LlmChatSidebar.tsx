@@ -109,7 +109,7 @@ const SessionItem = ({
             isActive || menuOpen
               ? 'opacity-100'
               : 'opacity-0 group-hover:opacity-100'
-          } hover:bg-white/10`}
+          } hover:bg-dark-surface-3`}
         >
           <MoreIcon className="h-3.5 w-3.5" />
         </span>

@@ -67,7 +67,9 @@ export const KanbanWidgetCardDetail = ({
 
           <p
             className={`flex-1 text-small leading-snug font-semibold ${
-              card.is_completed ? 'text-white/40 line-through' : 'text-white'
+              card.is_completed
+                ? 'text-dark-secondary line-through'
+                : 'text-dark-primary'
             }`}
           >
             {card.kanban_board_card_title}
@@ -77,7 +79,7 @@ export const KanbanWidgetCardDetail = ({
             type="button"
             onClick={onClose}
             aria-label={t('dashboard.close')}
-            className="shrink-0 rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-white"
+            className="shrink-0 rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -118,7 +120,7 @@ export const KanbanWidgetCardDetail = ({
                 </div>
               ))}
             </div>
-            <span className="text-micro text-white/40">
+            <span className="text-micro text-dark-secondary">
               {card.members.map((m) => m.name).join(', ')}
             </span>
           </div>
@@ -126,7 +128,7 @@ export const KanbanWidgetCardDetail = ({
 
         {/* Dates */}
         {(startDate || dueDate) && (
-          <div className="mb-3 flex flex-wrap items-center gap-3 text-micro text-white/40">
+          <div className="mb-3 flex flex-wrap items-center gap-3 text-micro text-dark-secondary">
             {startDate && (
               <span className="flex items-center gap-1">
                 <TimeIcon className="h-3 w-3" />
@@ -144,7 +146,7 @@ export const KanbanWidgetCardDetail = ({
 
         {/* Description */}
         {card.kanban_board_card_description && (
-          <p className="mb-3 text-xsmall whitespace-pre-wrap text-white/60">
+          <p className="mb-3 text-xsmall whitespace-pre-wrap text-dark-secondary">
             {card.kanban_board_card_description}
           </p>
         )}
@@ -159,7 +161,7 @@ export const KanbanWidgetCardDetail = ({
                 key={checklist.kanban_board_card_checklist_id}
                 className="mb-3"
               >
-                <div className="mb-1.5 flex items-center justify-between text-micro text-white/40">
+                <div className="mb-1.5 flex items-center justify-between text-micro text-dark-secondary">
                   <span className="flex items-center gap-1">
                     <ChecklistIcon className="h-3 w-3" />
                     {checklist.kanban_board_card_checklist_name}
@@ -192,7 +194,7 @@ export const KanbanWidgetCardDetail = ({
                         className={`flex h-3 w-3 shrink-0 items-center justify-center rounded-sm border ${
                           item.is_completed
                             ? 'border-accent-blue bg-accent-blue'
-                            : 'border-white/25'
+                            : 'border-dark-border-focus'
                         }`}
                       >
                         {item.is_completed && (
@@ -202,8 +204,8 @@ export const KanbanWidgetCardDetail = ({
                       <span
                         className={`text-xsmall ${
                           item.is_completed
-                            ? 'text-white/30 line-through'
-                            : 'text-white/70'
+                            ? 'text-dark-secondary/80 line-through'
+                            : 'text-dark-primary'
                         }`}
                       >
                         {item.kanban_board_card_checklist_item_name}
@@ -218,7 +220,7 @@ export const KanbanWidgetCardDetail = ({
         {/* Attachments */}
         {!!card.attachments?.length && (
           <div className="mb-3">
-            <p className="mb-1.5 flex items-center gap-1 text-micro text-white/40">
+            <p className="mb-1.5 flex items-center gap-1 text-micro text-dark-secondary">
               <PaperclipIcon className="h-3 w-3" />
               {t('dashboard.attachments', { count: card.attachments.length })}
             </p>
@@ -226,7 +228,7 @@ export const KanbanWidgetCardDetail = ({
               {card.attachments.map((att) => (
                 <p
                   key={att.kanban_board_card_attachment_id}
-                  className="truncate rounded-lg bg-dark-surface-3 px-2.5 py-1.5 text-xsmall text-white/60"
+                  className="truncate rounded-lg bg-dark-surface-3 px-2.5 py-1.5 text-xsmall text-dark-secondary"
                 >
                   {att.kanban_board_card_attachment_name ||
                     att.kanban_board_card_attachment_url}
@@ -239,7 +241,7 @@ export const KanbanWidgetCardDetail = ({
         {/* Comments */}
         {!!card.comments?.length && (
           <div>
-            <p className="mb-1.5 flex items-center gap-1 text-micro text-white/40">
+            <p className="mb-1.5 flex items-center gap-1 text-micro text-dark-secondary">
               <CommentIcon className="h-3 w-3" />
               {t('dashboard.comments', { count: card.comments.length })}
             </p>
@@ -250,14 +252,14 @@ export const KanbanWidgetCardDetail = ({
                   className="rounded-lg bg-dark-surface-3 px-2.5 py-1.5"
                 >
                   <div className="mb-0.5 flex items-center gap-1.5">
-                    <span className="text-micro font-semibold text-white/70">
+                    <span className="text-micro font-semibold text-dark-primary">
                       {comment.user?.name ?? t('dashboard.unknownSender')}
                     </span>
-                    <span className="text-micro text-white/30">
+                    <span className="text-micro text-dark-secondary/80">
                       {formatDate(comment.created_at)}
                     </span>
                   </div>
-                  <p className="text-xsmall break-words text-white/60">
+                  <p className="text-xsmall break-words text-dark-secondary">
                     {comment.kanban_board_card_comment_message}
                   </p>
                 </div>

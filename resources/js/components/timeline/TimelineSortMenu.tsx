@@ -43,14 +43,14 @@ export const TimelineSortMenu = ({
             type="button"
             onClick={() => onChange(option.key)}
             className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left transition ${
-              active ? 'bg-white/5' : 'hover:bg-white/5'
+              active ? 'bg-dark-surface-3' : 'hover:bg-dark-surface-3'
             }`}
           >
             <span className="min-w-0">
-              <span className="block text-xsmall font-medium text-white/80">
+              <span className="block text-xsmall font-medium text-dark-primary">
                 {t(option.labelKey)}
               </span>
-              <span className="block text-micro text-white/30">
+              <span className="block text-micro text-dark-secondary/80">
                 {t(option.hintKey)}
               </span>
             </span>

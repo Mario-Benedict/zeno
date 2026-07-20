@@ -91,7 +91,7 @@ export const NotesWidgetDetail = ({ note, onBack }: Props) => {
           type="button"
           onClick={onBack}
           aria-label={t('dashboard.backToNotes')}
-          className="rounded-lg p-1 text-white/50 transition hover:bg-white/10 hover:text-white"
+          className="rounded-lg p-1 text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
         >
           <BackIcon className="h-4 w-4" />
         </button>
@@ -102,7 +102,7 @@ export const NotesWidgetDetail = ({ note, onBack }: Props) => {
 
       <div className="scrollbar-app notes-widget-detail min-h-0 flex-1 overflow-y-auto px-3 pb-3">
         {loading ? (
-          <p className="py-6 text-center text-xsmall text-white/30">
+          <p className="py-6 text-center text-xsmall text-dark-secondary/80">
             {t('dashboard.loadingMessages')}
           </p>
         ) : (

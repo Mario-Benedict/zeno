@@ -17,7 +17,7 @@ export const KanbanWidgetCard = ({ card, onToggleDone, onClick }: Props) => {
   return (
     <div
       onClick={onClick}
-      className="flex cursor-pointer items-start gap-2 rounded-lg bg-dark-surface-3 p-2 transition hover:bg-white/10"
+      className="flex cursor-pointer items-start gap-2 rounded-lg bg-dark-surface-3 p-2 transition hover:bg-dark-surface-3"
     >
       <button
         type="button"
@@ -44,7 +44,9 @@ export const KanbanWidgetCard = ({ card, onToggleDone, onClick }: Props) => {
       <div className="min-w-0 flex-1">
         <p
           className={`truncate text-xsmall leading-snug font-medium ${
-            card.is_completed ? 'text-white/30 line-through' : 'text-white/90'
+            card.is_completed
+              ? 'text-dark-secondary/80 line-through'
+              : 'text-dark-primary'
           }`}
         >
           {card.kanban_board_card_title}
@@ -65,7 +67,7 @@ export const KanbanWidgetCard = ({ card, onToggleDone, onClick }: Props) => {
               </span>
             ))}
             {checklistProgress.total > 0 && (
-              <span className="text-micro text-white/40">
+              <span className="text-micro text-dark-secondary">
                 {checklistProgress.done}/{checklistProgress.total}
               </span>
             )}

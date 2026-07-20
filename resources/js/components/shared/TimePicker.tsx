@@ -77,7 +77,7 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <p className="mb-1 text-center text-micro font-semibold tracking-wider text-white/20 uppercase">
+      <p className="mb-1 text-center text-micro font-semibold tracking-wider text-dark-secondary/70 uppercase">
         {label}
       </p>
       <div
@@ -95,8 +95,8 @@ const TimeColumn = ({ label, items, selected, onSelect }: TimeColumnProps) => {
               onClick={() => onSelect(item.value)}
               className={`w-full rounded-lg py-1.5 text-center text-xsmall transition ${
                 active
-                  ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]'
-                  : 'text-white/50 hover:bg-white/8 hover:text-white'
+                  ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px] shadow-accent-blue/40'
+                  : 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary'
               }`}
             >
               {item.label}
@@ -167,8 +167,8 @@ export const TimePicker = ({
       onClick={() => setOpen((v) => !v)}
       className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xsmall transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
         value
-          ? 'border-dark-border bg-dark-surface-2 text-white/70 hover:border-dark-border-focus'
-          : 'border-dark-border bg-dark-surface-2 text-white/25 hover:border-dark-border-focus hover:text-white/40'
+          ? 'border-dark-border bg-dark-surface-2 text-dark-primary hover:border-dark-border-focus'
+          : 'border-dark-border bg-dark-surface-2 text-dark-secondary/70 hover:border-dark-border-focus hover:text-dark-secondary'
       }`}
     >
       <ClockIcon className="h-3.5 w-3.5 shrink-0 opacity-60" />
@@ -184,7 +184,7 @@ export const TimePicker = ({
     <div ref={ref} className="relative">
       {label ? (
         <div className="mb-1">
-          <label className="mb-1 block text-xsmall tracking-wider text-white/30 uppercase">
+          <label className="mb-1 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
             {label}
           </label>
           {trigger}
@@ -198,7 +198,7 @@ export const TimePicker = ({
           <div className="flex items-center justify-center border-b border-dark-border px-4 py-3">
             <button
               type="button"
-              className="flex items-center gap-1.5 text-small font-semibold text-white/70 transition hover:text-white"
+              className="flex items-center gap-1.5 text-small font-semibold text-dark-primary transition hover:text-dark-primary"
               onClick={setNow}
               title={t('common.now')}
             >
@@ -220,7 +220,7 @@ export const TimePicker = ({
               onSelect={(m) => emit({ minute: m })}
             />
             <div className="flex min-w-0 flex-1 flex-col">
-              <p className="mb-1 text-center text-micro font-semibold tracking-wider text-white/20 uppercase">
+              <p className="mb-1 text-center text-micro font-semibold tracking-wider text-dark-secondary/70 uppercase">
                 {t('common.period')}
               </p>
               <div className="flex h-44 flex-col gap-1 rounded-lg border border-dark-border bg-dark-surface-2 p-1">
@@ -234,8 +234,8 @@ export const TimePicker = ({
                       onClick={() => emit({ period: p })}
                       className={`flex-1 rounded-lg text-xsmall font-semibold transition ${
                         active
-                          ? 'bg-accent-blue text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]'
-                          : 'text-white/40 hover:bg-white/8 hover:text-white/70'
+                          ? 'bg-accent-blue text-white shadow-[0_0_12px] shadow-accent-blue/40'
+                          : 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary'
                       }`}
                     >
                       {p}
@@ -250,7 +250,7 @@ export const TimePicker = ({
             <button
               type="button"
               onClick={setNow}
-              className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-white/40 transition hover:bg-dark-surface-3 hover:text-white/70"
+              className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
             >
               {t('common.now')}
             </button>

@@ -84,7 +84,7 @@ export const ReminderRow = ({
           <p
             className={`truncate text-small font-semibold ${
               reminder.is_completed
-                ? 'text-white/30 line-through'
+                ? 'text-dark-secondary/80 line-through'
                 : 'text-dark-primary'
             }`}
           >

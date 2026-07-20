@@ -68,7 +68,7 @@ export const KanbanCard = ({
             className={`group cursor-pointer rounded-lg p-3 ${
               snapshot.isDragging
                 ? 'z-50 rotate-2 bg-dark-surface-2 shadow-2xl ring-1 ring-accent-blue/50'
-                : 'bg-dark-surface-3 transition-all hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]'
+                : 'bg-dark-surface-3 transition-all hover:-translate-y-px hover:shadow-[0_8px_24px] hover:shadow-black/40'
             }`}
           >
             {/* Title row */}
@@ -92,8 +92,8 @@ export const KanbanCard = ({
                 <span
                   className={`text-small leading-snug font-medium ${
                     card.is_completed
-                      ? 'text-white/30 line-through'
-                      : 'text-white/90'
+                      ? 'text-dark-secondary/80 line-through'
+                      : 'text-dark-primary'
                   }`}
                 >
                   {card.kanban_board_card_title}
@@ -105,7 +105,7 @@ export const KanbanCard = ({
                   e.stopPropagation();
                   setShowDeleteConfirm(true);
                 }}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white/0 transition-all group-hover:text-white/30 hover:bg-accent-red/10 hover:text-accent-red!"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white/0 transition-all group-hover:text-dark-secondary/80 hover:bg-accent-red/10 hover:text-accent-red!"
                 title={t('kanban.deleteCard')}
               >
                 ✕

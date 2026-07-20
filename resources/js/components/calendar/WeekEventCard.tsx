@@ -102,8 +102,8 @@ export const WeekEventCard = ({
       style={{ top: `${topMin}px`, height: `${height}px`, ...style }}
     >
       <div
-        className="relative flex h-full w-full flex-col overflow-hidden rounded-lg px-2 py-1 shadow-sm ring-1 ring-black/10"
-        style={{ backgroundColor: ownerColor, color: '#1c2530' }}
+        className="relative flex h-full w-full flex-col overflow-hidden rounded-lg px-2 py-1 text-light-primary shadow-sm ring-1 ring-black/10"
+        style={{ backgroundColor: ownerColor }}
       >
         <span
           className={`truncate pr-3 text-[11px] font-bold ${event.is_kanban_task && event.is_completed ? 'line-through opacity-60' : ''}`}
