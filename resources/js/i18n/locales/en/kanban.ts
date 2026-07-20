@@ -22,6 +22,7 @@ export const kanban = {
   addNewCard: 'Add New Card',
   cardTitleLabel: 'Title',
   cardTitlePlaceholder: 'Card title...',
+  boardLabel: 'Board',
   labelsLabel: 'Labels',
   adding: 'Adding...',
   addCard: 'Add Card',

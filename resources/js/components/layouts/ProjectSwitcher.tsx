@@ -9,7 +9,6 @@ interface ProjectSwitcherProps {
   currentProject: CurrentProject | null;
   projects: ProjectSummary[];
   onClose: () => void;
-  onSettingsOpen: () => void;
 }
 
 const ProjectIcon = ({
@@ -45,7 +44,6 @@ const ProjectSwitcher = ({
   currentProject,
   projects,
   onClose,
-  onSettingsOpen,
 }: ProjectSwitcherProps) => {
   const { account } = usePage().props;
   const { t } = useTranslation();
@@ -129,18 +127,6 @@ const ProjectSwitcher = ({
         >
           {t('header.createAProject')}
         </Link>
-        {currentProject && (
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              onSettingsOpen();
-            }}
-            className="block w-full rounded-md px-2 py-2 text-left text-small font-semibold text-dark-secondary transition-colors hover:bg-dark-surface-2 hover:text-dark-primary"
-          >
-            {t('header.projectSettings')}
-          </button>
-        )}
       </div>
     </div>
   );

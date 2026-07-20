@@ -7,7 +7,6 @@ import BoardIcon from '@public/icons/large/board.svg';
 import CalendarIcon from '@public/icons/large/calendar.svg';
 import ChatIcon from '@public/icons/large/chat.svg';
 import DashboardIcon from '@public/icons/large/dashboard.svg';
-import SettingsIcon from '@public/icons/large/gear.svg';
 import LLMIcon from '@public/icons/large/llmchat.svg';
 import NotesIcon from '@public/icons/large/notes.svg';
 import RemindersIcon from '@public/icons/large/reminder.svg';
@@ -76,10 +75,9 @@ const buildNavItems = (
 
 interface SidebarProps {
   projectSlug: string;
-  onOpenSettings: () => void;
 }
 
-const Sidebar = ({ projectSlug, onOpenSettings }: SidebarProps) => {
+const Sidebar = ({ projectSlug }: SidebarProps) => {
   const { t } = useTranslation();
   const page = usePage();
   const { url } = page;
@@ -94,7 +92,7 @@ const Sidebar = ({ projectSlug, onOpenSettings }: SidebarProps) => {
 
   return (
     <aside className="flex h-[calc(100dvh-var(--header-height))] flex-col bg-dark-surface-1 px-2 pb-2">
-      <nav className="flex h-full flex-col justify-between rounded-lg bg-dark-surface-2 p-2">
+      <nav className="flex h-full flex-col rounded-lg bg-dark-surface-2 p-2">
         <div className="flex flex-1 [scrollbar-width:none] flex-col items-center gap-0.5 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [&::-webkit-scrollbar]:hidden">
           {navItems.map(({ key, nameKey, href, icon: Icon }) => {
             const active = isActive(href);
@@ -124,19 +122,6 @@ const Sidebar = ({ projectSlug, onOpenSettings }: SidebarProps) => {
               </Link>
             );
           })}
-        </div>
-        <div className="flex flex-col items-center pb-1">
-          <div className="my-2 h-px w-10 bg-dark-secondary" />
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-micro leading-none font-medium text-dark-secondary transition-colors duration-150 hover:text-dark-primary"
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-transparent transition-colors duration-150 group-hover:bg-white/[0.07]">
-              <SettingsIcon />
-            </div>
-            <span>{t('nav.settings')}</span>
-          </button>
         </div>
       </nav>
     </aside>

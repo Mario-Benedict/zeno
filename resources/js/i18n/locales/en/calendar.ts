@@ -94,7 +94,7 @@ export const calendar = {
   endTime: 'End Time',
   labels: 'Labels',
   selectLabels: 'Select labels',
-  noLabelsInProject: 'No labels in this project yet — create one from Board.',
+  noLabelsInProject: 'No labels in this project yet. Create one from Board.',
   recurrence: 'Recurrence',
   doesNotRepeat: 'Does not repeat',
   weeklyOn: 'Weekly on {{weekday}}',

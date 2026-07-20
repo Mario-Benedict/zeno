@@ -9,7 +9,6 @@ export const header = {
   yourProjects: 'Your projects',
   seeAllProjects: 'See all projects',
   createAProject: 'Create a project',
-  projectSettings: 'Project settings',
   inbox: 'Inbox',
   chat: 'Chat',
   nothingDueSoon: 'Nothing due soon.',

@@ -49,10 +49,10 @@ const TimelineMockup = ({ className }: { className?: string }) => {
     <WidgetFrame
       title={t('dashboard.timelineTitle')}
       count={t('landing.bentoMockup.timelineCount')}
-      className={className}
+      className={`flex-1 ${className ?? ''}`}
     >
       {/* Day axis */}
-      <div className="flex h-6 border-y border-landing-app-line">
+      <div className="flex h-6 shrink-0 border-y border-landing-app-line">
         {DAYS.map((day, i) => (
           <div
             key={i}
@@ -66,7 +66,7 @@ const TimelineMockup = ({ className }: { className?: string }) => {
       </div>
 
       {/* Rows */}
-      <div className="relative py-1">
+      <div className="relative flex-1 py-1">
         <div className="pointer-events-none absolute inset-0 flex">
           {DAYS.map((day, i) => (
             <div

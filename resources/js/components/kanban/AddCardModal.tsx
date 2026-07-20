@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SelectPopover } from '@/components/shared/SelectPopover';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoard, CardLabel } from '@/types/kanban';
 
@@ -15,6 +16,7 @@ interface AddCardModalProps {
 }
 
 export const AddCardModal = ({
+  boards,
   cardLabels,
   defaultBoardId,
   onClose,
@@ -22,7 +24,7 @@ export const AddCardModal = ({
 }: AddCardModalProps) => {
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
-  const [boardId] = useState(defaultBoardId);
+  const [boardId, setBoardId] = useState(defaultBoardId);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -64,6 +66,17 @@ export const AddCardModal = ({
               className="w-full rounded-xl border border-dark-border bg-dark-input px-3 py-2 text-sm text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
             />
           </div>
+          {boards.length > 1 && (
+            <SelectPopover
+              label={t('kanban.boardLabel')}
+              value={boardId}
+              onChange={setBoardId}
+              options={boards.map((board) => ({
+                value: board.kanban_board_id,
+                label: board.kanban_board_name,
+              }))}
+            />
+          )}
           {(cardLabels || []).length > 0 && (
             <div>
               <label className="mb-1 block text-xs text-dark-secondary">

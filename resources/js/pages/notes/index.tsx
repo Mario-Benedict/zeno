@@ -118,7 +118,7 @@ const NotesPage = ({
 
   return (
     <AppLayout project={project}>
-      <Head title={t('notes.title')} />
+      <Head title={`${t('notes.title')} - ${project.project_name}`} />
 
       <div className="flex h-full w-full min-w-0 gap-2 overflow-hidden p-2">
         <NotesSidebarPanel

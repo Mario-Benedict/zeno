@@ -19,6 +19,13 @@ import { SlashCommand } from './editor/extensions/slashCommand';
 
 const AUTOSAVE_DELAY_MS = 600;
 const MAX_CONFLICT_REBASE_ATTEMPTS = 3;
+// Network blips and brief 5xx responses are common enough during autosave
+// that requiring a manual retry click for each one is disruptive — retry a
+// few times with backoff before surfacing an error state.
+const TRANSIENT_RETRY_DELAYS_MS = [800, 2000, 5000];
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 interface HttpErrorWithResponse {
   response?: {
@@ -158,24 +165,44 @@ export const useNoteEditor = ({
         const localContent = activeEditor.getJSON();
         const socketId = echo.socketId();
 
-        try {
-          const data = await inertiaJson<{ note: NoteDetail }>(
-            'patch',
-            notes.update.url({
-              accountIndex,
-              project: projectSlug,
-              note: noteId,
-            }),
-            {
-              data: {
-                title: localTitle,
-                content: localContent,
-                version: versionRef.current,
-              },
-              headers: socketId ? { 'X-Socket-ID': socketId } : {},
-            },
-          );
+        let data: { note: NoteDetail } | undefined;
+        let lastError: unknown;
 
+        for (
+          let transientAttempt = 0;
+          transientAttempt <= TRANSIENT_RETRY_DELAYS_MS.length;
+          transientAttempt++
+        ) {
+          try {
+            data = await inertiaJson<{ note: NoteDetail }>(
+              'patch',
+              notes.update.url({
+                accountIndex,
+                project: projectSlug,
+                note: noteId,
+              }),
+              {
+                data: {
+                  title: localTitle,
+                  content: localContent,
+                  version: versionRef.current,
+                },
+                headers: socketId ? { 'X-Socket-ID': socketId } : {},
+              },
+            );
+            break;
+          } catch (error: unknown) {
+            lastError = error;
+            // A version conflict needs a merge, not a blind retry — bail out
+            // to the outer loop's conflict handling immediately.
+            if (conflictNoteFromError(error)) break;
+            if (transientAttempt < TRANSIENT_RETRY_DELAYS_MS.length) {
+              await wait(TRANSIENT_RETRY_DELAYS_MS[transientAttempt]);
+            }
+          }
+        }
+
+        if (data) {
           versionRef.current = data.note.version;
           baseTitleRef.current = data.note.title;
           baseContentRef.current = JSON.stringify(data.note.content);
@@ -196,49 +223,47 @@ export const useNoteEditor = ({
           }
 
           return;
-        } catch (error: unknown) {
-          const latest = conflictNoteFromError(error);
-          if (!latest) {
-            setSaveStatus('error');
-            return;
-          }
+        }
 
-          const currentLocalContentJson = JSON.stringify(
-            activeEditor.getJSON(),
-          );
-          const mergedContentJson = mergeTextChanges(
-            baseContentRef.current,
-            currentLocalContentJson,
-            JSON.stringify(latest.content),
-          );
-          const mergedTitle = mergeTextChanges(
-            baseTitleRef.current,
-            titleRef.current,
-            latest.title,
-          );
+        const latest = conflictNoteFromError(lastError);
+        if (!latest) {
+          setSaveStatus('error');
+          return;
+        }
 
-          if (!mergedContentJson || mergedTitle === null) {
-            setSaveStatus('error');
-            return;
-          }
+        const currentLocalContentJson = JSON.stringify(activeEditor.getJSON());
+        const mergedContentJson = mergeTextChanges(
+          baseContentRef.current,
+          currentLocalContentJson,
+          JSON.stringify(latest.content),
+        );
+        const mergedTitle = mergeTextChanges(
+          baseTitleRef.current,
+          titleRef.current,
+          latest.title,
+        );
 
-          try {
-            const mergedContent = JSON.parse(mergedContentJson) as NoteContent;
+        if (!mergedContentJson || mergedTitle === null) {
+          setSaveStatus('error');
+          return;
+        }
 
-            activeEditor.commands.setContent(mergedContent, {
-              emitUpdate: false,
-            });
-            setTitleState(mergedTitle);
-            titleRef.current = mergedTitle;
-            versionRef.current = latest.version;
-            baseTitleRef.current = latest.title;
-            baseContentRef.current = JSON.stringify(latest.content);
-            dirtyRef.current = true;
-            setSaveStatus('dirty');
-          } catch {
-            setSaveStatus('error');
-            return;
-          }
+        try {
+          const mergedContent = JSON.parse(mergedContentJson) as NoteContent;
+
+          activeEditor.commands.setContent(mergedContent, {
+            emitUpdate: false,
+          });
+          setTitleState(mergedTitle);
+          titleRef.current = mergedTitle;
+          versionRef.current = latest.version;
+          baseTitleRef.current = latest.title;
+          baseContentRef.current = JSON.stringify(latest.content);
+          dirtyRef.current = true;
+          setSaveStatus('dirty');
+        } catch {
+          setSaveStatus('error');
+          return;
         }
       }
 

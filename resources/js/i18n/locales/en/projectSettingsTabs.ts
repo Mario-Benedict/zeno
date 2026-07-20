@@ -59,11 +59,11 @@ export const projectSettingsTabs = {
     'Protect your account with a time-based one-time password (TOTP) from an authenticator app.',
   disabling: 'Disabling…',
   disable2fa: 'Disable 2FA',
-  step1ScanQrCode: 'Step 1 — Scan the QR code',
+  step1ScanQrCode: 'Step 1: Scan the QR code',
   step1Description:
     'Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan the code below.',
   qrCodeAlt: '2FA QR code',
-  step2EnterCode: 'Step 2 — Enter the 6-digit code',
+  step2EnterCode: 'Step 2: Enter the 6-digit code',
   step2Description:
     'Enter the code shown in your authenticator app to confirm the setup.',
   invalidCode: 'Invalid code.',

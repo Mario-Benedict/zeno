@@ -44,7 +44,7 @@ const NewDmPicker = ({
   return (
     <div
       ref={ref}
-      className="scrollbar-app absolute top-full right-3 z-30 mt-1 max-h-72 w-56 overflow-y-auto rounded-xl border border-dark-border bg-dark-surface-3 py-1.5 shadow-2xl"
+      className="scrollbar-app absolute top-full right-0 z-30 mt-1 max-h-72 w-56 overflow-y-auto rounded-xl border border-dark-border bg-dark-surface-3 py-1.5 shadow-2xl"
     >
       <button
         type="button"
@@ -134,23 +134,25 @@ const ChatSidebar = ({
             className="w-full bg-transparent text-small text-dark-primary placeholder:text-dark-secondary focus:outline-none"
           />
         </div>
-        <button
-          type="button"
-          title={t('chat.newMessageTitle')}
-          aria-label={t('chat.newMessage')}
-          onClick={() => setPickerOpen((v) => !v)}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-dark-surface-3 hover:text-dark-primary"
-        >
-          <PlusIcon className="h-4 w-4" />
-        </button>
-        {pickerOpen && (
-          <NewDmPicker
-            members={members}
-            onSelect={onStartDm}
-            onCreateGroup={() => setGroupModalOpen(true)}
-            onClose={() => setPickerOpen(false)}
-          />
-        )}
+        <div className="relative">
+          <button
+            type="button"
+            title={t('chat.newMessageTitle')}
+            aria-label={t('chat.newMessage')}
+            onClick={() => setPickerOpen((v) => !v)}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-dark-surface-3 hover:text-dark-primary"
+          >
+            <PlusIcon className="h-4 w-4" />
+          </button>
+          {pickerOpen && (
+            <NewDmPicker
+              members={members}
+              onSelect={onStartDm}
+              onCreateGroup={() => setGroupModalOpen(true)}
+              onClose={() => setPickerOpen(false)}
+            />
+          )}
+        </div>
       </div>
 
       {groupModalOpen && (

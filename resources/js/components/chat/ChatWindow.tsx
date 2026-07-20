@@ -7,7 +7,6 @@ import { useMessages } from '@/hooks/useMessages';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatMessage, ChatParticipant, ChatRoom } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
-import MoreIcon from '@public/icons/large/more.svg';
 import CancelIcon from '@public/icons/small/cancel.svg';
 import ChatPlaceholderIcon from '@public/icons/small/chat_placeholder.svg';
 import SearchIcon from '@public/icons/small/search.svg';
@@ -77,13 +76,6 @@ const RoomHeader = ({
           ].join(' ')}
         >
           <SearchIcon className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          title={t('chat.moreOptions')}
-          className={`${btnBase} ${btnIdle}`}
-        >
-          <MoreIcon className="h-4 w-4" />
         </button>
       </div>
     </header>

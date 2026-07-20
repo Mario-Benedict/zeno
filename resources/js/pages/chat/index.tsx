@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
@@ -216,6 +216,8 @@ export default function Index({
 
   return (
     <AppLayout project={project}>
+      <Head title={`${t('nav.chat')} - ${project.project_name}`} />
+
       {/* gap-2 separates sidebar and window as two distinct boxes */}
       <div className="flex h-full w-full gap-2 overflow-hidden p-2">
         <ChatSidebar
