@@ -199,6 +199,18 @@ export const EventFormModal = ({
     if (value === 'none') setRecurrenceEndDate(null);
   };
 
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+
+    if (!endDate || endDate < value) {
+      setEndDate(value);
+    }
+
+    if (recurrenceEndDate && recurrenceEndDate < value) {
+      setRecurrenceEndDate(value);
+    }
+  };
+
   // Google-Calendar-style recurrence options, described relative to the
   // selected start date (e.g. "Weekly on Wednesday", "Monthly on day 8") so
   // the label always matches what picking it will actually do.
@@ -269,7 +281,7 @@ export const EventFormModal = ({
             <DatePicker
               label={t('calendar.startDate')}
               value={startDate}
-              onChange={setStartDate}
+              onChange={handleStartDateChange}
               placeholder={t('calendar.startDate')}
             />
             <TimePicker
@@ -286,6 +298,7 @@ export const EventFormModal = ({
               label={t('calendar.endDate')}
               value={endDate}
               onChange={setEndDate}
+              minDate={startDate}
               placeholder={t('calendar.endDate')}
             />
             <TimePicker
@@ -318,6 +331,7 @@ export const EventFormModal = ({
               value={recurrenceEndDate}
               onChange={setRecurrenceEndDate}
               onClear={() => setRecurrenceEndDate(null)}
+              minDate={startDate}
               placeholder={t('calendar.neverEnds')}
             />
           )}
@@ -330,7 +344,7 @@ export const EventFormModal = ({
               disabled={!canAssignOthers}
             />
             {!canAssignOthers && (
-              <p className="mt-1 text-[10px] text-dark-secondary">
+              <p className="mt-1 text-micro text-dark-secondary">
                 {t('calendar.assigneeRestrictionNote')}
               </p>
             )}

@@ -18,7 +18,8 @@ export const DayEventsPopup = ({
   onClose,
   onEventClick,
 }: DayEventsPopupProps) => {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export const DayEventsPopup = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
-  const displayDate = date.toLocaleDateString('en-US', {
+  const displayDate = date.toLocaleDateString(localeCode, {
     weekday: 'short',
     month: 'long',
     day: 'numeric',
@@ -66,7 +67,7 @@ export const DayEventsPopup = ({
       <div className="scrollbar-app flex max-h-[300px] flex-col gap-1 overflow-y-auto pr-1">
         {events.map((ev) => {
           const startTime = new Date(ev.start_time).toLocaleTimeString(
-            'en-US',
+            localeCode,
             {
               hour: 'numeric',
               minute: '2-digit',
@@ -102,14 +103,14 @@ export const DayEventsPopup = ({
                 }}
                 className="flex cursor-pointer items-center gap-2 rounded-lg bg-dark-surface-3 px-2 py-1.5 hover:bg-dark-border"
               >
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-dark-surface-1 text-[8px] font-bold text-dark-secondary">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-dark-surface-1 text-micro font-bold text-dark-secondary">
                   {ev.participants[0]?.name.charAt(0)}
                 </div>
                 <div className="flex flex-col overflow-hidden">
                   <span className="truncate text-xsmall font-medium text-dark-secondary">
                     {t('calendar.classified')}
                   </span>
-                  <span className="text-[10px] text-dark-secondary/70">
+                  <span className="text-micro text-dark-secondary/70">
                     {startTime} · {ev.participants[0]?.name}
                     {ev.participants.length > 1 &&
                       ` +${ev.participants.length - 1}`}
@@ -139,10 +140,10 @@ export const DayEventsPopup = ({
                 <span className="truncate text-xsmall font-medium text-dark-primary">
                   {ev.title}
                 </span>
-                <span className="flex items-center gap-2 text-[10px] text-dark-secondary">
+                <span className="flex items-center gap-2 text-micro text-dark-secondary">
                   <span>{startTime}</span>
                   {ev.labels[0] && (
-                    <span className="rounded-full bg-dark-surface-1/70 px-1.5 py-0.5 text-[8px] font-semibold tracking-wide text-dark-primary uppercase">
+                    <span className="rounded-full bg-dark-surface-1/70 px-1.5 py-0.5 text-micro font-semibold tracking-wide text-dark-primary uppercase">
                       {ev.labels[0].card_label_name}
                     </span>
                   )}

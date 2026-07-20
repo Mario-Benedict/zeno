@@ -90,6 +90,34 @@ export interface KanbanBoardCard {
   updated_at: string;
 }
 
+export interface CreateKanbanCardInput {
+  boardId: string;
+  title: string;
+  description: string | null;
+  startAt: string | null;
+  dueAt: string | null;
+  labelIds: string[];
+  memberIds: number[];
+  checklist: CreateKanbanCardChecklistInput | null;
+  attachments: CreateKanbanCardAttachmentInput[];
+}
+
+export interface CreateKanbanCardChecklistItemInput {
+  id: string;
+  name: string;
+}
+
+export interface CreateKanbanCardChecklistInput {
+  id: string;
+  name: string;
+  items: CreateKanbanCardChecklistItemInput[];
+}
+
+export interface CreateKanbanCardAttachmentInput {
+  id: string;
+  file: File;
+}
+
 export interface KanbanBoard {
   kanban_board_id: string;
   kanban_board_project_id: string;
@@ -106,6 +134,8 @@ export interface KanbanProps {
   projectUsers: KanbanUser[];
   currentUser: KanbanUser;
   cardLabels: CardLabel[];
+  /** Scrolls to and highlights a project-scoped board from global search. */
+  activeBoardId?: string | null;
   /** Opens this card's detail modal on load — e.g. from a notification deep-link. */
   activeCardId?: string | null;
   [key: string]: unknown;

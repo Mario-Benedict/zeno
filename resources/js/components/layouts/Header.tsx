@@ -1,7 +1,8 @@
 import { usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ChangeEvent, ReactNode } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
+import HeaderIconButton from '@/components/layouts/HeaderIconButton';
+import HeaderSearch from '@/components/layouts/HeaderSearch';
 import NotificationPanel from '@/components/layouts/NotificationPanel';
 import ProjectSwitcher from '@/components/layouts/ProjectSwitcher';
 import ProjectInvitationModal from '@/components/projects/ProjectInvitationModal';
@@ -13,50 +14,17 @@ import ArrowDown from '@public/icons/small/arrow_down.svg';
 import Bell from '@public/icons/small/bell.svg';
 import Gear from '@public/icons/small/gear.svg';
 import People from '@public/icons/small/people.svg';
-import Search from '@public/icons/small/search.svg';
 import Zeno from '@public/logos/logo.svg';
 
 interface AppHeaderProps {
-  onSearch?: (query: string) => void;
   onNotificationClick?: () => void;
   onOpenSettings?: (tab?: 'general' | 'profile') => void;
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-const IconButton = ({
-  label,
-  disabled = false,
-  onClick,
-  children,
-}: {
-  label: string;
-  disabled?: boolean;
-  onClick?: () => void;
-  children: ReactNode;
-}) => (
-  <button
-    type="button"
-    aria-label={label}
-    disabled={disabled}
-    onClick={onClick}
-    className="flex h-8 w-8 items-center justify-center rounded-full bg-static-dark-surface-2 text-static-dark-primary transition-colors hover:bg-static-dark-surface-3 disabled:cursor-not-allowed disabled:opacity-40"
-  >
-    {children}
-  </button>
-);
-
-// ─── Main Component ───────────────────────────────────────────────────────────
-
-const Header = ({
-  onSearch,
-  onNotificationClick,
-  onOpenSettings,
-}: AppHeaderProps) => {
+const Header = ({ onNotificationClick, onOpenSettings }: AppHeaderProps) => {
   const { auth, project, projectNavigation, projectShare, account } =
     usePage().props;
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -117,12 +85,6 @@ const Header = ({
     return () => document.removeEventListener('mousedown', onPointerDown);
   }, [projectMenuOpen]);
 
-  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    onSearch?.(query);
-  };
-
   return (
     <header className="flex items-center gap-2 bg-dark-surface-1 p-2 select-none">
       {/* ── Left: Logo + Project picker ── */}
@@ -161,25 +123,13 @@ const Header = ({
 
       {/* ── Centre: Search ── */}
       <div className="flex min-w-0 flex-1 justify-center px-4" role="search">
-        <div className="flex h-8 w-full max-w-90 items-center rounded-full bg-dark-surface-2 px-3 transition-colors focus-within:bg-dark-surface-3">
-          <span className="mr-3 flex shrink-0 items-center justify-center text-dark-secondary">
-            <Search className="h-5" />
-          </span>
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={handleSearch}
-            placeholder={t('header.search')}
-            aria-label={t('header.search')}
-            className="flex-1 bg-transparent text-normal font-bold text-dark-primary outline-none placeholder:text-dark-secondary [&::-webkit-search-cancel-button]:hidden"
-          />
-        </div>
+        <HeaderSearch />
       </div>
 
       {/* ── Right: Actions + Account switcher ── */}
       <div className="flex w-100 shrink-0 items-center justify-end gap-2">
         <div className="relative">
-          <IconButton
+          <HeaderIconButton
             label={t('header.notifications')}
             disabled={project === null}
             onClick={() => {
@@ -193,7 +143,7 @@ const Header = ({
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
-          </IconButton>
+          </HeaderIconButton>
           <NotificationPanel
             open={notificationsOpen}
             onClose={() => setNotificationsOpen(false)}
@@ -204,19 +154,19 @@ const Header = ({
             currentUserId={auth.user?.id ?? 0}
           />
         </div>
-        <IconButton
+        <HeaderIconButton
           label={t('header.inviteMembers')}
           disabled={project === null}
           onClick={() => setInviteOpen(true)}
         >
           <People />
-        </IconButton>
-        <IconButton
+        </HeaderIconButton>
+        <HeaderIconButton
           label={t('header.settings')}
           onClick={() => onOpenSettings?.('general')}
         >
           <Gear />
-        </IconButton>
+        </HeaderIconButton>
 
         <div className="mx-1.5 h-5 w-px bg-dark-border" aria-hidden="true" />
 

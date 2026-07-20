@@ -104,6 +104,7 @@ export const projectSettingsTabs = {
   share: 'Share',
   sharing: 'Sharing',
   shareWithLink: 'Share this project with a link',
+  linkEnabled: 'Link enabled. Anyone with the link can join.',
   linkDisabled: 'Link disabled',
   copyLink: 'Copy Link',
   create: 'Create',

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
 import type {
   AnyCalendarEvent,
+  CalendarEventSourceFilter,
   CalendarMember,
-  CalendarTaskSourceFilter,
   CalendarViewMode,
 } from '@/types/calendar';
 import type { CardLabel } from '@/types/kanban';
@@ -19,6 +20,7 @@ interface CalendarSidebarProps {
   onViewModeChange: (mode: CalendarViewMode) => void;
   onRefresh: () => void;
   isLoading: boolean;
+  canCreate: boolean;
   onCreate: () => void;
   currentDate: Date;
   onDateSelect: (date: Date) => void;
@@ -31,8 +33,8 @@ interface CalendarSidebarProps {
   cardLabels: CardLabel[];
   hiddenLabelIds: Set<string>;
   onToggleLabel: (labelId: string) => void;
-  taskSourceFilter: CalendarTaskSourceFilter;
-  onTaskSourceFilterChange: (filter: CalendarTaskSourceFilter) => void;
+  eventSourceFilter: CalendarEventSourceFilter;
+  onEventSourceFilterChange: (filter: CalendarEventSourceFilter) => void;
 }
 
 const MAX_VISIBLE_LABELS = 6;
@@ -42,6 +44,7 @@ export const CalendarSidebar = ({
   onViewModeChange,
   onRefresh,
   isLoading,
+  canCreate,
   onCreate,
   currentDate,
   onDateSelect,
@@ -54,15 +57,15 @@ export const CalendarSidebar = ({
   cardLabels,
   hiddenLabelIds,
   onToggleLabel,
-  taskSourceFilter,
-  onTaskSourceFilterChange,
+  eventSourceFilter,
+  onEventSourceFilterChange,
 }: CalendarSidebarProps) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [labelsExpanded, setLabelsExpanded] = useState(false);
 
-  const taskSourceOptions: {
-    value: CalendarTaskSourceFilter;
+  const eventSourceOptions: {
+    value: CalendarEventSourceFilter;
     label: string;
   }[] = [
     { value: 'all', label: t('calendar.taskSourceAll') },
@@ -86,19 +89,24 @@ export const CalendarSidebar = ({
       {/* --- Top card: create, view toggle, mini-calendar, legend --- */}
       <div className="rounded-2xl border border-dark-border bg-dark-surface-2 p-3">
         <div className="mb-3 flex items-center gap-2">
-          <button
-            onClick={onCreate}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-dark-primary px-4 py-2 text-small font-semibold text-dark-surface-1 transition hover:opacity-90"
-          >
-            <PlusIcon className="h-4 w-4" />
-            {t('calendar.create')}
-          </button>
+          {canCreate && (
+            <button
+              onClick={onCreate}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-dark-primary px-4 py-2 text-small font-semibold text-dark-surface-1 transition hover:opacity-90"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {t('calendar.create')}
+            </button>
+          )}
           <button
             onClick={() =>
               onViewModeChange(viewMode === 'month' ? 'week' : 'month')
             }
             title={t('calendar.switchView')}
-            className="flex items-center gap-2 rounded-full border border-dark-border bg-dark-surface-3 px-3 py-2 text-small font-semibold text-dark-primary transition hover:bg-dark-border"
+            className={cn(
+              'flex items-center gap-2 rounded-full border border-dark-border bg-dark-surface-3 px-3 py-2 text-small font-semibold text-dark-primary transition hover:bg-dark-border',
+              !canCreate && 'flex-1 justify-center',
+            )}
           >
             {viewMode === 'month' ? t('calendar.month') : t('calendar.week')}
             <span
@@ -124,6 +132,7 @@ export const CalendarSidebar = ({
           onPrevMonth={onPrevMonth}
           onNextMonth={onNextMonth}
           events={events}
+          viewMode={viewMode}
         />
 
         {cardLabels.length > 0 && (
@@ -175,15 +184,15 @@ export const CalendarSidebar = ({
 
         <div className="mt-3 border-t border-dark-border pt-3">
           <p className="mb-1.5 text-xsmall font-medium text-dark-secondary">
-            {t('calendar.taskSourceFilterLabel')}
+            {t('calendar.eventSourceFilterLabel')}
           </p>
           <div className="flex rounded-full border border-dark-border bg-dark-surface-3 p-0.5">
-            {taskSourceOptions.map((option) => (
+            {eventSourceOptions.map((option) => (
               <button
                 key={option.value}
-                onClick={() => onTaskSourceFilterChange(option.value)}
+                onClick={() => onEventSourceFilterChange(option.value)}
                 className={`flex-1 rounded-full px-2 py-1 text-xsmall font-semibold transition ${
-                  taskSourceFilter === option.value
+                  eventSourceFilter === option.value
                     ? 'bg-dark-primary text-dark-surface-1'
                     : 'text-dark-secondary hover:text-dark-primary'
                 }`}

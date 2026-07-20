@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { PinIcon } from '@/components/shared/PinButton';
+import PinIcon from '@/components/shared/PinIcon';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Reminder } from '@/types/reminder';
 import FilterIcon from '@public/icons/large/filter.svg';

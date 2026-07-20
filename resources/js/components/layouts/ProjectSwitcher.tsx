@@ -1,8 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath, projectPath } from '@/lib/accountRoutes';
-import { avatarHex } from '@/lib/projectAvatar';
 import type { CurrentProject, ProjectSummary } from '@/types';
+import ProjectSwitcherIcon from './ProjectSwitcherIcon';
 
 interface ProjectSwitcherProps {
   open: boolean;
@@ -11,34 +11,6 @@ interface ProjectSwitcherProps {
   onClose: () => void;
   onSettingsOpen: () => void;
 }
-
-const ProjectIcon = ({
-  name,
-  color,
-  avatarUrl,
-}: {
-  name: string;
-  color: string;
-  avatarUrl: string | null;
-}) => {
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className="h-9 w-9 shrink-0 rounded-md object-cover"
-      />
-    );
-  }
-  return (
-    <div
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-xsmall font-bold text-white"
-      style={{ backgroundColor: avatarHex(color) }}
-    >
-      {name.slice(0, 1).toUpperCase()}
-    </div>
-  );
-};
 
 const ProjectSwitcher = ({
   open,
@@ -63,7 +35,7 @@ const ProjectSwitcher = ({
 
       {currentProject && (
         <div className="flex items-center gap-3 rounded-lg bg-dark-surface-1 px-2 py-2">
-          <ProjectIcon
+          <ProjectSwitcherIcon
             name={currentProject.project_name}
             color={currentProject.avatar_color}
             avatarUrl={currentProject.avatar_url}
@@ -93,7 +65,7 @@ const ProjectSwitcher = ({
                 onClick={onClose}
                 className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-white/[0.07]"
               >
-                <ProjectIcon
+                <ProjectSwitcherIcon
                   name={project.project_name}
                   color={project.avatar_color}
                   avatarUrl={project.avatar_url}

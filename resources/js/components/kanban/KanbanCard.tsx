@@ -17,6 +17,7 @@ interface KanbanCardProps {
   card: KanbanBoardCard;
   boardId: string;
   index: number;
+  canEdit: boolean;
   onToggleDone: (boardId: string, cardId: string) => void;
   onClick: () => void;
   onDeleteCard: (boardId: string, cardId: string) => void;
@@ -26,6 +27,7 @@ export const KanbanCard = ({
   card,
   boardId,
   index,
+  canEdit,
   onToggleDone,
   onClick,
   onDeleteCard,
@@ -39,7 +41,7 @@ export const KanbanCard = ({
 
   return (
     <>
-      {showDeleteConfirm && (
+      {canEdit && showDeleteConfirm && (
         <ConfirmModal
           title={t('kanban.deleteCardTitle')}
           description={t('kanban.deleteCardDescription', {
@@ -53,7 +55,11 @@ export const KanbanCard = ({
           }}
         />
       )}
-      <Draggable draggableId={String(card.kanban_board_card_id)} index={index}>
+      <Draggable
+        draggableId={String(card.kanban_board_card_id)}
+        index={index}
+        isDragDisabled={!canEdit}
+      >
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
@@ -75,8 +81,11 @@ export const KanbanCard = ({
             <div className="mb-2 flex items-start justify-between gap-2">
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <button
+                  type="button"
+                  disabled={!canEdit}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (!canEdit) return;
                     onToggleDone(boardId, card.kanban_board_card_id);
                   }}
                   className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
@@ -100,16 +109,19 @@ export const KanbanCard = ({
                 </span>
               </div>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDeleteConfirm(true);
-                }}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white/0 transition-all group-hover:text-dark-secondary/80 hover:bg-accent-red/10 hover:text-accent-red!"
-                title={t('kanban.deleteCard')}
-              >
-                ✕
-              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white/0 transition-all group-hover:text-dark-secondary/80 hover:bg-accent-red/10 hover:text-accent-red!"
+                  title={t('kanban.deleteCard')}
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
             {/* Meta badges */}

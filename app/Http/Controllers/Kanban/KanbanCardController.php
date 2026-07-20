@@ -2,16 +2,29 @@
 
 namespace App\Http\Controllers\Kanban;
 
+use App\Events\CalendarEventChanged;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Kanban\StoreKanbanCardRequest;
+use App\Jobs\CheckTaskConflictJob;
+use App\Jobs\NotifyCardAssignedJob;
 use App\Models\KanbanBoard;
 use App\Models\KanbanBoardCard;
+use App\Models\KanbanBoardCardAttachment;
+use App\Models\KanbanBoardCardChecklist;
+use App\Models\KanbanBoardCardChecklistItem;
 use App\Models\Project;
+use App\Observers\KanbanBoardCardObserver;
+use App\Services\StorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Throwable;
 
 class KanbanCardController extends Controller
 {
+    public function __construct(private readonly StorageService $storage) {}
+
     /**
      * Store a newly created card in storage.
      *
@@ -19,38 +32,105 @@ class KanbanCardController extends Controller
      * frontend can optimistically render the card immediately and have it
      * line up with the persisted record after the request resolves.
      */
-    public function store(int $accountIndex, Request $request, Project $project, KanbanBoard $board): RedirectResponse
+    public function store(int $accountIndex, StoreKanbanCardRequest $request, Project $project, KanbanBoard $board): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $board->project), 403);
+        $this->assertBoardBelongsToProject($project, $board);
+        abort_unless($request->user()->can('view', $project), 403);
 
-        $validated = $request->validate([
-            'kanban_board_card_id' => ['nullable', 'string', 'uuid'],
-            'title' => 'required|string|max:20',
-            'label_ids' => 'array',
-            'label_ids.*' => 'string',
-        ]);
+        $validated = $request->validated();
+        $cardId = $validated['kanban_board_card_id'] ?? Str::uuid()->toString();
+        $storedAttachments = [];
 
-        DB::transaction(function () use ($validated, $board) {
-            $lastPosition = $board->cards()->max('position') ?? -1;
-
-            $card = new KanbanBoardCard([
-                'kanban_board_id' => $board->kanban_board_id,
-                'position' => $lastPosition + 1,
-                'kanban_board_card_title' => $validated['title'],
-                'kanban_board_card_description' => null,
-                'is_completed' => false,
-            ]);
-
-            if (! empty($validated['kanban_board_card_id'])) {
-                $card->kanban_board_card_id = $validated['kanban_board_card_id'];
+        try {
+            foreach ($validated['attachments'] ?? [] as $attachment) {
+                $file = $attachment['file'];
+                $storedAttachments[] = [
+                    'id' => $attachment['id'],
+                    'name' => Str::limit($file->getClientOriginalName(), 255, ''),
+                    'path' => $this->storage->put(
+                        $file,
+                        "kanban/{$project->project_id}/cards/{$cardId}/attachments",
+                    ),
+                ];
             }
 
-            $card->save();
+            $card = DB::transaction(function () use ($validated, $board, $cardId, $storedAttachments) {
+                $lastPosition = $board->cards()->max('position') ?? -1;
 
-            if (! empty($validated['label_ids'])) {
-                $card->labels()->attach($validated['label_ids']);
+                $card = new KanbanBoardCard([
+                    'kanban_board_id' => $board->kanban_board_id,
+                    'position' => $lastPosition + 1,
+                    'kanban_board_card_title' => $validated['title'],
+                    'kanban_board_card_description' => $validated['description'] ?? null,
+                    'is_completed' => false,
+                    'kanban_board_card_start_date' => $validated['kanban_board_card_start_date'] ?? null,
+                    'kanban_board_card_due_date' => $validated['kanban_board_card_due_date'] ?? null,
+                ]);
+                $card->kanban_board_card_id = $cardId;
+                $card->save();
+
+                if (! empty($validated['label_ids'] ?? [])) {
+                    $card->labels()->attach($validated['label_ids']);
+                }
+
+                if (! empty($validated['member_ids'] ?? [])) {
+                    $card->members()->attach($validated['member_ids']);
+                }
+
+                $checklistInput = $validated['checklist'] ?? null;
+                if ($checklistInput !== null && $checklistInput['items'] !== []) {
+                    $checklist = new KanbanBoardCardChecklist([
+                        'kanban_board_card_id' => $cardId,
+                        'kanban_board_card_checklist_name' => $checklistInput['name'],
+                    ]);
+                    $checklist->kanban_board_card_checklist_id = $checklistInput['id'];
+                    $checklist->save();
+
+                    foreach ($checklistInput['items'] as $itemInput) {
+                        $item = new KanbanBoardCardChecklistItem([
+                            'kanban_board_card_checklist_id' => $checklist->kanban_board_card_checklist_id,
+                            'kanban_board_card_checklist_item_name' => $itemInput['name'],
+                            'is_completed' => false,
+                        ]);
+                        $item->kanban_board_card_checklist_item_id = $itemInput['id'];
+                        $item->save();
+                    }
+                }
+
+                foreach ($storedAttachments as $storedAttachment) {
+                    $attachment = new KanbanBoardCardAttachment([
+                        'kanban_board_card_id' => $cardId,
+                        'kanban_board_card_attachment_name' => $storedAttachment['name'],
+                        'kanban_board_card_attachment_url' => $storedAttachment['path'],
+                    ]);
+                    $attachment->kanban_board_card_attachment_id = $storedAttachment['id'];
+                    $attachment->save();
+                }
+
+                return $card;
+            });
+        } catch (Throwable $exception) {
+            $this->storage->deleteMany(array_column($storedAttachments, 'path'));
+
+            throw $exception;
+        }
+
+        $memberIds = array_map('intval', $validated['member_ids'] ?? []);
+        if ($memberIds !== []) {
+            KanbanBoardCardObserver::syncReminders($card);
+
+            foreach ($memberIds as $memberId) {
+                NotifyCardAssignedJob::dispatch($card->kanban_board_card_id, $memberId, $request->user()->id);
+
+                if ($card->kanban_board_card_due_date) {
+                    CheckTaskConflictJob::dispatch($card->kanban_board_card_id, $memberId, $request->user()->id);
+                }
             }
-        });
+        }
+
+        if ($card->kanban_board_card_due_date && $memberIds !== []) {
+            broadcast(new CalendarEventChanged($project->project_id, $memberIds, 'created'));
+        }
 
         return back();
     }
@@ -69,13 +149,22 @@ class KanbanCardController extends Controller
      */
     public function move(int $accountIndex, Request $request, Project $project, KanbanBoard $board, KanbanBoardCard $card): RedirectResponse
     {
+        $this->assertBoardBelongsToProject($project, $board);
+        $this->assertCardBelongsToBoard($card, $board);
+        abort_unless($request->user()->can('view', $project), 403);
+
         $validated = $request->validate([
-            'board_id' => 'required|string',
+            'board_id' => 'required|string|uuid',
             'position' => 'required|integer|min:0',
         ]);
 
+        $destinationBoard = KanbanBoard::query()
+            ->where('kanban_board_project_id', $project->project_id)
+            ->find($validated['board_id']);
+        abort_if($destinationBoard === null, 404);
+
         $oldBoardId = $card->kanban_board_id;
-        $newBoardId = $validated['board_id'];
+        $newBoardId = $destinationBoard->kanban_board_id;
         $newPosition = $validated['position'];
 
         DB::transaction(function () use ($card, $oldBoardId, $newBoardId, $newPosition) {
@@ -131,9 +220,14 @@ class KanbanCardController extends Controller
      */
     public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoard $board, KanbanBoardCard $card): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+        $this->assertBoardBelongsToProject($project, $board);
+        $this->assertCardBelongsToBoard($card, $board);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $boardId = $card->kanban_board_id;
+        $attachmentPaths = $card->attachments()
+            ->pluck('kanban_board_card_attachment_url')
+            ->all();
 
         DB::transaction(function () use ($card, $boardId) {
             $card->delete();
@@ -147,7 +241,25 @@ class KanbanCardController extends Controller
             $this->repackBoard($boardId, array_keys($remaining), $remaining);
         });
 
+        $this->storage->deleteMany($attachmentPaths);
+
         return back();
+    }
+
+    private function assertBoardBelongsToProject(Project $project, KanbanBoard $board): void
+    {
+        abort_unless(
+            $board->kanban_board_project_id === $project->project_id,
+            404,
+        );
+    }
+
+    private function assertCardBelongsToBoard(KanbanBoardCard $card, KanbanBoard $board): void
+    {
+        abort_unless(
+            $card->kanban_board_id === $board->kanban_board_id,
+            404,
+        );
     }
 
     /**

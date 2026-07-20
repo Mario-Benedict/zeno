@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import ChevronLeftIcon from '@public/icons/small/chevron_left.svg';
 
 interface DatePickerProps {
   value: string | null;
@@ -8,6 +9,8 @@ interface DatePickerProps {
   label: string;
   placeholder?: string;
   highlightOverdue?: boolean;
+  /** Earliest selectable local calendar date, formatted as YYYY-MM-DD. */
+  minDate?: string | null;
 }
 
 export const DatePicker = ({
@@ -17,6 +20,7 @@ export const DatePicker = ({
   label,
   placeholder,
   highlightOverdue = false,
+  minDate,
 }: DatePickerProps) => {
   const { locale, t } = useTranslation();
   const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
@@ -70,6 +74,7 @@ export const DatePicker = ({
   }, [open]);
 
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
+  const minimumDate = minDate ? new Date(minDate + 'T00:00:00') : null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -120,6 +125,8 @@ export const DatePicker = ({
   };
 
   const selectDate = (date: Date) => {
+    if (minimumDate && date < minimumDate) return;
+
     const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     onChange(iso);
     setOpen(false);
@@ -177,9 +184,10 @@ export const DatePicker = ({
             <button
               type="button"
               onClick={prevMonth}
+              aria-label={t('calendar.previousMonth')}
               className="flex h-6 w-6 items-center justify-center rounded-lg text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
             >
-              ‹
+              <ChevronLeftIcon className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
@@ -195,9 +203,10 @@ export const DatePicker = ({
             <button
               type="button"
               onClick={nextMonth}
+              aria-label={t('calendar.nextMonth')}
               className="flex h-6 w-6 items-center justify-center rounded-lg text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
             >
-              ›
+              <ChevronLeftIcon className="h-3.5 w-3.5 rotate-180" />
             </button>
           </div>
 
@@ -221,13 +230,15 @@ export const DatePicker = ({
                 date.getMonth() === selectedDate.getMonth() &&
                 date.getDate() === selectedDate.getDate();
               const isPast = isCurrentMonth && date < today;
+              const isBeforeMinimum = minimumDate && date < minimumDate;
 
               return (
                 <button
                   key={i}
                   type="button"
+                  disabled={!!isBeforeMinimum}
                   onClick={() => selectDate(date)}
-                  className={`relative flex aspect-square w-full items-center justify-center rounded-lg text-xsmall transition-all ${!isCurrentMonth ? 'text-dark-secondary/50 hover:text-dark-secondary/70' : ''} ${isCurrentMonth && !isSelected && !isToday ? 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary' : ''} ${isPast && !isSelected ? 'text-dark-secondary/80' : ''} ${isToday && !isSelected ? 'font-semibold text-accent-blue' : ''} ${isSelected ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px] shadow-accent-blue/40' : ''} `}
+                  className={`relative flex aspect-square w-full items-center justify-center rounded-lg text-xsmall transition-all ${!isCurrentMonth ? 'text-dark-secondary/50 hover:text-dark-secondary/70' : ''} ${isCurrentMonth && !isSelected && !isToday ? 'text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary' : ''} ${isPast && !isSelected ? 'text-dark-secondary/80' : ''} ${isToday && !isSelected ? 'font-semibold text-accent-blue' : ''} ${isSelected ? 'bg-accent-blue font-semibold text-white shadow-[0_0_12px] shadow-accent-blue/40' : ''} ${isBeforeMinimum ? 'cursor-not-allowed text-dark-secondary/25 hover:bg-transparent hover:text-dark-secondary/25' : ''}`}
                 >
                   {isToday && !isSelected && (
                     <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-accent-blue" />
@@ -241,8 +252,9 @@ export const DatePicker = ({
           <div className="flex gap-2 px-3 pb-3">
             <button
               type="button"
+              disabled={!!minimumDate && today < minimumDate}
               onClick={() => selectDate(today)}
-              className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
+              className="flex-1 rounded-lg border border-dark-border bg-dark-surface-2 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-dark-surface-2 disabled:hover:text-dark-secondary"
             >
               {t('common.today')}
             </button>

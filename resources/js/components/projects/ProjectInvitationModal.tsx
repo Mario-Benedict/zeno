@@ -1,7 +1,9 @@
 import { router, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { FloatingMenu } from '@/components/shared/FloatingMenu';
+import ProjectMemberRow from '@/components/projects/ProjectMemberRow';
+import ProjectRoleSelect from '@/components/projects/ProjectRoleSelect';
+import { useProjectRoleLabels } from '@/hooks/useProjectRoleLabels';
 import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
 import type {
@@ -11,9 +13,7 @@ import type {
   ProjectShare,
 } from '@/types';
 import XIcon from '@public/icons/small/cancel.svg';
-import ChevronDownIcon from '@public/icons/small/chevron_down.svg';
 import LinkIcon from '@public/icons/small/link.svg';
-import TrashIcon from '@public/icons/small/trash.svg';
 
 interface ProjectInvitationModalProps {
   open: boolean;
@@ -21,149 +21,6 @@ interface ProjectInvitationModalProps {
   share: ProjectShare | null;
   onClose: () => void;
 }
-
-const useRoleLabels = (): Record<AssignableProjectRole, string> => {
-  const { t } = useTranslation();
-
-  return {
-    ADMIN: t('common.admin'),
-    MEMBER: t('common.member'),
-    VIEWER: t('common.viewer'),
-  };
-};
-
-const getInitials = (name: string): string => {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-};
-
-const RoleSelect = ({
-  value,
-  roles,
-  disabled,
-  onChange,
-}: {
-  value: AssignableProjectRole;
-  roles: AssignableProjectRole[];
-  disabled?: boolean;
-  onChange: (role: AssignableProjectRole) => void;
-}) => {
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const roleLabels = useRoleLabels();
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        className="flex h-9 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus hover:bg-dark-surface-3 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {roleLabels[value]}
-        <span
-          className={`text-dark-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
-        >
-          <ChevronDownIcon />
-        </span>
-      </button>
-
-      <FloatingMenu
-        open={open}
-        onClose={() => setOpen(false)}
-        triggerRef={triggerRef}
-        role="listbox"
-        className="min-w-28"
-      >
-        {roles.map((role) => (
-          <button
-            key={role}
-            type="button"
-            role="option"
-            aria-selected={role === value}
-            onClick={() => {
-              onChange(role);
-              setOpen(false);
-            }}
-            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
-              role === value ? 'text-dark-primary' : 'text-dark-secondary'
-            }`}
-          >
-            {role === value && (
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-blue" />
-            )}
-            {role !== value && <span className="h-1.5 w-1.5 shrink-0" />}
-            {roleLabels[role]}
-          </button>
-        ))}
-      </FloatingMenu>
-    </>
-  );
-};
-
-const MemberRow = ({
-  member,
-  roles,
-  canManage,
-  onRoleChange,
-  onRemove,
-}: {
-  member: ProjectMember;
-  roles: AssignableProjectRole[];
-  canManage: boolean;
-  onRoleChange: (member: ProjectMember, role: AssignableProjectRole) => void;
-  onRemove: (member: ProjectMember) => void;
-}) => {
-  const { t } = useTranslation();
-  const canEdit =
-    canManage && member.role !== 'OWNER' && !member.is_current_user;
-
-  return (
-    <div className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-white/[0.04]">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-blue text-xs font-bold text-white">
-        {getInitials(member.name)}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-dark-primary">
-          {member.name}
-          {member.is_current_user ? ` (${t('projectSettingsTabs.you')})` : ''}
-        </p>
-        <p className="truncate text-xs text-dark-secondary">{member.email}</p>
-      </div>
-      {member.role === 'OWNER' ? (
-        <span className="rounded-md border border-dark-border px-3 py-2 text-sm font-medium text-dark-secondary">
-          {t('common.owner')}
-        </span>
-      ) : (
-        <RoleSelect
-          value={member.role}
-          roles={roles}
-          disabled={!canEdit}
-          onChange={(role) => onRoleChange(member, role)}
-        />
-      )}
-      {canEdit && (
-        <button
-          type="button"
-          aria-label={t('projectSettingsTabs.removeMember', {
-            name: member.name,
-          })}
-          onClick={() => onRemove(member)}
-          className="flex h-9 w-9 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
-        >
-          <TrashIcon />
-        </button>
-      )}
-    </div>
-  );
-};
 
 const ProjectInvitationModal = ({
   open,
@@ -173,7 +30,7 @@ const ProjectInvitationModal = ({
 }: ProjectInvitationModalProps) => {
   const { account } = usePage().props;
   const { t } = useTranslation();
-  const roleLabels = useRoleLabels();
+  const roleLabels = useProjectRoleLabels();
   const accountIndex = account.index;
   const roles = useMemo<AssignableProjectRole[]>(
     () => share?.assignable_roles ?? ['MEMBER', 'ADMIN', 'VIEWER'],
@@ -348,7 +205,7 @@ const ProjectInvitationModal = ({
                 </p>
               )}
             </div>
-            <RoleSelect
+            <ProjectRoleSelect
               value={inviteForm.data.role}
               roles={roles}
               disabled={!canManage}
@@ -366,56 +223,71 @@ const ProjectInvitationModal = ({
           </form>
 
           <div className="mt-5 rounded-lg border border-dark-border bg-dark-surface-1 p-4">
-            <div className="flex items-start gap-3">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-dark-surface-3 text-dark-primary">
                 <LinkIcon />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-dark-primary">
+                <p className="text-small font-semibold text-dark-primary">
                   {t('projectSettingsTabs.shareWithLink')}
                 </p>
-                {!invitationLink && (
-                  <p className="mt-1 text-sm text-dark-secondary">
-                    {t('projectSettingsTabs.linkDisabled')}
+                <div className="mt-1 flex items-center gap-2">
+                  <span
+                    className={`h-2 w-2 shrink-0 rounded-full ${
+                      invitationLink ? 'bg-status-success' : 'bg-dark-secondary'
+                    }`}
+                  />
+                  <p
+                    className={`text-xsmall ${
+                      invitationLink
+                        ? 'text-status-success'
+                        : 'text-dark-secondary'
+                    }`}
+                  >
+                    {invitationLink
+                      ? t('projectSettingsTabs.linkEnabled')
+                      : t('projectSettingsTabs.linkDisabled')}
                   </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                <ProjectRoleSelect
+                  value={linkRole}
+                  roles={roles}
+                  disabled={!canManage || linkProcessing}
+                  onChange={updateLinkRole}
+                />
+                {invitationLink ? (
+                  <button
+                    type="button"
+                    onClick={() => copyLink(invitationLink.url)}
+                    className="h-9 rounded-md border border-dark-border px-3 text-small font-semibold whitespace-nowrap text-dark-primary transition-colors hover:bg-white/[0.07]"
+                  >
+                    {copied
+                      ? t('common.copied')
+                      : t('projectSettingsTabs.copyLink')}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={createLink}
+                    disabled={!canManage || linkProcessing}
+                    className="h-9 rounded-md border border-dark-border px-3 text-small font-semibold whitespace-nowrap text-dark-primary transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {t('projectSettingsTabs.create')}
+                  </button>
+                )}
+                {invitationLink && (
+                  <button
+                    type="button"
+                    onClick={disableLink}
+                    disabled={!canManage}
+                    className="h-9 rounded-md border border-dark-border px-3 text-small font-semibold whitespace-nowrap text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {t('projectSettingsTabs.disable')}
+                  </button>
                 )}
               </div>
-              <RoleSelect
-                value={linkRole}
-                roles={roles}
-                disabled={!canManage || linkProcessing}
-                onChange={updateLinkRole}
-              />
-              {invitationLink ? (
-                <button
-                  type="button"
-                  onClick={() => copyLink(invitationLink.url)}
-                  className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07]"
-                >
-                  {copied
-                    ? t('common.copied')
-                    : t('projectSettingsTabs.copyLink')}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={createLink}
-                  disabled={!canManage || linkProcessing}
-                  className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {t('projectSettingsTabs.create')}
-                </button>
-              )}
-              {invitationLink && (
-                <button
-                  type="button"
-                  onClick={disableLink}
-                  disabled={!canManage}
-                  className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {t('projectSettingsTabs.disable')}
-                </button>
-              )}
             </div>
           </div>
 
@@ -456,7 +328,7 @@ const ProjectInvitationModal = ({
 
             <div className="space-y-1">
               {share.members.map((member) => (
-                <MemberRow
+                <ProjectMemberRow
                   key={member.id}
                   member={member}
                   roles={roles}

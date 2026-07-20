@@ -7,13 +7,17 @@ use App\Http\Controllers\KanbanController;
 use App\Models\CardLabel;
 use App\Models\Project;
 use App\Services\StorageService;
+use App\Support\Kanban\KanbanAttachmentUrlResolver;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TimelineController extends Controller
 {
-    public function __construct(private readonly StorageService $storage) {}
+    public function __construct(
+        private readonly StorageService $storage,
+        private readonly KanbanAttachmentUrlResolver $attachmentUrls,
+    ) {}
 
     /**
      * Render the per-project Timeline view.
@@ -46,6 +50,7 @@ class TimelineController extends Controller
                     ]);
             },
         ]);
+        $this->attachmentUrls->resolveForProject($project);
 
         $cardLabels = CardLabel::where('card_label_project_id', $project->project_id)->get();
 

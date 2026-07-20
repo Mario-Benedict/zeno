@@ -52,7 +52,8 @@ class KanbanBoardController extends Controller
      */
     public function update(int $accountIndex, Request $request, Project $project, KanbanBoard $board): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $board->project), 403);
+        $this->assertBoardBelongsToProject($project, $board);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
@@ -79,11 +80,20 @@ class KanbanBoardController extends Controller
      */
     public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoard $board): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $board->project), 403);
+        $this->assertBoardBelongsToProject($project, $board);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $board->cards()->delete();
         $board->delete();
 
         return back();
+    }
+
+    private function assertBoardBelongsToProject(Project $project, KanbanBoard $board): void
+    {
+        abort_unless(
+            $board->kanban_board_project_id === $project->project_id,
+            404,
+        );
     }
 }

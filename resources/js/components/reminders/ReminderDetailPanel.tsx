@@ -207,19 +207,19 @@ export const ReminderDetailPanel = ({
         {/* Due date/time */}
         <div>
           {editingDate ? (
-            <div className="flex items-end gap-2">
-              <DatePicker
-                label={t('reminders.dueDate')}
-                value={dueDate}
-                onChange={(v) => onUpdateDueAt(combineDueAt(v, dueTime))}
-                onClear={() => onUpdateDueAt(null)}
-                placeholder={t('reminders.setDueDate')}
-              />
-              <div>
-                <label className="mb-1 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
-                  {t('reminders.time')}
-                </label>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+              <div className="min-w-0">
+                <DatePicker
+                  label={t('reminders.dueDate')}
+                  value={dueDate}
+                  onChange={(v) => onUpdateDueAt(combineDueAt(v, dueTime))}
+                  onClear={() => onUpdateDueAt(null)}
+                  placeholder={t('reminders.setDueDate')}
+                />
+              </div>
+              <div className="min-w-0">
                 <TimePicker
+                  label={t('reminders.time')}
                   ariaLabel={t('reminders.time')}
                   value={dueTime}
                   onChange={(v) => onUpdateDueAt(combineDueAt(dueDate, v))}
@@ -229,7 +229,7 @@ export const ReminderDetailPanel = ({
               <button
                 type="button"
                 onClick={() => setEditingDate(false)}
-                className="rounded-lg border border-dark-border px-3 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
+                className="mb-1 rounded-lg border border-dark-border px-3 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
               >
                 {t('reminders.done')}
               </button>

@@ -23,7 +23,8 @@ class KanbanCommentController extends Controller
      */
     public function store(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'kanban_board_card_comment_id' => ['nullable', 'string', 'uuid'],
@@ -50,12 +51,20 @@ class KanbanCommentController extends Controller
      */
     public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoardCardComment $comment): RedirectResponse
     {
-        $owningProject = $comment->card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $owningProject), 403);
+        $this->assertCardBelongsToProject($project, $comment->card);
+        abort_unless($request->user()->can('view', $project), 403);
         abort_unless($comment->kanban_board_card_comment_from === $request->user()->id, 403);
 
         $comment->delete();
 
         return back();
+    }
+
+    private function assertCardBelongsToProject(Project $project, KanbanBoardCard $card): void
+    {
+        abort_unless(
+            $card->kanbanBoard->kanban_board_project_id === $project->project_id,
+            404,
+        );
     }
 }

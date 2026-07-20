@@ -1,14 +1,14 @@
 import { router, usePage } from '@inertiajs/react';
 import { useCallback, useRef, useState } from 'react';
+import ChatAttachmentStrip from '@/components/chat/ChatAttachmentStrip';
+import type { PendingChatFile } from '@/components/chat/ChatAttachmentStrip';
 import echo from '@/echo';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FILE_SIZE_LIMITS, isFileTooLarge } from '@/lib/fileUploads';
-import { formatFileSize } from '@/lib/utils';
 import chat from '@/routes/chat';
 import type { ChatMessage, ChatParticipant } from '@/types/chat';
 import ArrowUpIcon from '@public/icons/small/arrow_up.svg';
 import CancelSmallIcon from '@public/icons/small/cancel.svg';
-import FileIcon from '@public/icons/small/file.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
 
 interface Props {
@@ -24,17 +24,12 @@ interface Props {
   disabled?: boolean;
 }
 
-interface PendingFile {
-  id: string;
-  file: File;
-  type: 'image' | 'file';
-  previewUrl?: string;
-}
-
 const getAttachmentType = (file: File): 'image' | 'file' =>
   file.type.startsWith('image/') ? 'image' : 'file';
 
-const getMessageType = (files: PendingFile[]): 'text' | 'image' | 'file' => {
+const getMessageType = (
+  files: PendingChatFile[],
+): 'text' | 'image' | 'file' => {
   if (files.length === 0) return 'text';
 
   return files.every((f) => f.type === 'image') ? 'image' : 'file';
@@ -45,77 +40,6 @@ const nextTempMessageId = () => `temp-${Date.now()}-${++_tempMessageIdCounter}`;
 
 let _idCounter = 0;
 const nextId = () => `pf-${++_idCounter}`;
-
-const AttachmentStrip = ({
-  files,
-  onRemove,
-}: {
-  files: PendingFile[];
-  onRemove: (id: string) => void;
-}) => {
-  if (files.length === 0) return null;
-
-  const images = files.filter((f) => f.type === 'image');
-  const docs = files.filter((f) => f.type === 'file');
-
-  return (
-    <div className="space-y-2 px-3 pt-3 pb-1">
-      {/* ── Image previews — WhatsApp style large thumbnails ── */}
-      {images.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {images.map((pf) => (
-            <div key={pf.id} className="relative h-16 w-16 shrink-0">
-              <img
-                src={pf.previewUrl}
-                alt={pf.file.name}
-                title={pf.file.name}
-                className="h-full w-full rounded-lg border border-dark-border object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => onRemove(pf.id)}
-                className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-dark-border bg-dark-surface-1 text-dark-secondary shadow-sm transition-colors hover:text-dark-primary"
-              >
-                <CancelSmallIcon className="h-2.5 w-2.5" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── File attachments — compact chip row ── */}
-      {docs.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {docs.map((pf) => (
-            <div
-              key={pf.id}
-              className="relative flex max-w-[160px] items-center gap-1.5 rounded-lg border border-dark-border bg-dark-surface-3 px-2 py-1.5"
-            >
-              <span className="shrink-0 text-dark-secondary">
-                <FileIcon />
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-xsmall leading-tight text-dark-primary">
-                  {pf.file.name}
-                </p>
-                <p className="text-xsmall leading-tight text-dark-secondary">
-                  {formatFileSize(pf.file.size)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onRemove(pf.id)}
-                className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-dark-border bg-dark-surface-1 text-dark-secondary transition-colors hover:text-dark-primary"
-              >
-                <CancelSmallIcon className="h-2.5 w-2.5" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const ChatComposer = ({
   projectSlug,
@@ -129,7 +53,7 @@ const ChatComposer = ({
   const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
   const [body, setBody] = useState('');
-  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<PendingChatFile[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -150,7 +74,7 @@ const ChatComposer = ({
   const addFiles = useCallback(
     (list: FileList | null) => {
       if (!list) return;
-      const toAdd: PendingFile[] = [];
+      const toAdd: PendingChatFile[] = [];
       const pendingSize = pendingFiles.reduce(
         (total, pendingFile) => total + pendingFile.file.size,
         0,
@@ -174,7 +98,7 @@ const ChatComposer = ({
           continue;
         }
         const type = getAttachmentType(file);
-        const pf: PendingFile = { id: nextId(), file, type };
+        const pf: PendingChatFile = { id: nextId(), file, type };
         if (type === 'image') pf.previewUrl = URL.createObjectURL(file);
         toAdd.push(pf);
       }
@@ -317,7 +241,7 @@ const ChatComposer = ({
 
   return (
     <div className="shrink-0 px-3 pt-1 pb-3">
-      <AttachmentStrip files={pendingFiles} onRemove={removeFile} />
+      <ChatAttachmentStrip files={pendingFiles} onRemove={removeFile} />
 
       {error && (
         <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-status-error/30 bg-status-error/10 px-3 py-1.5">
