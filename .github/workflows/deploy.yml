@@ -27,6 +27,20 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Validate realtime build variables
+        env:
+          REVERB_APP_KEY: ${{ vars.REVERB_APP_KEY }}
+          VITE_REVERB_HOST: ${{ vars.VITE_REVERB_HOST }}
+          VITE_REVERB_PORT: ${{ vars.VITE_REVERB_PORT }}
+          VITE_REVERB_SCHEME: ${{ vars.VITE_REVERB_SCHEME }}
+        run: |
+          for variable in REVERB_APP_KEY VITE_REVERB_HOST VITE_REVERB_PORT VITE_REVERB_SCHEME; do
+            if [ -z "${!variable}" ]; then
+              echo "Missing required Actions variable: ${variable}"
+              exit 1
+            fi
+          done
+
       # Public repos on Docker Hub's free tier — no per-month registry cost.
       # Nothing secret is baked into the image (real secrets come from .env at
       # container start), so public visibility only exposes compiled source code,
@@ -107,6 +121,12 @@ jobs:
             cd /opt/zeno
             export REGISTRY_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/zeno
             export IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}
+            trap 'docker compose -f docker-compose.prod.yml ps; docker compose -f docker-compose.prod.yml logs --tail=200 app web reverb caddy' ERR
+            if grep -q '^REVERB_APP_KEY=' .env; then
+              sed -i 's|^REVERB_APP_KEY=.*$|REVERB_APP_KEY=${{ vars.REVERB_APP_KEY }}|' .env
+            else
+              printf '\nREVERB_APP_KEY=%s\n' '${{ vars.REVERB_APP_KEY }}' >> .env
+            fi
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --wait mysql
             docker compose -f docker-compose.prod.yml run --rm app php artisan migrate --force

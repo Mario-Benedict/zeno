@@ -83,6 +83,74 @@ it('does not create a conflict when there is no schedule overlap', function () {
     expect(TaskConflict::where('kanban_board_card_id', $this->card->kanban_board_card_id)->exists())->toBeFalse();
 });
 
+it('creates a conflict for a same-day task in another project even when the times of day differ', function () {
+    /** @var mixed $this */
+    // Move the calendar-event overlap out of the way so only the
+    // cross-project Kanban-vs-Kanban overlap is under test here.
+    $this->existingEvent->update([
+        'start_time' => $this->dueDate->copy()->addDays(5),
+        'end_time' => $this->dueDate->copy()->addDays(5)->addHour(),
+    ]);
+
+    $otherProject = Project::create(['project_name' => 'Atlas', 'project_slug' => 'atlas-conflict']);
+    $otherProject->members()->attach($this->admin->id, ['role' => 'OWNER', 'color' => '#D7CCC8']);
+    $otherProject->members()->attach($this->assignee->id, ['role' => 'MEMBER', 'color' => '#F8BBD0']);
+
+    $otherBoard = KanbanBoard::create([
+        'kanban_board_project_id' => $otherProject->project_id,
+        'kanban_board_name' => 'Backlog',
+        'kanban_board_position' => 0,
+    ]);
+
+    // Same calendar day as $this->dueDate (10:30), but a very different
+    // time of day (21:00) — the old due_date..+1h window would have missed
+    // this entirely.
+    $otherCard = KanbanBoardCard::create([
+        'kanban_board_id' => $otherBoard->kanban_board_id,
+        'position' => 0,
+        'kanban_board_card_title' => 'Atlas deliverable',
+        'is_completed' => false,
+        'kanban_board_card_due_date' => $this->dueDate->copy()->setTime(21, 0),
+    ]);
+    $otherCard->members()->attach($this->assignee->id);
+
+    $this->actingAs($this->admin)
+        ->withSession(['accounts' => [['user_id' => $this->admin->id]], 'account_active_index' => 0])
+        ->post("/u/0/p/{$this->project->project_slug}/cards/{$this->card->kanban_board_card_id}/members", [
+            'user_id' => $this->assignee->id,
+        ])
+        ->assertRedirect();
+
+    $conflict = TaskConflict::where('kanban_board_card_id', $this->card->kanban_board_card_id)->first();
+
+    expect($conflict)->not->toBeNull();
+    expect($conflict->conflicting_title)->toBe('Atlas deliverable');
+});
+
+it('does not create a duplicate pending conflict when the due date is edited again before the first is resolved', function () {
+    /** @var mixed $this */
+    $this->actingAs($this->admin)
+        ->withSession(['accounts' => [['user_id' => $this->admin->id]], 'account_active_index' => 0])
+        ->post("/u/0/p/{$this->project->project_slug}/cards/{$this->card->kanban_board_card_id}/members", [
+            'user_id' => $this->assignee->id,
+        ])
+        ->assertRedirect();
+
+    expect(TaskConflict::where('kanban_board_card_id', $this->card->kanban_board_card_id)->count())->toBe(1);
+
+    // Still the same day, so it still overlaps the same existing event —
+    // this re-triggers CheckTaskConflictJob, but the first conflict is
+    // still pending and should not be duplicated.
+    $this->actingAs($this->admin)
+        ->withSession(['accounts' => [['user_id' => $this->admin->id]], 'account_active_index' => 0])
+        ->patch("/u/0/p/{$this->project->project_slug}/cards/{$this->card->kanban_board_card_id}/dates", [
+            'kanban_board_card_due_date' => $this->dueDate->copy()->addHour()->toIso8601String(),
+        ])
+        ->assertRedirect();
+
+    expect(TaskConflict::where('kanban_board_card_id', $this->card->kanban_board_card_id)->count())->toBe(1);
+});
+
 it('lets the assignee accept a conflict', function () {
     /** @var mixed $this */
     $conflict = TaskConflict::create([

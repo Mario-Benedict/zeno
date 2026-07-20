@@ -42,7 +42,14 @@ class NoteShareController extends Controller
 
         $fresh = $note->fresh();
 
-        broadcast(new NoteUpdated($fresh, (string) Auth::id()))->toOthers();
+        // toOthers() needs a connected socket's ID (X-Socket-ID header, set by Echo);
+        // skip exclusion when the caller has no active WebSocket connection. Check
+        // the header's value, not just its presence: pusher-php-server rejects an
+        // empty-but-present socket ID just as hard as a malformed one.
+        $broadcast = broadcast(new NoteUpdated($fresh, (string) Auth::id()));
+        if (preg_match('/^\d+\.\d+$/', (string) request()->header('X-Socket-ID')) === 1) {
+            $broadcast->toOthers();
+        }
 
         return response()->json(['note' => NoteController::formatDetail($fresh)]);
     }

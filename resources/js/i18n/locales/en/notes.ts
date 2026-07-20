@@ -18,7 +18,7 @@ export const notes = {
     "Pick a note from the sidebar, or create a new one. Press '/' anywhere in a note to insert headings, lists, images, and embeds.",
   viewOnlyNotice: 'You have view-only access to this note.',
   staleRemoteChangeNotice:
-    'This note changed elsewhere while you were editing. Your changes are safe — dismiss to keep working.',
+    'Another collaborator edited this note. Their changes are being merged with yours — dismiss to keep working.',
   editorRole: 'Editor',
   viewerRole: 'Viewer',
   collaboratorRoleTitle: '{{name}} · {{role}}',
@@ -97,6 +97,7 @@ export const notes = {
   orPasteImageUrl: 'or paste an image URL',
   imageUrlPlaceholder: 'https://...',
   imageUploadFailed: 'Upload failed — try again.',
+  imageTooLarge: 'This image exceeds the 5 MB limit.',
   editorContentPlaceholder: "Write something, or press '/' for commands…",
   slashCommandText: 'Text',
   slashCommandTextDescription: 'Plain paragraph text',

@@ -95,10 +95,27 @@ class ChatMessageController extends Controller
             payload: $request->validated(),
         );
 
+        $notificationRecipientIds = $room->participants()
+            ->where('users.id', '!=', Auth::id())
+            ->wherePivot('is_muted', false)
+            ->pluck('users.id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
         // Push to all OTHER room participants via WebSocket.
         // The sender receives their own message through the Inertia flash prop
         // (or, for API-style callers like the dashboard chat widget, the JSON body below).
-        broadcast(new MessageSent($message))->toOthers();
+        // toOthers() requires a connected socket's ID (sent via the X-Socket-ID header
+        // by Echo); callers without one - e.g. an API-style client with no active
+        // WebSocket connection, or Echo itself before its socket connects - have no
+        // socket to exclude, so broadcast to everyone. Check the header's value, not
+        // just its presence: pusher-php-server rejects an empty-but-present socket ID
+        // just as hard as a malformed one.
+        $broadcast = broadcast(new MessageSent($message, $notificationRecipientIds));
+        if (preg_match('/^\d+\.\d+$/', (string) request()->header('X-Socket-ID')) === 1) {
+            $broadcast->toOthers();
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['message' => $message]);

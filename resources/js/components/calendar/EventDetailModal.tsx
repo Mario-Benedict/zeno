@@ -10,6 +10,9 @@ import type {
 } from '@/types/calendar';
 import { getRecurrenceLabel } from '@/utils/calendar';
 import BoardIcon from '@public/icons/large/board.svg';
+import ClockIcon from '@public/icons/small/clock.svg';
+import LockIcon from '@public/icons/small/lock.svg';
+import PersonIcon from '@public/icons/small/person.svg';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -58,19 +61,7 @@ export const EventDetailModal = ({
         className="fixed top-1/2 left-1/2 z-[60] w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-dark-border bg-dark-surface-1 p-6 text-center shadow-2xl ring-1 ring-dark-border/50"
       >
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-dark-surface-3">
-          <svg
-            className="h-6 w-6 text-dark-secondary"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"
-            />
-          </svg>
+          <LockIcon className="h-6 w-6 text-dark-secondary" />
         </div>
         <h3 className="mb-2 text-medium font-semibold text-dark-primary">
           {t('calendar.privateSchedule')}
@@ -166,19 +157,7 @@ export const EventDetailModal = ({
 
       <div className="p-5">
         <div className="mb-4 flex items-center gap-3 text-small text-dark-primary">
-          <svg
-            className="h-4 w-4 text-dark-secondary"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <ClockIcon className="h-4 w-4 text-dark-secondary" />
           <div>
             <p>{dateStr}</p>
             <p className="text-dark-secondary">{timeStr}</p>
@@ -186,19 +165,7 @@ export const EventDetailModal = ({
         </div>
 
         <div className="mb-4 flex items-start gap-3 text-small text-dark-primary">
-          <svg
-            className="mt-0.5 h-4 w-4 shrink-0 text-dark-secondary"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
+          <PersonIcon className="mt-0.5 h-4 w-4 shrink-0 text-dark-secondary" />
           <div className="flex flex-col gap-1.5">
             {fullEvent.participants.length > 0 ? (
               fullEvent.participants.map((participant) => (

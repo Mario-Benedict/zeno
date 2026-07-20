@@ -7,6 +7,8 @@ import { PinButton } from '@/components/shared/PinButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath, projectPath } from '@/lib/accountRoutes';
 import type { PaginatedProjects, ProjectSummary } from '@/types';
+import ChevronLeftIcon from '@public/icons/small/chevron_left.svg';
+import SearchIconSvg from '@public/icons/small/search.svg';
 import Zeno from '@public/logos/logo.svg';
 
 interface ProjectsPageProps {
@@ -16,39 +18,13 @@ interface ProjectsPageProps {
 }
 
 const SearchIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="text-dark-secondary"
-  >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
+  <SearchIconSvg className="h-[15px] w-[15px] text-dark-secondary" />
 );
 
 const ChevronIcon = ({ dir }: { dir: 'left' | 'right' }) => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    {dir === 'left' ? (
-      <polyline points="15 18 9 12 15 6" />
-    ) : (
-      <polyline points="9 18 15 12 9 6" />
-    )}
-  </svg>
+  <ChevronLeftIcon
+    className={`h-3.5 w-3.5 ${dir === 'right' ? 'rotate-180' : ''}`}
+  />
 );
 
 interface ProjectRowProps {

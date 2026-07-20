@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\ProjectRole;
-use App\Events\ChatMemberJoined;
 use App\Models\ChatRoom;
 use App\Models\Project;
 use App\Models\User;
@@ -61,26 +60,51 @@ class ChatRoomService
     }
 
     /**
-     * Tambah member baru ke group room sebuah project.
-     * Dipanggil saat user diundang ke project.
+     * Create a new group room with an explicit subset of project members,
+     * chosen via the chat "+" button — distinct from createProjectGroupRoom(),
+     * which auto-attaches every project member to the project-wide room.
+     * The creator is always attached as admin, even if not in $participantIds.
      */
-    public function addMemberToGroupRoom(Project $project, User $user, string $projectRole = 'MEMBER'): void
+    public function createCustomGroupRoom(Project $project, User $creator, string $name, array $participantIds): ChatRoom
+    {
+        /** @var ChatRoom $room */
+        $room = ChatRoom::create([
+            'project_id' => $project->project_id,
+            'type' => 'group',
+            'name' => $name,
+        ]);
+
+        $attachData = [];
+        foreach ($participantIds as $id) {
+            $attachData[(int) $id] = ['role' => 'member', 'joined_at' => now()];
+        }
+        $attachData[$creator->id] = ['role' => 'admin', 'joined_at' => now()];
+
+        $room->participants()->attach($attachData);
+
+        return $room;
+    }
+
+    /**
+     * Tambah member baru ke group room sebuah project and return whether the
+     * room membership changed. Callers broadcast only after their surrounding
+     * membership transaction commits.
+     */
+    public function addMemberToGroupRoom(Project $project, User $user, string $projectRole = 'MEMBER'): bool
     {
         $groupRoom = ChatRoom::query()
             ->where('project_id', $project->project_id)
             ->where('type', 'group')
-            ->with('participants')
             ->first();
+
+        $createdGroupRoom = false;
 
         if (! $groupRoom instanceof ChatRoom) {
             $groupRoom = $this->createProjectGroupRoom($project, (string) $user->id);
-            $groupRoom->load('participants');
+            $createdGroupRoom = true;
         }
 
-        $existingParticipants = $groupRoom->participants;
-        $isNewJoin = ! $existingParticipants->contains(
-            fn (User $existing) => (string) $existing->id === (string) $user->id,
-        );
+        $isNewJoin = $createdGroupRoom || ! $groupRoom->participants()->whereKey($user->id)->exists();
         $chatRole = ProjectRole::tryFrom($projectRole)?->chatParticipantRole() ?? 'member';
 
         $groupRoom->participants()->syncWithoutDetaching([
@@ -90,19 +114,19 @@ class ChatRoomService
             ],
         ]);
 
-        // Auto-create a DM room between the new member and every existing member.
-        // Rooms are pre-created (hidden in sidebar until first message is sent).
-        foreach ($existingParticipants as $existing) {
-            if ((string) $existing->id !== (string) $user->id) {
-                $this->findOrCreateDmRoom($project, $user, $existing);
-            }
-        }
+        return $isNewJoin;
+    }
 
-        // Notify already-connected clients so their room list (group
-        // participants + the new DM) refreshes without a manual reload.
-        if ($isNewJoin) {
-            broadcast(new ChatMemberJoined($project->project_id));
-        }
+    /**
+     * Prepare DM rooms after a member joins. This is intentionally invoked by
+     * CreateMemberDirectMessageRooms on the queue, never by the invite request.
+     */
+    public function createDirectMessageRoomsForMember(Project $project, User $user): void
+    {
+        $project->members()
+            ->where('users.id', '!=', $user->id)
+            ->get()
+            ->each(fn (User $existing) => $this->findOrCreateDmRoom($project, $user, $existing));
     }
 
     /**

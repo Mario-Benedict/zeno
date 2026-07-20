@@ -9,9 +9,12 @@ use App\Policies\ProjectPolicy;
 use App\Services\MongoDB\MongoConnection;
 use App\Services\StorageService;
 use Carbon\CarbonImmutable;
+use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -39,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
         $this->configureDefaults();
+        $this->configureQueueLogging();
 
         KanbanBoardCard::observe(KanbanBoardCardObserver::class);
     }
@@ -78,5 +82,21 @@ class AppServiceProvider extends ServiceProvider
                     ->uncompromised()
                 : null,
         );
+    }
+
+    /**
+     * Log queue job failures (mail, broadcasting, etc.) with the exception and
+     * job class, so a failure like a misconfigured mail provider surfaces in
+     * the log stream instead of only being visible via `failed_jobs`/Horizon.
+     */
+    protected function configureQueueLogging(): void
+    {
+        Queue::failing(function (JobFailed $event): void {
+            Log::error('Queue job failed', [
+                'connection' => $event->connectionName,
+                'job' => $event->job->resolveName(),
+                'exception' => $event->exception->getMessage(),
+            ]);
+        });
     }
 }

@@ -40,6 +40,7 @@ export interface NoteDetail {
   isShared: boolean;
   ownerId: number;
   updatedAt: string | null;
+  version: number;
   collaborators: NoteCollaborator[];
 }
 

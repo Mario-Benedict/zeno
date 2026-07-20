@@ -96,17 +96,42 @@ class NoteController extends Controller
 
         $validated = $request->validated();
         $content = array_key_exists('content', $validated) ? $validated['content'] : $note->content;
+        $version = (int) ($validated['version'] ?? $note->version);
 
-        $note->update([
-            'title' => $validated['title'] ?? $note->title,
-            'content' => $content,
-            'excerpt' => NoteExcerptExtractor::extract($content),
-        ]);
+        // Only save if this browser still has the latest document version.
+        // This turns a concurrent edit into an explicit conflict rather than
+        // silently overwriting the other collaborator's content.
+        $updated = Note::query()
+            ->where('note_id', $note->note_id)
+            ->where('version', $version)
+            ->update([
+                'title' => $validated['title'] ?? $note->title,
+                'content' => $content,
+                'excerpt' => NoteExcerptExtractor::extract($content),
+                'version' => $version + 1,
+                'updated_at' => now(),
+            ]);
+
+        if ($updated === 0) {
+            $latest = $note->fresh();
+
+            return response()->json([
+                'message' => 'This note changed before your edits could be saved.',
+                'note' => $latest ? self::formatDetail($latest) : null,
+            ], 409);
+        }
 
         $fresh = $note->fresh();
 
         if ($fresh->is_shared) {
-            broadcast(new NoteUpdated($fresh, (string) Auth::id()))->toOthers();
+            // toOthers() needs a connected socket's ID (X-Socket-ID header, set by Echo);
+            // skip exclusion when the caller has no active WebSocket connection. Check
+            // the header's value, not just its presence: pusher-php-server rejects an
+            // empty-but-present socket ID just as hard as a malformed one.
+            $broadcast = broadcast(new NoteUpdated($fresh, (string) Auth::id()));
+            if (preg_match('/^\d+\.\d+$/', (string) request()->header('X-Socket-ID')) === 1) {
+                $broadcast->toOthers();
+            }
         }
 
         return response()->json(['note' => $this->formatDetail($fresh)]);
@@ -148,6 +173,7 @@ class NoteController extends Controller
             'isShared' => (bool) $note->is_shared,
             'ownerId' => (int) $note->user_id,
             'updatedAt' => $note->updated_at?->toISOString(),
+            'version' => (int) $note->version,
             'collaborators' => $note->is_shared
                 ? $note->collaborators()->get()->map(fn (User $user) => [
                     'id' => (int) $user->id,

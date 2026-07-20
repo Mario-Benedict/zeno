@@ -4,7 +4,9 @@ import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import DiffMatchPatch from 'diff-match-patch';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import echo from '@/echo';
 import { useTranslation } from '@/hooks/useTranslation';
 import { inertiaJson } from '@/lib/inertiaJson';
 import notes from '@/routes/notes';
@@ -16,6 +18,47 @@ import { NoteImage } from './editor/extensions/image';
 import { SlashCommand } from './editor/extensions/slashCommand';
 
 const AUTOSAVE_DELAY_MS = 600;
+const MAX_CONFLICT_REBASE_ATTEMPTS = 3;
+
+interface HttpErrorWithResponse {
+  response?: {
+    status?: number;
+    data?: string | { note?: NoteDetail | null };
+  };
+}
+
+const conflictNoteFromError = (error: unknown): NoteDetail | null => {
+  const response = (error as HttpErrorWithResponse).response;
+  if (response?.status !== 409 || !response.data) return null;
+
+  try {
+    const payload =
+      typeof response.data === 'string'
+        ? (JSON.parse(response.data) as { note?: NoteDetail | null })
+        : response.data;
+
+    return payload.note ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const mergeTextChanges = (
+  base: string,
+  local: string,
+  remote: string,
+): string | null => {
+  if (local === base) return remote;
+  if (remote === base || local === remote) return local;
+
+  const matcher = new DiffMatchPatch();
+  const [merged, applied] = matcher.patch_apply(
+    matcher.patch_make(base, local),
+    remote,
+  );
+
+  return applied.every(Boolean) ? merged : null;
+};
 
 export const emptyNoteDocument = (): NoteContent => ({
   type: 'doc',
@@ -58,8 +101,17 @@ export const useNoteEditor = ({
   );
 
   const dirtyRef = useRef(false);
+  const editRevisionRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleRef = useRef(title);
+  const versionRef = useRef(note?.version ?? 1);
+  const baseTitleRef = useRef(note?.title ?? '');
+  const baseContentRef = useRef(
+    JSON.stringify(note?.content ?? emptyNoteDocument()),
+  );
+  const performSaveRef = useRef<(activeEditor: Editor) => Promise<void>>(
+    async () => undefined,
+  );
 
   useEffect(() => {
     titleRef.current = title;
@@ -100,32 +152,104 @@ export const useNoteEditor = ({
 
       setSaveStatus('saving');
 
-      try {
-        const data = await inertiaJson<{ note: NoteDetail }>(
-          'patch',
-          notes.update.url({
-            accountIndex,
-            project: projectSlug,
-            note: noteId,
-          }),
-          {
-            data: {
-              title: titleRef.current.trim() || t('notes.untitled'),
-              content: activeEditor.getJSON(),
-            },
-          },
-        );
+      for (let attempt = 0; attempt < MAX_CONFLICT_REBASE_ATTEMPTS; attempt++) {
+        const revisionAtRequest = editRevisionRef.current;
+        const localTitle = titleRef.current.trim() || t('notes.untitled');
+        const localContent = activeEditor.getJSON();
+        const socketId = echo.socketId();
 
-        dirtyRef.current = false;
-        setSaveStatus('saved');
-        setSavedAt(data.note.updatedAt);
-        onSaved(data.note);
-      } catch {
-        setSaveStatus('error');
+        try {
+          const data = await inertiaJson<{ note: NoteDetail }>(
+            'patch',
+            notes.update.url({
+              accountIndex,
+              project: projectSlug,
+              note: noteId,
+            }),
+            {
+              data: {
+                title: localTitle,
+                content: localContent,
+                version: versionRef.current,
+              },
+              headers: socketId ? { 'X-Socket-ID': socketId } : {},
+            },
+          );
+
+          versionRef.current = data.note.version;
+          baseTitleRef.current = data.note.title;
+          baseContentRef.current = JSON.stringify(data.note.content);
+          setSavedAt(data.note.updatedAt);
+          onSaved(data.note);
+
+          if (editRevisionRef.current === revisionAtRequest) {
+            dirtyRef.current = false;
+            setSaveStatus('saved');
+          } else {
+            dirtyRef.current = true;
+            setSaveStatus('dirty');
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(
+              () => void performSaveRef.current(activeEditor),
+              AUTOSAVE_DELAY_MS,
+            );
+          }
+
+          return;
+        } catch (error: unknown) {
+          const latest = conflictNoteFromError(error);
+          if (!latest) {
+            setSaveStatus('error');
+            return;
+          }
+
+          const currentLocalContentJson = JSON.stringify(
+            activeEditor.getJSON(),
+          );
+          const mergedContentJson = mergeTextChanges(
+            baseContentRef.current,
+            currentLocalContentJson,
+            JSON.stringify(latest.content),
+          );
+          const mergedTitle = mergeTextChanges(
+            baseTitleRef.current,
+            titleRef.current,
+            latest.title,
+          );
+
+          if (!mergedContentJson || mergedTitle === null) {
+            setSaveStatus('error');
+            return;
+          }
+
+          try {
+            const mergedContent = JSON.parse(mergedContentJson) as NoteContent;
+
+            activeEditor.commands.setContent(mergedContent, {
+              emitUpdate: false,
+            });
+            setTitleState(mergedTitle);
+            titleRef.current = mergedTitle;
+            versionRef.current = latest.version;
+            baseTitleRef.current = latest.title;
+            baseContentRef.current = JSON.stringify(latest.content);
+            dirtyRef.current = true;
+            setSaveStatus('dirty');
+          } catch {
+            setSaveStatus('error');
+            return;
+          }
+        }
       }
+
+      setSaveStatus('error');
     },
     [accountIndex, projectSlug, noteId, onSaved, t],
   );
+
+  useEffect(() => {
+    performSaveRef.current = performSave;
+  }, [performSave]);
 
   const scheduleSave = useCallback(
     (activeEditor: Editor) => {
@@ -163,6 +287,7 @@ export const useNoteEditor = ({
         attributes: { class: 'prose-note focus:outline-none' },
       },
       onUpdate: ({ editor: activeEditor }) => {
+        editRevisionRef.current += 1;
         dirtyRef.current = true;
         setSaveStatus('dirty');
         scheduleSave(activeEditor);
@@ -181,6 +306,7 @@ export const useNoteEditor = ({
 
       if (!editor || !canEdit) return;
 
+      editRevisionRef.current += 1;
       dirtyRef.current = true;
       setSaveStatus('dirty');
       scheduleSave(editor);
@@ -197,14 +323,64 @@ export const useNoteEditor = ({
   const isDirty = useCallback(() => dirtyRef.current, []);
 
   const applyRemoteContent = useCallback(
-    (remoteNote: NoteDetail) => {
-      if (!editor || remoteNote.id !== noteId) return;
+    (remoteNote: NoteDetail): boolean => {
+      if (!editor || remoteNote.id !== noteId) return false;
 
-      editor.commands.setContent(remoteNote.content, { emitUpdate: false });
-      setTitleState(remoteNote.title);
-      setSavedAt(remoteNote.updatedAt);
+      if (!dirtyRef.current) {
+        editor.commands.setContent(remoteNote.content, { emitUpdate: false });
+        setTitleState(remoteNote.title);
+        setSavedAt(remoteNote.updatedAt);
+        setSaveStatus('saved');
+        versionRef.current = remoteNote.version;
+        baseTitleRef.current = remoteNote.title;
+        baseContentRef.current = JSON.stringify(remoteNote.content);
+
+        return true;
+      }
+
+      const mergedContentJson = mergeTextChanges(
+        baseContentRef.current,
+        JSON.stringify(editor.getJSON()),
+        JSON.stringify(remoteNote.content),
+      );
+      const mergedTitle = mergeTextChanges(
+        baseTitleRef.current,
+        titleRef.current,
+        remoteNote.title,
+      );
+
+      if (!mergedContentJson || mergedTitle === null) return false;
+
+      try {
+        const selection = editor.state.selection;
+        const mergedContent = JSON.parse(mergedContentJson) as NoteContent;
+
+        editor.commands.setContent(mergedContent, { emitUpdate: false });
+        const maxPosition = editor.state.doc.content.size;
+        editor.commands.setTextSelection({
+          from: Math.min(selection.from, maxPosition),
+          to: Math.min(selection.to, maxPosition),
+        });
+        setTitleState(mergedTitle);
+        titleRef.current = mergedTitle;
+        setSavedAt(remoteNote.updatedAt);
+
+        // The remote document is now the merge base. The merged local result
+        // remains dirty and is saved as the next version, so concurrent edits
+        // converge instead of overwriting either collaborator's work.
+        versionRef.current = remoteNote.version;
+        baseTitleRef.current = remoteNote.title;
+        baseContentRef.current = JSON.stringify(remoteNote.content);
+        dirtyRef.current = true;
+        setSaveStatus('dirty');
+        scheduleSave(editor);
+
+        return true;
+      } catch {
+        return false;
+      }
     },
-    [editor, noteId],
+    [editor, noteId, scheduleSave],
   );
 
   return {

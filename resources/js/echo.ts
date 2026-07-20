@@ -1,5 +1,6 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { inertiaJson } from '@/lib/inertiaJson';
 
 declare global {
   interface Window {
@@ -10,6 +11,14 @@ declare global {
 window.Pusher = Pusher;
 
 const REVERB_KEY = import.meta.env.VITE_REVERB_APP_KEY as string | undefined;
+const accountAuthEndpoint = (): string => {
+  const accountIndex =
+    window.location.pathname.match(/^\/u\/(\d+)(?:\/|$)/)?.[1];
+
+  return accountIndex
+    ? `/u/${accountIndex}/broadcasting/auth`
+    : '/broadcasting/auth';
+};
 
 if (!REVERB_KEY) {
   console.warn(
@@ -26,6 +35,35 @@ const echo = new Echo({
   wssPort: parseInt(import.meta.env.VITE_REVERB_PORT ?? '8080'),
   forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
   enabledTransports: ['ws', 'wss'],
+  // The account index must be part of private/presence-channel auth. Using
+  // the legacy unscoped endpoint makes two tabs signed in as different
+  // accounts race on the session's active account and intermittently reject
+  // otherwise valid subscriptions.
+  authEndpoint: accountAuthEndpoint(),
+  channelAuthorization: {
+    customHandler: (params, callback) => {
+      void inertiaJson<{ auth: string; channel_data?: string }>(
+        'post',
+        accountAuthEndpoint(),
+        {
+          data: {
+            socket_id: params.socketId,
+            channel_name: params.channelName,
+          },
+        },
+      )
+        .then((data) => callback(null, data))
+        .catch((error: unknown) =>
+          callback(
+            error instanceof Error
+              ? error
+              : new Error('Channel authorization failed'),
+            null,
+          ),
+        );
+    },
+  },
+  withCredentials: true,
 });
 
 export default echo;

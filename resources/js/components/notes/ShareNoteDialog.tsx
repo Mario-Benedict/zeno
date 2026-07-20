@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { FloatingMenu } from '@/components/shared/FloatingMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import { inertiaJson } from '@/lib/inertiaJson';
 import notes from '@/routes/notes';
@@ -8,6 +9,8 @@ import type {
   NoteProjectUser,
 } from '@/types/notes';
 import CancelIcon from '@public/icons/small/cancel.svg';
+import ChevronDownIcon from '@public/icons/small/chevron_down.svg';
+import TrashIcon from '@public/icons/small/trash.svg';
 import MemberPicker from './MemberPicker';
 
 interface ShareNoteDialogProps {
@@ -26,38 +29,6 @@ interface PendingInvite {
 
 const roleFromCanEdit = (canEdit: boolean): NoteCollaboratorRole =>
   canEdit ? 'Editor' : 'Viewer';
-
-const ChevronDownIcon = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 6h18" />
-    <path d="M8 6V4h8v2" />
-    <path d="M19 6l-1 14H6L5 6" />
-  </svg>
-);
 
 const getInitials = (name: string): string =>
   name
@@ -80,26 +51,18 @@ const RoleSelect = ({
   roleLabels: Record<NoteCollaboratorRole, string>;
 }) => {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <>
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex h-8 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold text-dark-primary transition-colors hover:border-dark-border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
       >
         {roleLabels[value]}
         <span
@@ -109,34 +72,35 @@ const RoleSelect = ({
         </span>
       </button>
 
-      {open && (
-        <div
-          role="listbox"
-          className="absolute top-full right-0 z-50 mt-1 min-w-24 overflow-hidden rounded-lg border border-dark-border bg-dark-surface-2 py-1 shadow-2xl"
-        >
-          {(['Editor', 'Viewer'] as NoteCollaboratorRole[]).map((role) => (
-            <button
-              key={role}
-              type="button"
-              role="option"
-              aria-selected={role === value}
-              onClick={() => {
-                onChange(role);
-                setOpen(false);
-              }}
-              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
-                role === value ? 'text-dark-primary' : 'text-dark-secondary'
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 shrink-0 rounded-full ${role === value ? 'bg-accent-blue' : ''}`}
-              />
-              {roleLabels[role]}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      <FloatingMenu
+        open={open}
+        onClose={() => setOpen(false)}
+        triggerRef={triggerRef}
+        role="listbox"
+        className="min-w-24"
+      >
+        {(['Editor', 'Viewer'] as NoteCollaboratorRole[]).map((role) => (
+          <button
+            key={role}
+            type="button"
+            role="option"
+            aria-selected={role === value}
+            onClick={() => {
+              onChange(role);
+              setOpen(false);
+            }}
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
+              role === value ? 'text-dark-primary' : 'text-dark-secondary'
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${role === value ? 'bg-accent-blue' : ''}`}
+            />
+            {roleLabels[role]}
+          </button>
+        ))}
+      </FloatingMenu>
+    </>
   );
 };
 

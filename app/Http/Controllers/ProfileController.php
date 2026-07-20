@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\StorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
+    public function __construct(private readonly StorageService $storage) {}
+
     public function update(int $accountIndex, Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -28,10 +30,10 @@ class ProfileController extends Controller
         $user = $request->user();
 
         if ($user->avatar_url) {
-            Storage::disk('public')->delete($user->avatar_url);
+            $this->storage->delete($user->avatar_url);
         }
 
-        $path = $request->file('avatar')->store('user-avatars', 'public');
+        $path = $this->storage->put($request->file('avatar'), 'user-avatars');
 
         $user->update(['avatar_url' => $path]);
 
@@ -43,7 +45,7 @@ class ProfileController extends Controller
         $user = $request->user();
 
         if ($user->avatar_url) {
-            Storage::disk('public')->delete($user->avatar_url);
+            $this->storage->delete($user->avatar_url);
             $user->update(['avatar_url' => null]);
         }
 

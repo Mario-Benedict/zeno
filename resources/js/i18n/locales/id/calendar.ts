@@ -47,6 +47,19 @@ export const calendar: typeof en = {
   // Sidebar member list
   searchForPeople: 'Cari orang',
   noMembersFound: 'Tidak ada anggota yang ditemukan.',
+  membersSelectedCount: '{{checked}}/{{total}} dipilih',
+  selectAll: 'Pilih semua',
+  deselectAll: 'Batalkan semua',
+
+  // Sidebar label legend
+  moreLabels: '+ {{count}} lainnya',
+  showLessLabels: 'Tampilkan lebih sedikit',
+
+  // Sidebar task-source filter
+  taskSourceFilterLabel: 'Tugas',
+  taskSourceAll: 'Semua',
+  taskSourceThisProject: 'Proyek ini',
+  taskSourceOtherProjects: 'Proyek lain',
 
   // Month grid
   moreEvents: '+ {{count}} lainnya',
@@ -108,6 +121,7 @@ export const calendar: typeof en = {
   saveScheduleError: 'Gagal menyimpan jadwal.',
 
   // Delete confirmation
+  deleteScheduleTitle: 'Hapus Jadwal',
   deleteScheduleConfirm: 'Apakah Anda yakin ingin menghapus jadwal ini?',
 
   // Recurrence edit dialog

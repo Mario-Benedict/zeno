@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Kanban;
 
+use App\Events\CalendarEventChanged;
 use App\Http\Controllers\Controller;
 use App\Jobs\CheckTaskConflictJob;
+use App\Jobs\NotifyCardAssignedJob;
 use App\Models\CardLabel;
 use App\Models\KanbanBoardCard;
 use App\Models\Project;
@@ -145,8 +147,20 @@ class KanbanCardDetailController extends Controller
             $card->members()->attach($validated['user_id']);
             KanbanBoardCardObserver::syncReminders($card);
 
+            NotifyCardAssignedJob::dispatch($card->kanban_board_card_id, (int) $validated['user_id'], $request->user()->id);
+
             if ($card->kanban_board_card_due_date) {
                 CheckTaskConflictJob::dispatch($card->kanban_board_card_id, (int) $validated['user_id'], $request->user()->id);
+
+                // Due-dated cards are projected onto the Calendar (read-only,
+                // computed live — see CalendarService::getAssignedKanbanTasks).
+                // Broadcast so an open Calendar view picks up the new
+                // assignee immediately instead of only on its next refetch.
+                broadcast(new CalendarEventChanged(
+                    $cardProject->project_id,
+                    $card->members()->pluck('users.id')->all(),
+                    'updated'
+                ));
             }
         }
 
@@ -158,10 +172,23 @@ class KanbanCardDetailController extends Controller
      */
     public function removeMember(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card, int $memberId): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+        $cardProject = $card->kanbanBoard->project;
+        abort_unless($request->user()->can('view', $cardProject), 403);
+
+        // Captured before detaching so the removed member's own Calendar
+        // view (if open) also refreshes and drops the now-unassigned task.
+        $affectedMemberIds = $card->members()->pluck('users.id')->all();
 
         $card->members()->detach($memberId);
         KanbanBoardCardObserver::syncReminders($card);
+
+        if ($card->kanban_board_card_due_date) {
+            broadcast(new CalendarEventChanged(
+                $cardProject->project_id,
+                $affectedMemberIds,
+                'updated'
+            ));
+        }
 
         return back();
     }
@@ -171,15 +198,16 @@ class KanbanCardDetailController extends Controller
      */
     public function updateDates(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+        $cardProject = $card->kanbanBoard->project;
+        abort_unless($request->user()->can('view', $cardProject), 403);
 
         $validated = $request->validate([
             'kanban_board_card_start_date' => 'nullable|date',
             'kanban_board_card_due_date' => 'nullable|date',
         ]);
 
-        $dueDateSubmitted = array_key_exists('kanban_board_card_due_date', $validated)
-            && $validated['kanban_board_card_due_date'] !== null;
+        $dueDateKeySubmitted = array_key_exists('kanban_board_card_due_date', $validated);
+        $dueDateSubmitted = $dueDateKeySubmitted && $validated['kanban_board_card_due_date'] !== null;
 
         $card->update($validated);
 
@@ -187,6 +215,18 @@ class KanbanCardDetailController extends Controller
             $card->members()->get()->each(
                 fn ($member) => CheckTaskConflictJob::dispatch($card->kanban_board_card_id, $member->id, $request->user()->id)
             );
+        }
+
+        // The due date drives whether (and when) this card shows up on the
+        // Calendar (see CalendarService::getAssignedKanbanTasks), so any
+        // change to it — including clearing it — must refresh an open
+        // Calendar view, not just wait for its next manual refetch.
+        if ($dueDateKeySubmitted) {
+            broadcast(new CalendarEventChanged(
+                $cardProject->project_id,
+                $card->members()->pluck('users.id')->all(),
+                'updated'
+            ));
         }
 
         return back();

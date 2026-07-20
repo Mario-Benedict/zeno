@@ -6,6 +6,7 @@ import { EventFormModal } from '@/components/calendar/EventFormModal';
 import { MonthGrid } from '@/components/calendar/MonthGrid';
 import { RecurrenceEditDialog } from '@/components/calendar/RecurrenceEditDialog';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
@@ -17,6 +18,7 @@ import type {
   CalendarMember,
   AnyCalendarEvent,
   CalendarEventFull,
+  CalendarTaskSourceFilter,
 } from '@/types/calendar';
 
 export default function Calendar({
@@ -42,10 +44,16 @@ export default function Calendar({
     () => new Set(),
   );
 
+  // Narrows Kanban-task entries to this project's own assignments or ones
+  // assigned in another project; manually-created events are never affected.
+  const [taskSourceFilter, setTaskSourceFilter] =
+    useState<CalendarTaskSourceFilter>('all');
+
   // Modals state
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [recurrenceDialogOpen, setRecurrenceDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEvent, setSelectedEvent] = useState<AnyCalendarEvent | null>(
@@ -96,16 +104,30 @@ export default function Calendar({
     members,
   );
 
-  // Apply the label filter. Classified busy-blocks and unlabeled events are
+  // Apply the label filter (classified busy-blocks and unlabeled events are
   // always shown; a labeled event shows if at least one of its labels is
-  // still visible.
+  // still visible) and the task-source filter (only Kanban-task entries are
+  // affected — a task belongs to "this project" only when it isn't a
+  // classified cross-project block AND its project_id matches the one being
+  // viewed, since an entry can be non-classified yet still from another
+  // project when the viewer participates directly in it).
   const visibleEvents = useMemo(
     () =>
       events.filter((ev) => {
-        if (ev.is_classified || ev.labels.length === 0) return true;
-        return ev.labels.some((l) => !hiddenLabelIds.has(l.card_label_id));
+        const labelVisible =
+          ev.is_classified ||
+          ev.labels.length === 0 ||
+          ev.labels.some((l) => !hiddenLabelIds.has(l.card_label_id));
+
+        if (!labelVisible) return false;
+        if (taskSourceFilter === 'all' || !ev.is_kanban_task) return true;
+
+        const isOwnProject =
+          !ev.is_classified && ev.project_id === project.project_id;
+
+        return taskSourceFilter === 'own' ? isOwnProject : !isOwnProject;
       }),
-    [events, hiddenLabelIds],
+    [events, hiddenLabelIds, taskSourceFilter, project.project_id],
   );
 
   // --- Handlers ---
@@ -131,25 +153,25 @@ export default function Calendar({
     );
   };
 
-  const handlePrevWeek = () => {
-    setCurrentDate((prev) => {
-      const next = new Date(prev);
-      next.setDate(next.getDate() - 7);
-      return next;
-    });
-  };
-
-  const handleNextWeek = () => {
-    setCurrentDate((prev) => {
-      const next = new Date(prev);
-      next.setDate(next.getDate() + 7);
-      return next;
-    });
+  // Switching into week view should land on the week actually containing
+  // today, not whatever week month-navigation last happened to pin
+  // currentDate to (month prev/next always resets the day to the 1st).
+  const handleViewModeChange = (mode: CalendarViewMode) => {
+    if (mode === 'week' && viewMode !== 'week') {
+      setCurrentDate(new Date());
+    }
+    setViewMode(mode);
   };
 
   const handleToggleMember = (id: number) => {
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, checked: !m.checked } : m)),
+    );
+  };
+
+  const handleToggleAllMembers = (ids: number[], checked: boolean) => {
+    setMembers((prev) =>
+      prev.map((m) => (ids.includes(m.id) ? { ...m, checked } : m)),
     );
   };
 
@@ -196,10 +218,14 @@ export default function Calendar({
       });
       setRecurrenceDialogOpen(true);
     } else {
-      if (confirm(t('calendar.deleteScheduleConfirm'))) {
-        submitDelete(selectedEvent as CalendarEventFull, 'single');
-      }
+      setDeleteConfirmOpen(true);
     }
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteConfirmOpen(false);
+    if (!selectedEvent || selectedEvent.is_classified) return;
+    submitDelete(selectedEvent as CalendarEventFull, 'single');
   };
 
   const handleRecurrenceConfirm = (scope: 'single' | 'all') => {
@@ -311,7 +337,7 @@ export default function Calendar({
       <div className="flex h-full w-full gap-2 overflow-hidden bg-dark-surface-1 p-2">
         <CalendarSidebar
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={handleViewModeChange}
           onRefresh={refetch}
           isLoading={loading}
           onCreate={handleCreate}
@@ -321,10 +347,13 @@ export default function Calendar({
           onNextMonth={handleNextMonth}
           members={members}
           onToggleMember={handleToggleMember}
+          onToggleAllMembers={handleToggleAllMembers}
           events={visibleEvents}
           cardLabels={cardLabels}
           hiddenLabelIds={hiddenLabelIds}
           onToggleLabel={handleToggleLabel}
+          taskSourceFilter={taskSourceFilter}
+          onTaskSourceFilterChange={setTaskSourceFilter}
         />
 
         <div className="relative flex flex-1 flex-col overflow-hidden">
@@ -345,8 +374,6 @@ export default function Calendar({
               members={members}
               onDateClick={handleGridDateClick}
               onEventClick={handleEventClick}
-              onPrevWeek={handlePrevWeek}
-              onNextWeek={handleNextWeek}
             />
           )}
 
@@ -399,6 +426,17 @@ export default function Calendar({
         onConfirm={handleRecurrenceConfirm}
         action={pendingAction?.type || 'edit'}
       />
+
+      {deleteConfirmOpen && (
+        <ConfirmModal
+          title={t('calendar.deleteScheduleTitle')}
+          description={t('calendar.deleteScheduleConfirm')}
+          confirmLabel={t('calendar.delete')}
+          cancelLabel={t('calendar.cancel')}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteConfirmOpen(false)}
+        />
+      )}
     </AppLayout>
   );
 }

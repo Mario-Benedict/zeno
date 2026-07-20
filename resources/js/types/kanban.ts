@@ -106,5 +106,7 @@ export interface KanbanProps {
   projectUsers: KanbanUser[];
   currentUser: KanbanUser;
   cardLabels: CardLabel[];
+  /** Opens this card's detail modal on load — e.g. from a notification deep-link. */
+  activeCardId?: string | null;
   [key: string]: unknown;
 }

@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -119,7 +120,12 @@ class CalendarService
         // a separate manually-created schedule.
         $kanbanTasks = $this->getAssignedKanbanTasks($projectId, $userIds, $rangeStart, $rangeEnd);
 
-        return array_merge($projectEvents, $classifiedEvents, $kanbanTasks);
+        // 4) CLASSIFIED Kanban-task busy-blocks from other projects — the
+        // Kanban-sourced counterpart to (2), so a task due elsewhere shows
+        // up here too, subject to the same calendar_visibility rules.
+        $classifiedKanbanTasks = $this->getClassifiedKanbanTasks($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
+
+        return array_merge($projectEvents, $classifiedEvents, $kanbanTasks, $classifiedKanbanTasks);
     }
 
     /**
@@ -367,6 +373,76 @@ class CalendarService
             ])->values()->all(),
             'is_classified' => true,
             'visibility' => $event->creator?->calendar_visibility === 'masked' ? 'masked' : 'busy_only',
+        ];
+    }
+
+    /**
+     * Fetch CLASSIFIED Kanban-task busy-blocks from all projects EXCEPT the
+     * current one — the Kanban-sourced counterpart to getClassifiedEvents().
+     * A card has no single "creator" the way a CalendarEvent does, so
+     * visibility is decided from the relevant assignees (the ones among
+     * `$userIds`): full detail if the viewer is themselves an assignee, or
+     * if any relevant assignee opted into "transparent"; otherwise
+     * classified, using "masked" if any relevant assignee chose that over
+     * "busy_only".
+     */
+    private function getClassifiedKanbanTasks(
+        string $projectId,
+        int $viewerId,
+        array $userIds,
+        Carbon $rangeStart,
+        Carbon $rangeEnd
+    ): array {
+        $cards = KanbanBoardCard::whereHas(
+            'kanbanBoard',
+            fn ($q) => $q->where('kanban_board_project_id', '!=', $projectId)
+        )
+            ->whereNotNull('kanban_board_card_due_date')
+            ->where('kanban_board_card_due_date', '<', $rangeEnd)
+            ->where('kanban_board_card_due_date', '>=', $rangeStart)
+            ->whereHas('members', fn ($q) => $q->whereIn('users.id', $userIds))
+            ->with([
+                'members:id,name,calendar_visibility',
+                'labels',
+                'kanbanBoard:kanban_board_id,kanban_board_name,kanban_board_project_id',
+            ])
+            ->get();
+
+        return $cards->map(function (KanbanBoardCard $card) use ($viewerId, $userIds) {
+            $relevantAssignees = $card->members->whereIn('id', $userIds);
+
+            $showFull = $card->members->contains('id', $viewerId)
+                || $relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'transparent');
+
+            return $showFull
+                ? $this->formatKanbanTask($card, $card->kanbanBoard->kanban_board_project_id)
+                : $this->formatClassifiedKanbanTask($card, $relevantAssignees);
+        })->values()->all();
+    }
+
+    /**
+     * Format a Kanban card as a CLASSIFIED busy-block — the Kanban-sourced
+     * counterpart to formatClassifiedEvent(): only time and participants, no
+     * title, description, or board/project info.
+     */
+    private function formatClassifiedKanbanTask(KanbanBoardCard $card, Collection $relevantAssignees): array
+    {
+        $start = $card->kanban_board_card_due_date;
+        $end = $start->copy()->addHour();
+
+        return [
+            'id' => 'classified-kanban-'.$card->kanban_board_card_id,
+            'start_time' => $start->toIso8601String(),
+            'end_time' => $end->toIso8601String(),
+            'participants' => $card->members->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+            ])->values()->all(),
+            'is_classified' => true,
+            'is_kanban_task' => true,
+            'visibility' => $relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'masked')
+                ? 'masked'
+                : 'busy_only',
         ];
     }
 

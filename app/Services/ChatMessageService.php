@@ -166,8 +166,8 @@ class ChatMessageService
         foreach ($results as $doc) {
             $sender = $senderMap[$doc['sender_id']] ?? null;
             $preview = match ($doc['type']) {
-                'image' => $sender ? "{$sender['name']} sent an image" : 'Sent an image',
-                'file' => $sender ? "{$sender['name']} sent a file" : 'Sent a file',
+                'image' => 'Sent an image',
+                'file' => 'Sent a file',
                 default => $doc['body'] ?? '',
             };
 
@@ -287,7 +287,7 @@ class ChatMessageService
      * @param  string  $userId  MySQL users.id
      * @param  string|null  $lastMessageId  MongoDB ObjectId string pesan terbaru
      */
-    public function markAsRead(ChatRoom $room, string $userId, ?string $lastMessageId): void
+    public function markAsRead(ChatRoom $room, int|string $userId, ?string $lastMessageId): void
     {
         if (! $lastMessageId) {
             return;
@@ -296,6 +296,11 @@ class ChatMessageService
         DB::table('chat_room_participants')
             ->where('chat_room_id', $room->id)
             ->where('user_id', $userId)
+            ->where(function ($query) use ($lastMessageId) {
+                $query
+                    ->whereNull('last_read_message_id')
+                    ->orWhere('last_read_message_id', '<', $lastMessageId);
+            })
             ->update([
                 'last_read_message_id' => $lastMessageId,
             ]);
@@ -311,9 +316,15 @@ class ChatMessageService
      * (`withPivot([..., 'last_read_message_id', ...])` in `ChatRoom::participants()`).
      * Re-querying it per room here would be an avoidable N+1.
      */
-    public function countUnread(string $roomId, ?string $lastReadMessageId): int
+    public function countUnread(string $roomId, ?string $lastReadMessageId, int|string $userId): int
     {
-        $filter = ['room_id' => $roomId, 'is_deleted' => false];
+        // A sender has already seen their own message. Counting it as unread
+        // makes the header badge reappear immediately after they send.
+        $filter = [
+            'room_id' => $roomId,
+            'is_deleted' => false,
+            'sender_id' => ['$ne' => $userId],
+        ];
 
         if ($lastReadMessageId) {
             $filter['_id'] = ['$gt' => new ObjectId($lastReadMessageId)];
@@ -369,13 +380,13 @@ class ChatMessageService
 
         return DB::table('users')
             ->whereIn('id', $senderIds)
-            ->get(['id', 'name', 'email'])
+            ->get(['id', 'name', 'email', 'avatar_url'])
             ->keyBy('id')
             ->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
-                'avatarUrl' => null,
+                'avatarUrl' => $this->storage->url($u->avatar_url),
             ])
             ->all();
     }
@@ -419,7 +430,7 @@ class ChatMessageService
         return [
             '_id' => (string) $doc['_id'],
             'roomId' => $doc['room_id'],
-            'senderId' => $doc['sender_id'],
+            'senderId' => (string) $doc['sender_id'],
             'sender' => $sender,
             'type' => $doc['type'],
             'body' => $doc['is_deleted'] ?? false

@@ -40,7 +40,6 @@ const NoteEditor = ({
     setTitle,
     saveStatus,
     savedAt,
-    isDirty,
     applyRemoteContent,
     flushSave,
   } = useNoteEditor({
@@ -52,9 +51,11 @@ const NoteEditor = ({
   });
 
   const handleRemoteUpdate = useCallback(
-    (remoteNote: NoteDetail) => {
-      applyRemoteContent(remoteNote);
-      onSaved(remoteNote);
+    (remoteNote: NoteDetail): boolean => {
+      const applied = applyRemoteContent(remoteNote);
+      if (applied) onSaved(remoteNote);
+
+      return applied;
     },
     [applyRemoteContent, onSaved],
   );
@@ -63,7 +64,7 @@ const NoteEditor = ({
     useNoteRealtime({
       noteId: note?.id ?? null,
       isShared: note?.isShared ?? false,
-      isDirty,
+      currentUserId,
       onRemoteUpdate: handleRemoteUpdate,
     });
 

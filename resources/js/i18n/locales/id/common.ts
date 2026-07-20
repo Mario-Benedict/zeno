@@ -47,4 +47,7 @@ export const common: typeof en = {
   viewer: 'Peninjau',
   unknown: 'Tidak diketahui',
   somethingWentWrong: 'Terjadi kesalahan. Silakan coba lagi.',
+  fileTooLargeTitle: 'Ukuran file terlalu besar',
+  fileTooLargeBody:
+    'Unggahan ini melebihi batas ukuran. Pilih file yang lebih kecil lalu coba lagi.',
 };

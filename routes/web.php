@@ -11,6 +11,8 @@ use App\Http\Controllers\ProjectSettingsController;
 use App\Http\Controllers\TaskConflictController;
 use App\Models\Project;
 use App\Services\AccountSessionService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -19,6 +21,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('u/{accountIndex}')
         ->whereNumber('accountIndex')
         ->group(function () {
+            Route::post('broadcasting/auth', fn (Request $request) => Broadcast::auth($request))
+                ->name('account.broadcasting.auth');
+
             Route::prefix('projects')->name('projects.')->group(function () {
                 Route::get('/', [ProjectController::class, 'index'])->name('index');
                 Route::post('/', [ProjectController::class, 'store'])->name('store');

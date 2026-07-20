@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Chat\StoreChatGroupRequest;
 use App\Http\Requests\Chat\StoreChatRoomRequest;
 use App\Http\Resources\ChatRoomResource;
 use App\Models\ChatRoom;
@@ -10,6 +11,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Services\ChatMessageService;
 use App\Services\ChatRoomService;
+use App\Services\StorageService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +36,7 @@ class ChatRoomController extends Controller
     public function __construct(
         private readonly ChatRoomService $roomService,
         private readonly ChatMessageService $messageService,
+        private readonly StorageService $storage,
     ) {}
 
     // ──────────────────────────────────────────────────────────────
@@ -93,7 +96,12 @@ class ChatRoomController extends Controller
         };
 
         return Inertia::render('chat/index', [
-            'rooms' => $rooms->map(function (ChatRoom $room) use ($lastMessageMap) {
+            'rooms' => $rooms->map(function (ChatRoom $room) use ($lastMessageMap, $user) {
+                $lastReadMessageId = $room->participants
+                    ->firstWhere('id', $user->id)
+                    ?->pivot
+                    ->last_read_message_id;
+
                 return [
                     'id' => $room->id,
                     'projectId' => $room->project_id,
@@ -103,11 +111,16 @@ class ChatRoomController extends Controller
                         'id' => (string) $p->id,
                         'name' => $p->name,
                         'email' => $p->email,
-                        'avatarUrl' => null,
+                        'avatarUrl' => $this->storage->url($p->avatar_url),
                         'role' => $p->pivot->role ?? null,
                         'isMuted' => (bool) ($p->pivot->is_muted ?? false),
                     ])->values()->all(),
                     'lastMessage' => $lastMessageMap[$room->id] ?? null,
+                    'unreadCount' => $this->messageService->countUnread(
+                        $room->id,
+                        $lastReadMessageId,
+                        $user->getKey(),
+                    ),
                     'createdAt' => $room->created_at?->toIso8601String(),
                     'updatedAt' => $room->updated_at?->toIso8601String(),
                 ];
@@ -116,13 +129,16 @@ class ChatRoomController extends Controller
                 'id' => (string) $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'avatarUrl' => null,
+                'avatarUrl' => $this->storage->url($user->avatar_url),
             ],
             'project' => [
                 'project_id' => $project->project_id,
                 'project_name' => $project->project_name,
                 'project_slug' => $project->project_slug,
             ],
+            // Lets notification deep-links open and mark the intended room as
+            // read instead of landing users on an empty chat pane.
+            'activeRoomId' => $activeRoomId,
             // Optional props: only evaluated + sent when explicitly requested via partial reload.
             // Not included on the initial full page load.
             'messages' => Inertia::optional(fn () => $resolveMessages()['messages']),
@@ -159,6 +175,40 @@ class ChatRoomController extends Controller
         ]);
 
         $room = $this->roomService->findOrCreateDmRoom($project, $user, $recipient);
+
+        return redirect()
+            ->route('chat.index', [
+                'accountIndex' => $accountIndex,
+                'project' => $project->project_slug,
+            ])
+            ->with('activeRoomId', $room->id);
+    }
+
+    /**
+     * POST /projects/{project}/chat/rooms/group
+     *
+     * Create a new group room with an explicit subset of project members
+     * (chosen via the chat "+" button), distinct from the auto-created
+     * project-wide group room every member already belongs to.
+     */
+    public function storeGroup(int $accountIndex, StoreChatGroupRequest $request, Project $project): RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $this->authorize('createGroup', [
+            ChatRoom::query()
+                ->where('project_id', $project->project_id)
+                ->where('type', 'group')
+                ->firstOrFail(),
+        ]);
+
+        $room = $this->roomService->createCustomGroupRoom(
+            $project,
+            $user,
+            $request->validated('name'),
+            $request->validated('participant_ids'),
+        );
 
         return redirect()
             ->route('chat.index', [

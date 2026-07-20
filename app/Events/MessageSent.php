@@ -12,17 +12,34 @@ class MessageSent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public readonly array $message) {}
+    /**
+     * @param  list<int>  $notificationRecipientIds
+     */
+    public function __construct(
+        public readonly array $message,
+        private readonly array $notificationRecipientIds = [],
+    ) {}
 
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel('chat.'.$this->message['roomId']),
         ];
+
+        foreach ($this->notificationRecipientIds as $userId) {
+            $channels[] = new PrivateChannel('notifications.user.'.$userId);
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string
     {
         return 'message.sent';
+    }
+
+    public function broadcastWith(): array
+    {
+        return ['message' => $this->message];
     }
 }

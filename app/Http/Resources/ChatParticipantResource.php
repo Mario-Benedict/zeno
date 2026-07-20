@@ -26,8 +26,8 @@ class ChatParticipantResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
 
-            'avatarUrl' => $this->avatar_path
-                ? app(StorageService::class)->url($this->avatar_path)
+            'avatarUrl' => $this->avatar_url
+                ? app(StorageService::class)->url($this->avatar_url)
                 : null,
 
             'role' => $this->whenPivotLoaded('chat_room_participants', fn () => $this->pivot->role),

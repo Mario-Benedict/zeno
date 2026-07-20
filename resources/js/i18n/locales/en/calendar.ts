@@ -45,6 +45,19 @@ export const calendar = {
   // Sidebar member list
   searchForPeople: 'Search for people',
   noMembersFound: 'No members found.',
+  membersSelectedCount: '{{checked}}/{{total}} selected',
+  selectAll: 'Select all',
+  deselectAll: 'Deselect all',
+
+  // Sidebar label legend
+  moreLabels: '+ {{count}} more',
+  showLessLabels: 'Show less',
+
+  // Sidebar task-source filter
+  taskSourceFilterLabel: 'Tasks',
+  taskSourceAll: 'All',
+  taskSourceThisProject: 'This project',
+  taskSourceOtherProjects: 'Other projects',
 
   // Month grid
   moreEvents: '+ {{count}} more',
@@ -106,6 +119,7 @@ export const calendar = {
   saveScheduleError: 'Failed to save schedule.',
 
   // Delete confirmation
+  deleteScheduleTitle: 'Delete Schedule',
   deleteScheduleConfirm: 'Are you sure you want to delete this schedule?',
 
   // Recurrence edit dialog

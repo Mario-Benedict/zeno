@@ -37,12 +37,20 @@ export interface RemindersPageProps {
   [key: string]: unknown;
 }
 
-export interface NotificationInboxItem {
-  reminder_id: string;
-  title: string;
-  due_at: string | null;
-  is_overdue: boolean;
-}
+export type NotificationInboxItem =
+  | {
+      type: 'reminder';
+      reminder_id: string;
+      title: string;
+      due_at: string | null;
+      is_overdue: boolean;
+    }
+  | {
+      type: 'assignment';
+      id: string;
+      card_title: string | null;
+      kanban_board_card_id: string;
+    };
 
 export interface NotificationChatItem {
   id: string;
@@ -50,6 +58,11 @@ export interface NotificationChatItem {
   name: string | null;
   participants: { id: string; name: string }[];
   unread_count: number;
+  lastMessage: {
+    body: string;
+    senderName: string;
+    createdAt: string;
+  } | null;
 }
 
 /**

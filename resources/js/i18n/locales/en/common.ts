@@ -45,4 +45,7 @@ export const common = {
   viewer: 'Viewer',
   unknown: 'Unknown',
   somethingWentWrong: 'Something went wrong. Please try again.',
+  fileTooLargeTitle: 'File is too large',
+  fileTooLargeBody:
+    'This upload exceeds the allowed size. Choose a smaller file and try again.',
 };

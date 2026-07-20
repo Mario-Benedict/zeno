@@ -24,6 +24,7 @@ class Note extends Model
     protected $casts = [
         'content' => 'array',
         'is_shared' => 'boolean',
+        'version' => 'integer',
     ];
 
     protected static function boot()

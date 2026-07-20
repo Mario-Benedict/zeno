@@ -1,9 +1,11 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import UploadErrorToast from '@/components/shared/UploadErrorToast';
 import { LocaleProvider } from '@/i18n/LocaleContext';
 import { applyThemeClass, getStoredTheme, persistTheme } from '@/lib/theme';
 import type { Theme } from '@/lib/theme';
+import { notifyUploadTooLarge } from '@/lib/uploadEvents';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -31,6 +33,13 @@ try {
 
 const pages = import.meta.glob('./pages/**/*.tsx');
 
+router.on('httpException', (event) => {
+  if (event.detail.response.status !== 413) return;
+
+  event.preventDefault();
+  notifyUploadTooLarge();
+});
+
 createInertiaApp({
   title: (title) => (title ? `${title} - ${appName}` : appName),
 
@@ -41,6 +50,7 @@ createInertiaApp({
       <StrictMode>
         <LocaleProvider>
           <App {...props} />
+          <UploadErrorToast />
         </LocaleProvider>
       </StrictMode>,
     );

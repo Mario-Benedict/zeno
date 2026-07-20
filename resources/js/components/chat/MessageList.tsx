@@ -6,8 +6,11 @@ import {
   useRef,
 } from 'react';
 import MessageBubble from '@/components/chat/MessageBubble';
+import type { ScrollSignal } from '@/hooks/useMessages';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatMessage, ChatParticipant } from '@/types/chat';
+import MessageIcon from '@public/icons/small/message.svg';
+import SpinnerIcon from '@public/icons/small/spinner.svg';
 
 interface Props {
   messages: ChatMessage[];
@@ -16,7 +19,7 @@ interface Props {
   loading: boolean;
   initialLoading: boolean;
   onLoadMore: () => void;
-  newMessageSignal?: string;
+  scrollSignal?: ScrollSignal;
   onSenderClick?: (senderId: string) => void;
 }
 
@@ -67,17 +70,7 @@ const shouldShowHeader = (
 
 const Spinner = () => (
   <div className="flex justify-center py-3">
-    <svg
-      className="animate-spin text-dark-secondary"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
+    <SpinnerIcon className="animate-spin text-dark-secondary" />
   </div>
 );
 
@@ -88,7 +81,7 @@ const MessageList = ({
   loading,
   initialLoading,
   onLoadMore,
-  newMessageSignal,
+  scrollSignal,
   onSenderClick,
 }: Props) => {
   const { t } = useTranslation();
@@ -130,15 +123,15 @@ const MessageList = ({
 
   useLayoutEffect(() => {
     const el = containerRef.current;
-    if (!el || !newMessageSignal) return;
+    if (!el || !scrollSignal) return;
 
     const { scrollTop, scrollHeight, clientHeight } = el;
     const distFromBottom = scrollHeight - scrollTop - clientHeight;
 
-    if (distFromBottom < 150) {
+    if (scrollSignal.force || distFromBottom < 150) {
       el.scrollTop = scrollHeight;
     }
-  }, [newMessageSignal]);
+  }, [scrollSignal]);
 
   useEffect(() => {
     const sentinel = topSentinelRef.current;
@@ -170,17 +163,7 @@ const MessageList = ({
   if (!initialLoading && messages.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 select-none">
-        <svg
-          width="36"
-          height="36"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className="text-dark-secondary opacity-40"
-        >
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
+        <MessageIcon className="text-dark-secondary opacity-40" />
         <p className="text-small text-dark-secondary opacity-50">
           {t('chat.noMessagesYet')}
         </p>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
 import { getEventLabelColor } from '@/utils/calendar';
@@ -13,7 +13,13 @@ interface MonthDayCellProps {
   onEventClick: (event: AnyCalendarEvent) => void;
 }
 
-const MAX_VISIBLE_EVENTS = 5;
+// Approximate rendered height (px) of one event row: text-[11px] leading-tight
+// (~14px) + py-px (~2px) + the gap-0.5 to the next row (~2px).
+const EVENT_ROW_HEIGHT = 18;
+const MIN_VISIBLE_EVENTS = 1;
+// Used only for the very first render, before the row container has been
+// measured — overwritten by the ResizeObserver a frame later.
+const FALLBACK_MAX_VISIBLE_EVENTS = 5;
 
 const MONTHS_SHORT = [
   'Jan',
@@ -50,6 +56,27 @@ export const MonthDayCell = ({
 }: MonthDayCellProps) => {
   const { t } = useTranslation();
   const [popupOpen, setPopupOpen] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [maxVisible, setMaxVisible] = useState(FALLBACK_MAX_VISIBLE_EVENTS);
+
+  // The number of events that fit depends on the cell's actual rendered
+  // height (which varies with viewport size, not just MAX_VISIBLE_EVENTS),
+  // so it's measured rather than fixed — otherwise events silently overflow
+  // the cell with no "+N more" affordance to reach the rest.
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const rows = Math.floor(el.clientHeight / EVENT_ROW_HEIGHT);
+      setMaxVisible(Math.max(MIN_VISIBLE_EVENTS, rows));
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const now = new Date();
   const isToday =
@@ -74,8 +101,13 @@ export const MonthDayCell = ({
       new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
   );
 
-  const visibleEvents = dayEvents.slice(0, MAX_VISIBLE_EVENTS);
-  const hiddenCount = dayEvents.length - MAX_VISIBLE_EVENTS;
+  // Reserve one row for the "+N more" button itself whenever not everything
+  // fits, so the button never gets pushed out of the visible area.
+  const visibleEvents =
+    dayEvents.length > maxVisible
+      ? dayEvents.slice(0, Math.max(MIN_VISIBLE_EVENTS, maxVisible - 1))
+      : dayEvents;
+  const hiddenCount = dayEvents.length - visibleEvents.length;
 
   const ownerName = (ev: AnyCalendarEvent) => {
     const first = ev.participants[0]?.name ?? t('calendar.unknownMember');
@@ -110,7 +142,10 @@ export const MonthDayCell = ({
         </span>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+      <div
+        ref={listRef}
+        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden"
+      >
         {visibleEvents.map((ev) => {
           const time = formatTime(ev.start_time);
 

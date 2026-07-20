@@ -102,11 +102,19 @@ const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
               key={acct.index}
               className="flex items-center gap-3 rounded-lg bg-dark-surface-1 px-2 py-2"
             >
-              <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(acct.index)} text-xsmall font-bold text-white`}
-              >
-                {getInitials(acct.name)}
-              </div>
+              {acct.avatar ? (
+                <img
+                  src={acct.avatar}
+                  alt={acct.name}
+                  className="h-9 w-9 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(acct.index)} text-xsmall font-bold text-white`}
+                >
+                  {getInitials(acct.name)}
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-small font-semibold text-dark-primary">
                   {acct.name}
@@ -127,11 +135,19 @@ const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
               }}
               className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-white/[0.07]"
             >
-              <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(acct.index)} text-xsmall font-bold text-white opacity-80`}
-              >
-                {getInitials(acct.name)}
-              </div>
+              {acct.avatar ? (
+                <img
+                  src={acct.avatar}
+                  alt={acct.name}
+                  className="h-9 w-9 shrink-0 rounded-full object-cover opacity-80"
+                />
+              ) : (
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(acct.index)} text-xsmall font-bold text-white opacity-80`}
+                >
+                  {getInitials(acct.name)}
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-small font-semibold text-dark-primary">
                   {acct.name}

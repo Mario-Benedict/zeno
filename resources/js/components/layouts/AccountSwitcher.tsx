@@ -73,12 +73,19 @@ const AccountSwitcher = ({
         aria-label={t('account.userMenu')}
         className="flex h-8 max-w-60 items-center gap-2 rounded-lg bg-static-dark-surface-2 px-2 text-static-dark-primary transition-colors select-none hover:bg-static-dark-surface-3"
       >
-        {/* Colour-coded avatar matching the account-menu style */}
-        <div
-          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(account.index)} text-micro font-bold text-white`}
-        >
-          {getInitials(userName)}
-        </div>
+        {auth.user?.avatar_url ? (
+          <img
+            src={auth.user.avatar_url}
+            alt={userName}
+            className="h-5 w-5 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${accountAvatarColor(account.index)} text-micro font-bold text-white`}
+          >
+            {getInitials(userName)}
+          </div>
+        )}
 
         <span className="truncate text-small font-bold whitespace-nowrap">
           {userName}

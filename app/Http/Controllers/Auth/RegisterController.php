@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,6 +45,8 @@ class RegisterController extends Controller
         $request->session()->regenerate();
 
         AccountSessionService::addAccount($request, $user->id);
+
+        Log::info('User registered', ['user_id' => $user->id]);
 
         return redirect()->route('verification.notice');
     }

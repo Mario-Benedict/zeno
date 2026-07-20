@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureProjectMember;
 use App\Http\Middleware\EnsureProjectRole;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\LogRequestContext;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAccountRouteDefaults;
 use Illuminate\Foundation\Application;
@@ -18,12 +19,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [
-            SecurityHeaders::class,
-            SetAccountRouteDefaults::class,
-            HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
-        ]);
+        $middleware->web(
+            prepend: [
+                LogRequestContext::class,
+            ],
+            append: [
+                SecurityHeaders::class,
+                SetAccountRouteDefaults::class,
+                HandleInertiaRequests::class,
+                AddLinkHeadersForPreloadedAssets::class,
+            ],
+        );
 
         $middleware->alias([
             'project.member' => EnsureProjectMember::class,

@@ -216,6 +216,7 @@ const Timeline = ({
           <TimelineChart
             tasks={visibleTasks}
             range={range}
+            openTaskId={openCard?.card.kanban_board_card_id ?? null}
             onOpenCard={(task) =>
               setOpenCard({ card: task.card, boardId: task.boardId })
             }

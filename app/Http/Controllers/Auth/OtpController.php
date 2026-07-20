@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\AccountSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -40,6 +41,8 @@ class OtpController extends Controller
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($key);
 
+            Log::warning('Email OTP rate limited', ['user_id' => $user->id]);
+
             return back()->withErrors([
                 'code' => "You've tried too many codes. Wait {$seconds} seconds, then try again.",
             ]);
@@ -55,6 +58,8 @@ class OtpController extends Controller
         if (! $otp) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
 
+            Log::warning('Failed email OTP attempt', ['user_id' => $user->id]);
+
             return back()->withErrors([
                 'code' => 'That code is invalid or has expired. Request a new code and try again.',
             ]);
@@ -63,6 +68,8 @@ class OtpController extends Controller
         RateLimiter::clear($key);
         $otp->delete();
         $user->markEmailAsVerified();
+
+        Log::info('Email verified', ['user_id' => $user->id]);
 
         return $this->redirectToProjects($request);
     }
@@ -76,6 +83,8 @@ class OtpController extends Controller
         }
 
         $user->sendEmailVerificationNotification();
+
+        Log::info('Email OTP resent', ['user_id' => $user->id]);
 
         return back()->with('status', 'verification-code-sent');
     }

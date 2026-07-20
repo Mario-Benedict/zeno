@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Services\AccountSessionService;
 use App\Services\CalendarService;
 use App\Services\ChatRoomService;
+use App\Services\StorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class ProjectController extends Controller
 {
+    public function __construct(private readonly StorageService $storage) {}
+
     public function index(): Response
     {
         $user = auth()->user();
@@ -30,7 +33,7 @@ class ProjectController extends Controller
                 'project_name' => $p->project_name,
                 'project_slug' => $p->project_slug,
                 'avatar_color' => $p->avatar_color ?? 'accent-blue',
-                'avatar_url' => $p->avatar_url,
+                'avatar_url' => $this->storage->url($p->avatar_url),
                 'is_pinned' => (bool) $p->pivot->is_pinned,
                 'role' => $p->pivot->role,
             ]);
@@ -45,7 +48,7 @@ class ProjectController extends Controller
             'project_name' => $p->project_name,
             'project_slug' => $p->project_slug,
             'avatar_color' => $p->avatar_color ?? 'accent-blue',
-            'avatar_url' => $p->avatar_url,
+            'avatar_url' => $this->storage->url($p->avatar_url),
             'is_pinned' => (bool) $p->pivot->is_pinned,
             'role' => $p->pivot->role,
         ]);

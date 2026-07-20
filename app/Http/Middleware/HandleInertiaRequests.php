@@ -7,9 +7,9 @@ use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
 use App\Services\AccountSessionService;
+use App\Services\StorageService;
 use App\Support\Totp;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -88,9 +88,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...$user->toArray(),
-            'avatar_url' => $user->avatar_url
-                ? Storage::disk('public')->url($user->avatar_url)
-                : null,
+            'avatar_url' => app(StorageService::class)->url($user->avatar_url),
         ];
     }
 
@@ -132,9 +130,7 @@ class HandleInertiaRequests extends Middleware
             'project_name' => $project->project_name,
             'project_slug' => $project->project_slug,
             'avatar_color' => $project->avatar_color ?? 'accent-blue',
-            'avatar_url' => $project->avatar_url
-                ? Storage::disk('public')->url($project->avatar_url)
-                : null,
+            'avatar_url' => app(StorageService::class)->url($project->avatar_url),
         ];
 
         $user = $request->user();
@@ -171,9 +167,7 @@ class HandleInertiaRequests extends Middleware
                 'project_name' => $project->project_name,
                 'project_slug' => $project->project_slug,
                 'avatar_color' => $project->avatar_color ?? 'accent-blue',
-                'avatar_url' => $project->avatar_url
-                    ? Storage::disk('public')->url($project->avatar_url)
-                    : null,
+                'avatar_url' => app(StorageService::class)->url($project->avatar_url),
                 'is_pinned' => (bool) $project->pivot->is_pinned,
                 'role' => $project->pivot->role,
             ])

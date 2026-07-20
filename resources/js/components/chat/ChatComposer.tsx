@@ -1,17 +1,26 @@
 import { router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import echo from '@/echo';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FILE_SIZE_LIMITS, isFileTooLarge } from '@/lib/fileUploads';
 import { formatFileSize } from '@/lib/utils';
 import chat from '@/routes/chat';
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, ChatParticipant } from '@/types/chat';
+import ArrowUpIcon from '@public/icons/small/arrow_up.svg';
 import CancelSmallIcon from '@public/icons/small/cancel.svg';
+import FileIcon from '@public/icons/small/file.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
 
 interface Props {
   projectSlug: string;
   roomId: string;
+  currentUser: ChatParticipant;
+  /** Called immediately with an optimistic message when send() is invoked. */
   onMessageSent: (message: ChatMessage) => void;
+  /** Called once the server confirms the send, to replace the optimistic entry. */
+  onMessageConfirmed: (tempId: string, message: ChatMessage) => void;
+  /** Called if the send request fails, to mark the optimistic entry as failed. */
+  onMessageFailed: (tempId: string) => void;
   disabled?: boolean;
 }
 
@@ -31,40 +40,11 @@ const getMessageType = (files: PendingFile[]): 'text' | 'image' | 'file' => {
   return files.every((f) => f.type === 'image') ? 'image' : 'file';
 };
 
+let _tempMessageIdCounter = 0;
+const nextTempMessageId = () => `temp-${Date.now()}-${++_tempMessageIdCounter}`;
+
 let _idCounter = 0;
 const nextId = () => `pf-${++_idCounter}`;
-
-const ArrowUpIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="12" y1="19" x2="12" y2="5" />
-    <polyline points="5 12 12 5 19 12" />
-  </svg>
-);
-
-const FileIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-  </svg>
-);
 
 const AttachmentStrip = ({
   files,
@@ -140,26 +120,25 @@ const AttachmentStrip = ({
 const ChatComposer = ({
   projectSlug,
   roomId,
+  currentUser,
   onMessageSent,
+  onMessageConfirmed,
+  onMessageFailed,
   disabled = false,
 }: Props) => {
   const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
   const [body, setBody] = useState('');
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
-  const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const wasSendingRef = useRef(false);
-
-  useEffect(() => {
-    if (wasSendingRef.current && !sending) {
-      textareaRef.current?.focus();
-    }
-    wasSendingRef.current = sending;
-  }, [sending]);
+  // Debounces a genuinely simultaneous double-fire (e.g. Enter key repeat)
+  // without blocking the composer for the whole network round-trip the way
+  // a `sending` state tied to `disabled` would — sends are optimistic now,
+  // so multiple can be in flight at once.
+  const isSendingRef = useRef(false);
 
   const adjustHeight = () => {
     const el = textareaRef.current;
@@ -171,13 +150,27 @@ const ChatComposer = ({
   const addFiles = useCallback(
     (list: FileList | null) => {
       if (!list) return;
-      const MAX_SIZE = 50 * 1024 * 1024;
       const toAdd: PendingFile[] = [];
+      const pendingSize = pendingFiles.reduce(
+        (total, pendingFile) => total + pendingFile.file.size,
+        0,
+      );
 
       for (const file of Array.from(list)) {
         if (pendingFiles.length + toAdd.length >= 10) break;
-        if (file.size > MAX_SIZE) {
+        if (isFileTooLarge(file, FILE_SIZE_LIMITS.chatAttachment)) {
           setError(t('chat.fileExceedsSizeLimit', { name: file.name }));
+          continue;
+        }
+        const addedSize = toAdd.reduce(
+          (total, pendingFile) => total + pendingFile.file.size,
+          0,
+        );
+        if (
+          pendingSize + addedSize + file.size >
+          FILE_SIZE_LIMITS.chatRequest
+        ) {
+          setError(t('chat.attachmentsExceedTotalSizeLimit'));
           continue;
         }
         const type = getAttachmentType(file);
@@ -187,7 +180,7 @@ const ChatComposer = ({
       }
       setPendingFiles((prev) => [...prev, ...toAdd]);
     },
-    [pendingFiles.length, t],
+    [pendingFiles, t],
   );
 
   const removeFile = useCallback((id: string) => {
@@ -202,19 +195,71 @@ const ChatComposer = ({
   const send = useCallback(() => {
     const trimmed = body.trim();
     if (!trimmed && pendingFiles.length === 0) return;
-    if (sending || disabled) return;
+    if (disabled || isSendingRef.current) return;
 
-    setSending(true);
+    // Only guards against a re-entrant call within this same synchronous
+    // pass (e.g. a duplicated event) — released below once body/pendingFiles
+    // are cleared, not tied to the network round-trip, so the next distinct
+    // send (a separate call stack entirely) is never blocked by it.
+    isSendingRef.current = true;
+
     setError(null);
 
-    const payload: Record<string, string | File> = {
-      type: pendingFiles.length > 0 ? getMessageType(pendingFiles) : 'text',
-    };
+    const tempId = nextTempMessageId();
+    const now = new Date().toISOString();
+    const messageType =
+      pendingFiles.length > 0 ? getMessageType(pendingFiles) : 'text';
+    const filesToSend = pendingFiles;
+
+    // Show the message in the list right away — saving happens in the
+    // background below, so the composer is free for the next one instead
+    // of waiting out the round-trip.
+    onMessageSent({
+      _id: tempId,
+      roomId,
+      senderId: currentUser.id,
+      sender: currentUser,
+      type: messageType,
+      body: trimmed,
+      attachments: filesToSend.map((pf) => ({
+        id: pf.id,
+        type: pf.type,
+        fileName: pf.file.name,
+        mimeType: pf.file.type || 'application/octet-stream',
+        size: pf.file.size,
+        path: '',
+        url: pf.type === 'image' ? pf.previewUrl : undefined,
+      })),
+      createdAt: now,
+      updatedAt: now,
+      pending: true,
+    });
+
+    const payload: Record<string, string | File> = { type: messageType };
     if (trimmed) payload['body'] = trimmed;
-    pendingFiles.forEach((pf, i) => {
+    filesToSend.forEach((pf, i) => {
       payload[`attachments[${i}][file]`] = pf.file;
       payload[`attachments[${i}][type]`] = pf.type;
     });
+
+    // Only attach the header when Echo has an active socket ID — an empty
+    // string still counts as "present" to the backend (Laravel's
+    // Broadcast::socket() returns it as-is) and Pusher/Reverb's SDK rejects
+    // any non-null socket ID that isn't in the "digits.digits" form,
+    // throwing "Invalid socket ID" instead of just skipping the exclusion.
+    const socketId = echo.socketId();
+
+    setBody('');
+    setPendingFiles([]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    isSendingRef.current = false;
+
+    const revokePreviews = () => {
+      filesToSend.forEach((pf) => {
+        if (pf.previewUrl) URL.revokeObjectURL(pf.previewUrl);
+      });
+    };
 
     router.post(
       chat.rooms.messages.store.url({
@@ -227,39 +272,36 @@ const ChatComposer = ({
         forceFormData: true,
         preserveState: true,
         preserveScroll: true,
-        headers: { 'X-Socket-ID': echo.socketId() ?? '' },
+        headers: socketId ? { 'X-Socket-ID': socketId } : {},
         onSuccess: (page) => {
           const newMessage = (
             page.props as { flash?: { chat?: { newMessage?: ChatMessage } } }
           ).flash?.chat?.newMessage;
-          if (newMessage) onMessageSent(newMessage);
-
-          setBody('');
-          setPendingFiles((prev) => {
-            prev.forEach((pf) => {
-              if (pf.previewUrl) URL.revokeObjectURL(pf.previewUrl);
-            });
-
-            return [];
-          });
-          if (fileInputRef.current) fileInputRef.current.value = '';
-          if (textareaRef.current) textareaRef.current.style.height = 'auto';
+          if (newMessage) {
+            onMessageConfirmed(tempId, newMessage);
+          } else {
+            onMessageFailed(tempId);
+          }
+          revokePreviews();
         },
         onError: (errors) => {
+          onMessageFailed(tempId);
           setError(Object.values(errors)[0] ?? t('chat.failedToSendMessage'));
+          revokePreviews();
         },
-        onFinish: () => setSending(false),
       },
     );
   }, [
     body,
     pendingFiles,
-    sending,
     disabled,
+    currentUser,
     accountIndex,
     projectSlug,
     roomId,
     onMessageSent,
+    onMessageConfirmed,
+    onMessageFailed,
     t,
   ]);
 
@@ -270,9 +312,8 @@ const ChatComposer = ({
     }
   };
 
-  const isDisabled = disabled || sending;
   const canSend =
-    (body.trim().length > 0 || pendingFiles.length > 0) && !isDisabled;
+    (body.trim().length > 0 || pendingFiles.length > 0) && !disabled;
 
   return (
     <div className="shrink-0 px-3 pt-1 pb-3">
@@ -310,7 +351,7 @@ const ChatComposer = ({
           }}
           onKeyDown={handleKeyDown}
           placeholder={t('chat.typeAMessage')}
-          disabled={isDisabled}
+          disabled={disabled}
           rows={1}
           className="flex-1 resize-none bg-transparent text-small leading-normal text-dark-primary placeholder:text-dark-secondary focus:outline-none disabled:opacity-50"
           style={{ minHeight: '22px', maxHeight: '88px' }}
@@ -320,7 +361,7 @@ const ChatComposer = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isDisabled}
+            disabled={disabled}
             title={t('chat.attachFile')}
             className="p-1 text-dark-secondary transition-colors hover:text-dark-primary disabled:opacity-40"
           >
@@ -339,21 +380,7 @@ const ChatComposer = ({
                 : 'cursor-not-allowed bg-dark-surface-2 text-dark-secondary',
             ].join(' ')}
           >
-            {sending ? (
-              <svg
-                className="animate-spin"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-            ) : (
-              <ArrowUpIcon />
-            )}
+            <ArrowUpIcon />
           </button>
         </div>
       </div>

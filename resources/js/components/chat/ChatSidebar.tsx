@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import ChatRoomItem from '@/components/chat/ChatRoomItem';
+import NewGroupModal from '@/components/chat/NewGroupModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatRoom, ChatParticipant } from '@/types/chat';
 import { avatarBgClass, getRoomDisplayName, initials } from '@/utils/chat';
 import PlusIcon from '@public/icons/small/plus.svg';
 import SearchIcon from '@public/icons/small/search.svg';
+import UsersIcon from '@public/icons/small/users.svg';
 
 interface Props {
   rooms: ChatRoom[];
@@ -13,15 +15,19 @@ interface Props {
   activeRoomId: string | null;
   onSelectRoom: (room: ChatRoom) => void;
   onStartDm: (memberId: string) => void;
+  onCreateGroup: (name: string, participantIds: string[]) => void;
+  creatingGroup?: boolean;
 }
 
 const NewDmPicker = ({
   members,
   onSelect,
+  onCreateGroup,
   onClose,
 }: {
   members: ChatParticipant[];
   onSelect: (memberId: string) => void;
+  onCreateGroup: () => void;
   onClose: () => void;
 }) => {
   const { t } = useTranslation();
@@ -38,8 +44,23 @@ const NewDmPicker = ({
   return (
     <div
       ref={ref}
-      className="scrollbar-app absolute top-full right-3 z-30 mt-1 max-h-64 w-56 overflow-y-auto rounded-xl border border-dark-border bg-dark-surface-3 py-1.5 shadow-2xl"
+      className="scrollbar-app absolute top-full right-3 z-30 mt-1 max-h-72 w-56 overflow-y-auto rounded-xl border border-dark-border bg-dark-surface-3 py-1.5 shadow-2xl"
     >
+      <button
+        type="button"
+        onClick={() => {
+          onCreateGroup();
+          onClose();
+        }}
+        className="flex w-full items-center gap-2.5 border-b border-dark-border px-3 py-2 text-left transition-colors hover:bg-dark-surface-2"
+      >
+        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-dark-surface-2 text-dark-primary">
+          <UsersIcon className="h-3.5 w-3.5" />
+        </span>
+        <span className="truncate text-small font-semibold text-dark-primary">
+          {t('chat.newGroupAction')}
+        </span>
+      </button>
       {members.length === 0 && (
         <p className="px-3 py-4 text-center text-xsmall text-dark-secondary">
           {t('chat.noOtherMembers')}
@@ -76,10 +97,13 @@ const ChatSidebar = ({
   activeRoomId,
   onSelectRoom,
   onStartDm,
+  onCreateGroup,
+  creatingGroup = false,
 }: Props) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [groupModalOpen, setGroupModalOpen] = useState(false);
 
   const hasQuery = query.trim().length > 0;
 
@@ -123,10 +147,23 @@ const ChatSidebar = ({
           <NewDmPicker
             members={members}
             onSelect={onStartDm}
+            onCreateGroup={() => setGroupModalOpen(true)}
             onClose={() => setPickerOpen(false)}
           />
         )}
       </div>
+
+      {groupModalOpen && (
+        <NewGroupModal
+          members={members}
+          submitting={creatingGroup}
+          onClose={() => setGroupModalOpen(false)}
+          onSubmit={(name, participantIds) => {
+            onCreateGroup(name, participantIds);
+            setGroupModalOpen(false);
+          }}
+        />
+      )}
 
       {/* ── Room list ── */}
       <nav className="scrollbar-app flex-1 overflow-y-auto">

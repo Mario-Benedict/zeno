@@ -138,7 +138,7 @@ final class AccountSessionService
                 'index' => $index,
                 'name' => $user->name,
                 'email' => $user->email,
-                'avatar' => is_string($user->avatar ?? null) ? $user->avatar : null,
+                'avatar' => app(StorageService::class)->url($user->avatar_url),
                 'is_active' => $index === $activeIndex,
             ];
         }

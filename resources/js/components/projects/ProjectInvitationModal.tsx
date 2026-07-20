@@ -1,6 +1,7 @@
 import { router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { FloatingMenu } from '@/components/shared/FloatingMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
 import type {
@@ -9,6 +10,10 @@ import type {
   ProjectMember,
   ProjectShare,
 } from '@/types';
+import XIcon from '@public/icons/small/cancel.svg';
+import ChevronDownIcon from '@public/icons/small/chevron_down.svg';
+import LinkIcon from '@public/icons/small/link.svg';
+import TrashIcon from '@public/icons/small/trash.svg';
 
 interface ProjectInvitationModalProps {
   open: boolean;
@@ -27,55 +32,6 @@ const useRoleLabels = (): Record<AssignableProjectRole, string> => {
   };
 };
 
-const XIcon = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.4"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const LinkIcon = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 6h18" />
-    <path d="M8 6V4h8v2" />
-    <path d="M19 6l-1 14H6L5 6" />
-  </svg>
-);
-
 const getInitials = (name: string): string => {
   return name
     .split(' ')
@@ -84,21 +40,6 @@ const getInitials = (name: string): string => {
     .toUpperCase()
     .slice(0, 2);
 };
-
-const ChevronDownIcon = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
 
 const RoleSelect = ({
   value,
@@ -112,21 +53,13 @@ const RoleSelect = ({
   onChange: (role: AssignableProjectRole) => void;
 }) => {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const roleLabels = useRoleLabels();
 
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
-
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
@@ -142,35 +75,36 @@ const RoleSelect = ({
         </span>
       </button>
 
-      {open && (
-        <div
-          role="listbox"
-          className="absolute top-full right-0 z-50 mt-1 min-w-28 overflow-hidden rounded-lg border border-dark-border bg-dark-surface-2 py-1 shadow-2xl"
-        >
-          {roles.map((role) => (
-            <button
-              key={role}
-              type="button"
-              role="option"
-              aria-selected={role === value}
-              onClick={() => {
-                onChange(role);
-                setOpen(false);
-              }}
-              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
-                role === value ? 'text-dark-primary' : 'text-dark-secondary'
-              }`}
-            >
-              {role === value && (
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-blue" />
-              )}
-              {role !== value && <span className="h-1.5 w-1.5 shrink-0" />}
-              {roleLabels[role]}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      <FloatingMenu
+        open={open}
+        onClose={() => setOpen(false)}
+        triggerRef={triggerRef}
+        role="listbox"
+        className="min-w-28"
+      >
+        {roles.map((role) => (
+          <button
+            key={role}
+            type="button"
+            role="option"
+            aria-selected={role === value}
+            onClick={() => {
+              onChange(role);
+              setOpen(false);
+            }}
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xsmall font-medium transition-colors hover:bg-white/[0.07] ${
+              role === value ? 'text-dark-primary' : 'text-dark-secondary'
+            }`}
+          >
+            {role === value && (
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-blue" />
+            )}
+            {role !== value && <span className="h-1.5 w-1.5 shrink-0" />}
+            {roleLabels[role]}
+          </button>
+        ))}
+      </FloatingMenu>
+    </>
   );
 };
 
@@ -289,30 +223,37 @@ const ProjectInvitationModal = ({
     );
   };
 
-  const saveLink = () => {
+  const createLink = () => {
     if (!canManage) return;
 
     setLinkProcessing(true);
-    const options = {
-      preserveScroll: true,
-      onSuccess: () => setSelectedLinkRole(null),
-      onFinish: () => setLinkProcessing(false),
-    };
-
-    if (invitationLink) {
-      router.patch(
-        projectPath(accountIndex, project.project_slug, '/invitations/link'),
-        { role: linkRole },
-        options,
-      );
-
-      return;
-    }
-
     router.post(
       projectPath(accountIndex, project.project_slug, '/invitations/link'),
       { role: linkRole },
-      options,
+      {
+        preserveScroll: true,
+        onSuccess: () => setSelectedLinkRole(null),
+        onFinish: () => setLinkProcessing(false),
+      },
+    );
+  };
+
+  // The role picker for an existing link applies immediately — there's no
+  // separate "Save" step, since the primary button next to it is dedicated
+  // to copying the link instead.
+  const updateLinkRole = (role: AssignableProjectRole) => {
+    setSelectedLinkRole(role);
+    if (!canManage || !invitationLink) return;
+
+    setLinkProcessing(true);
+    router.patch(
+      projectPath(accountIndex, project.project_slug, '/invitations/link'),
+      { role },
+      {
+        preserveScroll: true,
+        onSuccess: () => setSelectedLinkRole(null),
+        onFinish: () => setLinkProcessing(false),
+      },
     );
   };
 
@@ -433,15 +374,7 @@ const ProjectInvitationModal = ({
                 <p className="text-sm font-semibold text-dark-primary">
                   {t('projectSettingsTabs.shareWithLink')}
                 </p>
-                {invitationLink ? (
-                  <button
-                    type="button"
-                    onClick={() => copyLink(invitationLink.url)}
-                    className="mt-1 max-w-full truncate text-left text-sm font-medium text-status-info hover:underline"
-                  >
-                    {copied ? t('common.copied') : invitationLink.url}
-                  </button>
-                ) : (
+                {!invitationLink && (
                   <p className="mt-1 text-sm text-dark-secondary">
                     {t('projectSettingsTabs.linkDisabled')}
                   </p>
@@ -450,19 +383,29 @@ const ProjectInvitationModal = ({
               <RoleSelect
                 value={linkRole}
                 roles={roles}
-                disabled={!canManage}
-                onChange={setSelectedLinkRole}
-              />
-              <button
-                type="button"
-                onClick={saveLink}
                 disabled={!canManage || linkProcessing}
-                className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {invitationLink
-                  ? t('projectSettingsTabs.save')
-                  : t('projectSettingsTabs.create')}
-              </button>
+                onChange={updateLinkRole}
+              />
+              {invitationLink ? (
+                <button
+                  type="button"
+                  onClick={() => copyLink(invitationLink.url)}
+                  className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07]"
+                >
+                  {copied
+                    ? t('common.copied')
+                    : t('projectSettingsTabs.copyLink')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={createLink}
+                  disabled={!canManage || linkProcessing}
+                  className="h-9 rounded-md border border-dark-border px-3 text-sm font-semibold text-dark-primary transition-colors hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t('projectSettingsTabs.create')}
+                </button>
+              )}
               {invitationLink && (
                 <button
                   type="button"

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { KeyboardEvent, SyntheticEvent } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import SendIcon from '@public/icons/small/arrow_up.svg';
+import SpinnerIconSvg from '@public/icons/small/spinner.svg';
 
 interface Props {
   value: string;
@@ -9,36 +11,7 @@ interface Props {
   disabled: boolean;
 }
 
-// No arrow-up icon exists in the icon set; keep it inline (same as ChatComposer).
-const SendIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="12" y1="19" x2="12" y2="5" />
-    <polyline points="5 12 12 5 19 12" />
-  </svg>
-);
-
-const SpinnerIcon = () => (
-  <svg
-    className="animate-spin"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-  >
-    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-  </svg>
-);
+const SpinnerIcon = () => <SpinnerIconSvg className="animate-spin" />;
 
 const LlmChatComposer = ({ value, onChange, onSubmit, disabled }: Props) => {
   const { t } = useTranslation();

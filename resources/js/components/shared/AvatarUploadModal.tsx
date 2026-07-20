@@ -1,41 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FILE_SIZE_LIMITS, isFileTooLarge } from '@/lib/fileUploads';
 import CancelIcon from '@public/icons/small/cancel.svg';
-
-export const UploadIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="17 8 12 3 7 8" />
-    <line x1="12" y1="3" x2="12" y2="15" />
-  </svg>
-);
-
-const ImageIcon = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" />
-    <polyline points="21 15 16 10 5 21" />
-  </svg>
-);
+import ImageIcon from '@public/icons/small/image.svg';
+export { default as UploadIcon } from '@public/icons/small/upload.svg';
 
 /**
  * Full-screen image upload dialog with a drag-free "click to select" preview
@@ -49,16 +18,21 @@ export const AvatarUploadModal = ({
   onRemove,
   hasImage,
   uploading,
+  error: requestError = null,
+  onErrorClear,
 }: {
   onClose: () => void;
   onUpload: (file: File) => void;
   onRemove: () => void;
   hasImage: boolean;
   uploading: boolean;
+  error?: string | null;
+  onErrorClear?: () => void;
 }) => {
   const { t } = useTranslation();
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(
@@ -71,6 +45,13 @@ export const AvatarUploadModal = ({
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
     if (!picked) return;
+    onErrorClear?.();
+    if (isFileTooLarge(picked, FILE_SIZE_LIMITS.avatar)) {
+      setSelectionError(t('projectSettingsTabs.avatarFileTooLarge'));
+      e.target.value = '';
+      return;
+    }
+    setSelectionError(null);
     if (preview) URL.revokeObjectURL(preview);
     setPreview(URL.createObjectURL(picked));
     setFile(picked);
@@ -143,6 +124,14 @@ export const AvatarUploadModal = ({
             className="hidden"
             onChange={handleFileChange}
           />
+          {(selectionError || requestError) && (
+            <div
+              role="alert"
+              className="mt-3 rounded-lg border border-status-error/30 bg-status-error/10 px-3 py-2 text-xsmall text-status-error"
+            >
+              {selectionError ?? requestError}
+            </div>
+          )}
           {hasImage && (
             <button
               type="button"

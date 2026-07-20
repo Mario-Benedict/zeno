@@ -25,6 +25,7 @@ const ProfileTab = ({
   const [error, setError] = useState<string | null>(null);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const hasChanged = name.trim() !== '' && name.trim() !== user?.name;
 
@@ -66,12 +67,18 @@ const ProfileTab = ({
 
   const handleUpload = (file: File) => {
     setUploading(true);
+    setUploadError(null);
     const form = new FormData();
     form.append('avatar', file);
     router.post(accountPath(accountIndex, '/profile/avatar'), form, {
       preserveScroll: true,
       forceFormData: true,
       onSuccess: () => setUploadModalOpen(false),
+      onError: (errors) =>
+        setUploadError(
+          (errors.avatar as string | undefined) ??
+            t('projectSettingsTabs.avatarUploadFailed'),
+        ),
       onFinish: () => setUploading(false),
     });
   };
@@ -92,7 +99,7 @@ const ProfileTab = ({
         <button
           type="button"
           onClick={() => setUploadModalOpen(true)}
-          className="block shrink-0 transition-opacity hover:opacity-80"
+          className="relative block shrink-0 transition-opacity hover:opacity-80"
           aria-label={t('projectSettingsTabs.changeProfilePicture')}
         >
           {user?.avatar_url ? (
@@ -106,6 +113,9 @@ const ProfileTab = ({
               {getInitials(name || user?.name || 'U')}
             </div>
           )}
+          <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-dark-surface-2 bg-accent-blue text-white">
+            <UploadIcon />
+          </span>
         </button>
         <div className="min-w-0">
           <p className="truncate text-small font-semibold text-dark-primary">
@@ -114,14 +124,6 @@ const ProfileTab = ({
           <p className="truncate text-xsmall text-dark-secondary">
             {user?.email}
           </p>
-          <button
-            type="button"
-            onClick={() => setUploadModalOpen(true)}
-            className="mt-1 flex items-center gap-1.5 text-xsmall text-dark-secondary transition-colors hover:text-dark-primary"
-          >
-            <UploadIcon />
-            {t('projectSettingsTabs.uploadAvatar')}
-          </button>
         </div>
       </div>
 
@@ -132,6 +134,8 @@ const ProfileTab = ({
           onRemove={handleRemoveImage}
           hasImage={!!user?.avatar_url}
           uploading={uploading}
+          error={uploadError}
+          onErrorClear={() => setUploadError(null)}
         />
       )}
       <form onSubmit={handleSave} className="space-y-5">
