@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarSidebar } from '@/components/calendar/CalendarSidebar';
 import { EventDetailModal } from '@/components/calendar/EventDetailModal';
 import { EventFormModal } from '@/components/calendar/EventFormModal';
@@ -13,26 +13,43 @@ import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
 import { inertiaJson } from '@/lib/inertiaJson';
 import type {
+  AnyCalendarEvent,
+  CalendarEventSourceFilter,
+  CalendarEventFull,
+  CalendarMember,
   CalendarProps,
   CalendarViewMode,
-  CalendarMember,
-  AnyCalendarEvent,
-  CalendarEventFull,
-  CalendarTaskSourceFilter,
 } from '@/types/calendar';
 
-export default function Calendar({
+const Calendar = ({
   project,
   projectRole,
   projectUsers,
   cardLabels,
   currentUser,
-}: CalendarProps) {
+  initialDate,
+  activeEventId,
+}: CalendarProps) => {
   const { t } = useTranslation();
   const accountIndex = usePage().props.account.index;
+  const canCreateEvent =
+    projectRole === 'OWNER' ||
+    projectRole === 'ADMIN' ||
+    projectRole === 'MEMBER';
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(() =>
+    initialDate ? new Date(`${initialDate}T00:00:00`) : new Date(),
+  );
+
+  useEffect(() => {
+    if (!initialDate) return;
+
+    // A global-search result can navigate between calendar dates without
+    // unmounting this Inertia page, so keep the controlled view in sync.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentDate(new Date(`${initialDate}T00:00:00`));
+  }, [initialDate]);
 
   // Member checkboxes
   const [members, setMembers] = useState<CalendarMember[]>(() =>
@@ -44,10 +61,8 @@ export default function Calendar({
     () => new Set(),
   );
 
-  // Narrows Kanban-task entries to this project's own assignments or ones
-  // assigned in another project; manually-created events are never affected.
-  const [taskSourceFilter, setTaskSourceFilter] =
-    useState<CalendarTaskSourceFilter>('all');
+  const [eventSourceFilter, setEventSourceFilter] =
+    useState<CalendarEventSourceFilter>('all');
 
   // Modals state
   const [formOpen, setFormOpen] = useState(false);
@@ -59,6 +74,7 @@ export default function Calendar({
   const [selectedEvent, setSelectedEvent] = useState<AnyCalendarEvent | null>(
     null,
   );
+  const openedDeepLinkRef = useRef<string | null>(null);
 
   // Pending action for recurrence dialog
   const [pendingAction, setPendingAction] = useState<{
@@ -98,36 +114,65 @@ export default function Calendar({
     accountIndex,
     project.project_slug,
     project.project_id,
-    currentUser.id,
     viewBounds.start,
     viewBounds.end,
     members,
+    eventSourceFilter,
   );
 
-  // Apply the label filter (classified busy-blocks and unlabeled events are
-  // always shown; a labeled event shows if at least one of its labels is
-  // still visible) and the task-source filter (only Kanban-task entries are
-  // affected — a task belongs to "this project" only when it isn't a
-  // classified cross-project block AND its project_id matches the one being
-  // viewed, since an entry can be non-classified yet still from another
-  // project when the viewer participates directly in it).
+  useEffect(() => {
+    if (!activeEventId) {
+      openedDeepLinkRef.current = null;
+      return;
+    }
+
+    const deepLinkKey = `${initialDate ?? ''}:${activeEventId}`;
+    if (loading || openedDeepLinkRef.current === deepLinkKey) return;
+
+    const event = events.find((candidate) => {
+      const matchesId =
+        candidate.id === activeEventId ||
+        ('original_event_id' in candidate &&
+          candidate.original_event_id === activeEventId);
+      const matchesDate =
+        !initialDate || candidate.start_time.slice(0, 10) === initialDate;
+
+      return matchesId && matchesDate;
+    });
+
+    if (!event) return;
+
+    openedDeepLinkRef.current = deepLinkKey;
+    // Opening a server-requested deep link intentionally synchronizes modal
+    // state after its asynchronously fetched event becomes available.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedEvent(event);
+    setDetailOpen(true);
+  }, [activeEventId, events, initialDate, loading]);
+
+  // The backend applies the same source filter to every event type. Repeating
+  // the lightweight source check here prevents the previous request's rows
+  // from flashing while a newly selected filter is still loading.
   const visibleEvents = useMemo(
     () =>
-      events.filter((ev) => {
-        const labelVisible =
-          ev.is_classified ||
-          ev.labels.length === 0 ||
-          ev.labels.some((l) => !hiddenLabelIds.has(l.card_label_id));
-
-        if (!labelVisible) return false;
-        if (taskSourceFilter === 'all' || !ev.is_kanban_task) return true;
-
+      events.filter((event) => {
         const isOwnProject =
-          !ev.is_classified && ev.project_id === project.project_id;
+          !event.is_classified && event.project_id === project.project_id;
+        const sourceVisible =
+          eventSourceFilter === 'all' ||
+          (eventSourceFilter === 'own' && isOwnProject) ||
+          (eventSourceFilter === 'other' && !isOwnProject);
 
-        return taskSourceFilter === 'own' ? isOwnProject : !isOwnProject;
+        return (
+          sourceVisible &&
+          (event.is_classified ||
+            event.labels.length === 0 ||
+            event.labels.some(
+              (label) => !hiddenLabelIds.has(label.card_label_id),
+            ))
+        );
       }),
-    [events, hiddenLabelIds, taskSourceFilter, project.project_id],
+    [eventSourceFilter, events, hiddenLabelIds, project.project_id],
   );
 
   // --- Handlers ---
@@ -153,13 +198,25 @@ export default function Calendar({
     );
   };
 
-  // Switching into week view should land on the week actually containing
-  // today, not whatever week month-navigation last happened to pin
-  // currentDate to (month prev/next always resets the day to the 1st).
+  const handlePrevWeek = () => {
+    setCurrentDate((previous) => {
+      const date = new Date(previous);
+      date.setDate(date.getDate() - 7);
+
+      return date;
+    });
+  };
+
+  const handleNextWeek = () => {
+    setCurrentDate((previous) => {
+      const date = new Date(previous);
+      date.setDate(date.getDate() + 7);
+
+      return date;
+    });
+  };
+
   const handleViewModeChange = (mode: CalendarViewMode) => {
-    if (mode === 'week' && viewMode !== 'week') {
-      setCurrentDate(new Date());
-    }
     setViewMode(mode);
   };
 
@@ -176,12 +233,16 @@ export default function Calendar({
   };
 
   const handleCreate = () => {
+    if (!canCreateEvent) return;
+
     setSelectedDate(currentDate);
     setSelectedEvent(null);
     setFormOpen(true);
   };
 
   const handleGridDateClick = (date: Date) => {
+    if (!canCreateEvent) return;
+
     setSelectedDate(date);
     setSelectedEvent(null);
     setFormOpen(true);
@@ -320,10 +381,13 @@ export default function Calendar({
   // Auth checks
   const canEditSelectedEvent = () => {
     if (!selectedEvent || selectedEvent.is_classified) return false;
+    if (selectedEvent.project_id !== project.project_id) return false;
     // Kanban-sourced entries are read-only from Calendar — editing happens
     // on the board, where the assignment/date actually lives.
     if (selectedEvent.is_kanban_task) return false;
     if (projectRole === 'OWNER' || projectRole === 'ADMIN') return true;
+    if (projectRole !== 'MEMBER') return false;
+
     return (
       selectedEvent.created_by === currentUser.id ||
       selectedEvent.participants.some((p) => p.id === currentUser.id)
@@ -340,6 +404,7 @@ export default function Calendar({
           onViewModeChange={handleViewModeChange}
           onRefresh={refetch}
           isLoading={loading}
+          canCreate={canCreateEvent}
           onCreate={handleCreate}
           currentDate={currentDate}
           onDateSelect={setCurrentDate}
@@ -352,8 +417,8 @@ export default function Calendar({
           cardLabels={cardLabels}
           hiddenLabelIds={hiddenLabelIds}
           onToggleLabel={handleToggleLabel}
-          taskSourceFilter={taskSourceFilter}
-          onTaskSourceFilterChange={setTaskSourceFilter}
+          eventSourceFilter={eventSourceFilter}
+          onEventSourceFilterChange={setEventSourceFilter}
         />
 
         <div className="relative flex flex-1 flex-col overflow-hidden">
@@ -374,6 +439,8 @@ export default function Calendar({
               members={members}
               onDateClick={handleGridDateClick}
               onEventClick={handleEventClick}
+              onPrevWeek={handlePrevWeek}
+              onNextWeek={handleNextWeek}
             />
           )}
 
@@ -414,6 +481,7 @@ export default function Calendar({
         onDelete={handleDeleteClick}
         canEdit={canEditSelectedEvent()}
         accountIndex={accountIndex}
+        currentProjectId={project.project_id}
         projectSlug={project.project_slug}
       />
 
@@ -439,4 +507,6 @@ export default function Calendar({
       )}
     </AppLayout>
   );
-}
+};
+
+export default Calendar;

@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AddReminderModal,
   NoReminderSelected,
@@ -26,20 +26,23 @@ const inertiaWriteOptions = {
   preserveState: true,
 } as const;
 
-export default function RemindersPage({
+const RemindersPage = ({
   reminders: initialReminders,
   pomodoroSettings,
-}: RemindersPageProps) {
+  activeReminderId,
+}: RemindersPageProps) => {
   const { t } = useTranslation();
   const { project, accountIndex } = useProject();
   const [reminderList, setReminderList] =
     useState<Reminder[]>(initialReminders);
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    typeof window === 'undefined'
-      ? null
-      : new URLSearchParams(window.location.search).get('reminder'),
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(activeReminderId);
   const [addModalOpen, setAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Keep global-search deep links in sync when Inertia changes the query.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedId(activeReminderId);
+  }, [activeReminderId]);
 
   const selected =
     reminderList.find((r) => r.reminder_id === selectedId) ?? null;
@@ -343,4 +346,6 @@ export default function RemindersPage({
       )}
     </AppLayout>
   );
-}
+};
+
+export default RemindersPage;

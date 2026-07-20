@@ -55,6 +55,7 @@ export interface NotesPageProps {
   notes: NoteListItem[];
   projectUsers: NoteProjectUser[];
   currentUserId: number;
+  activeNoteId: string | null;
   [key: string]: unknown;
 }
 

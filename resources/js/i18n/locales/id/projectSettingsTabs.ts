@@ -103,6 +103,7 @@ export const projectSettingsTabs: typeof en = {
   share: 'Bagikan',
   sharing: 'Membagikan',
   shareWithLink: 'Bagikan proyek ini dengan tautan',
+  linkEnabled: 'Tautan aktif. Siapa pun yang memiliki tautan dapat bergabung.',
   linkDisabled: 'Tautan dinonaktifkan',
   copyLink: 'Salin Tautan',
   create: 'Buat',

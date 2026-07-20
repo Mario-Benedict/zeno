@@ -55,6 +55,7 @@ Route::name('kanban.')->group(function () {
     Route::controller(KanbanBoardController::class)
         ->prefix('kanban/boards')
         ->name('boards.')
+        ->middleware('project.role:OWNER,ADMIN,MEMBER')
         ->group(function () {
             Route::post('/', 'store')->name('store');
 
@@ -88,6 +89,7 @@ Route::name('kanban.')->group(function () {
     Route::controller(KanbanCardDetailController::class)
         ->prefix('cards/{card}')
         ->name('cards.')
+        ->middleware('project.role:OWNER,ADMIN,MEMBER')
         ->group(function () {
             // Title / description / completion
             Route::patch('detail', 'update')->name('detail.update');
@@ -124,22 +126,24 @@ Route::name('kanban.')->group(function () {
     | the checklist itself. Routes split between card-scoped (creation) and
     | resource-scoped (mutations on existing entities by their own id).
     */
-    Route::controller(KanbanChecklistController::class)->group(function () {
-        // Checklists themselves
-        Route::post('cards/{card}/checklists', 'store')
-            ->name('cards.checklists.store');
-        Route::delete('checklists/{checklist}', 'destroy')
-            ->name('checklists.destroy');
+    Route::controller(KanbanChecklistController::class)
+        ->middleware('project.role:OWNER,ADMIN,MEMBER')
+        ->group(function () {
+            // Checklists themselves
+            Route::post('cards/{card}/checklists', 'store')
+                ->name('cards.checklists.store');
+            Route::delete('checklists/{checklist}', 'destroy')
+                ->name('checklists.destroy');
 
-        // Items within a checklist
-        Route::post('checklists/{checklist}/items', 'addItem')
-            ->name('checklist.items.store');
+            // Items within a checklist
+            Route::post('checklists/{checklist}/items', 'addItem')
+                ->name('checklist.items.store');
 
-        Route::prefix('checklist-items/{item}')->name('checklist.items.')->group(function () {
-            Route::patch('/', 'updateItem')->name('update');
-            Route::delete('/', 'destroyItem')->name('destroy');
+            Route::prefix('checklist-items/{item}')->name('checklist.items.')->group(function () {
+                Route::patch('/', 'updateItem')->name('update');
+                Route::delete('/', 'destroyItem')->name('destroy');
+            });
         });
-    });
 
     /*
     |--------------------------------------------------------------------------
@@ -148,10 +152,12 @@ Route::name('kanban.')->group(function () {
     | Post comments on a card and delete them. Comments are addressed
     | directly by their own id when deleting.
     */
-    Route::controller(KanbanCommentController::class)->group(function () {
-        Route::post('cards/{card}/comments', 'store')
-            ->name('cards.comments.store');
-        Route::delete('comments/{comment}', 'destroy')
-            ->name('comments.destroy');
-    });
+    Route::controller(KanbanCommentController::class)
+        ->middleware('project.role:OWNER,ADMIN,MEMBER')
+        ->group(function () {
+            Route::post('cards/{card}/comments', 'store')
+                ->name('cards.comments.store');
+            Route::delete('comments/{comment}', 'destroy')
+                ->name('comments.destroy');
+        });
 });

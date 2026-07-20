@@ -24,7 +24,8 @@ class KanbanChecklistController extends Controller
      */
     public function store(int $accountIndex, Request $request, Project $project, KanbanBoardCard $card): RedirectResponse
     {
-        abort_unless($request->user()->can('view', $card->kanbanBoard->project), 403);
+        $this->assertCardBelongsToProject($project, $card);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'kanban_board_card_checklist_id' => ['nullable', 'string', 'uuid'],
@@ -51,8 +52,8 @@ class KanbanChecklistController extends Controller
      */
     public function addItem(int $accountIndex, Request $request, Project $project, KanbanBoardCardChecklist $checklist): RedirectResponse
     {
-        $owningProject = $checklist->card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $owningProject), 403);
+        $this->assertChecklistBelongsToProject($project, $checklist);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'kanban_board_card_checklist_item_id' => ['nullable', 'string', 'uuid'],
@@ -79,8 +80,8 @@ class KanbanChecklistController extends Controller
      */
     public function updateItem(int $accountIndex, Request $request, Project $project, KanbanBoardCardChecklistItem $item): RedirectResponse
     {
-        $owningProject = $item->checklist->card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $owningProject), 403);
+        $this->assertItemBelongsToProject($project, $item);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $validated = $request->validate([
             'kanban_board_card_checklist_item_name' => 'string|max:255',
@@ -97,8 +98,8 @@ class KanbanChecklistController extends Controller
      */
     public function destroyItem(int $accountIndex, Request $request, Project $project, KanbanBoardCardChecklistItem $item): RedirectResponse
     {
-        $owningProject = $item->checklist->card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $owningProject), 403);
+        $this->assertItemBelongsToProject($project, $item);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $item->delete();
 
@@ -110,12 +111,30 @@ class KanbanChecklistController extends Controller
      */
     public function destroy(int $accountIndex, Request $request, Project $project, KanbanBoardCardChecklist $checklist): RedirectResponse
     {
-        $owningProject = $checklist->card->kanbanBoard->project;
-        abort_unless($request->user()->can('view', $owningProject), 403);
+        $this->assertChecklistBelongsToProject($project, $checklist);
+        abort_unless($request->user()->can('view', $project), 403);
 
         $checklist->items()->delete();
         $checklist->delete();
 
         return back();
+    }
+
+    private function assertCardBelongsToProject(Project $project, KanbanBoardCard $card): void
+    {
+        abort_unless(
+            $card->kanbanBoard->kanban_board_project_id === $project->project_id,
+            404,
+        );
+    }
+
+    private function assertChecklistBelongsToProject(Project $project, KanbanBoardCardChecklist $checklist): void
+    {
+        $this->assertCardBelongsToProject($project, $checklist->card);
+    }
+
+    private function assertItemBelongsToProject(Project $project, KanbanBoardCardChecklistItem $item): void
+    {
+        $this->assertChecklistBelongsToProject($project, $item->checklist);
     }
 }

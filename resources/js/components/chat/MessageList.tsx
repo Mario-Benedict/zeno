@@ -20,6 +20,7 @@ interface Props {
   initialLoading: boolean;
   onLoadMore: () => void;
   scrollSignal?: ScrollSignal;
+  targetMessageId?: string | null;
   onSenderClick?: (senderId: string) => void;
 }
 
@@ -68,12 +69,6 @@ const shouldShowHeader = (
   return Math.abs(diff) > FIVE_MINUTES;
 };
 
-const Spinner = () => (
-  <div className="flex justify-center py-3">
-    <SpinnerIcon className="animate-spin text-dark-secondary" />
-  </div>
-);
-
 const MessageList = ({
   messages,
   currentUser,
@@ -82,6 +77,7 @@ const MessageList = ({
   initialLoading,
   onLoadMore,
   scrollSignal,
+  targetMessageId,
   onSenderClick,
 }: Props) => {
   const { t } = useTranslation();
@@ -89,6 +85,7 @@ const MessageList = ({
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const isFirstRenderRef = useRef(true);
   const isLoadingMoreRef = useRef(false);
+  const focusedTargetRef = useRef<string | null>(null);
   const savedScrollRef = useRef({ top: 0, height: 0 });
 
   const sorted = [...messages].reverse();
@@ -115,11 +112,24 @@ const MessageList = ({
       return;
     }
 
+    if (targetMessageId && focusedTargetRef.current !== targetMessageId) {
+      const target = el.querySelector<HTMLElement>(
+        `[data-msgid="${targetMessageId}"]`,
+      );
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        focusedTargetRef.current = targetMessageId;
+        isFirstRenderRef.current = false;
+
+        return;
+      }
+    }
+
     if (isFirstRenderRef.current && messages.length > 0) {
       el.scrollTop = el.scrollHeight;
       isFirstRenderRef.current = false;
     }
-  }, [messages]);
+  }, [messages, targetMessageId]);
 
   useLayoutEffect(() => {
     const el = containerRef.current;
@@ -155,7 +165,7 @@ const MessageList = ({
   if (initialLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <Spinner />
+        <SpinnerIcon className="animate-spin text-dark-secondary" />
       </div>
     );
   }
@@ -178,12 +188,17 @@ const MessageList = ({
     >
       <div ref={topSentinelRef} className="h-px" />
 
-      {loading && <Spinner />}
+      {loading && (
+        <div className="flex justify-center py-3">
+          <SpinnerIcon className="animate-spin text-dark-secondary" />
+        </div>
+      )}
 
       {sorted.map((msg, i) => {
         const prev = i > 0 ? sorted[i - 1] : null;
         const showDateSep = !prev || !isSameDay(prev.createdAt, msg.createdAt);
         const showHeader = shouldShowHeader(msg, prev);
+        const isTarget = msg._id === targetMessageId;
 
         return (
           <Fragment key={msg._id}>
@@ -199,7 +214,15 @@ const MessageList = ({
                 <hr className="flex-1 border-dark-border" />
               </div>
             )}
-            <div data-msgid={msg._id}>
+            <div
+              data-msgid={msg._id}
+              aria-current={isTarget ? 'true' : undefined}
+              className={
+                isTarget
+                  ? 'rounded-lg bg-accent-blue/10 ring-2 ring-accent-blue/70 ring-offset-4 ring-offset-dark-surface-2'
+                  : undefined
+              }
+            >
               <MessageBubble
                 message={msg}
                 currentUser={currentUser}

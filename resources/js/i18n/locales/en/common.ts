@@ -10,6 +10,8 @@ export const common = {
   create: 'Create',
   creating: 'Creating…',
   add: 'Add',
+  pin: 'Pin',
+  unpin: 'Unpin',
   remove: 'Remove',
   confirm: 'Confirm',
   done: 'Done',

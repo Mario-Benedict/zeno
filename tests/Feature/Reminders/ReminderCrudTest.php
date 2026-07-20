@@ -144,3 +144,44 @@ it('only lists the current user\'s own reminders in this project', function () {
             ->where('reminders.0.reminder_title', 'Mine')
         );
 });
+
+it('only exposes an owned reminder in the current project as a deep-link target', function () {
+    /** @var mixed $this */
+    $mine = Reminder::create([
+        'reminder_project_id' => $this->project->project_id,
+        'reminder_user_id' => $this->user->id,
+        'reminder_title' => 'Mine',
+        'source' => 'manual',
+    ]);
+    $otherUsers = Reminder::create([
+        'reminder_project_id' => $this->project->project_id,
+        'reminder_user_id' => $this->otherUser->id,
+        'reminder_title' => 'Not mine',
+        'source' => 'manual',
+    ]);
+    $otherProject = Project::create([
+        'project_name' => 'Other Project',
+        'project_slug' => 'other-project',
+    ]);
+    $otherProject->members()->attach($this->user->id, ['role' => 'OWNER']);
+    $outsideProject = Reminder::create([
+        'reminder_project_id' => $otherProject->project_id,
+        'reminder_user_id' => $this->user->id,
+        'reminder_title' => 'Outside project',
+        'source' => 'manual',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(remindersUrl($this->project)."?reminder={$mine->reminder_id}")
+        ->assertInertia(fn ($page) => $page
+            ->where('activeReminderId', $mine->reminder_id)
+        );
+
+    foreach ([$otherUsers, $outsideProject] as $inaccessibleReminder) {
+        $this->actingAs($this->user)
+            ->get(remindersUrl($this->project)."?reminder={$inaccessibleReminder->reminder_id}")
+            ->assertInertia(fn ($page) => $page
+                ->where('activeReminderId', null)
+            );
+    }
+});

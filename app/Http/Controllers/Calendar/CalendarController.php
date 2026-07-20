@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Calendar;
 
 use App\Http\Controllers\Controller;
+use App\Models\CalendarEvent;
 use App\Models\CardLabel;
 use App\Models\Project;
 use App\Services\CalendarService;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,6 +26,10 @@ class CalendarController extends Controller
     public function show(Request $request): Response
     {
         $project = $this->resolveProject($request->route('project'));
+        $query = $request->validate([
+            'date' => ['sometimes', 'date_format:Y-m-d'],
+            'event' => ['sometimes', 'uuid'],
+        ]);
 
         // Get all users associated with this project (including colors)
         $projectUsers = $project->members()->get()->map(fn ($u) => [
@@ -34,6 +40,12 @@ class CalendarController extends Controller
         ])->values();
 
         $user = Auth::user();
+        $activeEventId = isset($query['event'])
+            ? CalendarEvent::query()
+                ->whereKey($query['event'])
+                ->where('project_id', $project->project_id)
+                ->value('id')
+            : null;
 
         // Same project-scoped CardLabels Kanban uses (KanbanController::show)
         // — Calendar tags events with these instead of a fixed priority enum.
@@ -59,6 +71,8 @@ class CalendarController extends Controller
                 'name' => $user?->name,
                 'email' => $user?->email,
             ],
+            'initialDate' => $query['date'] ?? null,
+            'activeEventId' => $activeEventId,
         ]);
     }
 
@@ -68,9 +82,15 @@ class CalendarController extends Controller
 
         $request->validate([
             'start' => ['required', 'date'],
-            'end' => ['required', 'date'],
+            'end' => ['required', 'date', 'after:start'],
             'users' => ['sometimes', 'array'],
-            'users.*' => ['integer'],
+            'users.*' => [
+                'integer',
+                'distinct',
+                Rule::exists('project_user', 'user_id')
+                    ->where('project_id', $project->project_id),
+            ],
+            'source' => ['sometimes', 'in:all,own,other'],
         ]);
 
         $viewerId = Auth::id();
@@ -84,7 +104,8 @@ class CalendarController extends Controller
             $viewerId,
             $userIds,
             $start,
-            $end
+            $end,
+            $request->input('source', 'all')
         );
 
         return response()->json($events);

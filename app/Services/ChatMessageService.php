@@ -122,6 +122,98 @@ class ChatMessageService
     }
 
     /**
+     * Load a window centred on one search result while preserving the older
+     * pagination cursor used by the normal chat history flow.
+     *
+     * Returning `null` means the message does not exist in this room. The
+     * controller uses that distinction to reject stale or cross-room links
+     * instead of silently opening unrelated history.
+     *
+     * @return array{messages: array<int, array>, nextCursor: string|null, hasMore: bool}|null
+     */
+    public function getMessagesAround(string $roomId, string $messageId, int $limit = 30): ?array
+    {
+        try {
+            $targetId = new ObjectId($messageId);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+
+        $target = $this->collection->findOne([
+            '_id' => $targetId,
+            'room_id' => $roomId,
+            'is_deleted' => false,
+        ]);
+        if ($target === null) {
+            return null;
+        }
+
+        $limit = max(3, min($limit, 50));
+        $olderLimit = intdiv($limit - 1, 2);
+        $newerLimit = $limit - 1 - $olderLimit;
+
+        $newer = iterator_to_array($this->collection->find(
+            [
+                'room_id' => $roomId,
+                'is_deleted' => false,
+                '_id' => ['$gt' => $targetId],
+            ],
+            [
+                'sort' => ['_id' => 1],
+                'limit' => $newerLimit,
+            ],
+        ), false);
+        $older = iterator_to_array($this->collection->find(
+            [
+                'room_id' => $roomId,
+                'is_deleted' => false,
+                '_id' => ['$lt' => $targetId],
+            ],
+            [
+                'sort' => ['_id' => -1],
+                'limit' => $olderLimit + 1,
+            ],
+        ), false);
+        $hasMore = count($older) > $olderLimit;
+        if ($hasMore) {
+            array_pop($older);
+        }
+
+        $documents = array_map(
+            fn ($document) => $document instanceof BSONDocument
+                ? $document->getArrayCopy()
+                : (array) $document,
+            [...$newer, $target, ...$older],
+        );
+        usort(
+            $documents,
+            fn (array $left, array $right) => strcmp(
+                (string) $right['_id'],
+                (string) $left['_id'],
+            ),
+        );
+
+        $senderIds = array_values(array_unique(array_map(
+            fn (array $document) => (string) ($document['sender_id'] ?? ''),
+            $documents,
+        )));
+        $senderMap = $this->loadSenders($senderIds);
+        $messages = array_map(
+            fn (array $document) => $this->formatMessage($document, $senderMap),
+            $documents,
+        );
+        $oldest = end($documents);
+
+        return [
+            'messages' => $messages,
+            'nextCursor' => $hasMore && is_array($oldest)
+                ? (string) $oldest['_id']
+                : null,
+            'hasMore' => $hasMore,
+        ];
+    }
+
+    /**
      * Ambil preview pesan terakhir untuk banyak room sekaligus (batch).
      * Dipanggil oleh ChatRoomController saat render halaman chat
      *
@@ -179,6 +271,48 @@ class ChatMessageService
         }
 
         return $map;
+    }
+
+    /**
+     * Return a bounded set of recent text messages for project-wide search.
+     * The caller must supply only rooms the current user is allowed to view.
+     *
+     * @param  string[]  $roomIds
+     * @return list<array{id: string, room_id: string, body: string}>
+     */
+    public function getRecentSearchableMessages(array $roomIds, int $limit = 200): array
+    {
+        if ($roomIds === []) {
+            return [];
+        }
+
+        $cursor = $this->collection->find(
+            [
+                'room_id' => ['$in' => array_values($roomIds)],
+                'is_deleted' => false,
+                'body' => ['$nin' => ['', null]],
+            ],
+            [
+                'projection' => ['room_id' => 1, 'body' => 1],
+                'sort' => ['_id' => -1],
+                'limit' => max(1, min($limit, 500)),
+            ],
+        );
+
+        $messages = [];
+        foreach ($cursor as $document) {
+            if ($document instanceof BSONDocument) {
+                $document = $document->getArrayCopy();
+            }
+
+            $messages[] = [
+                'id' => (string) ($document['_id'] ?? ''),
+                'room_id' => (string) ($document['room_id'] ?? ''),
+                'body' => (string) ($document['body'] ?? ''),
+            ];
+        }
+
+        return $messages;
     }
 
     /**

@@ -10,8 +10,9 @@ uses(RefreshDatabase::class);
 
 /**
  * Two projects: Zeno (viewer's project) and Atlas (owns the event under
- * test). The viewer is in Zeno only, so any Atlas event they see must go
- * through getClassifiedEvents()'s cross-project branch.
+ * test). Both users are in Zeno so the creator is a valid member-filter
+ * target; the event itself belongs to Atlas and therefore still goes through
+ * getClassifiedEvents()'s cross-project branch.
  */
 function seedVisibilityScenario(string $creatorVisibility): array
 {
@@ -20,6 +21,7 @@ function seedVisibilityScenario(string $creatorVisibility): array
 
     $zeno = Project::create(['project_name' => 'Zeno', 'project_slug' => 'zeno-vis']);
     $zeno->members()->attach($viewer->id, ['role' => 'OWNER', 'color' => '#D7CCC8']);
+    $zeno->members()->attach($creator->id, ['role' => 'MEMBER', 'color' => '#7B7B7B']);
 
     $atlas = Project::create(['project_name' => 'Atlas', 'project_slug' => 'atlas-vis']);
     $atlas->members()->attach($creator->id, ['role' => 'OWNER', 'color' => '#D7CCC8']);
