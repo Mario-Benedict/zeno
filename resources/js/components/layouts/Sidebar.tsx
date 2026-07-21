@@ -93,7 +93,7 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
   return (
     <aside className="flex h-[calc(100dvh-var(--header-height))] flex-col bg-dark-surface-1 px-2 pb-2">
       <nav className="flex h-full flex-col rounded-lg bg-dark-surface-2 p-2">
-        <div className="flex flex-1 [scrollbar-width:none] flex-col items-center justify-center gap-0.5 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-1 [scrollbar-width:none] flex-col items-center gap-0.5 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [&::-webkit-scrollbar]:hidden">
           {navItems.map(({ key, nameKey, href, icon: Icon }) => {
             const active = isActive(href);
 

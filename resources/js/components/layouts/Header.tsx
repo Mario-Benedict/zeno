@@ -1,4 +1,4 @@
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
 import HeaderIconButton from '@/components/layouts/HeaderIconButton';
@@ -8,13 +8,14 @@ import ProjectSwitcher from '@/components/layouts/ProjectSwitcher';
 import ProjectInvitationModal from '@/components/projects/ProjectInvitationModal';
 import echo from '@/echo';
 import { useTranslation } from '@/hooks/useTranslation';
+import { accountPath } from '@/lib/accountRoutes';
 import { NOTIFICATIONS_REFRESH_EVENT } from '@/lib/notificationEvents';
 import type { NotificationInboxResponse } from '@/types/reminder';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
 import Bell from '@public/icons/small/bell.svg';
 import Gear from '@public/icons/small/gear.svg';
 import People from '@public/icons/small/people.svg';
-import Zeno from '@public/logos/logo.svg';
+import Zeno from '@public/logos/logo-mono.svg';
 
 interface AppHeaderProps {
   onNotificationClick?: () => void;
@@ -54,22 +55,36 @@ const Header = ({ onNotificationClick, onOpenSettings }: AppHeaderProps) => {
     const refresh = () => {
       setNotificationRefreshVersion((version) => version + 1);
     };
+    // If the project we're currently viewing is the one we were just
+    // removed from, leave immediately instead of waiting for the next
+    // request to bounce off a 403.
+    const handleMemberRemoved = (event: { project_id: string }) => {
+      if (project?.project_id === event.project_id) {
+        router.visit(accountPath(account.index, '/projects'), {
+          replace: true,
+        });
+      }
+    };
     const channelName = `notifications.user.${userId}`;
     const channel = echo.private(channelName);
 
     channel.listen('.message.sent', refresh);
     channel.listen('.task-conflict.created', refresh);
+    channel.listen('.task-conflict.declined', refresh);
     channel.listen('.card-assignment.created', refresh);
+    channel.listen('.project-member.removed', handleMemberRemoved);
     window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, refresh);
 
     return () => {
       channel.stopListening('.message.sent', refresh);
       channel.stopListening('.task-conflict.created', refresh);
+      channel.stopListening('.task-conflict.declined', refresh);
       channel.stopListening('.card-assignment.created', refresh);
+      channel.stopListening('.project-member.removed', handleMemberRemoved);
       echo.leave(channelName);
       window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, refresh);
     };
-  }, [auth.user?.id]);
+  }, [auth.user?.id, project?.project_id, account.index]);
 
   // Close project menu on outside click
   useEffect(() => {
@@ -89,7 +104,7 @@ const Header = ({ onNotificationClick, onOpenSettings }: AppHeaderProps) => {
     <header className="flex items-center gap-2 bg-dark-surface-1 p-2 select-none">
       {/* ── Left: Logo + Project picker ── */}
       <div className="flex w-100 shrink-0 items-center gap-2">
-        <div className="flex items-center justify-center rounded-lg bg-dark-surface-2 p-1">
+        <div className="flex items-center justify-center rounded-lg bg-dark-surface-2 p-1 text-dark-primary">
           <Zeno className="h-6 w-6" />
         </div>
 
@@ -100,13 +115,13 @@ const Header = ({ onNotificationClick, onOpenSettings }: AppHeaderProps) => {
             aria-haspopup="true"
             aria-expanded={projectMenuOpen}
             aria-label={t('header.selectProject')}
-            className="flex h-8 max-w-56 items-center gap-1 rounded-lg bg-static-dark-surface-2 px-2 text-static-dark-primary transition-colors hover:bg-static-dark-surface-3"
+            className="flex h-8 max-w-56 items-center gap-1 rounded-lg bg-dark-surface-2 px-2 text-dark-primary transition-colors hover:bg-dark-surface-3"
           >
             <span className="truncate text-sm font-bold whitespace-nowrap">
               {project?.project_name ?? t('header.projectsFallback')}
             </span>
             <span
-              className={`shrink-0 text-static-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
+              className={`shrink-0 text-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
             >
               <ArrowDown />
             </span>

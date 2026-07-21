@@ -35,6 +35,11 @@ export const projectSettingsTabs = {
   noMembersYet: 'No members yet.',
   you: 'you',
   removeMember: 'Remove {{name}}',
+  removeMemberConfirmTitle: 'Remove {{name}}?',
+  removeMemberConfirmDescription: '{{name}} will lose access to this project.',
+  removeMemberAssignedTasksDescription:
+    '{{name}} is currently assigned to {{count}} task(s) in this project. Removing them will unassign those tasks instead of deleting them.',
+  removeMemberAssignedTasksConfirm: 'Remove anyway',
   inviteMembersHint:
     'To invite new members, use the {{people}} icon in the top bar.',
   peopleIcon: 'People',

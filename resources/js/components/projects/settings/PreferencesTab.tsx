@@ -48,10 +48,10 @@ const PreferencesTab = () => {
                   : 'border-dark-border bg-dark-surface-1 hover:border-dark-border-focus'
               }`}
             >
-              <div className="w-full rounded-lg border border-dark-border bg-dark-surface-2 p-2">
-                <div className="mb-2 h-2 w-3/4 rounded bg-dark-surface-3" />
-                <div className="mb-1 h-2 w-full rounded bg-dark-surface-3/60" />
-                <div className="h-2 w-2/3 rounded bg-dark-surface-3/40" />
+              <div className="w-full rounded-lg border border-static-dark-surface-3 bg-static-dark-surface-2 p-2">
+                <div className="mb-2 h-2 w-3/4 rounded bg-static-dark-surface-3" />
+                <div className="mb-1 h-2 w-full rounded bg-static-dark-surface-3/60" />
+                <div className="h-2 w-2/3 rounded bg-static-dark-surface-3/40" />
               </div>
               {/* Icon inherits text color from wrapper div */}
               <div
