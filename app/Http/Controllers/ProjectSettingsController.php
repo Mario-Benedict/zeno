@@ -11,7 +11,10 @@ use Illuminate\Http\Request;
 
 class ProjectSettingsController extends Controller
 {
-    public function __construct(private readonly StorageService $storage) {}
+    public function __construct(
+        private readonly StorageService $storage,
+        private readonly ChatRoomService $chatRoomService,
+    ) {}
 
     public function update(int $accountIndex, Request $request, Project $project): RedirectResponse
     {
@@ -19,6 +22,7 @@ class ProjectSettingsController extends Controller
             'project_name' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\- ]+$/'],
         ]);
 
+        $oldName = $project->project_name;
         $newName = trim($validated['project_name']);
         $newSlug = Project::generateUniqueSlug($newName, $project->project_id);
 
@@ -26,6 +30,8 @@ class ProjectSettingsController extends Controller
             'project_name' => $newName,
             'project_slug' => $newSlug,
         ]);
+
+        $this->chatRoomService->renameProjectGroupRoom($project, $oldName, $newName);
 
         return redirect()
             ->route('projects.show', ['accountIndex' => $accountIndex, 'project' => $newSlug])

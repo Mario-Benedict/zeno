@@ -60,6 +60,27 @@ class ChatRoomService
     }
 
     /**
+     * Keep the auto-created "all members" group room's name in sync when the
+     * project is renamed. Custom sub-group rooms (createCustomGroupRoom) get
+     * their own user-chosen name and are never renamed here — this only
+     * touches rooms still carrying the project's old name, which is exactly
+     * (and only) the default room, since nothing else lets a user rename a
+     * group room independently.
+     */
+    public function renameProjectGroupRoom(Project $project, string $oldName, string $newName): void
+    {
+        if ($oldName === $newName) {
+            return;
+        }
+
+        ChatRoom::query()
+            ->where('project_id', $project->project_id)
+            ->where('type', 'group')
+            ->where('name', $oldName)
+            ->update(['name' => $newName]);
+    }
+
+    /**
      * Create a new group room with an explicit subset of project members,
      * chosen via the chat "+" button — distinct from createProjectGroupRoom(),
      * which auto-attaches every project member to the project-wide room.

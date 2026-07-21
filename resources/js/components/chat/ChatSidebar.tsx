@@ -65,7 +65,7 @@ const ChatSidebar = ({
   });
 
   return (
-    <aside className="relative flex h-full w-[200px] shrink-0 flex-col overflow-hidden rounded-lg bg-dark-surface-2">
+    <aside className="relative flex h-full w-55 shrink-0 flex-col overflow-hidden rounded-lg bg-dark-surface-2">
       {/* ── Search bar + new message ── */}
       <div className="flex items-center gap-2 px-3 pt-3 pb-2">
         <div className="flex flex-1 items-center gap-2 rounded-md bg-dark-input px-3 py-[7px] ring-1 ring-transparent transition-all focus-within:bg-dark-input-focus focus-within:ring-dark-border-focus">

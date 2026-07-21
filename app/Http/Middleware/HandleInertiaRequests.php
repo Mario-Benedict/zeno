@@ -221,7 +221,7 @@ class HandleInertiaRequests extends Middleware
         $canManageMembers = $role?->canManageMembers() ?? false;
 
         $members = $project->members()
-            ->select(['users.id', 'users.name', 'users.email'])
+            ->select(['users.id', 'users.name', 'users.email', 'users.avatar_url'])
             ->orderByRaw("CASE project_user.role WHEN 'OWNER' THEN 0 WHEN 'ADMIN' THEN 1 WHEN 'MEMBER' THEN 2 ELSE 3 END")
             ->orderBy('users.name')
             ->get()
@@ -229,6 +229,7 @@ class HandleInertiaRequests extends Middleware
                 'id' => $member->id,
                 'name' => $member->name,
                 'email' => $member->email,
+                'avatar_url' => app(StorageService::class)->url($member->avatar_url),
                 'role' => $member->pivot->role,
                 'is_current_user' => $user instanceof User && (int) $member->id === (int) $user->id,
             ])

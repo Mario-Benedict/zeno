@@ -137,9 +137,7 @@ const ProjectsPage = () => {
               onClick={() => setPanelOpen(true)}
               className="flex w-full items-start gap-3 rounded-xl bg-dark-surface-2 p-4 text-left transition-colors hover:bg-dark-surface-3"
             >
-              {/* Brand mark: stays a fixed dark chip + light glyph regardless
-                  of the active theme, same rule as the header logo. */}
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-static-dark-surface-2 text-static-dark-primary">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-dark-surface-2 text-dark-primary">
                 <Zeno />
               </div>
               <div>
