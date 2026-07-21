@@ -212,7 +212,7 @@ export const WeekGrid = ({
                 >
                   <span
                     className={`text-micro font-semibold tracking-wider uppercase ${
-                      isToday ? 'text-dark-primary' : 'text-dark-secondary'
+                      isToday ? 'text-white/80' : 'text-dark-secondary'
                     }`}
                   >
                     {t(DAY_KEYS[d.getDay()])}
