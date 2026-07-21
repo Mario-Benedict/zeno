@@ -15,10 +15,11 @@ uses(RefreshDatabase::class);
  * getClassifiedEvents()'s cross-project branch.
  *
  * $viewerInTargetProject controls whether the viewer ALSO shares membership
- * in Atlas (the event's own project) — when true, the viewer already has
- * legitimate access to Atlas's data via that shared membership, so
- * getClassifiedEvents() must show full details regardless of the creator's
- * calendar_visibility preference.
+ * in Atlas (the event's own project) — when true and the creator's
+ * `calendar_visibility` is "masked", the viewer already has legitimate
+ * access to Atlas's data via that shared membership, so getClassifiedEvents()
+ * shows full details instead of classifying it. "busy_only" is the strictest
+ * setting and stays classified regardless of shared membership.
  */
 function seedVisibilityScenario(string $creatorVisibility, bool $viewerInTargetProject = false): array
 {
@@ -115,12 +116,17 @@ it('shows full event details when the creator is masked but the viewer shares th
     expect($entry['is_classified'] ?? false)->toBeFalse();
 });
 
-it('shows full event details when the creator is busy_only but the viewer shares the event\'s own project', function () {
+it('stays classified when the creator is busy_only even if the viewer shares the event\'s own project', function () {
+    // busy_only is the strictest setting — shared project membership does
+    // NOT relax it the way it does for "masked". It only stops applying
+    // once the viewer opens that other project directly (a different,
+    // non-classified code path entirely).
     ['creator' => $creator, 'viewer' => $viewer, 'zeno' => $zeno, 'start' => $start] = seedVisibilityScenario('busy_only', viewerInTargetProject: true);
 
     $entry = fetchClassifiedEntry($viewer, $zeno, [$creator->id], $start);
 
     expect($entry)->not->toBeNull();
-    expect($entry['title'])->toBe('Confidential planning session');
-    expect($entry['is_classified'] ?? false)->toBeFalse();
+    expect($entry)->not->toHaveKey('title');
+    expect($entry['is_classified'])->toBeTrue();
+    expect($entry['visibility'])->toBe('busy_only');
 });
