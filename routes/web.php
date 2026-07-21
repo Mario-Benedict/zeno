@@ -28,6 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::get('/', [ProjectController::class, 'index'])->name('index');
                 Route::post('/', [ProjectController::class, 'store'])->name('store');
                 Route::get('/check-slug', [ProjectController::class, 'checkSlug'])->name('check-slug');
+                Route::get('/notification-status', [ProjectController::class, 'notificationStatus'])->name('notification-status');
             });
 
             Route::inertia('account', 'account/show')->name('account.show');

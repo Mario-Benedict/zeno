@@ -104,10 +104,7 @@ const Header = ({ onNotificationClick, onOpenSettings }: AppHeaderProps) => {
     <header className="flex items-center gap-2 bg-dark-surface-1 p-2 select-none">
       {/* ── Left: Logo + Project picker ── */}
       <div className="flex w-100 shrink-0 items-center gap-2">
-        {/* Brand mark: stays a fixed dark chip + light glyph regardless of
-            the active theme, unlike the reactive buttons elsewhere in the
-            header — a logo shouldn't flip colors with light mode. */}
-        <div className="flex items-center justify-center rounded-lg bg-static-dark-surface-2 p-1 text-static-dark-primary">
+        <div className="flex items-center justify-center rounded-lg bg-dark-surface-2 p-1 text-dark-primary">
           <Zeno className="h-6 w-6" />
         </div>
 
