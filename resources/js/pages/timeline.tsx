@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AddCardModal, CardDetailModalWrapper } from '@/components/kanban';
 import { TimelineChart, TimelineHeader } from '@/components/timeline';
+import echo from '@/echo';
 import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
@@ -70,6 +71,31 @@ const Timeline = ({
       optimisticAttachmentUrls.clear();
     };
   }, []);
+
+  // Keep local board state in sync whenever the server-provided prop changes,
+  // whether from our own writes' full-page reloads or a realtime refresh.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBoards(kanbanBoards);
+  }, [kanbanBoards]);
+
+  // Any card due-date/assignment change elsewhere (Kanban board, card modal,
+  // another member) broadcasts on this project's calendar channel — reuse it
+  // here so the timeline chart stays live without a manual refresh.
+  useEffect(() => {
+    const channelName = `calendar.project.${project.project_id}`;
+    const channel = echo.private(channelName);
+    const onChanged = () => {
+      router.reload({ only: ['kanbanBoards'] });
+    };
+
+    channel.listen('.calendar.changed', onChanged);
+
+    return () => {
+      channel.stopListening('.calendar.changed', onChanged);
+      echo.leave(channelName);
+    };
+  }, [project.project_id]);
 
   // Flatten the board tree, then derive the filtered + sorted list of rows and
   // the visible date window. All layout maths downstream reads from `range`.

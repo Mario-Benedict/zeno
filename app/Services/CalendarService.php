@@ -122,8 +122,9 @@ class CalendarService
         }
 
         if ($sourceFilter !== 'own') {
-            $classifiedEvents = $this->getClassifiedEvents($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
-            $classifiedKanbanTasks = $this->getClassifiedKanbanTasks($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
+            $viewerProjectIds = DB::table('project_user')->where('user_id', $viewerId)->pluck('project_id')->all();
+            $classifiedEvents = $this->getClassifiedEvents($projectId, $viewerId, $viewerProjectIds, $userIds, $rangeStart, $rangeEnd);
+            $classifiedKanbanTasks = $this->getClassifiedKanbanTasks($projectId, $viewerId, $viewerProjectIds, $userIds, $rangeStart, $rangeEnd);
         }
 
         return array_merge($projectEvents, $classifiedEvents, $kanbanTasks, $classifiedKanbanTasks);
@@ -267,6 +268,7 @@ class CalendarService
     private function getClassifiedEvents(
         string $projectId,
         int $viewerId,
+        array $viewerProjectIds,
         array $userIds,
         Carbon $rangeStart,
         Carbon $rangeEnd
@@ -298,13 +300,17 @@ class CalendarService
         $result = [];
 
         foreach ($events as $event) {
-            // Full detail when the viewer is a participant, or when the
-            // event's creator has opted into "transparent" cross-project
-            // visibility. Otherwise the event is classified — either
-            // "masked" (generic label, real times) or "busy_only" (no label
-            // at all), per the creator's `calendar_visibility` preference.
+            // Full detail when the viewer is a participant, when the event's
+            // creator has opted into "transparent" cross-project visibility,
+            // or when the viewer already shares membership in the event's
+            // own project — classifying it would just hide data the viewer
+            // has legitimate access to anyway via that other project.
+            // Otherwise the event is classified — either "masked" (generic
+            // label, real times) or "busy_only" (no label at all), per the
+            // creator's `calendar_visibility` preference.
             $showFull = $event->participants->contains('id', $viewerId)
-                || $event->creator?->calendar_visibility === 'transparent';
+                || $event->creator?->calendar_visibility === 'transparent'
+                || in_array($event->project_id, $viewerProjectIds, true);
 
             if ($this->isRecurring($event)) {
                 $occurrences = $showFull
@@ -390,6 +396,7 @@ class CalendarService
     private function getClassifiedKanbanTasks(
         string $projectId,
         int $viewerId,
+        array $viewerProjectIds,
         array $userIds,
         Carbon $rangeStart,
         Carbon $rangeEnd
@@ -409,11 +416,17 @@ class CalendarService
             ])
             ->get();
 
-        return $cards->map(function (KanbanBoardCard $card) use ($viewerId, $userIds) {
+        return $cards->map(function (KanbanBoardCard $card) use ($viewerId, $viewerProjectIds, $userIds) {
             $relevantAssignees = $card->members->whereIn('id', $userIds);
 
+            // Full detail when the viewer is themselves an assignee, when a
+            // relevant assignee opted into "transparent" visibility, or when
+            // the viewer already shares membership in the card's own
+            // project — classifying it would just hide data the viewer has
+            // legitimate access to anyway via that other project.
             $showFull = $card->members->contains('id', $viewerId)
-                || $relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'transparent');
+                || $relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'transparent')
+                || in_array($card->kanbanBoard->kanban_board_project_id, $viewerProjectIds, true);
 
             return $showFull
                 ? $this->formatKanbanTask($card, $card->kanbanBoard->kanban_board_project_id)

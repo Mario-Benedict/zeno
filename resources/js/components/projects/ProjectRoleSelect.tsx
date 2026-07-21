@@ -30,7 +30,7 @@ const ProjectRoleSelect = ({
         onClick={() => setOpen((value) => !value)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex h-9 items-center gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold whitespace-nowrap text-dark-primary transition-colors hover:border-dark-border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-28 items-center justify-between gap-1.5 rounded-md border border-dark-border bg-dark-surface-3 pr-2 pl-3 text-xsmall font-semibold whitespace-nowrap text-dark-primary transition-colors hover:border-dark-border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
       >
         {roleLabels[value]}
         <span

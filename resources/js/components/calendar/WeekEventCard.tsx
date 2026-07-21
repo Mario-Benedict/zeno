@@ -71,26 +71,10 @@ export const WeekEventCard = ({
   const endTimeString = formatTime(clampedEnd, localeCode);
 
   // --- CLASSIFIED busy-block: neutral card, no colour, no label ribbon ---
+  // Both "masked" and "busy_only" (the event creator's calendar_visibility
+  // preference) render the same classified card below — a generic label +
+  // owner name, no real title/description.
   if (event.is_classified) {
-    // "busy_only" (the event creator's calendar_visibility preference) shows
-    // nothing but the block itself — no label, name, or time text.
-    if (event.visibility === 'busy_only') {
-      return (
-        <div
-          onClick={onClick}
-          className="absolute z-10 cursor-pointer p-[1.5px] transition-opacity hover:opacity-90"
-          style={{
-            top: `${displayTop}px`,
-            height: `${displayHeight}px`,
-            ...style,
-          }}
-          title={t('calendar.classified')}
-        >
-          <div className="h-full w-full rounded-lg border border-dashed border-dark-border bg-dark-surface-3" />
-        </div>
-      );
-    }
-
     return (
       <div
         onClick={onClick}
