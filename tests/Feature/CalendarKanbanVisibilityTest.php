@@ -16,10 +16,12 @@ uses(RefreshDatabase::class);
  * CalendarService::getClassifiedKanbanTasks()'s cross-project branch.
  *
  * $viewerInTargetProject controls whether the viewer ALSO shares membership
- * in Atlas (the card's own project) — when true, the viewer already has
- * legitimate access to Atlas's data via that shared membership, so
- * getClassifiedKanbanTasks() must show full details regardless of the
- * assignee's calendar_visibility preference.
+ * in Atlas (the card's own project) — when true and a relevant assignee's
+ * `calendar_visibility` is "masked", the viewer already has legitimate
+ * access to Atlas's data via that shared membership, so
+ * getClassifiedKanbanTasks() shows full details instead of classifying it.
+ * "busy_only" is the strictest setting and stays classified regardless of
+ * shared membership.
  */
 function seedKanbanVisibilityScenario(string $assigneeVisibility, bool $viewerInTargetProject = false): array
 {
@@ -121,13 +123,17 @@ it('shows full task details when the assignee is masked but the viewer shares th
     expect($entry['is_kanban_task'] ?? false)->toBeTrue();
 });
 
-it('shows full task details when the assignee is busy_only but the viewer shares the card\'s own project', function () {
+it('stays classified when the assignee is busy_only even if the viewer shares the card\'s own project', function () {
+    // busy_only is the strictest setting — shared project membership does
+    // NOT relax it the way it does for "masked". It only stops applying
+    // once the viewer opens that other project directly (a different,
+    // non-classified code path entirely).
     ['assignee' => $assignee, 'viewer' => $viewer, 'zeno' => $zeno, 'dueDate' => $dueDate] = seedKanbanVisibilityScenario('busy_only', viewerInTargetProject: true);
 
     $entry = fetchClassifiedKanbanEntry($viewer, $zeno, [$assignee->id], $dueDate);
 
     expect($entry)->not->toBeNull();
-    expect($entry['title'])->toBe('Confidential deliverable');
-    expect($entry['is_classified'] ?? false)->toBeFalse();
-    expect($entry['is_kanban_task'] ?? false)->toBeTrue();
+    expect($entry)->not->toHaveKey('title');
+    expect($entry['is_classified'])->toBeTrue();
+    expect($entry['visibility'])->toBe('busy_only');
 });
