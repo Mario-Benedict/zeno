@@ -8,5 +8,4 @@ export const nav = {
   llm: 'LLM',
   notes: 'Notes',
   reminders: 'Reminders',
-  more: 'More',
 };

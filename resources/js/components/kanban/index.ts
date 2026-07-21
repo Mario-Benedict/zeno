@@ -9,6 +9,7 @@ export { KanbanCard } from './KanbanCard';
 export { KanbanColumn } from './KanbanColumn';
 export { CardDetailModalWrapper } from './CardDetailModalWrapper';
 export { AddCardModal } from './AddCardModal';
+export { AddCardInput } from './AddCardInput';
 export { AddBoardInput } from './AddBoardInput';
 export { SectionHeader } from './SectionHeader';
 export { SidebarButton } from './SidebarButton';
