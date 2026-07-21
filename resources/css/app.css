@@ -298,18 +298,16 @@ html.light-mode input:-webkit-autofill:focus {
 
 /* ─── Notes — Tiptap block editor typography ────────────────────────────────
    Applied to the note editor's `EditorContent` wrapper. The editor's own
-   surface (NoteEditor.tsx) always renders with the dark-surface-* palette —
-   Tailwind's legacy `@config`-sourced utilities bake literal hex per class
-   rather than emitting `var(--color-*)`, so they don't respond to the
-   `html.light-mode` variable overrides above. Colors here are hardcoded to
-   match that same always-dark surface instead of chasing a CSS variable
-   the surrounding chrome ignores, which previously produced near-black text
-   on the still-dark editor background whenever light mode was toggled on.
+   surface (NoteEditor.tsx) uses the standard reactive bg-dark-surface-*
+   utilities, which DO respond to the `html.light-mode` overrides above like
+   everywhere else in the app — so colors here use the same `--color-dark-*`
+   custom properties instead of hardcoded white-based values, which used to
+   render near-invisible light-gray text on the editor's light-mode surface.
    ─────────────────────────────────────────────────────────────────────────── */
 .prose-note {
   font-size: 1.125rem;
   line-height: 1.6;
-  color: #f0f0f0;
+  color: var(--color-dark-primary);
   min-height: 450px;
 }
 .prose-note p {
@@ -319,7 +317,7 @@ html.light-mode input:-webkit-autofill:focus {
 .prose-note h2,
 .prose-note h3 {
   font-weight: 700;
-  color: #f0f0f0;
+  color: var(--color-dark-primary);
 }
 .prose-note h1 {
   font-size: 1.9em;
@@ -365,7 +363,7 @@ html.light-mode input:-webkit-autofill:focus {
   margin: 0.2em 0;
 }
 .prose-note li::marker {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-dark-secondary);
 }
 /* Task lists render their own checkbox — no bullet marker. */
 .prose-note ul[data-type='taskList'] {
@@ -386,14 +384,14 @@ html.light-mode input:-webkit-autofill:focus {
   min-width: 0;
 }
 .prose-note ul[data-type='taskList'] li[data-checked='true'] > div {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-dark-secondary);
   text-decoration: line-through;
 }
 .prose-note blockquote {
-  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  border-left: 3px solid var(--color-dark-border);
   padding-left: 0.9em;
   margin: 0.6em 0;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-dark-secondary);
 }
 /* Box chrome (background/border/toolbar) for code blocks now lives on
    CodeBlockView's NodeView wrapper via Tailwind classes — this just
@@ -412,7 +410,7 @@ html.light-mode input:-webkit-autofill:focus {
 /* Inline code spans (the Code mark) — excludes code blocks, which have
    their own box chrome from CodeBlockView. */
 .prose-note code:not(pre code) {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--color-dark-primary) 8%, transparent);
   border-radius: 4px;
   padding: 0.15em 0.4em;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -424,7 +422,7 @@ html.light-mode input:-webkit-autofill:focus {
    ─────────────────────────────────────────────────────────────────────────── */
 .prose-note .hljs-comment,
 .prose-note .hljs-quote {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-dark-secondary);
   font-style: italic;
 }
 .prose-note .hljs-keyword,
@@ -478,7 +476,7 @@ html.light-mode input:-webkit-autofill:focus {
 }
 .prose-note hr {
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid var(--color-dark-border);
   margin: 1.2em 0;
 }
 .prose-note a {
@@ -491,7 +489,7 @@ html.light-mode input:-webkit-autofill:focus {
   float: left;
   height: 0;
   pointer-events: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-dark-secondary);
 }
 /* Muted, Notion-style text selection instead of the browser's saturated blue default. */
 .prose-note ::selection {
