@@ -110,7 +110,7 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
                 <div
                   className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 ${
                     active
-                      ? 'bg-accent-blue text-white shadow-[0_0_18px] shadow-accent-blue/45'
+                      ? 'bg-accent-blue text-white'
                       : 'bg-transparent group-hover:bg-dark-surface-3'
                   }`}
                 >

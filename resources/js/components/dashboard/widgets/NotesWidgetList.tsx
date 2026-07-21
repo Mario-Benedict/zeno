@@ -36,7 +36,7 @@ export const NotesWidgetList = ({ notes, onSelectNote }: Props) => {
                 {note.title || t('dashboard.untitled')}
               </p>
               {note.isShared && (
-                <span className="shrink-0 rounded-full bg-accent-blue/20 px-1.5 py-0.5 text-micro font-medium text-accent-blue-light">
+                <span className="shrink-0 rounded-full bg-accent-blue px-1.5 py-0.5 text-micro font-medium text-white">
                   {t('dashboard.shared')}
                 </span>
               )}

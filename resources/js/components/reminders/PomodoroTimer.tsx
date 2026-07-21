@@ -17,14 +17,12 @@ const MODE_STYLES = {
   focus: {
     labelKey: 'reminders.focus' as TranslationKey,
     badgeClass: 'bg-accent-blue/15 text-accent-blue border-accent-blue/30',
-    ringClass: 'ring-accent-blue/40',
     timeClass: 'text-dark-primary',
     startButtonClass: 'bg-accent-blue hover:bg-opacity-90',
   },
   break: {
     labelKey: 'reminders.break' as TranslationKey,
     badgeClass: 'bg-accent-green/15 text-accent-green border-accent-green/30',
-    ringClass: 'ring-accent-green/40',
     timeClass: 'text-accent-green',
     startButtonClass: 'bg-accent-green hover:bg-opacity-90',
   },
@@ -120,9 +118,7 @@ export const PomodoroTimer = ({
   const modeLabel = t(style.labelKey);
 
   return (
-    <div
-      className={`relative rounded-2xl bg-dark-surface-2 p-5 ring-1 transition-colors ${style.ringClass}`}
-    >
+    <div className="relative rounded-2xl bg-dark-surface-2 p-5 transition-colors">
       <div className="mb-4 flex items-center justify-between">
         <span
           className={`rounded-full border px-3 py-1 text-xsmall font-semibold tracking-wider uppercase ${style.badgeClass}`}
