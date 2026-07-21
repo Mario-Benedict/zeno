@@ -1,6 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath, projectPath } from '@/lib/accountRoutes';
+import { inertiaJson } from '@/lib/inertiaJson';
+import projectRoutes from '@/routes/projects';
 import type { CurrentProject, ProjectSummary } from '@/types';
 import ProjectSwitcherIcon from './ProjectSwitcherIcon';
 
@@ -20,6 +23,34 @@ const ProjectSwitcher = ({
   const { account } = usePage().props;
   const { t } = useTranslation();
   const accountIndex = account.index;
+  const [notified, setNotified] = useState<Record<string, boolean>>({});
+  const projectIdsKey = projects.map((p) => p.project_id).join(',');
+
+  // Fetched on-demand only when the switcher actually opens — this spans
+  // every project the user's in, so it isn't cheap enough to eagerly share
+  // on every page load like the rest of the switcher's data.
+  useEffect(() => {
+    if (!open || projectIdsKey === '') return;
+
+    let cancelled = false;
+    inertiaJson<Record<string, boolean>>(
+      'get',
+      projectRoutes.notificationStatus.url(
+        { accountIndex },
+        { query: { project_ids: projectIdsKey.split(',') } },
+      ),
+    )
+      .then((data) => {
+        if (!cancelled) setNotified(data);
+      })
+      .catch((err: unknown) =>
+        console.error('Failed to load project notification status', err),
+      );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, projectIdsKey, accountIndex]);
 
   if (!open) return null;
 
@@ -63,11 +94,16 @@ const ProjectSwitcher = ({
                 onClick={onClose}
                 className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-white/[0.07]"
               >
-                <ProjectSwitcherIcon
-                  name={project.project_name}
-                  color={project.avatar_color}
-                  avatarUrl={project.avatar_url}
-                />
+                <div className="relative shrink-0">
+                  <ProjectSwitcherIcon
+                    name={project.project_name}
+                    color={project.avatar_color}
+                    avatarUrl={project.avatar_url}
+                  />
+                  {notified[project.project_id] && (
+                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-dark-surface-1 bg-accent-red" />
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-small font-medium text-dark-primary">
                     {project.project_name}
