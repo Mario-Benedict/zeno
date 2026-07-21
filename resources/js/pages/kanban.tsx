@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   KanbanColumn,
   CardDetailModalWrapper,
-  AddCardModal,
   AddBoardInput,
 } from '@/components/kanban';
 import { useProject } from '@/hooks/useProject';
@@ -57,7 +56,6 @@ const Kanban = ({
     projectRole === 'MEMBER';
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [searchQuery, setSearchQuery] = useState('');
-  const [modalBoardId, setModalBoardId] = useState<string | null>(null);
   const [addingBoard, setAddingBoard] = useState(false);
   const [openCard, setOpenCard] = useState<{
     card: KanbanBoardCard;
@@ -351,7 +349,6 @@ const Kanban = ({
         {
           ...inertiaWriteOptions,
           forceFormData: attachments.length > 0,
-          onSuccess: () => setModalBoardId(null),
           onError: (errors) => {
             optimisticAttachmentUrls.forEach((url) => {
               URL.revokeObjectURL(url);
@@ -378,6 +375,23 @@ const Kanban = ({
       );
     });
   };
+
+  // The board column's inline composer only collects a title — everything
+  // else a card can have (description, dates, checklist, attachments,
+  // members) is added afterwards from the card detail panel, same as
+  // clicking into any existing card.
+  const handleQuickAddCard = (boardId: string, title: string) =>
+    handleAddCard({
+      boardId,
+      title,
+      description: null,
+      startAt: null,
+      dueAt: null,
+      labelIds: [],
+      memberIds: [],
+      checklist: null,
+      attachments: [],
+    });
 
   const handleAddBoard = async (name: string) => {
     if (!canEdit) return;
@@ -590,7 +604,7 @@ const Kanban = ({
                         highlighted={board.kanban_board_id === activeBoardId}
                         canEdit={canEdit}
                         onToggleDone={toggleCardDone}
-                        onAddCard={(id) => setModalBoardId(id)}
+                        onAddCard={handleQuickAddCard}
                         onRenameBoard={handleRenameBoard}
                         onDeleteBoard={handleDeleteBoard}
                         onDeleteCard={handleDeleteCard}
@@ -640,17 +654,6 @@ const Kanban = ({
           </main>
         </div>
       </DragDropContext>
-
-      {canEdit && modalBoardId && (
-        <AddCardModal
-          boards={boards}
-          cardLabels={cardLabels}
-          projectUsers={projectUsers}
-          defaultBoardId={modalBoardId}
-          onClose={() => setModalBoardId(null)}
-          onSubmit={handleAddCard}
-        />
-      )}
     </AppLayout>
   );
 };
