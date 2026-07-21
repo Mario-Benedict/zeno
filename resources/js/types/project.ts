@@ -48,6 +48,7 @@ export type ProjectMember = {
   id: number;
   name: string;
   email: string;
+  avatar_url: string | null;
   role: ProjectRole;
   is_current_user: boolean;
 };
