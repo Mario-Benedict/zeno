@@ -302,15 +302,16 @@ class CalendarService
         foreach ($events as $event) {
             // Full detail when the viewer is a participant, when the event's
             // creator has opted into "transparent" cross-project visibility,
-            // or when the viewer already shares membership in the event's
-            // own project — classifying it would just hide data the viewer
-            // has legitimate access to anyway via that other project.
-            // Otherwise the event is classified — either "masked" (generic
-            // label, real times) or "busy_only" (no label at all), per the
-            // creator's `calendar_visibility` preference.
+            // or when the creator is "masked" AND the viewer already shares
+            // membership in the event's own project — classifying it would
+            // just hide data the viewer has legitimate access to anyway via
+            // that other project. "busy_only" is intentionally excluded from
+            // that last exception: it's the strictest setting and must stay
+            // classified everywhere except the event's own project view,
+            // which never goes through this classified path at all.
             $showFull = $event->participants->contains('id', $viewerId)
                 || $event->creator?->calendar_visibility === 'transparent'
-                || in_array($event->project_id, $viewerProjectIds, true);
+                || ($event->creator?->calendar_visibility === 'masked' && in_array($event->project_id, $viewerProjectIds, true));
 
             if ($this->isRecurring($event)) {
                 $occurrences = $showFull
@@ -421,12 +422,17 @@ class CalendarService
 
             // Full detail when the viewer is themselves an assignee, when a
             // relevant assignee opted into "transparent" visibility, or when
-            // the viewer already shares membership in the card's own
-            // project — classifying it would just hide data the viewer has
-            // legitimate access to anyway via that other project.
+            // a relevant assignee is "masked" AND the viewer already shares
+            // membership in the card's own project — classifying it would
+            // just hide data the viewer has legitimate access to anyway via
+            // that other project. "busy_only" is intentionally excluded from
+            // that last exception: it's the strictest setting and must stay
+            // classified everywhere except the card's own project view,
+            // which never goes through this classified path at all.
             $showFull = $card->members->contains('id', $viewerId)
                 || $relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'transparent')
-                || in_array($card->kanbanBoard->kanban_board_project_id, $viewerProjectIds, true);
+                || ($relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'masked')
+                    && in_array($card->kanbanBoard->kanban_board_project_id, $viewerProjectIds, true));
 
             return $showFull
                 ? $this->formatKanbanTask($card, $card->kanbanBoard->kanban_board_project_id)
