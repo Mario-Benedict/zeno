@@ -5,6 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoard, KanbanBoardCard } from '@/types/kanban';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import AddIcon from '@public/icons/small/plus.svg';
+import { AddCardInput } from './AddCardInput';
 import { KanbanCard } from './KanbanCard';
 
 interface KanbanColumnProps {
@@ -13,7 +14,7 @@ interface KanbanColumnProps {
   highlighted?: boolean;
   canEdit: boolean;
   onToggleDone: (boardId: string, cardId: string) => void;
-  onAddCard: (boardId: string) => void;
+  onAddCard: (boardId: string, title: string) => void;
   onRenameBoard: (boardId: string, newName: string) => void;
   onDeleteBoard: (boardId: string) => void;
   onDeleteCard: (boardId: string, cardId: string) => void;
@@ -38,6 +39,7 @@ export const KanbanColumn = ({
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(board.kanban_board_name);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [addingCard, setAddingCard] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -190,18 +192,24 @@ export const KanbanColumn = ({
           </Droppable>
 
           {/* Add card */}
-          {canEdit && (
-            <div className="shrink-0 px-3 pb-3">
-              <button
-                type="button"
-                onClick={() => onAddCard(board.kanban_board_id)}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
-              >
-                <AddIcon className="h-4 w-4" />
-                {t('kanban.addACard')}
-              </button>
-            </div>
-          )}
+          {canEdit &&
+            (addingCard ? (
+              <AddCardInput
+                onAdd={(title) => onAddCard(board.kanban_board_id, title)}
+                onCancel={() => setAddingCard(false)}
+              />
+            ) : (
+              <div className="shrink-0 px-3 pb-3">
+                <button
+                  type="button"
+                  onClick={() => setAddingCard(true)}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
+                >
+                  <AddIcon className="h-4 w-4" />
+                  {t('kanban.addACard')}
+                </button>
+              </div>
+            ))}
         </div>
       )}
     </Draggable>
