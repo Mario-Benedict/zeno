@@ -34,6 +34,12 @@ export const projectSettingsTabs: typeof en = {
   noMembersYet: 'Belum ada anggota.',
   you: 'Anda',
   removeMember: 'Hapus {{name}}',
+  removeMemberConfirmTitle: 'Hapus {{name}}?',
+  removeMemberConfirmDescription:
+    '{{name}} akan kehilangan akses ke proyek ini.',
+  removeMemberAssignedTasksDescription:
+    '{{name}} saat ini ditugaskan ke {{count}} tugas di proyek ini. Menghapusnya akan membatalkan penugasan tugas tersebut, bukan menghapus tugasnya.',
+  removeMemberAssignedTasksConfirm: 'Tetap hapus',
   inviteMembersHint:
     'Untuk mengundang anggota baru, gunakan ikon {{people}} di bilah atas.',
   peopleIcon: 'Orang',

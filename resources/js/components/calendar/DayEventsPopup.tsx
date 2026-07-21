@@ -75,25 +75,8 @@ export const DayEventsPopup = ({
           );
 
           if (ev.is_classified) {
-            // "busy_only" shows a plain unlabeled busy row — no time, no name.
-            if (ev.visibility === 'busy_only') {
-              return (
-                <div
-                  key={ev.id}
-                  onClick={() => {
-                    onClose();
-                    onEventClick(ev);
-                  }}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg bg-dark-surface-3 px-2 py-1.5 hover:bg-dark-border"
-                >
-                  <div className="h-2 w-2 shrink-0 rounded-full bg-dark-secondary/50" />
-                  <span className="truncate text-xsmall font-medium text-dark-secondary">
-                    {t('calendar.classified')}
-                  </span>
-                </div>
-              );
-            }
-
+            // Both "masked" and "busy_only" render the same classified row
+            // — a generic label + owner name, no real title/description.
             return (
               <div
                 key={ev.id}

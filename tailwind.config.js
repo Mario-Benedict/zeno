@@ -67,11 +67,12 @@ export default {
         },
 
         // --- STATIC DARK ---
-        // A handful of header icon buttons (bell, people, gear, the
-        // account/project switcher triggers) are meant to stay a dark
-        // rounded chip in both themes rather than following the
-        // adaptive `dark.*` tokens (which intentionally flip to light
-        // colors in light mode — see the `@theme` comment in app.css).
+        // For UI that must depict "what dark mode looks like" regardless of
+        // the page's *actual* current theme — e.g. the Dark option's preview
+        // swatch in the appearance picker (PreferencesTab), which would
+        // otherwise flip to light colors when previewed while already in
+        // light mode, defeating the point of a preview. Its `light.*`
+        // sibling above is the same idea for the Light preview swatch.
         // These are literal hex, same technique as `light.*` above and
         // `.prose-note` in app.css, matching dark mode's default
         // `--color-dark-surface-*` / `--color-dark-primary` values.
