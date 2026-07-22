@@ -1,6 +1,10 @@
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
+import { inertiaJson } from '@/lib/inertiaJson';
+import projects from '@/routes/projects';
 import type {
   AssignableProjectRole,
   CurrentProject,
@@ -8,7 +12,13 @@ import type {
   ProjectShare,
 } from '@/types';
 import TrashIcon from '@public/icons/small/trash.svg';
-import { RoleSelect, getInitials } from './shared';
+import RoleSelect from './RoleSelect';
+import { getInitials } from './shared';
+
+interface AssignedTasksResponse {
+  count: number;
+  cards: { id: string; title: string }[];
+}
 
 const MembersTab = ({
   share,
@@ -26,6 +36,13 @@ const MembersTab = ({
     (['ADMIN', 'MEMBER', 'VIEWER'] as AssignableProjectRole[]);
   const members: ProjectMember[] = share?.members ?? [];
 
+  const [pendingRemoval, setPendingRemoval] = useState<ProjectMember | null>(
+    null,
+  );
+  const [assignedTasks, setAssignedTasks] =
+    useState<AssignedTasksResponse | null>(null);
+  const [checkingTasks, setCheckingTasks] = useState(false);
+
   const changeRole = (member: ProjectMember, role: AssignableProjectRole) => {
     router.patch(
       projectPath(accountIndex, project.project_slug, `/members/${member.id}`),
@@ -34,12 +51,50 @@ const MembersTab = ({
     );
   };
 
-  const removeMember = (member: ProjectMember) => {
+  const startRemoval = async (member: ProjectMember) => {
+    setPendingRemoval(member);
+    setAssignedTasks(null);
+    setCheckingTasks(true);
+    try {
+      const data = await inertiaJson<AssignedTasksResponse>(
+        'get',
+        projects.members.assignedTasks.url({
+          accountIndex,
+          project: project.project_slug,
+          user: member.id,
+        }),
+      );
+      setAssignedTasks(data);
+    } catch (error) {
+      console.error('Failed to check assigned tasks', error);
+      // Fail open with a zero count rather than blocking removal entirely —
+      // the worst case is the admin doesn't see the task warning.
+      setAssignedTasks({ count: 0, cards: [] });
+    } finally {
+      setCheckingTasks(false);
+    }
+  };
+
+  const confirmRemoval = () => {
+    if (!pendingRemoval) return;
     router.delete(
-      projectPath(accountIndex, project.project_slug, `/members/${member.id}`),
+      projectPath(
+        accountIndex,
+        project.project_slug,
+        `/members/${pendingRemoval.id}`,
+      ),
       { preserveScroll: true },
     );
+    setPendingRemoval(null);
+    setAssignedTasks(null);
   };
+
+  const cancelRemoval = () => {
+    setPendingRemoval(null);
+    setAssignedTasks(null);
+  };
+
+  const hasAssignedTasks = (assignedTasks?.count ?? 0) > 0;
 
   return (
     <div>
@@ -67,9 +122,17 @@ const MembersTab = ({
                 key={member.id}
                 className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.04]"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-blue text-xsmall font-bold text-white">
-                  {getInitials(member.name)}
-                </div>
+                {member.avatar_url ? (
+                  <img
+                    src={member.avatar_url}
+                    alt={member.name}
+                    className="h-9 w-9 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-blue text-xsmall font-bold text-white">
+                    {getInitials(member.name)}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-small font-semibold text-dark-primary">
                     {member.name}
@@ -84,7 +147,7 @@ const MembersTab = ({
                   </p>
                 </div>
                 {isOwner ? (
-                  <span className="rounded-md border border-dark-border px-2.5 py-1.5 text-xsmall font-medium text-dark-secondary">
+                  <span className="flex h-8 w-28 items-center justify-center rounded-md border border-dark-border text-xsmall font-medium whitespace-nowrap text-dark-secondary">
                     {t('common.owner')}
                   </span>
                 ) : (
@@ -101,7 +164,7 @@ const MembersTab = ({
                     aria-label={t('projectSettingsTabs.removeMember', {
                       name: member.name,
                     })}
-                    onClick={() => removeMember(member)}
+                    onClick={() => void startRemoval(member)}
                     className="flex h-8 w-8 items-center justify-center rounded-md text-dark-secondary transition-colors hover:bg-accent-red/15 hover:text-accent-red"
                   >
                     <TrashIcon />
@@ -118,6 +181,35 @@ const MembersTab = ({
           people: t('projectSettingsTabs.peopleIcon'),
         })}
       </div>
+
+      {pendingRemoval && !checkingTasks && (
+        <ConfirmModal
+          title={t('projectSettingsTabs.removeMemberConfirmTitle', {
+            name: pendingRemoval.name,
+          })}
+          description={
+            hasAssignedTasks
+              ? t('projectSettingsTabs.removeMemberAssignedTasksDescription', {
+                  name: pendingRemoval.name,
+                  count: assignedTasks?.count ?? 0,
+                })
+              : t('projectSettingsTabs.removeMemberConfirmDescription', {
+                  name: pendingRemoval.name,
+                })
+          }
+          confirmLabel={
+            hasAssignedTasks
+              ? t('projectSettingsTabs.removeMemberAssignedTasksConfirm')
+              : t('projectSettingsTabs.removeMember', {
+                  name: pendingRemoval.name,
+                })
+          }
+          cancelLabel={t('common.cancel')}
+          tone="danger"
+          onConfirm={confirmRemoval}
+          onCancel={cancelRemoval}
+        />
+      )}
     </div>
   );
 };

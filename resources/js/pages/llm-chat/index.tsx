@@ -82,7 +82,7 @@ const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
   return (
     <>
       <Head
-        title={session?.llm_chat_session_name ?? t('llmChat.defaultTitle')}
+        title={`${session?.llm_chat_session_name ?? t('llmChat.defaultTitle')} - ${project.project_name}`}
       />
 
       <AppLayout project={project}>

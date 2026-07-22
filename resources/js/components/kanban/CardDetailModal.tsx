@@ -19,25 +19,17 @@ import CheckIcon from '@public/icons/small/check.svg';
 import { CardDetailBody } from './CardDetailBody';
 import { CardDetailSidebar } from './CardDetailSidebar';
 
-interface CardDetailPanelProps {
+export interface CardDetailPanelProps {
   card: KanbanBoardCard;
   boardId: string;
   cardLabels: CardLabel[];
   projectUsers: KanbanUser[];
   currentUser: KanbanUser;
   project: KanbanProject;
+  canEdit: boolean;
   onClose: () => void;
   onUpdate: (updatedCard: KanbanBoardCard, boardId: string) => void;
 }
-
-interface CardDetailModalWrapperProps extends CardDetailPanelProps {
-  isOpen: boolean;
-}
-
-export const CardDetailModalWrapper = (props: CardDetailModalWrapperProps) => {
-  if (!props.isOpen) return null;
-  return <CardDetailModal {...props} />;
-};
 
 // Shared Inertia options for every write request in this modal — the modal
 // already runs its own optimistic updates, so we preserve scroll + state
@@ -47,13 +39,14 @@ const inertiaWriteOptions = {
   preserveState: true,
 } as const;
 
-const CardDetailModal = ({
+export const CardDetailModal = ({
   card,
   boardId,
   cardLabels,
   projectUsers,
   currentUser,
   project,
+  canEdit,
   onClose,
   onUpdate,
 }: CardDetailPanelProps) => {
@@ -180,6 +173,8 @@ const CardDetailModal = ({
   };
 
   const patchCard = (patch: CardScalarPatch) => {
+    if (!canEdit) return;
+
     const updated = { ...localCard, ...patch };
     setLocalCard(updated);
     onUpdate(updated, boardId);
@@ -199,6 +194,8 @@ const CardDetailModal = ({
   };
 
   const commitTitle = () => {
+    if (!canEdit) return;
+
     setEditingTitle(false);
     const trimmed = titleValue.trim();
     if (trimmed && trimmed !== localCard.kanban_board_card_title) {
@@ -209,11 +206,15 @@ const CardDetailModal = ({
   };
 
   const commitDesc = () => {
+    if (!canEdit) return;
+
     setEditingDesc(false);
     patchCard({ kanban_board_card_description: descValue || null });
   };
 
   const createLabel = () => {
+    if (!canEdit) return;
+
     if (!newLabelName.trim() || !newLabelColor) return;
     setSavingLabel(true);
 
@@ -262,6 +263,8 @@ const CardDetailModal = ({
   };
 
   const deleteLabel = (labelId: string) => {
+    if (!canEdit) return;
+
     const isActive = (localCard.labels || []).some(
       (l) => l.card_label_id === labelId,
     );
@@ -286,6 +289,8 @@ const CardDetailModal = ({
   };
 
   const toggleLabel = (label: CardLabel) => {
+    if (!canEdit) return;
+
     const currentLabels = localCard.labels || [];
     const hasLabel = currentLabels.some(
       (l) => l.card_label_id === label.card_label_id,
@@ -327,6 +332,8 @@ const CardDetailModal = ({
   };
 
   const toggleMember = (user: KanbanUser) => {
+    if (!canEdit) return;
+
     const currentMembers = localCard.members || [];
     const hasMember = currentMembers.some((m) => m.id === user.id);
     const updatedMembers = hasMember
@@ -369,6 +376,9 @@ const CardDetailModal = ({
     field: 'kanban_board_card_start_date' | 'kanban_board_card_due_date',
     value: string,
   ) => {
+    if (!canEdit) return;
+
+    const previous = localCard;
     const updated = { ...localCard, [field]: value || null };
     setLocalCard(updated);
     onUpdate(updated, boardId);
@@ -382,12 +392,18 @@ const CardDetailModal = ({
       { [field]: value || null },
       {
         ...inertiaWriteOptions,
-        onError: () => console.error('Failed to update dates'),
+        onError: () => {
+          setLocalCard(previous);
+          onUpdate(previous, boardId);
+          console.error('Failed to update dates');
+        },
       },
     );
   };
 
   const addChecklist = () => {
+    if (!canEdit) return;
+
     if (!newChecklistName.trim()) return;
     setSaving(true);
 
@@ -432,6 +448,8 @@ const CardDetailModal = ({
   };
 
   const addChecklistItem = (checklistId: string) => {
+    if (!canEdit) return;
+
     const text = newChecklistItems[checklistId]?.trim();
     if (!text) return;
 
@@ -481,6 +499,8 @@ const CardDetailModal = ({
     itemId: string,
     current: boolean,
   ) => {
+    if (!canEdit) return;
+
     const updated = {
       ...localCard,
       checklists: (localCard.checklists || []).map((cl) =>
@@ -514,6 +534,8 @@ const CardDetailModal = ({
   };
 
   const deleteChecklistItem = (checklistId: string, itemId: string) => {
+    if (!canEdit) return;
+
     const updated = {
       ...localCard,
       checklists: (localCard.checklists || []).map((cl) =>
@@ -544,6 +566,8 @@ const CardDetailModal = ({
   };
 
   const deleteChecklist = (checklistId: string) => {
+    if (!canEdit) return;
+
     const updated = {
       ...localCard,
       checklists: (localCard.checklists || []).filter(
@@ -567,6 +591,8 @@ const CardDetailModal = ({
   };
 
   const submitComment = () => {
+    if (!canEdit) return;
+
     if (!newComment.trim()) return;
 
     const commentId = crypto.randomUUID();
@@ -609,6 +635,8 @@ const CardDetailModal = ({
   };
 
   const deleteComment = (commentId: string) => {
+    if (!canEdit) return;
+
     const updated = {
       ...localCard,
       comments: (localCard.comments || []).filter(
@@ -632,6 +660,8 @@ const CardDetailModal = ({
   };
 
   const processFiles = async (files: FileList | File[]) => {
+    if (!canEdit) return;
+
     setAttachmentError(null);
     for (const file of Array.from(files)) {
       if (isFileTooLarge(file, FILE_SIZE_LIMITS.cardAttachment)) {
@@ -667,6 +697,8 @@ const CardDetailModal = ({
   };
 
   const deleteLocalAttachment = async (id: string) => {
+    if (!canEdit) return;
+
     await dbDelete(id);
     setLocalAttachments((prev) => prev.filter((a) => a.id !== id));
   };
@@ -695,18 +727,22 @@ const CardDetailModal = ({
         {/* Header */}
         <div className="flex shrink-0 items-center gap-4 border-b-2 border-dark-secondary px-4 py-3">
           <button
+            type="button"
+            disabled={!canEdit}
             onClick={() => patchCard({ is_completed: !localCard.is_completed })}
             className={`flex min-h-6 min-w-6 items-center justify-center rounded-full border-2 transition-all ${
               localCard.is_completed
                 ? 'border-transparent bg-accent-blue text-dark-primary'
-                : 'border-dark-secondary bg-dark-surface-2 hover:bg-dark-surface-3'
+                : `border-dark-secondary bg-dark-surface-2 ${
+                    canEdit ? 'hover:bg-dark-surface-3' : 'cursor-default'
+                  }`
             }`}
           >
             {localCard.is_completed && <CheckIcon className="h-3 w-3" />}
           </button>
 
           <div className="min-w-0 flex-1">
-            {editingTitle ? (
+            {canEdit && editingTitle ? (
               <textarea
                 ref={titleRef}
                 value={titleValue}
@@ -727,9 +763,13 @@ const CardDetailModal = ({
               />
             ) : (
               <h2
-                className="line-clamp-2 cursor-pointer text-medium leading-snug font-bold text-dark-primary transition hover:text-dark-secondary"
-                onClick={() => setEditingTitle(true)}
-                title={t('kanban.clickToEditTitle')}
+                className={`line-clamp-2 text-medium leading-snug font-bold text-dark-primary ${
+                  canEdit
+                    ? 'cursor-pointer transition hover:text-dark-secondary'
+                    : ''
+                }`}
+                onClick={() => canEdit && setEditingTitle(true)}
+                title={canEdit ? t('kanban.clickToEditTitle') : undefined}
               >
                 {localCard.kanban_board_card_title}
               </h2>
@@ -749,6 +789,7 @@ const CardDetailModal = ({
           <CardDetailBody
             card={localCard}
             currentUser={currentUser}
+            canEdit={canEdit}
             isDueSoon={isDueSoon}
             isOverdue={isOverdue}
             desc={{
@@ -805,31 +846,33 @@ const CardDetailModal = ({
             }}
           />
 
-          <CardDetailSidebar
-            card={localCard}
-            cardLabels={cardLabels}
-            projectUsers={projectUsers}
-            addingChecklist={addingChecklist}
-            addingAttachment={addingAttachment}
-            onToggleChecklist={setAddingChecklist}
-            onToggleAttachment={setAddingAttachment}
-            onUpdateDates={updateDates}
-            labels={{
-              popoverOpen: labelPopoverOpen,
-              setPopoverOpen: setLabelPopoverOpen,
-              creatingLabel,
-              setCreatingLabel,
-              newName: newLabelName,
-              setNewName: setNewLabelName,
-              newColor: newLabelColor,
-              setNewColor: setNewLabelColor,
-              saving: savingLabel,
-              onCreate: createLabel,
-              onDelete: deleteLabel,
-              onToggle: toggleLabel,
-            }}
-            onToggleMember={toggleMember}
-          />
+          {canEdit && (
+            <CardDetailSidebar
+              card={localCard}
+              cardLabels={cardLabels}
+              projectUsers={projectUsers}
+              addingChecklist={addingChecklist}
+              addingAttachment={addingAttachment}
+              onToggleChecklist={setAddingChecklist}
+              onToggleAttachment={setAddingAttachment}
+              onUpdateDates={updateDates}
+              labels={{
+                popoverOpen: labelPopoverOpen,
+                setPopoverOpen: setLabelPopoverOpen,
+                creatingLabel,
+                setCreatingLabel,
+                newName: newLabelName,
+                setNewName: setNewLabelName,
+                newColor: newLabelColor,
+                setNewColor: setNewLabelColor,
+                saving: savingLabel,
+                onCreate: createLabel,
+                onDelete: deleteLabel,
+                onToggle: toggleLabel,
+              }}
+              onToggleMember={toggleMember}
+            />
+          )}
         </div>
       </div>
     </div>

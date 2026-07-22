@@ -49,19 +49,19 @@ export const AddReminderModal = ({
               className="w-full rounded-xl border border-dark-border bg-dark-input px-3 py-2 text-sm text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
             />
           </div>
-          <div className="flex items-end gap-2">
-            <DatePicker
-              label={t('reminders.dueDate')}
-              value={date}
-              onChange={setDate}
-              onClear={() => setDate(null)}
-              placeholder={t('reminders.optional')}
-            />
-            <div>
-              <label className="mb-1 block text-xsmall tracking-wider text-dark-secondary/80 uppercase">
-                {t('reminders.time')}
-              </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="min-w-0">
+              <DatePicker
+                label={t('reminders.dueDate')}
+                value={date}
+                onChange={setDate}
+                onClear={() => setDate(null)}
+                placeholder={t('reminders.optional')}
+              />
+            </div>
+            <div className="min-w-0">
               <TimePicker
+                label={t('reminders.time')}
                 ariaLabel={t('reminders.time')}
                 value={time}
                 onChange={setTime}

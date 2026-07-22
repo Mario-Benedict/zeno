@@ -7,6 +7,7 @@ import TrashIcon from '@public/icons/small/trash.svg';
 interface NoteListItemProps {
   note: NoteListItemType;
   isActive: boolean;
+  canDelete: boolean;
   onSelect: (note: NoteListItemType) => void;
   onDeleteRequest: (id: string) => void;
 }
@@ -14,6 +15,7 @@ interface NoteListItemProps {
 const NoteListItem = ({
   note,
   isActive,
+  canDelete,
   onSelect,
   onDeleteRequest,
 }: NoteListItemProps): React.ReactElement => {
@@ -42,17 +44,19 @@ const NoteListItem = ({
         </span>
       )}
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDeleteRequest(note.id);
-        }}
-        title={t('notes.deleteNote')}
-        className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-dark-secondary opacity-0 transition-opacity group-hover:opacity-100 hover:text-dark-primary"
-      >
-        <TrashIcon className="h-[13px] w-[13px]" />
-      </button>
+      {canDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDeleteRequest(note.id);
+          }}
+          title={t('notes.deleteNote')}
+          className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-dark-secondary opacity-0 transition-opacity group-hover:opacity-100 hover:text-dark-primary"
+        >
+          <TrashIcon className="h-[13px] w-[13px]" />
+        </button>
+      )}
     </div>
   );
 };

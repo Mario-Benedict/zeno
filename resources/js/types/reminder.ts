@@ -34,6 +34,7 @@ export interface PomodoroSettings {
 export interface RemindersPageProps {
   reminders: Reminder[];
   pomodoroSettings: PomodoroSettings | null;
+  activeReminderId: string | null;
   [key: string]: unknown;
 }
 

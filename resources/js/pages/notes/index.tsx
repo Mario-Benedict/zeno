@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DeleteNoteDialog from '@/components/notes/DeleteNoteDialog';
 import NoteEditor from '@/components/notes/NoteEditor';
 import NotesSidebarPanel from '@/components/notes/NotesSidebarPanel';
@@ -22,6 +22,7 @@ const NotesPage = ({
   notes: initialNotes,
   projectUsers,
   currentUserId,
+  activeNoteId,
 }: NotesPageProps): React.ReactElement => {
   const { t } = useTranslation();
   const { project, accountIndex } = useProject();
@@ -32,6 +33,7 @@ const NotesPage = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const openedDeepLinkRef = useRef<string | null>(null);
 
   const isEditable = (note: NoteDetail | null): boolean => {
     if (!note) return false;
@@ -73,6 +75,22 @@ const NotesPage = ({
     },
     [accountIndex, projectSlug],
   );
+
+  useEffect(() => {
+    if (!activeNoteId) {
+      openedDeepLinkRef.current = null;
+      return;
+    }
+    if (openedDeepLinkRef.current === activeNoteId) return;
+
+    const item = initialNotes.find((note) => note.id === activeNoteId);
+    if (!item) return;
+
+    openedDeepLinkRef.current = activeNoteId;
+    // Opening the server-validated deep link intentionally updates selection.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void openNote(item);
+  }, [activeNoteId, initialNotes, openNote]);
 
   const handleSaved = useCallback(
     (note: NoteDetail) => {
@@ -118,12 +136,13 @@ const NotesPage = ({
 
   return (
     <AppLayout project={project}>
-      <Head title={t('notes.title')} />
+      <Head title={`${t('notes.title')} - ${project.project_name}`} />
 
       <div className="flex h-full w-full min-w-0 gap-2 overflow-hidden p-2">
         <NotesSidebarPanel
           notes={noteList}
           selectedNoteId={selectedNote?.id ?? null}
+          currentUserId={currentUserId}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onSelectNote={(item) => void openNote(item)}

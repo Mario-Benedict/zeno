@@ -1,12 +1,14 @@
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ChangeEvent, ReactNode } from 'react';
 import AccountSwitcher from '@/components/layouts/AccountSwitcher';
+import HeaderIconButton from '@/components/layouts/HeaderIconButton';
+import HeaderSearch from '@/components/layouts/HeaderSearch';
 import NotificationPanel from '@/components/layouts/NotificationPanel';
 import ProjectSwitcher from '@/components/layouts/ProjectSwitcher';
 import ProjectInvitationModal from '@/components/projects/ProjectInvitationModal';
 import echo from '@/echo';
 import { useTranslation } from '@/hooks/useTranslation';
+import { accountPath } from '@/lib/accountRoutes';
 import { NOTIFICATIONS_REFRESH_EVENT } from '@/lib/notificationEvents';
 import type { NotificationInboxResponse } from '@/types/reminder';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
@@ -14,47 +16,16 @@ import Bell from '@public/icons/small/bell.svg';
 import Gear from '@public/icons/small/gear.svg';
 import Menu from '@public/icons/small/menu.svg';
 import People from '@public/icons/small/people.svg';
-import Search from '@public/icons/small/search.svg';
-import Zeno from '@public/logos/logo.svg';
+import Zeno from '@public/logos/logo-mono.svg';
 
 interface AppHeaderProps {
-  onSearch?: (query: string) => void;
   onNotificationClick?: () => void;
   onOpenSettings?: (tab?: 'general' | 'profile') => void;
   /** Toggles the mobile navigation drawer (only shown below md). */
   onToggleSidebar?: () => void;
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-const IconButton = ({
-  label,
-  disabled = false,
-  onClick,
-  className = '',
-  children,
-}: {
-  label: string;
-  disabled?: boolean;
-  onClick?: () => void;
-  className?: string;
-  children: ReactNode;
-}) => (
-  <button
-    type="button"
-    aria-label={label}
-    disabled={disabled}
-    onClick={onClick}
-    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-static-dark-surface-2 text-static-dark-primary transition-colors hover:bg-static-dark-surface-3 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
-  >
-    {children}
-  </button>
-);
-
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 const Header = ({
-  onSearch,
   onNotificationClick,
   onOpenSettings,
   onToggleSidebar,
@@ -62,7 +33,6 @@ const Header = ({
   const { auth, project, projectNavigation, projectShare, account } =
     usePage().props;
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -92,22 +62,36 @@ const Header = ({
     const refresh = () => {
       setNotificationRefreshVersion((version) => version + 1);
     };
+    // If the project we're currently viewing is the one we were just
+    // removed from, leave immediately instead of waiting for the next
+    // request to bounce off a 403.
+    const handleMemberRemoved = (event: { project_id: string }) => {
+      if (project?.project_id === event.project_id) {
+        router.visit(accountPath(account.index, '/projects'), {
+          replace: true,
+        });
+      }
+    };
     const channelName = `notifications.user.${userId}`;
     const channel = echo.private(channelName);
 
     channel.listen('.message.sent', refresh);
     channel.listen('.task-conflict.created', refresh);
+    channel.listen('.task-conflict.declined', refresh);
     channel.listen('.card-assignment.created', refresh);
+    channel.listen('.project-member.removed', handleMemberRemoved);
     window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, refresh);
 
     return () => {
       channel.stopListening('.message.sent', refresh);
       channel.stopListening('.task-conflict.created', refresh);
+      channel.stopListening('.task-conflict.declined', refresh);
       channel.stopListening('.card-assignment.created', refresh);
+      channel.stopListening('.project-member.removed', handleMemberRemoved);
       echo.leave(channelName);
       window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, refresh);
     };
-  }, [auth.user?.id]);
+  }, [auth.user?.id, project?.project_id, account.index]);
 
   // Close project menu on outside click
   useEffect(() => {
@@ -123,12 +107,6 @@ const Header = ({
     return () => document.removeEventListener('mousedown', onPointerDown);
   }, [projectMenuOpen]);
 
-  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    onSearch?.(query);
-  };
-
   return (
     <header className="flex items-center gap-2 bg-dark-surface-1 p-2 select-none">
       {/* ── Left: Menu (mobile) + Logo + Project picker ── */}
@@ -142,7 +120,7 @@ const Header = ({
           <Menu className="h-5 w-5" />
         </button>
 
-        <div className="hidden items-center justify-center rounded-lg bg-dark-surface-2 p-1 sm:flex">
+        <div className="hidden items-center justify-center rounded-lg bg-dark-surface-2 p-1 text-dark-primary sm:flex">
           <Zeno className="h-6 w-6" />
         </div>
 
@@ -153,13 +131,13 @@ const Header = ({
             aria-haspopup="true"
             aria-expanded={projectMenuOpen}
             aria-label={t('header.selectProject')}
-            className="flex h-8 max-w-56 items-center gap-1 rounded-lg bg-static-dark-surface-2 px-2 text-static-dark-primary transition-colors hover:bg-static-dark-surface-3"
+            className="flex h-8 max-w-56 items-center gap-1 rounded-lg bg-dark-surface-2 px-2 text-dark-primary transition-colors hover:bg-dark-surface-3"
           >
             <span className="truncate text-sm font-bold whitespace-nowrap">
               {project?.project_name ?? t('header.projectsFallback')}
             </span>
             <span
-              className={`shrink-0 text-static-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
+              className={`shrink-0 text-dark-secondary transition-transform duration-150 ${projectMenuOpen ? 'rotate-180' : ''}`}
             >
               <ArrowDown />
             </span>
@@ -169,7 +147,6 @@ const Header = ({
             currentProject={project}
             projects={projectNavigation.projects}
             onClose={() => setProjectMenuOpen(false)}
-            onSettingsOpen={() => onOpenSettings?.('general')}
           />
         </div>
       </div>
@@ -179,25 +156,13 @@ const Header = ({
         className="hidden min-w-0 flex-1 justify-center px-4 md:flex"
         role="search"
       >
-        <div className="flex h-8 w-full max-w-90 items-center rounded-full bg-dark-surface-2 px-3 transition-colors focus-within:bg-dark-surface-3">
-          <span className="mr-3 flex shrink-0 items-center justify-center text-dark-secondary">
-            <Search className="h-5" />
-          </span>
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={handleSearch}
-            placeholder={t('header.search')}
-            aria-label={t('header.search')}
-            className="flex-1 bg-transparent text-normal font-bold text-dark-primary outline-none placeholder:text-dark-secondary [&::-webkit-search-cancel-button]:hidden"
-          />
-        </div>
+        <HeaderSearch />
       </div>
 
       {/* ── Right: Actions + Account switcher ── */}
       <div className="flex shrink-0 items-center justify-end gap-2 md:w-100">
         <div className="relative">
-          <IconButton
+          <HeaderIconButton
             label={t('header.notifications')}
             disabled={project === null}
             onClick={() => {
@@ -211,7 +176,7 @@ const Header = ({
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
-          </IconButton>
+          </HeaderIconButton>
           <NotificationPanel
             open={notificationsOpen}
             onClose={() => setNotificationsOpen(false)}
@@ -222,21 +187,21 @@ const Header = ({
             currentUserId={auth.user?.id ?? 0}
           />
         </div>
-        <IconButton
+        <HeaderIconButton
           label={t('header.inviteMembers')}
           disabled={project === null}
           onClick={() => setInviteOpen(true)}
           className="hidden xs:flex"
         >
           <People />
-        </IconButton>
-        <IconButton
+        </HeaderIconButton>
+        <HeaderIconButton
           label={t('header.settings')}
           onClick={() => onOpenSettings?.('general')}
           className="hidden xs:flex"
         >
           <Gear />
-        </IconButton>
+        </HeaderIconButton>
 
         <div
           className="mx-1.5 hidden h-5 w-px bg-dark-border xs:block"

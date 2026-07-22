@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import DashboardEmptySlot from '@/components/dashboard/DashboardEmptySlot';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { TranslationKey } from '@/i18n/dictionary';
 import type { ChatParticipant, ChatRoom } from '@/types/chat';
@@ -6,10 +7,8 @@ import type { KanbanBoard } from '@/types/kanban';
 import type { NoteListItem } from '@/types/notes';
 import type { PomodoroSettings, Reminder } from '@/types/reminder';
 import CloseIcon from '@public/icons/small/cancel.svg';
-import PlusIcon from '@public/icons/small/plus.svg';
 import { getTemplate } from './templates';
 import type { TemplateId } from './templates';
-import { WidgetPicker } from './WidgetPicker';
 import type { WidgetId } from './widgets';
 import { AlarmWidget } from './widgets/AlarmWidget';
 import { CalendarWidget } from './widgets/CalendarWidget';
@@ -69,44 +68,6 @@ interface Props {
   alarmWidgetData?: AlarmWidgetData;
   timelineWidgetData?: TimelineWidgetData;
 }
-
-const EmptySlot = ({
-  index,
-  pickerOpen,
-  onOpenPicker,
-  onClosePicker,
-  onSelect,
-}: {
-  index: number;
-  pickerOpen: boolean;
-  onOpenPicker: () => void;
-  onClosePicker: () => void;
-  onSelect: (widgetId: WidgetId) => void;
-}) => {
-  const { t } = useTranslation();
-
-  if (pickerOpen) {
-    return (
-      <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-surface-3 bg-dark-surface-2 transition-colors hover:border-dark-secondary/40 hover:bg-dark-surface-3">
-        <WidgetPicker onSelect={onSelect} onClose={onClosePicker} />
-      </div>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onOpenPicker}
-      className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-surface-3 bg-dark-surface-2 text-dark-secondary transition-colors hover:border-dark-secondary/40 hover:bg-dark-surface-3 hover:text-dark-primary"
-      aria-label={t('dashboard.addWidget', { index: index + 1 })}
-    >
-      <PlusIcon className="h-6 w-6" />
-      <span className="text-xsmall font-medium">
-        {t('dashboard.addWidgetLabel')}
-      </span>
-    </button>
-  );
-};
 
 const renderWidget = (
   widgetId: WidgetId,
@@ -228,7 +189,7 @@ export const DashboardGrid = ({
                   {t('dashboard.loadingWidget')}
                 </div>
               ) : (
-                <EmptySlot
+                <DashboardEmptySlot
                   index={i}
                   pickerOpen={pickerOpenIndex === i}
                   onOpenPicker={() => setPickerOpenIndex(i)}

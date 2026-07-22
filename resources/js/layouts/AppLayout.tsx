@@ -33,7 +33,6 @@ const AppLayout = ({ children, project }: AppLayoutProps) => {
       <main className="flex">
         <Sidebar
           projectSlug={project.project_slug}
-          onOpenSettings={() => openSettings('general')}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />

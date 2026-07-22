@@ -6,7 +6,7 @@ import EyeOffIcon from '@public/icons/small/eye_off.svg';
 import GlobeIcon from '@public/icons/small/globe.svg';
 import MoonIcon from '@public/icons/small/moon.svg';
 import SunIcon from '@public/icons/small/sun.svg';
-import { FieldLabel } from './shared';
+import FieldLabel from './FieldLabel';
 
 // ── PreferencesTab ────────────────────────────────────────────────────────
 //
@@ -48,10 +48,10 @@ const PreferencesTab = () => {
                   : 'border-dark-border bg-dark-surface-1 hover:border-dark-border-focus'
               }`}
             >
-              <div className="w-full rounded-lg border border-dark-border bg-dark-surface-2 p-2">
-                <div className="mb-2 h-2 w-3/4 rounded bg-dark-surface-3" />
-                <div className="mb-1 h-2 w-full rounded bg-dark-surface-3/60" />
-                <div className="h-2 w-2/3 rounded bg-dark-surface-3/40" />
+              <div className="w-full rounded-lg border border-static-dark-surface-3 bg-static-dark-surface-2 p-2">
+                <div className="mb-2 h-2 w-3/4 rounded bg-static-dark-surface-3" />
+                <div className="mb-1 h-2 w-full rounded bg-static-dark-surface-3/60" />
+                <div className="h-2 w-2/3 rounded bg-static-dark-surface-3/40" />
               </div>
               {/* Icon inherits text color from wrapper div */}
               <div

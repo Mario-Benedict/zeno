@@ -11,22 +11,33 @@ uses(RefreshDatabase::class);
 
 /**
  * Two projects: Zeno (viewer's project) and Atlas (owns the Kanban card
- * under test). The viewer is in Zeno only (plus Atlas as a bystander
- * member, not an assignee), so any Atlas-assigned task they see must go
- * through CalendarService::getClassifiedKanbanTasks()'s cross-project
- * branch — mirrors CalendarVisibilityTest.php for CalendarEvents.
+ * under test). Both users are in Zeno so the assignee is a valid member-filter
+ * target. The card belongs to Atlas, so it still goes through
+ * CalendarService::getClassifiedKanbanTasks()'s cross-project branch.
+ *
+ * $viewerInTargetProject controls whether the viewer ALSO shares membership
+ * in Atlas (the card's own project) — when true and a relevant assignee's
+ * `calendar_visibility` is "masked", the viewer already has legitimate
+ * access to Atlas's data via that shared membership, so
+ * getClassifiedKanbanTasks() shows full details instead of classifying it.
+ * "busy_only" is the strictest setting and stays classified regardless of
+ * shared membership.
  */
-function seedKanbanVisibilityScenario(string $assigneeVisibility): array
+function seedKanbanVisibilityScenario(string $assigneeVisibility, bool $viewerInTargetProject = false): array
 {
     $assignee = User::factory()->create(['name' => 'Assignee', 'calendar_visibility' => $assigneeVisibility]);
     $viewer = User::factory()->create(['name' => 'Viewer']);
 
     $zeno = Project::create(['project_name' => 'Zeno', 'project_slug' => 'zeno-kanban-vis']);
     $zeno->members()->attach($viewer->id, ['role' => 'OWNER', 'color' => '#D7CCC8']);
+    $zeno->members()->attach($assignee->id, ['role' => 'MEMBER', 'color' => '#7B7B7B']);
 
     $atlas = Project::create(['project_name' => 'Atlas', 'project_slug' => 'atlas-kanban-vis']);
     $atlas->members()->attach($assignee->id, ['role' => 'OWNER', 'color' => '#D7CCC8']);
-    $atlas->members()->attach($viewer->id, ['role' => 'MEMBER', 'color' => '#F8BBD0']);
+
+    if ($viewerInTargetProject) {
+        $atlas->members()->attach($viewer->id, ['role' => 'MEMBER', 'color' => '#F8BBD0']);
+    }
 
     $board = KanbanBoard::create([
         'kanban_board_project_id' => $atlas->project_id,
@@ -92,6 +103,32 @@ it('hides the title but keeps real times when the assignee is masked', function 
 
 it('strips everything but a busy block when the assignee is busy_only', function () {
     ['assignee' => $assignee, 'viewer' => $viewer, 'zeno' => $zeno, 'dueDate' => $dueDate] = seedKanbanVisibilityScenario('busy_only');
+
+    $entry = fetchClassifiedKanbanEntry($viewer, $zeno, [$assignee->id], $dueDate);
+
+    expect($entry)->not->toBeNull();
+    expect($entry)->not->toHaveKey('title');
+    expect($entry['is_classified'])->toBeTrue();
+    expect($entry['visibility'])->toBe('busy_only');
+});
+
+it('shows full task details when the assignee is masked but the viewer shares the card\'s own project', function () {
+    ['assignee' => $assignee, 'viewer' => $viewer, 'zeno' => $zeno, 'dueDate' => $dueDate] = seedKanbanVisibilityScenario('masked', viewerInTargetProject: true);
+
+    $entry = fetchClassifiedKanbanEntry($viewer, $zeno, [$assignee->id], $dueDate);
+
+    expect($entry)->not->toBeNull();
+    expect($entry['title'])->toBe('Confidential deliverable');
+    expect($entry['is_classified'] ?? false)->toBeFalse();
+    expect($entry['is_kanban_task'] ?? false)->toBeTrue();
+});
+
+it('stays classified when the assignee is busy_only even if the viewer shares the card\'s own project', function () {
+    // busy_only is the strictest setting — shared project membership does
+    // NOT relax it the way it does for "masked". It only stops applying
+    // once the viewer opens that other project directly (a different,
+    // non-classified code path entirely).
+    ['assignee' => $assignee, 'viewer' => $viewer, 'zeno' => $zeno, 'dueDate' => $dueDate] = seedKanbanVisibilityScenario('busy_only', viewerInTargetProject: true);
 
     $entry = fetchClassifiedKanbanEntry($viewer, $zeno, [$assignee->id], $dueDate);
 

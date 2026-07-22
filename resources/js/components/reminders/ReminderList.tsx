@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { PinIcon } from '@/components/shared/PinButton';
+import PinIcon from '@/components/shared/PinIcon';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Reminder } from '@/types/reminder';
 import FilterIcon from '@public/icons/large/filter.svg';
@@ -118,8 +118,8 @@ export const ReminderList = ({
           title={t('reminders.onlyWithDueDate')}
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
             dueOnly
-              ? 'bg-accent-blue/20'
-              : 'bg-dark-surface-1 hover:bg-dark-surface-3'
+              ? 'bg-accent-blue/20 text-accent-blue'
+              : 'bg-dark-surface-1 text-dark-secondary hover:bg-dark-surface-3'
           }`}
         >
           <FilterIcon className="h-3.5 w-3.5" />

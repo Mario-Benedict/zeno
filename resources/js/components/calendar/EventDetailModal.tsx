@@ -23,6 +23,7 @@ interface EventDetailModalProps {
   onDelete: () => void;
   canEdit: boolean;
   accountIndex: number;
+  currentProjectId: string;
   projectSlug: string;
 }
 
@@ -35,6 +36,7 @@ export const EventDetailModal = ({
   onDelete,
   canEdit,
   accountIndex,
+  currentProjectId,
   projectSlug,
 }: EventDetailModalProps) => {
   const { t, locale } = useTranslation();
@@ -82,8 +84,9 @@ export const EventDetailModal = ({
   // Narrow before the CalendarEventFull cast below, which would otherwise
   // erase the CalendarKanbanTask-only fields (kanban_board_id / _name).
   const kanbanTask = event.is_kanban_task ? event : null;
-  const kanbanBoardUrl = kanbanTask
-    ? projectPath(accountIndex, projectSlug, '/kanban')
+  const canOpenBoard = kanbanTask?.project_id === currentProjectId;
+  const kanbanBoardUrl = canOpenBoard
+    ? `${projectPath(accountIndex, projectSlug, '/kanban')}?card=${encodeURIComponent(kanbanTask.kanban_board_card_id)}`
     : null;
 
   const fullEvent = event as CalendarEventFull;
@@ -91,13 +94,13 @@ export const EventDetailModal = ({
   const start = new Date(fullEvent.start_time);
   const end = new Date(fullEvent.end_time);
 
-  const dateStr = start.toLocaleDateString('en-US', {
+  const dateStr = start.toLocaleDateString(localeCode, {
     weekday: 'short',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
-  const timeStr = `${start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  const timeStr = `${start.toLocaleTimeString(localeCode, { hour: 'numeric', minute: '2-digit' })} - ${end.toLocaleTimeString(localeCode, { hour: 'numeric', minute: '2-digit' })}`;
 
   const recurrenceLabel =
     fullEvent.recurrence !== 'none'
@@ -195,7 +198,7 @@ export const EventDetailModal = ({
           </div>
         )}
 
-        {kanbanTask && (
+        {canOpenBoard && (
           <div className="mt-6 flex justify-end border-t border-dark-border pt-4">
             <Link
               href={kanbanBoardUrl!}

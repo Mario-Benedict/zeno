@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\TaskConflictDeclined;
 use App\Models\CalendarEvent;
 use App\Models\KanbanBoard;
 use App\Models\KanbanBoardCard;
@@ -8,6 +9,7 @@ use App\Models\TaskConflict;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
@@ -203,6 +205,99 @@ it('lets the assignee decline a conflict, which the assigner sees as a decline a
     expect($alert)->not->toBeNull();
     expect($alert['role'])->toBe('assigner');
     expect($alert['assignee_name'])->toBe('Assignee');
+});
+
+it('unassigns the card and notifies the assigner when the assignee declines', function () {
+    /** @var mixed $this */
+    Event::fake([TaskConflictDeclined::class]);
+
+    $this->card->members()->attach($this->assignee->id);
+
+    $conflict = TaskConflict::create([
+        'kanban_board_card_id' => $this->card->kanban_board_card_id,
+        'assignee_user_id' => $this->assignee->id,
+        'assigned_by_user_id' => $this->admin->id,
+        'conflicting_title' => 'Client sync',
+        'conflicting_start' => $this->existingEvent->start_time,
+        'conflicting_end' => $this->existingEvent->end_time,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->assignee)
+        ->patch("/u/0/task-conflicts/{$conflict->id}/respond", ['can_do_both' => false])
+        ->assertRedirect();
+
+    expect($this->card->fresh()->members()->where('users.id', $this->assignee->id)->exists())->toBeFalse();
+
+    Event::assertDispatched(TaskConflictDeclined::class, function (TaskConflictDeclined $event) use ($conflict) {
+        return $event->conflict->id === $conflict->id;
+    });
+});
+
+it('keeps the assignment when the assignee accepts a conflict', function () {
+    /** @var mixed $this */
+    $this->card->members()->attach($this->assignee->id);
+
+    $conflict = TaskConflict::create([
+        'kanban_board_card_id' => $this->card->kanban_board_card_id,
+        'assignee_user_id' => $this->assignee->id,
+        'assigned_by_user_id' => $this->admin->id,
+        'conflicting_title' => 'Client sync',
+        'conflicting_start' => $this->existingEvent->start_time,
+        'conflicting_end' => $this->existingEvent->end_time,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->assignee)
+        ->patch("/u/0/task-conflicts/{$conflict->id}/respond", ['can_do_both' => true])
+        ->assertRedirect();
+
+    expect($this->card->fresh()->members()->where('users.id', $this->assignee->id)->exists())->toBeTrue();
+});
+
+it('does not create a conflict against another kanban card that is already marked done', function () {
+    /** @var mixed $this */
+    $this->existingEvent->delete();
+
+    $conflictingCard = KanbanBoardCard::create([
+        'kanban_board_id' => $this->board->kanban_board_id,
+        'position' => 1,
+        'kanban_board_card_title' => 'Already finished',
+        'is_completed' => true,
+        'kanban_board_card_due_date' => $this->dueDate,
+    ]);
+    $conflictingCard->members()->attach($this->assignee->id);
+
+    $this->actingAs($this->admin)
+        ->withSession(['accounts' => [['user_id' => $this->admin->id]], 'account_active_index' => 0])
+        ->post("/u/0/p/{$this->project->project_slug}/cards/{$this->card->kanban_board_card_id}/members", [
+            'user_id' => $this->assignee->id,
+        ])
+        ->assertRedirect();
+
+    expect(TaskConflict::where('kanban_board_card_id', $this->card->kanban_board_card_id)->exists())->toBeFalse();
+});
+
+it('clears pending conflicts for a card once it is marked complete', function () {
+    /** @var mixed $this */
+    $conflict = TaskConflict::create([
+        'kanban_board_card_id' => $this->card->kanban_board_card_id,
+        'assignee_user_id' => $this->assignee->id,
+        'assigned_by_user_id' => $this->admin->id,
+        'conflicting_title' => 'Client sync',
+        'conflicting_start' => $this->existingEvent->start_time,
+        'conflicting_end' => $this->existingEvent->end_time,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['accounts' => [['user_id' => $this->admin->id]], 'account_active_index' => 0])
+        ->patch("/u/0/p/{$this->project->project_slug}/cards/{$this->card->kanban_board_card_id}/detail", [
+            'is_completed' => true,
+        ])
+        ->assertRedirect();
+
+    expect(TaskConflict::find($conflict->id))->toBeNull();
 });
 
 it('rejects a respond attempt from someone other than the assignee', function () {

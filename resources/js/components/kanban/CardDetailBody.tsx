@@ -17,7 +17,7 @@ import DescriptionIcon from '@public/icons/small/description.svg';
 import PaperclipIcon from '@public/icons/small/paperclip.svg';
 import CalendarIcon from '@public/icons/small/time.svg';
 import { AvatarStack } from './AvatarStack';
-import { SectionHeader } from './CardDetailComponents';
+import { SectionHeader } from './SectionHeader';
 import { TagBadge } from './TagBadge';
 
 export interface DescState {
@@ -72,6 +72,7 @@ export interface CommentState {
 interface CardDetailBodyProps {
   card: KanbanBoardCard;
   currentUser: KanbanUser;
+  canEdit: boolean;
   isDueSoon: boolean;
   isOverdue: boolean;
   desc: DescState;
@@ -83,6 +84,7 @@ interface CardDetailBodyProps {
 export const CardDetailBody = ({
   card,
   currentUser,
+  canEdit,
   isDueSoon,
   isOverdue,
   desc,
@@ -235,6 +237,7 @@ export const CardDetailBody = ({
           icon={<DescriptionIcon className="h-4 w-4" />}
           label={t('kanban.description')}
           action={
+            canEdit &&
             !descEditing && (
               <button
                 onClick={descOnEdit}
@@ -245,7 +248,7 @@ export const CardDetailBody = ({
             )
           }
         />
-        {descEditing ? (
+        {canEdit && descEditing ? (
           <div>
             <textarea
               ref={descRef}
@@ -272,8 +275,10 @@ export const CardDetailBody = ({
           </div>
         ) : (
           <div
-            onClick={descOnEdit}
-            className="min-h-15 cursor-pointer rounded-xl bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed transition hover:bg-dark-surface-3"
+            onClick={canEdit ? descOnEdit : undefined}
+            className={`min-h-15 rounded-xl bg-dark-surface-2 px-3.5 py-3 text-small leading-relaxed ${
+              canEdit ? 'cursor-pointer transition hover:bg-dark-surface-3' : ''
+            }`}
           >
             {card.kanban_board_card_description ? (
               <span className="whitespace-pre-wrap text-dark-primary">
@@ -350,13 +355,16 @@ export const CardDetailBody = ({
                   >
                     ↓
                   </button>
-                  <button
-                    onClick={() => attachmentsOnDelete(att.id)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-dark-secondary/80 transition hover:bg-accent-red/10 hover:text-accent-red"
-                    title={t('common.delete')}
-                  >
-                    <CloseIcon className="h-3 w-3" />
-                  </button>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => attachmentsOnDelete(att.id)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-dark-secondary/80 transition hover:bg-accent-red/10 hover:text-accent-red"
+                      title={t('common.delete')}
+                    >
+                      <CloseIcon className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -364,7 +372,7 @@ export const CardDetailBody = ({
         </div>
       )}
 
-      {attachmentsError && (
+      {canEdit && attachmentsError && (
         <div
           role="alert"
           className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-status-error/30 bg-status-error/10 px-3 py-2"
@@ -382,7 +390,7 @@ export const CardDetailBody = ({
       )}
 
       {/* Upload drop zone */}
-      {attachmentsAdding && (
+      {canEdit && attachmentsAdding && (
         <div
           ref={attachmentsZoneRef}
           className="space-y-2 rounded-xl border border-dark-border bg-dark-surface-2 p-4"
@@ -452,16 +460,19 @@ export const CardDetailBody = ({
                   {checklist.kanban_board_card_checklist_name}
                 </span>
               </div>
-              <button
-                onClick={() =>
-                  checklistsOnDeleteChecklist(
-                    checklist.kanban_board_card_checklist_id,
-                  )
-                }
-                className="rounded px-2 py-0.5 text-xsmall text-dark-secondary/70 transition hover:bg-accent-red/10 hover:text-accent-red"
-              >
-                {t('kanban.deleteChecklist')}
-              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    checklistsOnDeleteChecklist(
+                      checklist.kanban_board_card_checklist_id,
+                    )
+                  }
+                  className="rounded px-2 py-0.5 text-xsmall text-dark-secondary/70 transition hover:bg-accent-red/10 hover:text-accent-red"
+                >
+                  {t('kanban.deleteChecklist')}
+                </button>
+              )}
             </div>
 
             {prog.total > 0 && (
@@ -488,7 +499,10 @@ export const CardDetailBody = ({
                   className="group/item flex items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-dark-surface-3"
                 >
                   <button
+                    type="button"
+                    disabled={!canEdit}
                     onClick={() =>
+                      canEdit &&
                       checklistsOnToggleItem(
                         checklist.kanban_board_card_checklist_id,
                         item.kanban_board_card_checklist_item_id,
@@ -514,59 +528,66 @@ export const CardDetailBody = ({
                   >
                     {item.kanban_board_card_checklist_item_name}
                   </span>
-                  <button
-                    onClick={() =>
-                      checklistsOnDeleteItem(
-                        checklist.kanban_board_card_checklist_id,
-                        item.kanban_board_card_checklist_item_id,
-                      )
-                    }
-                    className="flex h-5 w-5 items-center justify-center rounded text-xsmall text-dark-secondary/70 opacity-0 transition group-hover/item:opacity-100 hover:text-accent-red"
-                  >
-                    ✕
-                  </button>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        checklistsOnDeleteItem(
+                          checklist.kanban_board_card_checklist_id,
+                          item.kanban_board_card_checklist_item_id,
+                        )
+                      }
+                      className="flex h-5 w-5 items-center justify-center rounded text-xsmall text-dark-secondary/70 opacity-0 transition group-hover/item:opacity-100 hover:text-accent-red"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
 
-            <div className="mt-2.5 flex gap-2 pl-1">
-              <input
-                value={
-                  checklistsNewItems[
-                    checklist.kanban_board_card_checklist_id
-                  ] || ''
-                }
-                onChange={(e) =>
-                  checklistsOnItemChange(
-                    checklist.kanban_board_card_checklist_id,
-                    e.target.value,
-                  )
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+            {canEdit && (
+              <div className="mt-2.5 flex gap-2 pl-1">
+                <input
+                  value={
+                    checklistsNewItems[
+                      checklist.kanban_board_card_checklist_id
+                    ] || ''
+                  }
+                  onChange={(e) =>
+                    checklistsOnItemChange(
+                      checklist.kanban_board_card_checklist_id,
+                      e.target.value,
+                    )
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      checklistsOnAddItem(
+                        checklist.kanban_board_card_checklist_id,
+                      );
+                    }
+                  }}
+                  placeholder={t('kanban.addAnItem')}
+                  className="flex-1 rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-dark-primary placeholder-dark-secondary transition focus:border-dark-surface-3 focus:outline-none"
+                />
+                <button
+                  onClick={() =>
                     checklistsOnAddItem(
                       checklist.kanban_board_card_checklist_id,
-                    );
+                    )
                   }
-                }}
-                placeholder={t('kanban.addAnItem')}
-                className="flex-1 rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-dark-primary placeholder-dark-secondary transition focus:border-dark-surface-3 focus:outline-none"
-              />
-              <button
-                onClick={() =>
-                  checklistsOnAddItem(checklist.kanban_board_card_checklist_id)
-                }
-                className="rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
-              >
-                {t('common.add')}
-              </button>
-            </div>
+                  className="rounded-lg border border-dark-secondary bg-dark-surface-2 px-3 py-1.5 text-small text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
+                >
+                  {t('common.add')}
+                </button>
+              </div>
+            )}
           </div>
         );
       })}
 
       {/* Add checklist form */}
-      {checklistsAdding && (
+      {canEdit && checklistsAdding && (
         <div className="space-y-2 rounded-xl border border-dark-border bg-dark-surface-2 p-4">
           <p className="mb-2 text-xsmall font-semibold text-dark-secondary">
             {t('kanban.newChecklist')}
@@ -609,45 +630,47 @@ export const CardDetailBody = ({
           label={t('kanban.activity')}
         />
 
-        <div className="mt-4 mb-3 flex gap-3">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xsmall font-bold text-white"
-            style={{ backgroundColor: memberColor(currentUser.id) }}
-          >
-            {generateInitials(currentUser.name)}
+        {canEdit && (
+          <div className="mt-4 mb-3 flex gap-3">
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xsmall font-bold text-white"
+              style={{ backgroundColor: memberColor(currentUser.id) }}
+            >
+              {generateInitials(currentUser.name)}
+            </div>
+            <div className="flex-1">
+              <textarea
+                value={commentsNewComment}
+                onChange={(e) => commentsOnChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    commentsOnSubmit();
+                  }
+                }}
+                placeholder={t('kanban.commentPlaceholder')}
+                rows={commentsNewComment ? 3 : 2}
+                className="w-full resize-none rounded-xl border border-dark-border bg-dark-surface-2 px-3.5 py-2.5 text-small text-dark-primary placeholder-dark-secondary transition-all focus:border-dark-border-focus focus:outline-none"
+              />
+              {commentsNewComment.trim() && (
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={commentsOnSubmit}
+                    className="hover:bg-opacity-90 rounded-lg bg-accent-blue px-3.5 py-1.5 text-xsmall font-semibold text-white transition"
+                  >
+                    {t('common.save')}
+                  </button>
+                  <button
+                    onClick={commentsOnDiscard}
+                    className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
+                  >
+                    {t('kanban.discard')}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex-1">
-            <textarea
-              value={commentsNewComment}
-              onChange={(e) => commentsOnChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  commentsOnSubmit();
-                }
-              }}
-              placeholder={t('kanban.commentPlaceholder')}
-              rows={commentsNewComment ? 3 : 2}
-              className="w-full resize-none rounded-xl border border-dark-border bg-dark-surface-2 px-3.5 py-2.5 text-small text-dark-primary placeholder-dark-secondary transition-all focus:border-dark-border-focus focus:outline-none"
-            />
-            {commentsNewComment.trim() && (
-              <div className="mt-2 flex gap-2">
-                <button
-                  onClick={commentsOnSubmit}
-                  className="hover:bg-opacity-90 rounded-lg bg-accent-blue px-3.5 py-1.5 text-xsmall font-semibold text-white transition"
-                >
-                  {t('common.save')}
-                </button>
-                <button
-                  onClick={commentsOnDiscard}
-                  className="rounded-lg border border-dark-border px-3.5 py-1.5 text-xsmall text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
-                >
-                  {t('kanban.discard')}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
 
         <div className="space-y-4">
           {(card.comments || []).map((comment) => (
@@ -683,16 +706,17 @@ export const CardDetailBody = ({
                   {comment.kanban_board_card_comment_message}
                 </div>
               </div>
-              {comment.kanban_board_card_comment_from === currentUser.id && (
-                <button
-                  onClick={() =>
-                    commentsOnDelete(comment.kanban_board_card_comment_id)
-                  }
-                  className="mt-2 flex h-5 w-5 items-center justify-center self-start rounded text-xsmall text-dark-secondary/70 opacity-0 transition group-hover/comment:opacity-100 hover:text-accent-red"
-                >
-                  <CloseIcon />
-                </button>
-              )}
+              {canEdit &&
+                comment.kanban_board_card_comment_from === currentUser.id && (
+                  <button
+                    onClick={() =>
+                      commentsOnDelete(comment.kanban_board_card_comment_id)
+                    }
+                    className="mt-2 flex h-5 w-5 items-center justify-center self-start rounded text-xsmall text-dark-secondary/70 opacity-0 transition group-hover/comment:opacity-100 hover:text-accent-red"
+                  >
+                    <CloseIcon />
+                  </button>
+                )}
             </div>
           ))}
           {!card.comments?.length && (

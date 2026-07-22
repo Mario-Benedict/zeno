@@ -1,6 +1,5 @@
 import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import CancelIcon from '@public/icons/small/cancel.svg';
 import DangerTab from './settings/DangerTab';
@@ -8,6 +7,8 @@ import GeneralTab from './settings/GeneralTab';
 import MembersTab from './settings/MembersTab';
 import PreferencesTab from './settings/PreferencesTab';
 import ProfileTab from './settings/ProfileTab';
+import ProjectSettingsNavGroup from './settings/ProjectSettingsNavGroup';
+import ProjectSettingsNavItem from './settings/ProjectSettingsNavItem';
 import SecurityTab from './settings/SecurityTab';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -25,49 +26,6 @@ interface ProjectSettingsModalProps {
   initialTab?: Tab;
   onClose: () => void;
 }
-
-// ── Sidebar nav ────────────────────────────────────────────────────────────
-
-const NavGroup = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) => (
-  <div className="mb-3">
-    <p className="mb-1 px-3 text-micro font-bold tracking-wider text-dark-secondary uppercase">
-      {label}
-    </p>
-    <div className="space-y-0.5">{children}</div>
-  </div>
-);
-
-const NavItem = ({
-  label,
-  active,
-  danger,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  danger?: boolean;
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`w-full rounded-md px-3 py-2 text-left text-small font-medium transition-colors ${
-      active
-        ? 'bg-white/[0.1] text-dark-primary'
-        : danger
-          ? 'text-status-error hover:bg-status-error/10'
-          : 'text-dark-secondary hover:bg-white/[0.07] hover:text-dark-primary'
-    }`}
-  >
-    {label}
-  </button>
-);
 
 // ── Modal ──────────────────────────────────────────────────────────────────
 
@@ -142,39 +100,41 @@ const ProjectSettingsModal = ({
 
           <div className="flex flex-1 flex-col">
             {project && (
-              <NavGroup label={t('projectSettings.navProject')}>
-                <NavItem
+              <ProjectSettingsNavGroup label={t('projectSettings.navProject')}>
+                <ProjectSettingsNavItem
                   label={t('projectSettings.navGeneral')}
                   active={activeTab === 'general'}
                   onClick={() => setActiveTab('general')}
                 />
-                <NavItem
+                <ProjectSettingsNavItem
                   label={t('projectSettings.navMembers')}
                   active={activeTab === 'members'}
                   onClick={() => setActiveTab('members')}
                 />
-              </NavGroup>
+              </ProjectSettingsNavGroup>
             )}
-            <NavGroup label={t('projectSettings.navYourAccount')}>
-              <NavItem
+            <ProjectSettingsNavGroup
+              label={t('projectSettings.navYourAccount')}
+            >
+              <ProjectSettingsNavItem
                 label={t('projectSettings.navProfile')}
                 active={activeTab === 'profile'}
                 onClick={() => setActiveTab('profile')}
               />
-              <NavItem
+              <ProjectSettingsNavItem
                 label={t('projectSettings.navPreferences')}
                 active={activeTab === 'preferences'}
                 onClick={() => setActiveTab('preferences')}
               />
-              <NavItem
+              <ProjectSettingsNavItem
                 label={t('projectSettings.navSecurity')}
                 active={activeTab === 'security'}
                 onClick={() => setActiveTab('security')}
               />
-            </NavGroup>
+            </ProjectSettingsNavGroup>
             {project && (
               <div className="mt-auto border-t border-dark-border pt-2">
-                <NavItem
+                <ProjectSettingsNavItem
                   label={t('projectSettings.navDanger')}
                   active={activeTab === 'danger'}
                   danger

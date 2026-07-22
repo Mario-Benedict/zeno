@@ -28,6 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::get('/', [ProjectController::class, 'index'])->name('index');
                 Route::post('/', [ProjectController::class, 'store'])->name('store');
                 Route::get('/check-slug', [ProjectController::class, 'checkSlug'])->name('check-slug');
+                Route::get('/notification-status', [ProjectController::class, 'notificationStatus'])->name('notification-status');
             });
 
             Route::inertia('account', 'account/show')->name('account.show');
@@ -85,6 +86,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                             Route::patch('/members/{user}', [ProjectMemberController::class, 'update'])
                                 ->name('members.update');
+                            Route::get('/members/{user}/assigned-tasks', [ProjectMemberController::class, 'assignedTasks'])
+                                ->name('members.assigned-tasks');
                             Route::delete('/members/{user}', [ProjectMemberController::class, 'destroy'])
                                 ->name('members.destroy');
                         });

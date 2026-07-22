@@ -3,11 +3,15 @@
 use App\Models\CardLabel;
 use App\Models\KanbanBoard;
 use App\Models\KanbanBoardCard;
+use App\Models\KanbanBoardCardAttachment;
 use App\Models\KanbanBoardCardChecklist;
 use App\Models\KanbanBoardCardChecklistItem;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -55,6 +59,205 @@ it('creates a card with its title on a single row', function () {
         'kanban_board_id' => $this->board->kanban_board_id,
         'kanban_board_card_title' => 'Design login screen',
         'is_completed' => false,
+    ]);
+});
+
+it('creates a card with the detailed modal fields', function () {
+    /** @var mixed $this */
+    $member = User::factory()->create();
+    $this->project->members()->attach($member->id, ['role' => 'MEMBER']);
+    $label = CardLabel::create([
+        'card_label_project_id' => $this->project->project_id,
+        'card_label_name' => 'Launch',
+        'card_label_color_hex' => '#3366FF',
+    ]);
+
+    $this->actingAs($this->user)
+        ->post(kanbanUrl($this->project, "kanban/boards/{$this->board->kanban_board_id}/cards"), [
+            'title' => 'Plan launch',
+            'description' => 'Prepare the release checklist.',
+            'kanban_board_card_start_date' => '2026-08-01 09:00:00',
+            'kanban_board_card_due_date' => '2026-08-01 10:00:00',
+            'label_ids' => [$label->card_label_id],
+            'member_ids' => [$member->id],
+        ])
+        ->assertRedirect();
+
+    $card = KanbanBoardCard::where('kanban_board_card_title', 'Plan launch')->firstOrFail();
+
+    expect($card->kanban_board_card_description)->toBe('Prepare the release checklist.')
+        ->and($card->labels()->pluck('card_labels.card_label_id')->all())->toBe([$label->card_label_id])
+        ->and($card->members()->pluck('users.id')->all())->toBe([$member->id]);
+    $this->assertDatabaseHas('kanban_board_cards', [
+        'kanban_board_card_id' => $card->kanban_board_card_id,
+        'kanban_board_card_start_date' => '2026-08-01 09:00:00',
+        'kanban_board_card_due_date' => '2026-08-01 10:00:00',
+    ]);
+});
+
+it('creates a card with its initial checklist items and attachments', function () {
+    /** @var mixed $this */
+    Storage::fake('public');
+    config()->set('filesystems.uploads_disk', 'public');
+
+    $cardId = Str::uuid()->toString();
+    $checklistId = Str::uuid()->toString();
+    $firstItemId = Str::uuid()->toString();
+    $secondItemId = Str::uuid()->toString();
+    $attachmentId = Str::uuid()->toString();
+
+    $this->actingAs($this->user)
+        ->post(kanbanUrl($this->project, "kanban/boards/{$this->board->kanban_board_id}/cards"), [
+            'kanban_board_card_id' => $cardId,
+            'title' => 'Prepare demo',
+            'checklist' => [
+                'id' => $checklistId,
+                'name' => 'Checklist',
+                'items' => [
+                    ['id' => $firstItemId, 'name' => 'Write the script'],
+                    ['id' => $secondItemId, 'name' => 'Rehearse the flow'],
+                ],
+            ],
+            'attachments' => [[
+                'id' => $attachmentId,
+                'file' => UploadedFile::fake()->image('wireframe.png'),
+            ]],
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('kanban_board_card_checklists', [
+        'kanban_board_card_checklist_id' => $checklistId,
+        'kanban_board_card_id' => $cardId,
+        'kanban_board_card_checklist_name' => 'Checklist',
+    ]);
+    $this->assertDatabaseHas('kanban_board_card_checklist_items', [
+        'kanban_board_card_checklist_item_id' => $firstItemId,
+        'kanban_board_card_checklist_id' => $checklistId,
+        'kanban_board_card_checklist_item_name' => 'Write the script',
+        'is_completed' => false,
+    ]);
+    $this->assertDatabaseHas('kanban_board_card_checklist_items', [
+        'kanban_board_card_checklist_item_id' => $secondItemId,
+        'kanban_board_card_checklist_id' => $checklistId,
+        'kanban_board_card_checklist_item_name' => 'Rehearse the flow',
+        'is_completed' => false,
+    ]);
+
+    $attachment = KanbanBoardCardAttachment::findOrFail($attachmentId);
+    expect($attachment->kanban_board_card_id)->toBe($cardId)
+        ->and($attachment->kanban_board_card_attachment_name)->toBe('wireframe.png')
+        ->and($attachment->kanban_board_card_attachment_url)
+        ->toStartWith("kanban/{$this->project->project_id}/cards/{$cardId}/attachments/");
+    Storage::disk('public')->assertExists($attachment->kanban_board_card_attachment_url);
+});
+
+it('rejects unsupported card attachments before creating the card', function () {
+    /** @var mixed $this */
+    Storage::fake('public');
+    config()->set('filesystems.uploads_disk', 'public');
+    $cardId = Str::uuid()->toString();
+
+    $this->actingAs($this->user)
+        ->from(kanbanUrl($this->project, 'timeline'))
+        ->post(kanbanUrl($this->project, "kanban/boards/{$this->board->kanban_board_id}/cards"), [
+            'kanban_board_card_id' => $cardId,
+            'title' => 'Unsafe upload',
+            'attachments' => [[
+                'id' => Str::uuid()->toString(),
+                'file' => UploadedFile::fake()->create(
+                    'malware.exe',
+                    10,
+                    'application/x-msdownload',
+                ),
+            ]],
+        ])
+        ->assertRedirect(kanbanUrl($this->project, 'timeline'))
+        ->assertSessionHasErrors('attachments.0.file');
+
+    $this->assertDatabaseMissing('kanban_board_cards', [
+        'kanban_board_card_id' => $cardId,
+    ]);
+    Storage::disk('public')->assertDirectoryEmpty(
+        "kanban/{$this->project->project_id}/cards/{$cardId}",
+    );
+});
+
+it('rejects card attachments whose combined size exceeds fifty megabytes', function () {
+    /** @var mixed $this */
+    Storage::fake('public');
+    config()->set('filesystems.uploads_disk', 'public');
+    $cardId = Str::uuid()->toString();
+
+    $attachments = collect(['first.pdf', 'second.pdf', 'third.pdf'])
+        ->map(fn (string $name) => [
+            'id' => Str::uuid()->toString(),
+            'file' => UploadedFile::fake()->create($name, 18 * 1024, 'application/pdf'),
+        ])
+        ->all();
+
+    $this->actingAs($this->user)
+        ->post(kanbanUrl($this->project, "kanban/boards/{$this->board->kanban_board_id}/cards"), [
+            'kanban_board_card_id' => $cardId,
+            'title' => 'Oversized batch',
+            'attachments' => $attachments,
+        ])
+        ->assertSessionHasErrors('attachments');
+
+    $this->assertDatabaseMissing('kanban_board_cards', [
+        'kanban_board_card_id' => $cardId,
+    ]);
+    Storage::disk('public')->assertDirectoryEmpty('kanban');
+});
+
+it('does not upload attachments when the board belongs to another project', function () {
+    /** @var mixed $this */
+    Storage::fake('public');
+    config()->set('filesystems.uploads_disk', 'public');
+
+    $otherProject = Project::create([
+        'project_name' => 'Other Project',
+        'project_slug' => 'other-project',
+    ]);
+    $otherProject->members()->attach($this->user->id, ['role' => 'OWNER']);
+    $otherBoard = KanbanBoard::create([
+        'kanban_board_project_id' => $otherProject->project_id,
+        'kanban_board_name' => 'Other Board',
+        'kanban_board_position' => 0,
+    ]);
+    $cardId = Str::uuid()->toString();
+
+    $this->actingAs($this->user)
+        ->post(kanbanUrl($this->project, "kanban/boards/{$otherBoard->kanban_board_id}/cards"), [
+            'kanban_board_card_id' => $cardId,
+            'title' => 'Wrong project',
+            'attachments' => [[
+                'id' => Str::uuid()->toString(),
+                'file' => UploadedFile::fake()->image('private.png'),
+            ]],
+        ])
+        ->assertNotFound();
+
+    $this->assertDatabaseMissing('kanban_board_cards', [
+        'kanban_board_card_id' => $cardId,
+    ]);
+    Storage::disk('public')->assertDirectoryEmpty('kanban');
+});
+
+it('rejects a due date that is not after the start date when creating a card', function () {
+    /** @var mixed $this */
+    $this->actingAs($this->user)
+        ->from(kanbanUrl($this->project, 'timeline'))
+        ->post(kanbanUrl($this->project, "kanban/boards/{$this->board->kanban_board_id}/cards"), [
+            'title' => 'Invalid range',
+            'kanban_board_card_start_date' => '2026-08-02 10:00:00',
+            'kanban_board_card_due_date' => '2026-08-02 09:00:00',
+        ])
+        ->assertRedirect(kanbanUrl($this->project, 'timeline'))
+        ->assertSessionHasErrors('kanban_board_card_due_date');
+
+    $this->assertDatabaseMissing('kanban_board_cards', [
+        'kanban_board_card_title' => 'Invalid range',
     ]);
 });
 
@@ -106,6 +309,29 @@ it('sets and clears the card start and due dates', function () {
         'kanban_board_card_id' => $card->kanban_board_card_id,
         'kanban_board_card_start_date' => null,
         'kanban_board_card_due_date' => null,
+    ]);
+});
+
+it('rejects partial date updates that would reverse the card range', function () {
+    /** @var mixed $this */
+    $card = createCard($this->board);
+    $card->update([
+        'kanban_board_card_start_date' => '2026-08-01 09:00:00',
+        'kanban_board_card_due_date' => '2026-08-01 10:00:00',
+    ]);
+
+    $this->actingAs($this->user)
+        ->from(kanbanUrl($this->project, 'kanban'))
+        ->patch(kanbanUrl($this->project, "cards/{$card->kanban_board_card_id}/dates"), [
+            'kanban_board_card_start_date' => '2026-08-01 11:00:00',
+        ])
+        ->assertRedirect(kanbanUrl($this->project, 'kanban'))
+        ->assertSessionHasErrors('kanban_board_card_due_date');
+
+    $this->assertDatabaseHas('kanban_board_cards', [
+        'kanban_board_card_id' => $card->kanban_board_card_id,
+        'kanban_board_card_start_date' => '2026-08-01 09:00:00',
+        'kanban_board_card_due_date' => '2026-08-01 10:00:00',
     ]);
 });
 

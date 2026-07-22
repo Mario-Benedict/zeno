@@ -5,6 +5,7 @@ import type {
   ProjectRole,
   ProjectShare,
 } from '@/types/project';
+import type { GlobalSearchPayload } from '@/types/search';
 
 /**
  * Augment Inertia's `sharedPageProps` so every page automatically gets
@@ -42,6 +43,7 @@ declare module '@inertiajs/core' {
       projectRole: ProjectRole | null;
       projectNavigation: ProjectNavigation;
       projectShare: ProjectShare | null;
+      globalSearch: GlobalSearchPayload;
 
       twoFactor: { enabled: boolean; qrCodeUrl: string | null };
 

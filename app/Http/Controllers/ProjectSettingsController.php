@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ProjectRole;
+use App\Jobs\DeleteProjectFilesJob;
+use App\Models\ChatRoom;
+use App\Models\Note;
 use App\Models\Project;
 use App\Services\ChatRoomService;
 use App\Services\StorageService;
@@ -11,7 +14,10 @@ use Illuminate\Http\Request;
 
 class ProjectSettingsController extends Controller
 {
-    public function __construct(private readonly StorageService $storage) {}
+    public function __construct(
+        private readonly StorageService $storage,
+        private readonly ChatRoomService $chatRoomService,
+    ) {}
 
     public function update(int $accountIndex, Request $request, Project $project): RedirectResponse
     {
@@ -19,6 +25,7 @@ class ProjectSettingsController extends Controller
             'project_name' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\- ]+$/'],
         ]);
 
+        $oldName = $project->project_name;
         $newName = trim($validated['project_name']);
         $newSlug = Project::generateUniqueSlug($newName, $project->project_id);
 
@@ -26,6 +33,8 @@ class ProjectSettingsController extends Controller
             'project_name' => $newName,
             'project_slug' => $newSlug,
         ]);
+
+        $this->chatRoomService->renameProjectGroupRoom($project, $oldName, $newName);
 
         return redirect()
             ->route('projects.show', ['accountIndex' => $accountIndex, 'project' => $newSlug])
@@ -81,7 +90,18 @@ class ProjectSettingsController extends Controller
     {
         abort_if($project->roleFor(auth()->user()) !== ProjectRole::Owner, 403);
 
+        // Everything else (kanban boards/cards, chat rooms, notes, calendar
+        // events, reminders, members, invitations, ...) cascades at the
+        // MySQL FK level once the project row is gone. Mongo chat messages
+        // and files on disk/S3 don't, so capture what's needed to clean
+        // those up before the cascade removes the rows that reference them.
+        $chatRoomIds = ChatRoom::where('project_id', $project->project_id)->pluck('id')->all();
+        $noteIds = Note::withTrashed()->where('project_id', $project->project_id)->pluck('note_id')->all();
+        $avatarPath = $project->avatar_url;
+
         $project->delete();
+
+        DeleteProjectFilesJob::dispatch($chatRoomIds, $noteIds, $avatarPath);
 
         return redirect()
             ->route('projects.index', ['accountIndex' => $accountIndex])

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { TranslationKey } from '@/i18n/dictionary';
 import type { AnyCalendarEvent, CalendarMember } from '@/types/calendar';
+import ChevronLeftIcon from '@public/icons/small/chevron_left.svg';
 import { WeekEventCard } from './WeekEventCard';
 
 interface WeekGridProps {
@@ -10,6 +11,8 @@ interface WeekGridProps {
   members: CalendarMember[];
   onDateClick: (date: Date) => void;
   onEventClick: (event: AnyCalendarEvent) => void;
+  onPrevWeek: () => void;
+  onNextWeek: () => void;
 }
 
 const DAY_KEYS: TranslationKey[] = [
@@ -33,8 +36,10 @@ export const WeekGrid = ({
   members,
   onDateClick,
   onEventClick,
+  onPrevWeek,
+  onNextWeek,
 }: WeekGridProps) => {
-  const { t } = useTranslation();
+  const { locale, t } = useTranslation();
   // Scrolling the hour grid only ever browses hours within the visible week —
   // it used to also step to the prev/next week once scrolled to the top/
   // bottom boundary, but that made normal scrolling unpredictably jump weeks,
@@ -50,6 +55,17 @@ export const WeekGrid = ({
     d.setDate(startOfWeek.getDate() + i);
     return d;
   });
+  const weekEnd = weekDays[6];
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
+  const weekRangeLabel = `${startOfWeek.toLocaleDateString(localeCode, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })} – ${weekEnd.toLocaleDateString(localeCode, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })}`;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -149,9 +165,33 @@ export const WeekGrid = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-dark-border bg-dark-surface-1">
+      <div className="flex items-center justify-between border-b border-dark-border px-4 py-2">
+        <button
+          type="button"
+          onClick={onPrevWeek}
+          aria-label={t('calendar.previousWeek')}
+          title={t('calendar.previousWeek')}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-dark-border text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
+        >
+          <ChevronLeftIcon className="h-4 w-4" />
+        </button>
+        <p className="text-small font-semibold text-dark-primary">
+          {weekRangeLabel}
+        </p>
+        <button
+          type="button"
+          onClick={onNextWeek}
+          aria-label={t('calendar.nextWeek')}
+          title={t('calendar.nextWeek')}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-dark-border text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
+        >
+          <ChevronLeftIcon className="h-4 w-4 rotate-180" />
+        </button>
+      </div>
+
       {/* Day headers */}
       <div className="flex border-b border-dark-border">
-        <div className="flex w-16 shrink-0 items-end justify-center border-r border-dark-border pb-1 text-[9px] font-semibold text-dark-secondary">
+        <div className="flex w-16 shrink-0 items-end justify-center border-r border-dark-border pb-1 text-micro font-semibold text-dark-secondary">
           {tzString}
         </div>
         <div className="grid flex-1 grid-cols-7">
@@ -171,8 +211,8 @@ export const WeekGrid = ({
                   }`}
                 >
                   <span
-                    className={`text-[10px] font-semibold tracking-wider uppercase ${
-                      isToday ? 'text-dark-primary' : 'text-dark-secondary'
+                    className={`text-micro font-semibold tracking-wider uppercase ${
+                      isToday ? 'text-white/80' : 'text-dark-secondary'
                     }`}
                   >
                     {t(DAY_KEYS[d.getDay()])}
@@ -198,7 +238,7 @@ export const WeekGrid = ({
           {HOURS.map((h) => (
             <div
               key={h}
-              className="absolute w-full pr-2 text-right text-[10px] text-dark-secondary"
+              className="absolute w-full pr-2 text-right text-micro text-dark-secondary"
               style={{
                 top: `${h * HOUR_HEIGHT}px`,
                 transform: 'translateY(-50%)',

@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
@@ -28,6 +28,7 @@ interface Props {
   rooms: ChatRoom[];
   currentUser: ChatParticipant;
   activeRoomId?: string | null;
+  activeMessageId?: string | null;
   messages?: ChatMessage[];
   nextCursor?: string | null;
   hasMore?: boolean;
@@ -37,6 +38,7 @@ export default function Index({
   rooms,
   currentUser,
   activeRoomId: initialActiveRoomId,
+  activeMessageId,
 }: Props) {
   const { project, accountIndex } = useProject();
   const { projectShare } = usePage().props;
@@ -216,6 +218,8 @@ export default function Index({
 
   return (
     <AppLayout project={project}>
+      <Head title={`${t('nav.chat')} - ${project.project_name}`} />
+
       {/* gap-2 separates sidebar and window as two distinct boxes.
           On mobile it's a single pane: the room list, or the open room. */}
       <div className="flex h-full w-full gap-2 overflow-hidden p-2">
@@ -233,6 +237,11 @@ export default function Index({
         <ChatWindow
           room={activeRoom}
           currentUser={currentUser}
+          targetMessageId={
+            activeRoom?.id === initialActiveRoomId
+              ? (activeMessageId ?? null)
+              : null
+          }
           onSenderClick={openDmWith}
           onMessageSent={updateRoomFromMessage}
           realtimeMessages={realtimeMessages}

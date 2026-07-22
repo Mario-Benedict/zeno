@@ -1,17 +1,22 @@
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import {
   KanbanColumn,
   CardDetailModalWrapper,
-  AddCardModal,
   AddBoardInput,
 } from '@/components/kanban';
+import { useProject } from '@/hooks/useProject';
 import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import projects from '@/routes/projects';
-import type { KanbanBoardCard, KanbanBoard, KanbanProps } from '@/types/kanban';
+import type {
+  CreateKanbanCardInput,
+  KanbanBoard,
+  KanbanBoardCard,
+  KanbanProps,
+} from '@/types/kanban';
 import AddIcon from '@public/icons/small/plus.svg';
 import SearchIcon from '@public/icons/small/search.svg';
 
@@ -34,24 +39,66 @@ const silentPatch = (url: string, data: InertiaWritePayload) => {
   });
 };
 
-export default function Kanban({
+const Kanban = ({
   project,
   kanbanBoards,
   projectUsers,
   currentUser,
   cardLabels,
+  activeBoardId,
   activeCardId,
-}: KanbanProps) {
+}: KanbanProps) => {
   const { t } = useTranslation();
-  const accountIndex = usePage().props.account.index;
+  const { accountIndex, projectRole } = useProject();
+  const canEdit =
+    projectRole === 'OWNER' ||
+    projectRole === 'ADMIN' ||
+    projectRole === 'MEMBER';
   const [boards, setBoards] = useState<KanbanBoard[]>(kanbanBoards);
   const [searchQuery, setSearchQuery] = useState('');
-  const [modalBoardId, setModalBoardId] = useState<string | null>(null);
   const [addingBoard, setAddingBoard] = useState(false);
   const [openCard, setOpenCard] = useState<{
     card: KanbanBoardCard;
     boardId: string;
   } | null>(null);
+  const optimisticAttachmentUrlsRef = useRef(new Set<string>());
+  const autoFocusedBoardId = useRef<string | null>(null);
+
+  useEffect(() => {
+    const optimisticAttachmentUrls = optimisticAttachmentUrlsRef.current;
+
+    return () => {
+      optimisticAttachmentUrls.forEach((url) => URL.revokeObjectURL(url));
+      optimisticAttachmentUrls.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!activeBoardId || autoFocusedBoardId.current === activeBoardId) {
+      return;
+    }
+    if (!boards.some((board) => board.kanban_board_id === activeBoardId)) {
+      return;
+    }
+
+    if (searchQuery !== '') {
+      // A previous local filter can hide the requested board entirely.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSearchQuery('');
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-board-id="${activeBoardId}"]`)
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        });
+      autoFocusedBoardId.current = activeBoardId;
+    });
+  }, [activeBoardId, boards, searchQuery]);
 
   // Opens the deep-linked card once per `activeCardId` value — a plain
   // useState initializer only runs on first mount, so it would miss this
@@ -75,6 +122,8 @@ export default function Kanban({
   }, [activeCardId, boards]);
 
   const onDragEnd = (result: DropResult) => {
+    if (!canEdit) return;
+
     const { source, destination, draggableId, type } = result;
 
     if (!destination) return;
@@ -139,6 +188,8 @@ export default function Kanban({
   };
 
   const toggleCardDone = (boardId: string, cardId: string) => {
+    if (!canEdit) return;
+
     // Find the board and card in current state
     const board = boards.find((b) => b.kanban_board_id === boardId);
     if (!board) return;
@@ -185,11 +236,20 @@ export default function Kanban({
     );
   };
 
-  const handleAddCard = async (
-    boardId: string,
-    title: string,
-    labelIds: string[],
-  ) => {
+  const handleAddCard = async (input: CreateKanbanCardInput) => {
+    if (!canEdit) return;
+
+    const {
+      boardId,
+      title,
+      description,
+      startAt,
+      dueAt,
+      labelIds,
+      memberIds,
+      checklist,
+      attachments,
+    } = input;
     // Pre-generate the UUID on the client so we can optimistically render
     // the new card before the server round-trip completes — the server
     // will persist with this exact ID.
@@ -199,19 +259,50 @@ export default function Kanban({
     const selectedLabels = (cardLabels || []).filter((l) =>
       labelIds.includes(l.card_label_id),
     );
+    const optimisticAttachmentUrls = attachments.map((attachment) =>
+      URL.createObjectURL(attachment.file),
+    );
+    optimisticAttachmentUrls.forEach((url) =>
+      optimisticAttachmentUrlsRef.current.add(url),
+    );
 
     const optimisticCard: KanbanBoardCard = {
       kanban_board_card_id: cardId,
       kanban_board_id: boardId,
       kanban_board_card_title: title,
-      kanban_board_card_description: null,
+      kanban_board_card_description: description,
       is_completed: false,
-      kanban_board_card_start_date: null,
-      kanban_board_card_due_date: null,
+      kanban_board_card_start_date: startAt,
+      kanban_board_card_due_date: dueAt,
       labels: selectedLabels,
-      members: [],
-      checklists: [],
-      attachments: [],
+      members: projectUsers.filter((member) => memberIds.includes(member.id)),
+      checklists: checklist
+        ? [
+            {
+              kanban_board_card_checklist_id: checklist.id,
+              kanban_board_card_id: cardId,
+              kanban_board_card_checklist_name: checklist.name,
+              items: checklist.items.map((item) => ({
+                kanban_board_card_checklist_item_id: item.id,
+                kanban_board_card_checklist_id: checklist.id,
+                kanban_board_card_checklist_item_name: item.name,
+                is_completed: false,
+                created_at: now,
+                updated_at: now,
+              })),
+              created_at: now,
+              updated_at: now,
+            },
+          ]
+        : [],
+      attachments: attachments.map((attachment, index) => ({
+        kanban_board_card_attachment_id: attachment.id,
+        kanban_board_card_id: cardId,
+        kanban_board_card_attachment_name: attachment.file.name,
+        kanban_board_card_attachment_url: optimisticAttachmentUrls[index],
+        created_at: now,
+        updated_at: now,
+      })),
       comments: [],
       created_at: now,
       updated_at: now,
@@ -224,43 +315,87 @@ export default function Kanban({
           : { ...b, cards: [...(b.cards || []), optimisticCard] },
       ),
     );
-    setModalBoardId(null);
 
-    router.post(
-      projects.kanban.boards.board.cards.store.url({
-        accountIndex,
-        project: project.project_slug,
-        board: boardId,
-      }),
-      {
-        kanban_board_card_id: cardId,
-        title,
-        label_ids: labelIds,
-      },
-      {
-        ...inertiaWriteOptions,
-        onError: (errors) => {
-          // Revert optimistic insertion on failure
-          setBoards((prev) =>
-            prev.map((b) =>
-              b.kanban_board_id !== boardId
-                ? b
-                : {
-                    ...b,
-                    cards: b.cards?.filter(
-                      (c) => c.kanban_board_card_id !== cardId,
-                    ),
-                  },
-            ),
-          );
-          console.error('Failed to add card', errors);
-          alert(t('kanban.failedToCreateCard'));
+    return new Promise<void>((resolve) => {
+      router.post(
+        projects.kanban.boards.board.cards.store.url({
+          accountIndex,
+          project: project.project_slug,
+          board: boardId,
+        }),
+        {
+          kanban_board_card_id: cardId,
+          title,
+          description,
+          kanban_board_card_start_date: startAt,
+          kanban_board_card_due_date: dueAt,
+          label_ids: labelIds,
+          member_ids: memberIds,
+          checklist: checklist
+            ? {
+                id: checklist.id,
+                name: checklist.name,
+                items: checklist.items.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                })),
+              }
+            : null,
+          attachments: attachments.map((attachment) => ({
+            id: attachment.id,
+            file: attachment.file,
+          })),
         },
-      },
-    );
+        {
+          ...inertiaWriteOptions,
+          forceFormData: attachments.length > 0,
+          onError: (errors) => {
+            optimisticAttachmentUrls.forEach((url) => {
+              URL.revokeObjectURL(url);
+              optimisticAttachmentUrlsRef.current.delete(url);
+            });
+            // Revert optimistic insertion on failure
+            setBoards((prev) =>
+              prev.map((b) =>
+                b.kanban_board_id !== boardId
+                  ? b
+                  : {
+                      ...b,
+                      cards: b.cards?.filter(
+                        (c) => c.kanban_board_card_id !== cardId,
+                      ),
+                    },
+              ),
+            );
+            console.error('Failed to add card', errors);
+            alert(t('kanban.failedToCreateCard'));
+          },
+          onFinish: () => resolve(),
+        },
+      );
+    });
   };
 
+  // The board column's inline composer only collects a title — everything
+  // else a card can have (description, dates, checklist, attachments,
+  // members) is added afterwards from the card detail panel, same as
+  // clicking into any existing card.
+  const handleQuickAddCard = (boardId: string, title: string) =>
+    handleAddCard({
+      boardId,
+      title,
+      description: null,
+      startAt: null,
+      dueAt: null,
+      labelIds: [],
+      memberIds: [],
+      checklist: null,
+      attachments: [],
+    });
+
   const handleAddBoard = async (name: string) => {
+    if (!canEdit) return;
+
     const boardId = crypto.randomUUID();
     const now = new Date().toISOString();
 
@@ -297,6 +432,8 @@ export default function Kanban({
   };
 
   const handleRenameBoard = async (boardId: string, newName: string) => {
+    if (!canEdit) return;
+
     setBoards((prev) =>
       prev.map((b) =>
         b.kanban_board_id === boardId
@@ -320,6 +457,8 @@ export default function Kanban({
   };
 
   const handleDeleteBoard = async (boardId: string) => {
+    if (!canEdit) return;
+
     setBoards((prev) => prev.filter((b) => b.kanban_board_id !== boardId));
 
     router.delete(
@@ -336,6 +475,8 @@ export default function Kanban({
   };
 
   const handleDeleteCard = async (boardId: string, cardId: string) => {
+    if (!canEdit) return;
+
     setBoards((prev) =>
       prev.map((b) =>
         b.kanban_board_id !== boardId
@@ -366,6 +507,8 @@ export default function Kanban({
     updatedCard: KanbanBoardCard,
     targetBoardId: string,
   ) => {
+    if (!canEdit) return;
+
     setBoards((prev) =>
       prev.map((board) => {
         // If card is in this board, update it in-place
@@ -408,6 +551,7 @@ export default function Kanban({
           projectUsers={projectUsers}
           currentUser={currentUser}
           project={project}
+          canEdit={canEdit}
           onClose={() => setOpenCard(null)}
           onUpdate={handleCardUpdate}
         />
@@ -457,8 +601,10 @@ export default function Kanban({
                         key={board.kanban_board_id}
                         board={board}
                         index={index}
+                        highlighted={board.kanban_board_id === activeBoardId}
+                        canEdit={canEdit}
                         onToggleDone={toggleCardDone}
-                        onAddCard={(id) => setModalBoardId(id)}
+                        onAddCard={handleQuickAddCard}
                         onRenameBoard={handleRenameBoard}
                         onDeleteBoard={handleDeleteBoard}
                         onDeleteCard={handleDeleteCard}
@@ -486,12 +632,12 @@ export default function Kanban({
                       />
                     ))}
 
-                  {addingBoard ? (
+                  {canEdit && addingBoard ? (
                     <AddBoardInput
                       onAdd={handleAddBoard}
                       onCancel={() => setAddingBoard(false)}
                     />
-                  ) : (
+                  ) : canEdit ? (
                     <button
                       onClick={() => setAddingBoard(true)}
                       className="flex h-fit w-70 shrink-0 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-dark-surface-3 py-6 text-small font-semibold text-dark-surface-3 transition hover:border-dark-secondary hover:text-dark-secondary"
@@ -499,7 +645,7 @@ export default function Kanban({
                       <AddIcon />
                       {t('kanban.addBoard')}
                     </button>
-                  )}
+                  ) : null}
 
                   {provided.placeholder}
                 </div>
@@ -508,16 +654,8 @@ export default function Kanban({
           </main>
         </div>
       </DragDropContext>
-
-      {modalBoardId && (
-        <AddCardModal
-          boards={boards}
-          cardLabels={cardLabels}
-          defaultBoardId={modalBoardId}
-          onClose={() => setModalBoardId(null)}
-          onSubmit={handleAddCard}
-        />
-      )}
     </AppLayout>
   );
-}
+};
+
+export default Kanban;

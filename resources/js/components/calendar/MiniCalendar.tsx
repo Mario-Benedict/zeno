@@ -1,7 +1,8 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWheelStepNavigation } from '@/hooks/useWheelStepNavigation';
 import type { TranslationKey } from '@/i18n/dictionary';
-import type { AnyCalendarEvent } from '@/types/calendar';
+import type { AnyCalendarEvent, CalendarViewMode } from '@/types/calendar';
+import ChevronLeftIcon from '@public/icons/small/chevron_left.svg';
 
 interface MiniCalendarProps {
   currentDate: Date;
@@ -9,6 +10,7 @@ interface MiniCalendarProps {
   onPrevMonth: () => void;
   onNextMonth: () => void;
   events: AnyCalendarEvent[];
+  viewMode: CalendarViewMode;
 }
 
 const DAY_LETTER_KEYS: TranslationKey[] = [
@@ -41,6 +43,7 @@ export const MiniCalendar = ({
   onPrevMonth,
   onNextMonth,
   events,
+  viewMode,
 }: MiniCalendarProps) => {
   const { t } = useTranslation();
   const viewYear = currentDate.getFullYear();
@@ -84,6 +87,12 @@ export const MiniCalendar = ({
 
   const selectedMidnight = new Date(currentDate);
   selectedMidnight.setHours(0, 0, 0, 0);
+  const selectedWeekStart = new Date(selectedMidnight);
+  selectedWeekStart.setDate(
+    selectedWeekStart.getDate() - selectedWeekStart.getDay(),
+  );
+  const selectedWeekEnd = new Date(selectedWeekStart);
+  selectedWeekEnd.setDate(selectedWeekEnd.getDate() + 7);
 
   // Quick lookup for dates that have events (mark by start date).
   const eventDates = new Set<string>();
@@ -101,15 +110,17 @@ export const MiniCalendar = ({
         <div className="flex gap-1">
           <button
             onClick={onPrevMonth}
+            aria-label={t('calendar.previousMonth')}
             className="flex h-6 w-6 items-center justify-center rounded-full text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
-            ‹
+            <ChevronLeftIcon className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={onNextMonth}
+            aria-label={t('calendar.nextMonth')}
             className="flex h-6 w-6 items-center justify-center rounded-full text-dark-secondary transition hover:bg-dark-surface-3 hover:text-dark-primary"
           >
-            ›
+            <ChevronLeftIcon className="h-3.5 w-3.5 rotate-180" />
           </button>
         </div>
       </div>
@@ -117,7 +128,7 @@ export const MiniCalendar = ({
         {DAY_LETTER_KEYS.map((key, i) => (
           <div
             key={i}
-            className="text-center text-[10px] font-medium text-dark-secondary"
+            className="text-center text-micro font-medium text-dark-secondary"
           >
             {t(key)}
           </div>
@@ -127,6 +138,10 @@ export const MiniCalendar = ({
         {cells.map(({ date, isCurrentMonth }, i) => {
           const isToday = date.getTime() === today.getTime();
           const isSelected = date.getTime() === selectedMidnight.getTime();
+          const isInSelectedWeek =
+            viewMode === 'week' &&
+            date >= selectedWeekStart &&
+            date < selectedWeekEnd;
           const hasEvent = eventDates.has(
             `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
           );
@@ -143,6 +158,9 @@ export const MiniCalendar = ({
 
           if (isSelected) {
             stateClass = 'bg-accent-blue font-semibold text-white';
+          } else if (isInSelectedWeek) {
+            stateClass =
+              'bg-accent-blue/15 font-semibold text-dark-primary hover:bg-accent-blue/25';
           } else if (isToday) {
             stateClass =
               'font-semibold text-dark-primary ring-1 ring-dark-secondary/50 ring-inset';

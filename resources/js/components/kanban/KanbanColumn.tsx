@@ -5,13 +5,16 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { KanbanBoard, KanbanBoardCard } from '@/types/kanban';
 import CloseIcon from '@public/icons/small/cancel.svg';
 import AddIcon from '@public/icons/small/plus.svg';
+import { AddCardInput } from './AddCardInput';
 import { KanbanCard } from './KanbanCard';
 
 interface KanbanColumnProps {
   board: KanbanBoard;
   index: number;
+  highlighted?: boolean;
+  canEdit: boolean;
   onToggleDone: (boardId: string, cardId: string) => void;
-  onAddCard: (boardId: string) => void;
+  onAddCard: (boardId: string, title: string) => void;
   onRenameBoard: (boardId: string, newName: string) => void;
   onDeleteBoard: (boardId: string) => void;
   onDeleteCard: (boardId: string, cardId: string) => void;
@@ -22,6 +25,8 @@ interface KanbanColumnProps {
 export const KanbanColumn = ({
   board,
   index,
+  highlighted = false,
+  canEdit,
   onToggleDone,
   onAddCard,
   onRenameBoard,
@@ -34,6 +39,7 @@ export const KanbanColumn = ({
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(board.kanban_board_name);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [addingCard, setAddingCard] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,10 +66,15 @@ export const KanbanColumn = ({
   }, [board.cards, searchQuery]);
 
   return (
-    <Draggable draggableId={String(board.kanban_board_id)} index={index}>
+    <Draggable
+      draggableId={String(board.kanban_board_id)}
+      index={index}
+      isDragDisabled={!canEdit}
+    >
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
+          data-board-id={board.kanban_board_id}
           {...provided.draggableProps}
           style={{
             ...provided.draggableProps.style,
@@ -72,15 +83,19 @@ export const KanbanColumn = ({
           className={`flex h-fit max-h-[calc(100vh-10.5rem)] w-70 shrink-0 flex-col rounded-2xl ${
             snapshot.isDragging
               ? 'z-50 rotate-1 bg-dark-surface-1 shadow-2xl ring-1 ring-accent-blue/50'
-              : 'bg-dark-surface-2'
+              : highlighted
+                ? 'bg-dark-surface-2 shadow-[0_0_20px] ring-2 shadow-accent-blue/20 ring-accent-blue/70'
+                : 'bg-dark-surface-2'
           }`}
         >
           {/* Header */}
           <div
             {...provided.dragHandleProps}
-            className="flex shrink-0 cursor-grab items-center justify-between gap-2 px-4 pt-4 pb-3 active:cursor-grabbing"
+            className={`flex shrink-0 items-center justify-between gap-2 px-4 pt-4 pb-3 ${
+              canEdit ? 'cursor-grab active:cursor-grabbing' : ''
+            }`}
           >
-            {editingName ? (
+            {canEdit && editingName ? (
               <input
                 ref={inputRef}
                 value={nameValue}
@@ -97,9 +112,13 @@ export const KanbanColumn = ({
               />
             ) : (
               <p
-                className="flex-1 cursor-pointer truncate text-medium font-bold tracking-tight text-dark-primary transition hover:text-dark-primary/80"
-                onClick={() => setEditingName(true)}
-                title={t('kanban.clickToRename')}
+                className={`flex-1 truncate text-medium font-bold tracking-tight text-dark-primary ${
+                  canEdit
+                    ? 'cursor-pointer transition hover:text-dark-primary/80'
+                    : ''
+                }`}
+                onClick={() => canEdit && setEditingName(true)}
+                title={canEdit ? t('kanban.clickToRename') : undefined}
               >
                 {board.kanban_board_name}
                 <span className="ml-2 text-xsmall font-normal text-dark-secondary/70">
@@ -108,34 +127,40 @@ export const KanbanColumn = ({
               </p>
             )}
 
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                title={t('kanban.deleteBoard')}
-                className="shrink-0 rounded-lg p-1.5 text-dark-secondary hover:bg-dark-surface-3 hover:text-accent-red"
-              >
-                <CloseIcon className="h-4 w-4" />
-              </button>
+            {canEdit && (
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  title={t('kanban.deleteBoard')}
+                  className="shrink-0 rounded-lg p-1.5 text-dark-secondary hover:bg-dark-surface-3 hover:text-accent-red"
+                >
+                  <CloseIcon className="h-4 w-4" />
+                </button>
 
-              {showDeleteConfirm && (
-                <ConfirmModal
-                  title={t('kanban.deleteBoardTitle')}
-                  description={t('kanban.deleteBoardDescription', {
-                    name: board.kanban_board_name,
-                  })}
-                  confirmLabel={t('kanban.deleteBoardConfirm')}
-                  onCancel={() => setShowDeleteConfirm(false)}
-                  onConfirm={() => {
-                    onDeleteBoard(board.kanban_board_id);
-                    setShowDeleteConfirm(false);
-                  }}
-                />
-              )}
-            </div>
+                {showDeleteConfirm && (
+                  <ConfirmModal
+                    title={t('kanban.deleteBoardTitle')}
+                    description={t('kanban.deleteBoardDescription', {
+                      name: board.kanban_board_name,
+                    })}
+                    confirmLabel={t('kanban.deleteBoardConfirm')}
+                    onCancel={() => setShowDeleteConfirm(false)}
+                    onConfirm={() => {
+                      onDeleteBoard(board.kanban_board_id);
+                      setShowDeleteConfirm(false);
+                    }}
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Cards */}
-          <Droppable droppableId={String(board.kanban_board_id)}>
+          <Droppable
+            droppableId={String(board.kanban_board_id)}
+            isDropDisabled={!canEdit}
+          >
             {(provided) => (
               <div
                 ref={provided.innerRef}
@@ -154,6 +179,7 @@ export const KanbanColumn = ({
                     card={card}
                     boardId={board.kanban_board_id}
                     index={index}
+                    canEdit={canEdit}
                     onToggleDone={onToggleDone}
                     onDeleteCard={onDeleteCard}
                     onClick={() => onCardClick(card, board.kanban_board_id)}
@@ -166,15 +192,24 @@ export const KanbanColumn = ({
           </Droppable>
 
           {/* Add card */}
-          <div className="shrink-0 px-3 pb-3">
-            <button
-              onClick={() => onAddCard(board.kanban_board_id)}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
-            >
-              <AddIcon className="h-4 w-4" />
-              {t('kanban.addACard')}
-            </button>
-          </div>
+          {canEdit &&
+            (addingCard ? (
+              <AddCardInput
+                onAdd={(title) => onAddCard(board.kanban_board_id, title)}
+                onCancel={() => setAddingCard(false)}
+              />
+            ) : (
+              <div className="shrink-0 px-3 pb-3">
+                <button
+                  type="button"
+                  onClick={() => setAddingCard(true)}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-small text-dark-secondary/80 transition hover:bg-dark-surface-3 hover:text-dark-primary"
+                >
+                  <AddIcon className="h-4 w-4" />
+                  {t('kanban.addACard')}
+                </button>
+              </div>
+            ))}
         </div>
       )}
     </Draggable>

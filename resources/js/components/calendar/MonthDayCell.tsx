@@ -13,32 +13,17 @@ interface MonthDayCellProps {
   onEventClick: (event: AnyCalendarEvent) => void;
 }
 
-// Approximate rendered height (px) of one event row: text-[11px] leading-tight
-// (~14px) + py-px (~2px) + the gap-0.5 to the next row (~2px).
-const EVENT_ROW_HEIGHT = 18;
+// Approximate rendered height (px) of one event row: text-xsmall leading-tight
+// (~15px) + py-px (~2px) + the gap-0.5 to the next row (~2px).
+const EVENT_ROW_HEIGHT = 19;
 const MIN_VISIBLE_EVENTS = 1;
 // Used only for the very first render, before the row container has been
 // measured — overwritten by the ResizeObserver a frame later.
 const FALLBACK_MAX_VISIBLE_EVENTS = 5;
 
-const MONTHS_SHORT = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-const formatTime = (iso: string) =>
+const formatTime = (iso: string, localeCode: string) =>
   new Date(iso)
-    .toLocaleTimeString('en-US', {
+    .toLocaleTimeString(localeCode, {
       hour: 'numeric',
       minute: '2-digit',
     })
@@ -54,7 +39,8 @@ export const MonthDayCell = ({
   onClick,
   onEventClick,
 }: MonthDayCellProps) => {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const localeCode = locale === 'id' ? 'id-ID' : 'en-US';
   const [popupOpen, setPopupOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const [maxVisible, setMaxVisible] = useState(FALLBACK_MAX_VISIBLE_EVENTS);
@@ -118,7 +104,7 @@ export const MonthDayCell = ({
 
   const dayLabel =
     date.getDate() === 1
-      ? `${MONTHS_SHORT[date.getMonth()]} 1`
+      ? date.toLocaleDateString(localeCode, { month: 'short', day: 'numeric' })
       : `${date.getDate()}`;
 
   return (
@@ -147,27 +133,11 @@ export const MonthDayCell = ({
         className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden"
       >
         {visibleEvents.map((ev) => {
-          const time = formatTime(ev.start_time);
+          const time = formatTime(ev.start_time, localeCode);
 
           if (ev.is_classified) {
-            // "busy_only" shows only a bare dot on the day cell — no time,
-            // no label, no name.
-            if (ev.visibility === 'busy_only') {
-              return (
-                <button
-                  key={ev.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEventClick(ev);
-                  }}
-                  title={t('calendar.classified')}
-                  className="flex items-center gap-1.5 truncate rounded px-1 py-px text-left hover:bg-dark-surface-3"
-                >
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-dark-secondary/50" />
-                </button>
-              );
-            }
-
+            // Both "masked" and "busy_only" render the same classified card
+            // — a generic label + owner name, no real title/description.
             return (
               <button
                 key={ev.id}
@@ -175,7 +145,7 @@ export const MonthDayCell = ({
                   e.stopPropagation();
                   onEventClick(ev);
                 }}
-                className="flex items-center gap-1.5 truncate rounded px-1 py-px text-left text-[11px] leading-tight text-dark-secondary hover:bg-dark-surface-3"
+                className="flex items-center gap-1.5 truncate rounded px-1 py-px text-left text-xsmall leading-tight text-dark-secondary hover:bg-dark-surface-3"
               >
                 <span className="shrink-0 text-dark-secondary/80 tabular-nums">
                   {time}
@@ -195,7 +165,7 @@ export const MonthDayCell = ({
                 e.stopPropagation();
                 onEventClick(ev);
               }}
-              className="flex items-center gap-1.5 truncate rounded px-1 py-px text-left text-[11px] leading-tight hover:bg-dark-surface-3"
+              className="flex items-center gap-1.5 truncate rounded px-1 py-px text-left text-xsmall leading-tight hover:bg-dark-surface-3"
             >
               <span className="shrink-0 text-dark-secondary tabular-nums">
                 {time}
@@ -219,7 +189,7 @@ export const MonthDayCell = ({
               e.stopPropagation();
               setPopupOpen(true);
             }}
-            className="mt-px pl-1 text-left text-[11px] font-medium text-dark-secondary hover:text-dark-primary"
+            className="mt-px pl-1 text-left text-xsmall font-medium text-dark-secondary hover:text-dark-primary"
           >
             {t('calendar.moreEvents', { count: hiddenCount })}
           </button>

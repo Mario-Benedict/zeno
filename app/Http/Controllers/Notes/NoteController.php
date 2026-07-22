@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Support\Notes\NoteExcerptExtractor;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -40,7 +41,7 @@ class NoteController extends Controller
      * shared note in the project) as a lightweight preview list, plus the
      * project's member roster for the share/collaborator picker.
      */
-    public function index(int $accountIndex, Project $project): Response
+    public function index(int $accountIndex, Request $request, Project $project): Response
     {
         $notes = Note::query()
             ->where('project_id', $project->project_id)
@@ -53,10 +54,17 @@ class NoteController extends Controller
             ->get()
             ->map(fn (Note $note) => $this->formatListItem($note));
 
+        $requestedNoteId = $request->query('note');
+        $activeNoteId = is_string($requestedNoteId)
+            && $notes->contains(fn (array $note) => $note['id'] === $requestedNoteId)
+                ? $requestedNoteId
+                : null;
+
         return Inertia::render('notes/index', [
             'notes' => $notes,
             'projectUsers' => $project->members()->get(),
             'currentUserId' => (int) Auth::id(),
+            'activeNoteId' => $activeNoteId,
         ]);
     }
 
@@ -96,7 +104,15 @@ class NoteController extends Controller
 
         $validated = $request->validated();
         $content = array_key_exists('content', $validated) ? $validated['content'] : $note->content;
+        $title = $validated['title'] ?? $note->title;
         $version = (int) ($validated['version'] ?? $note->version);
+
+        // Editor extensions can emit transactions while hydrating a document.
+        // Treat an identical payload as a successful no-op so it never bumps
+        // the version, timestamp, or broadcasts an update to collaborators.
+        if ($title === $note->title && $content == $note->content) {
+            return response()->json(['note' => $this->formatDetail($note)]);
+        }
 
         // Only save if this browser still has the latest document version.
         // This turns a concurrent edit into an explicit conflict rather than
@@ -105,7 +121,7 @@ class NoteController extends Controller
             ->where('note_id', $note->note_id)
             ->where('version', $version)
             ->update([
-                'title' => $validated['title'] ?? $note->title,
+                'title' => $title,
                 'content' => $content,
                 'excerpt' => NoteExcerptExtractor::extract($content),
                 'version' => $version + 1,

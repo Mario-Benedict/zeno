@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProjectRole;
 use App\Models\CalendarEvent;
 use App\Models\CardLabel;
 use App\Models\KanbanBoard;
@@ -8,6 +9,8 @@ use App\Models\Project;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -162,6 +165,100 @@ it('stops expanding a recurring event past its "ends on" date', function () {
     expect($occurrences->count())->toBe(2);
     expect($occurrences->pluck('recurrence_end_date')->unique()->all())
         ->toBe([$recurrenceEnd->toDateString()]);
+});
+
+it('accepts a same-day recurrence boundary on create and rejects a prior day', function () {
+    ['mario' => $mario, 'zeno' => $zeno] = seedCalendarScenario();
+    $start = CarbonImmutable::create(2026, 7, 20, 10, 0, 0, 'UTC');
+    $session = ['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0];
+    $url = "/u/0/p/{$zeno->project_slug}/calendar/events";
+
+    $this->actingAs($mario)
+        ->withSession($session)
+        ->postJson($url, [
+            'title' => 'Same-day recurrence boundary',
+            'start_time' => $start->toIso8601String(),
+            'end_time' => $start->addHour()->toIso8601String(),
+            'recurrence' => 'daily',
+            'recurrence_end_date' => '2026-07-20',
+            'participants' => [$mario->id],
+        ])
+        ->assertCreated();
+
+    $this->actingAs($mario)
+        ->withSession($session)
+        ->postJson($url, [
+            'title' => 'Prior-day recurrence boundary',
+            'start_time' => $start->toIso8601String(),
+            'end_time' => $start->addHour()->toIso8601String(),
+            'recurrence' => 'daily',
+            'recurrence_end_date' => '2026-07-19',
+            'participants' => [$mario->id],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('recurrence_end_date');
+});
+
+it('accepts a same-day recurrence boundary on update and rejects a prior day', function () {
+    ['mario' => $mario, 'zeno' => $zeno] = seedCalendarScenario();
+    $start = CarbonImmutable::create(2026, 7, 20, 10, 0, 0, 'UTC');
+
+    $event = new CalendarEvent;
+    $event->project_id = $zeno->project_id;
+    $event->title = 'Recurring planning';
+    $event->start_time = $start;
+    $event->end_time = $start->addHour();
+    $event->created_by = $mario->id;
+    $event->recurrence = 'daily';
+    $event->recurrence_group_id = (string) Str::uuid();
+    $event->recurrence_end_date = '2026-07-22';
+    $event->save();
+    $event->participants()->attach($mario->id);
+
+    $session = ['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0];
+    $url = "/u/0/p/{$zeno->project_slug}/calendar/events/{$event->id}";
+
+    $this->actingAs($mario)
+        ->withSession($session)
+        ->patchJson($url, ['recurrence_end_date' => '2026-07-20'])
+        ->assertOk();
+
+    expect($event->fresh()->recurrence_end_date->toDateString())->toBe('2026-07-20');
+
+    $this->actingAs($mario)
+        ->withSession($session)
+        ->patchJson($url, ['recurrence_end_date' => '2026-07-19'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('recurrence_end_date');
+
+    expect($event->fresh()->recurrence_end_date->toDateString())->toBe('2026-07-20');
+});
+
+it('rejects a partial start update beyond the persisted recurrence boundary', function () {
+    ['mario' => $mario, 'zeno' => $zeno] = seedCalendarScenario();
+    $start = CarbonImmutable::create(2026, 7, 20, 10, 0, 0, 'UTC');
+
+    $event = new CalendarEvent;
+    $event->project_id = $zeno->project_id;
+    $event->title = 'Long recurring event';
+    $event->start_time = $start;
+    $event->end_time = $start->addDays(5);
+    $event->created_by = $mario->id;
+    $event->recurrence = 'daily';
+    $event->recurrence_group_id = (string) Str::uuid();
+    $event->recurrence_end_date = '2026-07-22';
+    $event->save();
+    $event->participants()->attach($mario->id);
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->patchJson("/u/0/p/{$zeno->project_slug}/calendar/events/{$event->id}", [
+            'start_time' => $start->addDays(3)->toIso8601String(),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('recurrence_end_date');
+
+    expect($event->fresh()->start_time->toIso8601String())->toBe($start->toIso8601String());
 });
 
 it('expands a daily recurring event into multiple occurrences', function () {
@@ -338,6 +435,267 @@ it('forbids a non-member from reading a project calendar', function () {
         ->assertForbidden();
 });
 
+it('rejects calendar user filters for people outside the current project', function () {
+    ['kevin' => $kevin, 'zeno' => $zeno, 'atlas' => $atlas, 'start' => $start] = seedCalendarScenario();
+    $outsider = User::factory()->create();
+    $atlas->members()->attach($outsider->id, ['role' => 'MEMBER', 'color' => '#7B7B7B']);
+
+    $outsideEvent = new CalendarEvent;
+    $outsideEvent->project_id = $atlas->project_id;
+    $outsideEvent->title = 'Outsider schedule';
+    $outsideEvent->start_time = $start;
+    $outsideEvent->end_time = $start->addHour();
+    $outsideEvent->created_by = $outsider->id;
+    $outsideEvent->recurrence = 'none';
+    $outsideEvent->save();
+    $outsideEvent->participants()->attach($outsider->id);
+
+    $this->actingAs($kevin)
+        ->withSession(['accounts' => [['user_id' => $kevin->id]], 'account_active_index' => 0])
+        ->getJson(eventsUrl($zeno->project_slug, $start, [$outsider->id]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('users.0');
+});
+
+it('rejects event participants outside the current project on create and update', function () {
+    ['mario' => $mario, 'zeno' => $zeno, 'start' => $start] = seedCalendarScenario();
+    $outsider = User::factory()->create();
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->postJson("/u/0/p/{$zeno->project_slug}/calendar/events", [
+            'title' => 'Invalid participant',
+            'start_time' => $start->toIso8601String(),
+            'end_time' => $start->addHour()->toIso8601String(),
+            'recurrence' => 'none',
+            'participants' => [$outsider->id],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('participants.0');
+
+    $event = new CalendarEvent;
+    $event->project_id = $zeno->project_id;
+    $event->title = 'Valid event';
+    $event->start_time = $start;
+    $event->end_time = $start->addHour();
+    $event->created_by = $mario->id;
+    $event->recurrence = 'none';
+    $event->save();
+    $event->participants()->attach($mario->id);
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->patchJson("/u/0/p/{$zeno->project_slug}/calendar/events/{$event->id}", [
+            'participants' => [$outsider->id],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('participants.0');
+
+    expect($event->fresh()->participants()->pluck('users.id')->all())->toBe([$mario->id]);
+});
+
+it('returns validation errors for non-array event participants', function () {
+    ['mario' => $mario, 'zeno' => $zeno, 'start' => $start] = seedCalendarScenario();
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->postJson("/u/0/p/{$zeno->project_slug}/calendar/events", [
+            'title' => 'Invalid participant payload',
+            'start_time' => $start->toIso8601String(),
+            'end_time' => $start->addHour()->toIso8601String(),
+            'recurrence' => 'none',
+            'participants' => $mario->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('participants');
+
+    $event = new CalendarEvent;
+    $event->project_id = $zeno->project_id;
+    $event->title = 'Valid event';
+    $event->start_time = $start;
+    $event->end_time = $start->addHour();
+    $event->created_by = $mario->id;
+    $event->recurrence = 'none';
+    $event->save();
+    $event->participants()->attach($mario->id);
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->patchJson("/u/0/p/{$zeno->project_slug}/calendar/events/{$event->id}", [
+            'participants' => $mario->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('participants');
+});
+
+it('keeps viewers read only across calendar event mutations and recurring scopes', function () {
+    ['zeno' => $zeno, 'start' => $start] = seedCalendarScenario();
+    $viewer = User::factory()->create();
+    $zeno->members()->attach($viewer->id, [
+        'role' => ProjectRole::Viewer->value,
+        'color' => '#7B7B7B',
+    ]);
+
+    $session = ['accounts' => [['user_id' => $viewer->id]], 'account_active_index' => 0];
+    $baseUrl = "/u/0/p/{$zeno->project_slug}/calendar/events";
+
+    $this->actingAs($viewer)
+        ->withSession($session)
+        ->postJson($baseUrl, [
+            'title' => 'Viewer event',
+            'start_time' => $start->toIso8601String(),
+            'end_time' => $start->addHour()->toIso8601String(),
+            'recurrence' => 'none',
+            'participants' => [$viewer->id],
+        ])
+        ->assertForbidden();
+
+    $event = new CalendarEvent;
+    $event->project_id = $zeno->project_id;
+    $event->title = 'Viewer-owned recurring event';
+    $event->start_time = $start;
+    $event->end_time = $start->addHour();
+    $event->created_by = $viewer->id;
+    $event->recurrence = 'weekly';
+    $event->recurrence_group_id = (string) Str::uuid();
+    $event->save();
+    $event->participants()->attach($viewer->id);
+
+    foreach (['single', 'all'] as $scope) {
+        $this->actingAs($viewer)
+            ->withSession($session)
+            ->patchJson("{$baseUrl}/{$event->id}", [
+                'title' => "Viewer edit {$scope}",
+                'scope' => $scope,
+                'occurrence_date' => $start->toIso8601String(),
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($viewer)
+            ->withSession($session)
+            ->deleteJson("{$baseUrl}/{$event->id}", [
+                'scope' => $scope,
+                'occurrence_date' => $start->toIso8601String(),
+            ])
+            ->assertForbidden();
+    }
+
+    expect($event->fresh()->title)->toBe('Viewer-owned recurring event');
+});
+
+it('forbids members from mutating unrelated events across recurring scopes', function () {
+    ['mario' => $mario, 'kevin' => $kevin, 'zeno' => $zeno, 'start' => $start] = seedCalendarScenario();
+    $session = ['accounts' => [['user_id' => $kevin->id]], 'account_active_index' => 0];
+    $baseUrl = "/u/0/p/{$zeno->project_slug}/calendar/events";
+
+    $event = new CalendarEvent;
+    $event->project_id = $zeno->project_id;
+    $event->title = 'Mario recurring event';
+    $event->start_time = $start;
+    $event->end_time = $start->addHour();
+    $event->created_by = $mario->id;
+    $event->recurrence = 'weekly';
+    $event->recurrence_group_id = (string) Str::uuid();
+    $event->save();
+    $event->participants()->attach($mario->id);
+
+    foreach (['single', 'all'] as $scope) {
+        $this->actingAs($kevin)
+            ->withSession($session)
+            ->patchJson("{$baseUrl}/{$event->id}", [
+                'title' => "Unauthorized {$scope} edit",
+                'scope' => $scope,
+                'occurrence_date' => $start->toIso8601String(),
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($kevin)
+            ->withSession($session)
+            ->deleteJson("{$baseUrl}/{$event->id}", [
+                'scope' => $scope,
+                'occurrence_date' => $start->toIso8601String(),
+            ])
+            ->assertForbidden();
+    }
+
+    expect($event->fresh()->title)->toBe('Mario recurring event');
+});
+
+it('lets a member participant edit a multi-participant event without reassigning it', function () {
+    ['mario' => $mario, 'kevin' => $kevin, 'zeno' => $zeno, 'start' => $start] = seedCalendarScenario();
+
+    $event = new CalendarEvent;
+    $event->project_id = $zeno->project_id;
+    $event->title = 'Team planning';
+    $event->start_time = $start;
+    $event->end_time = $start->addHour();
+    $event->created_by = $mario->id;
+    $event->recurrence = 'none';
+    $event->save();
+    $event->participants()->attach([$mario->id, $kevin->id]);
+
+    $session = ['accounts' => [['user_id' => $kevin->id]], 'account_active_index' => 0];
+    $url = "/u/0/p/{$zeno->project_slug}/calendar/events/{$event->id}";
+
+    $this->actingAs($kevin)
+        ->withSession($session)
+        ->patchJson($url, [
+            'title' => 'Team planning updated',
+            'participants' => [$kevin->id, $mario->id],
+        ])
+        ->assertOk();
+
+    expect($event->fresh()->title)->toBe('Team planning updated');
+    expect($event->participants()->pluck('users.id')->sort()->values()->all())
+        ->toBe(collect([$mario->id, $kevin->id])->sort()->values()->all());
+
+    $this->actingAs($kevin)
+        ->withSession($session)
+        ->patchJson($url, [
+            'participants' => [$kevin->id],
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($kevin)
+        ->withSession($session)
+        ->deleteJson($url)
+        ->assertOk();
+
+    expect(CalendarEvent::find($event->id))->toBeNull();
+});
+
+it('lets a member creator mutate an event they no longer participate in', function () {
+    ['mario' => $mario, 'kevin' => $kevin, 'zeno' => $zeno, 'start' => $start] = seedCalendarScenario();
+
+    $event = new CalendarEvent;
+    $event->project_id = $zeno->project_id;
+    $event->title = 'Creator-owned event';
+    $event->start_time = $start;
+    $event->end_time = $start->addHour();
+    $event->created_by = $kevin->id;
+    $event->recurrence = 'none';
+    $event->save();
+    $event->participants()->attach($mario->id);
+
+    $session = ['accounts' => [['user_id' => $kevin->id]], 'account_active_index' => 0];
+    $url = "/u/0/p/{$zeno->project_slug}/calendar/events/{$event->id}";
+
+    $this->actingAs($kevin)
+        ->withSession($session)
+        ->patchJson($url, [
+            'title' => 'Creator update',
+            'participants' => [$mario->id],
+        ])
+        ->assertOk();
+
+    $this->actingAs($kevin)
+        ->withSession($session)
+        ->deleteJson($url)
+        ->assertOk();
+
+    expect(CalendarEvent::find($event->id))->toBeNull();
+});
+
 it('refuses to update another project\'s event even via a URL for a project the actor owns', function () {
     // Mario owns both Zeno and Atlas, and is a participant on the Atlas
     // "secret" event — plenty of authorization to touch *something*, but
@@ -365,4 +723,189 @@ it('refuses to delete another project\'s event even via a URL for a project the 
         ->assertNotFound();
 
     expect(CalendarEvent::find($secret->id))->not->toBeNull();
+});
+
+it('filters every calendar entry by current or other project within the requested range', function () {
+    ['mario' => $mario, 'zeno' => $zeno, 'atlas' => $atlas, 'start' => $start] = seedCalendarScenario();
+
+    $own = new CalendarEvent;
+    $own->project_id = $zeno->project_id;
+    $own->title = 'Zeno planning';
+    $own->start_time = $start->addMinutes(30);
+    $own->end_time = $start->addMinutes(90);
+    $own->created_by = $mario->id;
+    $own->recurrence = 'none';
+    $own->save();
+    $own->participants()->attach($mario->id);
+
+    $outsideRange = new CalendarEvent;
+    $outsideRange->project_id = $zeno->project_id;
+    $outsideRange->title = 'Next month';
+    $outsideRange->start_time = $start->addMonth();
+    $outsideRange->end_time = $start->addMonth()->addHour();
+    $outsideRange->created_by = $mario->id;
+    $outsideRange->recurrence = 'none';
+    $outsideRange->save();
+    $outsideRange->participants()->attach($mario->id);
+
+    $baseQuery = [
+        'start' => $start->subDay()->toIso8601String(),
+        'end' => $start->addDays(2)->toIso8601String(),
+        'users' => [$mario->id],
+    ];
+
+    $ownResponse = $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->getJson("/u/0/p/{$zeno->project_slug}/calendar/events?".http_build_query([
+            ...$baseQuery,
+            'source' => 'own',
+        ]))
+        ->assertOk();
+
+    expect(collect($ownResponse->json())->pluck('project_id')->unique()->all())
+        ->toBe([$zeno->project_id]);
+    expect(collect($ownResponse->json())->pluck('title')->all())
+        ->toContain('Zeno planning')
+        ->not->toContain('Next month', 'Review Kontrak Klien X');
+
+    $otherResponse = $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->getJson("/u/0/p/{$zeno->project_slug}/calendar/events?".http_build_query([
+            ...$baseQuery,
+            'source' => 'other',
+        ]))
+        ->assertOk();
+
+    expect(collect($otherResponse->json())->pluck('project_id')->unique()->all())
+        ->toBe([$atlas->project_id]);
+    expect(collect($otherResponse->json())->pluck('title')->all())
+        ->toContain('Review Kontrak Klien X')
+        ->not->toContain('Zeno planning', 'Next month');
+});
+
+it('rejects an invalid calendar view range', function () {
+    ['mario' => $mario, 'zeno' => $zeno, 'start' => $start] = seedCalendarScenario();
+
+    $query = http_build_query([
+        'start' => $start->toIso8601String(),
+        'end' => $start->subDay()->toIso8601String(),
+        'users' => [$mario->id],
+    ]);
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->getJson("/u/0/p/{$zeno->project_slug}/calendar/events?{$query}")
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('end');
+});
+
+it('requires an event end time to be strictly after its start time', function () {
+    ['mario' => $mario, 'zeno' => $zeno, 'start' => $start] = seedCalendarScenario();
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->postJson("/u/0/p/{$zeno->project_slug}/calendar/events", [
+            'title' => 'Zero duration event',
+            'start_time' => $start->toIso8601String(),
+            'end_time' => $start->toIso8601String(),
+            'recurrence' => 'none',
+            'participants' => [$mario->id],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('end_time');
+});
+
+it('validates partial event time updates against the persisted endpoint', function () {
+    ['mario' => $mario, 'zeno' => $zeno, 'secret' => $secret, 'start' => $start] = seedCalendarScenario();
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->patchJson("/u/0/p/{$zeno->project_slug}/calendar/events/{$secret->id}", [
+            'start_time' => $start->addHours(3)->toIso8601String(),
+        ])
+        ->assertNotFound();
+
+    $own = new CalendarEvent;
+    $own->project_id = $zeno->project_id;
+    $own->title = 'Planning';
+    $own->start_time = $start;
+    $own->end_time = $start->addHours(2);
+    $own->created_by = $mario->id;
+    $own->recurrence = 'none';
+    $own->save();
+    $own->participants()->attach($mario->id);
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->patchJson("/u/0/p/{$zeno->project_slug}/calendar/events/{$own->id}", [
+            'start_time' => $start->addHours(3)->toIso8601String(),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('end_time');
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->patchJson("/u/0/p/{$zeno->project_slug}/calendar/events/{$own->id}", [
+            'end_time' => $start->subMinute()->toIso8601String(),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('end_time');
+});
+
+it('hydrates a validated calendar date deep link', function () {
+    ['mario' => $mario, 'zeno' => $zeno] = seedCalendarScenario();
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->get("/u/0/p/{$zeno->project_slug}/calendar?date=2026-07-20")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('calendar')
+            ->where('initialDate', '2026-07-20')
+            ->where('activeEventId', null));
+});
+
+it('only hydrates a calendar event deep link from the current project', function () {
+    ['mario' => $mario, 'zeno' => $zeno, 'secret' => $secret, 'start' => $start] = seedCalendarScenario();
+
+    $ownEvent = new CalendarEvent;
+    $ownEvent->project_id = $zeno->project_id;
+    $ownEvent->title = 'Zeno deep link';
+    $ownEvent->start_time = $start;
+    $ownEvent->end_time = $start->addHour();
+    $ownEvent->created_by = $mario->id;
+    $ownEvent->recurrence = 'none';
+    $ownEvent->save();
+    $ownEvent->participants()->attach($mario->id);
+
+    $date = $start->toDateString();
+    $session = ['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0];
+
+    $this->actingAs($mario)
+        ->withSession($session)
+        ->get("/u/0/p/{$zeno->project_slug}/calendar?date={$date}&event={$ownEvent->id}")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('calendar')
+            ->where('initialDate', $date)
+            ->where('activeEventId', $ownEvent->id));
+
+    $this->actingAs($mario)
+        ->withSession($session)
+        ->get("/u/0/p/{$zeno->project_slug}/calendar?date={$date}&event={$secret->id}")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('calendar')
+            ->where('initialDate', $date)
+            ->where('activeEventId', null));
+});
+
+it('rejects a malformed calendar event deep link', function () {
+    ['mario' => $mario, 'zeno' => $zeno] = seedCalendarScenario();
+
+    $this->actingAs($mario)
+        ->withSession(['accounts' => [['user_id' => $mario->id]], 'account_active_index' => 0])
+        ->getJson("/u/0/p/{$zeno->project_slug}/calendar?date=2026-07-20&event=not-a-uuid")
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('event');
 });

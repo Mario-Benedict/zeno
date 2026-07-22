@@ -19,6 +19,13 @@ import { SlashCommand } from './editor/extensions/slashCommand';
 
 const AUTOSAVE_DELAY_MS = 600;
 const MAX_CONFLICT_REBASE_ATTEMPTS = 3;
+// Network blips and brief 5xx responses are common enough during autosave
+// that requiring a manual retry click for each one is disruptive — retry a
+// few times with backoff before surfacing an error state.
+const TRANSIENT_RETRY_DELAYS_MS = [800, 2000, 5000];
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 interface HttpErrorWithResponse {
   response?: {
@@ -101,6 +108,7 @@ export const useNoteEditor = ({
   );
 
   const dirtyRef = useRef(false);
+  const canEditRef = useRef(canEdit);
   const editRevisionRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleRef = useRef(title);
@@ -116,6 +124,18 @@ export const useNoteEditor = ({
   useEffect(() => {
     titleRef.current = title;
   }, [title]);
+
+  useEffect(() => {
+    canEditRef.current = canEdit;
+
+    if (!canEdit) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      dirtyRef.current = false;
+      // Reset a stale error/dirty indicator if edit access is revoked.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSaveStatus('idle');
+    }
+  }, [canEdit]);
 
   useEffect(
     () => () => {
@@ -148,7 +168,19 @@ export const useNoteEditor = ({
 
   const performSave = useCallback(
     async (activeEditor: Editor) => {
-      if (!noteId) return;
+      if (!noteId || !canEditRef.current || !dirtyRef.current) return;
+
+      const pendingTitle = titleRef.current.trim() || t('notes.untitled');
+      const pendingContent = JSON.stringify(activeEditor.getJSON());
+
+      if (
+        pendingTitle === baseTitleRef.current &&
+        pendingContent === baseContentRef.current
+      ) {
+        dirtyRef.current = false;
+        setSaveStatus('idle');
+        return;
+      }
 
       setSaveStatus('saving');
 
@@ -158,24 +190,50 @@ export const useNoteEditor = ({
         const localContent = activeEditor.getJSON();
         const socketId = echo.socketId();
 
-        try {
-          const data = await inertiaJson<{ note: NoteDetail }>(
-            'patch',
-            notes.update.url({
-              accountIndex,
-              project: projectSlug,
-              note: noteId,
-            }),
-            {
-              data: {
-                title: localTitle,
-                content: localContent,
-                version: versionRef.current,
-              },
-              headers: socketId ? { 'X-Socket-ID': socketId } : {},
-            },
-          );
+        let data: { note: NoteDetail } | undefined;
+        let lastError: unknown;
 
+        for (
+          let transientAttempt = 0;
+          transientAttempt <= TRANSIENT_RETRY_DELAYS_MS.length;
+          transientAttempt++
+        ) {
+          if (!canEditRef.current) {
+            dirtyRef.current = false;
+            setSaveStatus('idle');
+            return;
+          }
+
+          try {
+            data = await inertiaJson<{ note: NoteDetail }>(
+              'patch',
+              notes.update.url({
+                accountIndex,
+                project: projectSlug,
+                note: noteId,
+              }),
+              {
+                data: {
+                  title: localTitle,
+                  content: localContent,
+                  version: versionRef.current,
+                },
+                headers: socketId ? { 'X-Socket-ID': socketId } : {},
+              },
+            );
+            break;
+          } catch (error: unknown) {
+            lastError = error;
+            // A version conflict needs a merge, not a blind retry — bail out
+            // to the outer loop's conflict handling immediately.
+            if (conflictNoteFromError(error)) break;
+            if (transientAttempt < TRANSIENT_RETRY_DELAYS_MS.length) {
+              await wait(TRANSIENT_RETRY_DELAYS_MS[transientAttempt]);
+            }
+          }
+        }
+
+        if (data) {
           versionRef.current = data.note.version;
           baseTitleRef.current = data.note.title;
           baseContentRef.current = JSON.stringify(data.note.content);
@@ -196,49 +254,53 @@ export const useNoteEditor = ({
           }
 
           return;
-        } catch (error: unknown) {
-          const latest = conflictNoteFromError(error);
-          if (!latest) {
-            setSaveStatus('error');
-            return;
-          }
+        }
 
-          const currentLocalContentJson = JSON.stringify(
-            activeEditor.getJSON(),
-          );
-          const mergedContentJson = mergeTextChanges(
-            baseContentRef.current,
-            currentLocalContentJson,
-            JSON.stringify(latest.content),
-          );
-          const mergedTitle = mergeTextChanges(
-            baseTitleRef.current,
-            titleRef.current,
-            latest.title,
-          );
+        if (!canEditRef.current) {
+          dirtyRef.current = false;
+          setSaveStatus('idle');
+          return;
+        }
 
-          if (!mergedContentJson || mergedTitle === null) {
-            setSaveStatus('error');
-            return;
-          }
+        const latest = conflictNoteFromError(lastError);
+        if (!latest) {
+          setSaveStatus('error');
+          return;
+        }
 
-          try {
-            const mergedContent = JSON.parse(mergedContentJson) as NoteContent;
+        const currentLocalContentJson = JSON.stringify(activeEditor.getJSON());
+        const mergedContentJson = mergeTextChanges(
+          baseContentRef.current,
+          currentLocalContentJson,
+          JSON.stringify(latest.content),
+        );
+        const mergedTitle = mergeTextChanges(
+          baseTitleRef.current,
+          titleRef.current,
+          latest.title,
+        );
 
-            activeEditor.commands.setContent(mergedContent, {
-              emitUpdate: false,
-            });
-            setTitleState(mergedTitle);
-            titleRef.current = mergedTitle;
-            versionRef.current = latest.version;
-            baseTitleRef.current = latest.title;
-            baseContentRef.current = JSON.stringify(latest.content);
-            dirtyRef.current = true;
-            setSaveStatus('dirty');
-          } catch {
-            setSaveStatus('error');
-            return;
-          }
+        if (!mergedContentJson || mergedTitle === null) {
+          setSaveStatus('error');
+          return;
+        }
+
+        try {
+          const mergedContent = JSON.parse(mergedContentJson) as NoteContent;
+
+          activeEditor.commands.setContent(mergedContent, {
+            emitUpdate: false,
+          });
+          setTitleState(mergedTitle);
+          titleRef.current = mergedTitle;
+          versionRef.current = latest.version;
+          baseTitleRef.current = latest.title;
+          baseContentRef.current = JSON.stringify(latest.content);
+          dirtyRef.current = true;
+          setSaveStatus('dirty');
+        } catch {
+          setSaveStatus('error');
+          return;
         }
       }
 
@@ -283,10 +345,30 @@ export const useNoteEditor = ({
       ],
       content: note?.content ?? emptyNoteDocument(),
       editable: canEdit,
+      onCreate: ({ editor: activeEditor }) => {
+        // Use Tiptap's normalized representation as the initial comparison
+        // baseline. Parsing the server document must never count as an edit.
+        baseContentRef.current = JSON.stringify(activeEditor.getJSON());
+      },
       editorProps: {
         attributes: { class: 'prose-note focus:outline-none' },
       },
       onUpdate: ({ editor: activeEditor }) => {
+        if (!canEditRef.current) return;
+
+        const currentTitle = titleRef.current.trim() || t('notes.untitled');
+        const currentContent = JSON.stringify(activeEditor.getJSON());
+
+        if (
+          currentTitle === baseTitleRef.current &&
+          currentContent === baseContentRef.current
+        ) {
+          if (timerRef.current) clearTimeout(timerRef.current);
+          dirtyRef.current = false;
+          setSaveStatus('idle');
+          return;
+        }
+
         editRevisionRef.current += 1;
         dirtyRef.current = true;
         setSaveStatus('dirty');
@@ -302,20 +384,34 @@ export const useNoteEditor = ({
 
   const setTitle = useCallback(
     (value: string) => {
-      setTitleState(value);
+      if (!canEditRef.current) return;
 
-      if (!editor || !canEdit) return;
+      setTitleState(value);
+      titleRef.current = value;
+
+      if (!editor) return;
+
+      const normalizedTitle = value.trim() || t('notes.untitled');
+      const contentIsUnchanged =
+        JSON.stringify(editor.getJSON()) === baseContentRef.current;
+
+      if (normalizedTitle === baseTitleRef.current && contentIsUnchanged) {
+        if (timerRef.current) clearTimeout(timerRef.current);
+        dirtyRef.current = false;
+        setSaveStatus('idle');
+        return;
+      }
 
       editRevisionRef.current += 1;
       dirtyRef.current = true;
       setSaveStatus('dirty');
       scheduleSave(editor);
     },
-    [editor, canEdit, scheduleSave],
+    [editor, scheduleSave, t],
   );
 
   const flushSave = useCallback(() => {
-    if (!editor || !dirtyRef.current) return;
+    if (!editor || !canEditRef.current || !dirtyRef.current) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     void performSave(editor);
   }, [editor, performSave]);

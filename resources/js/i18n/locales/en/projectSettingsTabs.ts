@@ -35,6 +35,11 @@ export const projectSettingsTabs = {
   noMembersYet: 'No members yet.',
   you: 'you',
   removeMember: 'Remove {{name}}',
+  removeMemberConfirmTitle: 'Remove {{name}}?',
+  removeMemberConfirmDescription: '{{name}} will lose access to this project.',
+  removeMemberAssignedTasksDescription:
+    '{{name}} is currently assigned to {{count}} task(s) in this project. Removing them will unassign those tasks instead of deleting them.',
+  removeMemberAssignedTasksConfirm: 'Remove anyway',
   inviteMembersHint:
     'To invite new members, use the {{people}} icon in the top bar.',
   peopleIcon: 'People',
@@ -59,11 +64,11 @@ export const projectSettingsTabs = {
     'Protect your account with a time-based one-time password (TOTP) from an authenticator app.',
   disabling: 'Disabling…',
   disable2fa: 'Disable 2FA',
-  step1ScanQrCode: 'Step 1 — Scan the QR code',
+  step1ScanQrCode: 'Step 1: Scan the QR code',
   step1Description:
     'Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan the code below.',
   qrCodeAlt: '2FA QR code',
-  step2EnterCode: 'Step 2 — Enter the 6-digit code',
+  step2EnterCode: 'Step 2: Enter the 6-digit code',
   step2Description:
     'Enter the code shown in your authenticator app to confirm the setup.',
   invalidCode: 'Invalid code.',
@@ -104,6 +109,7 @@ export const projectSettingsTabs = {
   share: 'Share',
   sharing: 'Sharing',
   shareWithLink: 'Share this project with a link',
+  linkEnabled: 'Link enabled. Anyone with the link can join.',
   linkDisabled: 'Link disabled',
   copyLink: 'Copy Link',
   create: 'Create',

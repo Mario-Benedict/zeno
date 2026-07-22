@@ -3,11 +3,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteListItem as NoteListItemType } from '@/types/notes';
 import PlusIcon from '@public/icons/small/plus.svg';
 import SearchIcon from '@public/icons/small/search.svg';
-import NoteListItem from './NoteListItem';
+import NotesSection from './NotesSection';
 
 interface NotesSidebarPanelProps {
   notes: NoteListItemType[];
   selectedNoteId: string | null;
+  currentUserId: number;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onSelectNote: (note: NoteListItemType) => void;
@@ -17,41 +18,6 @@ interface NotesSidebarPanelProps {
   className?: string;
 }
 
-const Section = ({
-  label,
-  notes,
-  selectedNoteId,
-  onSelectNote,
-  onDeleteRequest,
-}: {
-  label: string;
-  notes: NoteListItemType[];
-  selectedNoteId: string | null;
-  onSelectNote: (note: NoteListItemType) => void;
-  onDeleteRequest: (id: string) => void;
-}): React.ReactElement | null => {
-  if (notes.length === 0) return null;
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="block px-0.5 text-xsmall font-bold tracking-wide text-dark-primary/60 uppercase">
-        {label}
-      </span>
-      <div className="flex flex-col gap-1">
-        {notes.map((note) => (
-          <NoteListItem
-            key={note.id}
-            note={note}
-            isActive={selectedNoteId === note.id}
-            onSelect={onSelectNote}
-            onDeleteRequest={onDeleteRequest}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
 /**
  * Single sectioned sidebar (Private / Shared) — no more route-per-tab
  * switching. Selecting a note is purely client-side; the parent lazily
@@ -60,6 +26,7 @@ const Section = ({
 const NotesSidebarPanel = ({
   notes,
   selectedNoteId,
+  currentUserId,
   searchQuery,
   onSearchChange,
   onSelectNote,
@@ -153,17 +120,19 @@ const NotesSidebarPanel = ({
           </p>
         ) : (
           <>
-            <Section
+            <NotesSection
               label={t('notes.private')}
               notes={privateNotes}
               selectedNoteId={selectedNoteId}
+              currentUserId={currentUserId}
               onSelectNote={onSelectNote}
               onDeleteRequest={onDeleteRequest}
             />
-            <Section
+            <NotesSection
               label={t('notes.shared')}
               notes={sharedNotes}
               selectedNoteId={selectedNoteId}
+              currentUserId={currentUserId}
               onSelectNote={onSelectNote}
               onDeleteRequest={onDeleteRequest}
             />

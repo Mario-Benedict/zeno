@@ -20,14 +20,8 @@ export type CalendarRecurrence =
   | 'yearly';
 export type CalendarViewMode = 'month' | 'week';
 
-/**
- * Filters Kanban-task-sourced calendar entries by which project assigned
- * them — `own` for the project currently being viewed, `other` for tasks
- * assigned in a different project (surfaced per the assignee's
- * `calendar_visibility`). Non-task entries (manually-created CalendarEvents)
- * are unaffected by this filter regardless of its value.
- */
-export type CalendarTaskSourceFilter = 'all' | 'own' | 'other';
+/** Filters every calendar entry by whether it belongs to the open project. */
+export type CalendarEventSourceFilter = 'all' | 'own' | 'other';
 
 export interface CalendarMember {
   id: number;
@@ -70,9 +64,9 @@ export interface CalendarEventFull extends CalendarEventBase {
 export interface CalendarEventClassified extends CalendarEventBase {
   is_classified: true;
   /**
-   * The event creator's `calendar_visibility` preference: `masked` renders a
-   * generic "busy" label alongside the real times, `busy_only` renders just
-   * the coloured block with no label at all.
+   * The event creator's `calendar_visibility` preference. `masked` and
+   * `busy_only` currently render identically (a generic classified card) —
+   * kept as a separate value since it's still a distinct user preference.
    */
   visibility: 'masked' | 'busy_only';
   /**
@@ -118,5 +112,7 @@ export interface CalendarProps {
     name: string;
     email: string;
   };
+  initialDate?: string | null;
+  activeEventId?: string | null;
   [key: string]: unknown;
 }

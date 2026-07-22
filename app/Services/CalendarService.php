@@ -96,6 +96,7 @@ class CalendarService
      * @param  array  $userIds  Members whose events to show
      * @param  Carbon  $rangeStart  Query window start (UTC)
      * @param  Carbon  $rangeEnd  Query window end (UTC)
+     * @param  string  $sourceFilter  `all`, `own`, or `other`
      * @return array Array of event data (full detail + classified)
      */
     public function getEventsForView(
@@ -103,27 +104,28 @@ class CalendarService
         int $viewerId,
         array $userIds,
         Carbon $rangeStart,
-        Carbon $rangeEnd
+        Carbon $rangeEnd,
+        string $sourceFilter = 'all'
     ): array {
         if (empty($userIds)) {
             return [];
         }
 
-        // 1) Full-detail events from the current project
-        $projectEvents = $this->getProjectEvents($projectId, $userIds, $rangeStart, $rangeEnd);
+        $projectEvents = [];
+        $classifiedEvents = [];
+        $kanbanTasks = [];
+        $classifiedKanbanTasks = [];
 
-        // 2) CLASSIFIED busy-blocks from other projects
-        $classifiedEvents = $this->getClassifiedEvents($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
+        if ($sourceFilter !== 'other') {
+            $projectEvents = $this->getProjectEvents($projectId, $userIds, $rangeStart, $rangeEnd);
+            $kanbanTasks = $this->getAssignedKanbanTasks($projectId, $userIds, $rangeStart, $rangeEnd);
+        }
 
-        // 3) Kanban cards assigned to the selected members, so a due/start
-        // date with an assignment shows up on the calendar without needing
-        // a separate manually-created schedule.
-        $kanbanTasks = $this->getAssignedKanbanTasks($projectId, $userIds, $rangeStart, $rangeEnd);
-
-        // 4) CLASSIFIED Kanban-task busy-blocks from other projects — the
-        // Kanban-sourced counterpart to (2), so a task due elsewhere shows
-        // up here too, subject to the same calendar_visibility rules.
-        $classifiedKanbanTasks = $this->getClassifiedKanbanTasks($projectId, $viewerId, $userIds, $rangeStart, $rangeEnd);
+        if ($sourceFilter !== 'own') {
+            $viewerProjectIds = DB::table('project_user')->where('user_id', $viewerId)->pluck('project_id')->all();
+            $classifiedEvents = $this->getClassifiedEvents($projectId, $viewerId, $viewerProjectIds, $userIds, $rangeStart, $rangeEnd);
+            $classifiedKanbanTasks = $this->getClassifiedKanbanTasks($projectId, $viewerId, $viewerProjectIds, $userIds, $rangeStart, $rangeEnd);
+        }
 
         return array_merge($projectEvents, $classifiedEvents, $kanbanTasks, $classifiedKanbanTasks);
     }
@@ -266,6 +268,7 @@ class CalendarService
     private function getClassifiedEvents(
         string $projectId,
         int $viewerId,
+        array $viewerProjectIds,
         array $userIds,
         Carbon $rangeStart,
         Carbon $rangeEnd
@@ -297,13 +300,18 @@ class CalendarService
         $result = [];
 
         foreach ($events as $event) {
-            // Full detail when the viewer is a participant, or when the
-            // event's creator has opted into "transparent" cross-project
-            // visibility. Otherwise the event is classified — either
-            // "masked" (generic label, real times) or "busy_only" (no label
-            // at all), per the creator's `calendar_visibility` preference.
+            // Full detail when the viewer is a participant, when the event's
+            // creator has opted into "transparent" cross-project visibility,
+            // or when the creator is "masked" AND the viewer already shares
+            // membership in the event's own project — classifying it would
+            // just hide data the viewer has legitimate access to anyway via
+            // that other project. "busy_only" is intentionally excluded from
+            // that last exception: it's the strictest setting and must stay
+            // classified everywhere except the event's own project view,
+            // which never goes through this classified path at all.
             $showFull = $event->participants->contains('id', $viewerId)
-                || $event->creator?->calendar_visibility === 'transparent';
+                || $event->creator?->calendar_visibility === 'transparent'
+                || ($event->creator?->calendar_visibility === 'masked' && in_array($event->project_id, $viewerProjectIds, true));
 
             if ($this->isRecurring($event)) {
                 $occurrences = $showFull
@@ -389,6 +397,7 @@ class CalendarService
     private function getClassifiedKanbanTasks(
         string $projectId,
         int $viewerId,
+        array $viewerProjectIds,
         array $userIds,
         Carbon $rangeStart,
         Carbon $rangeEnd
@@ -408,11 +417,22 @@ class CalendarService
             ])
             ->get();
 
-        return $cards->map(function (KanbanBoardCard $card) use ($viewerId, $userIds) {
+        return $cards->map(function (KanbanBoardCard $card) use ($viewerId, $viewerProjectIds, $userIds) {
             $relevantAssignees = $card->members->whereIn('id', $userIds);
 
+            // Full detail when the viewer is themselves an assignee, when a
+            // relevant assignee opted into "transparent" visibility, or when
+            // a relevant assignee is "masked" AND the viewer already shares
+            // membership in the card's own project — classifying it would
+            // just hide data the viewer has legitimate access to anyway via
+            // that other project. "busy_only" is intentionally excluded from
+            // that last exception: it's the strictest setting and must stay
+            // classified everywhere except the card's own project view,
+            // which never goes through this classified path at all.
             $showFull = $card->members->contains('id', $viewerId)
-                || $relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'transparent');
+                || $relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'transparent')
+                || ($relevantAssignees->contains(fn (User $u) => $u->calendar_visibility === 'masked')
+                    && in_array($card->kanbanBoard->kanban_board_project_id, $viewerProjectIds, true));
 
             return $showFull
                 ? $this->formatKanbanTask($card, $card->kanbanBoard->kanban_board_project_id)

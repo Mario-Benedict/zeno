@@ -1,5 +1,4 @@
 import { router, usePage } from '@inertiajs/react';
-import type { ReactNode } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { accountPath } from '@/lib/accountRoutes';
 import RightArrow from '@public/icons/small/arrow_down.svg';
@@ -8,6 +7,8 @@ import PersonIcon from '@public/icons/small/person.svg';
 import PersonAddIcon from '@public/icons/small/person_add.svg';
 import PersonDeleteIcon from '@public/icons/small/person_delete.svg';
 import SignOutIcon from '@public/icons/small/signout.svg';
+import AccountMenuButton from './AccountMenuButton';
+import AccountMenuDivider from './AccountMenuDivider';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,32 +31,6 @@ export const ACCOUNT_AVATAR_COLORS = [
 
 export const accountAvatarColor = (index: number) =>
   ACCOUNT_AVATAR_COLORS[index % ACCOUNT_AVATAR_COLORS.length];
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-const MenuButton = ({
-  children,
-  tone = 'default',
-  onClick,
-}: {
-  children: ReactNode;
-  tone?: 'default' | 'danger';
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-small font-medium transition-colors ${
-      tone === 'danger'
-        ? 'text-status-error hover:bg-status-error/10'
-        : 'text-dark-primary hover:bg-white/[0.07]'
-    }`}
-  >
-    {children}
-  </button>
-);
-
-const Divider = () => <div className="my-1.5 h-px bg-dark-border" />;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -162,10 +137,10 @@ const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
         )}
       </div>
 
-      <Divider />
+      <AccountMenuDivider />
 
       {/* ── Actions ────────────────────────────────────────────────── */}
-      <MenuButton
+      <AccountMenuButton
         onClick={() => {
           onClose();
           onSettingsOpen();
@@ -173,25 +148,25 @@ const AccountMenu = ({ open, onClose, onSettingsOpen }: AccountMenuProps) => {
       >
         <PersonIcon />
         {t('account.manageAccount')}
-      </MenuButton>
+      </AccountMenuButton>
 
-      <MenuButton onClick={() => logout('add_account')}>
+      <AccountMenuButton onClick={() => logout('add_account')}>
         <PersonAddIcon />
         {t('account.addAnotherAccount')}
-      </MenuButton>
+      </AccountMenuButton>
 
-      <Divider />
+      <AccountMenuDivider />
 
-      <MenuButton tone="danger" onClick={() => logout('home')}>
+      <AccountMenuButton tone="danger" onClick={() => logout('home')}>
         <SignOutIcon />
         {t('account.signOut')}
-      </MenuButton>
+      </AccountMenuButton>
 
       {accountsList.length > 1 && (
-        <MenuButton tone="danger" onClick={() => logout('signout_all')}>
+        <AccountMenuButton tone="danger" onClick={() => logout('signout_all')}>
           <PersonDeleteIcon />
           {t('account.signOutOfAllAccounts')}
-        </MenuButton>
+        </AccountMenuButton>
       )}
     </div>
   );

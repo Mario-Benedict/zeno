@@ -54,7 +54,8 @@ class ChatRoomController extends Controller
     {
         $request->validate([
             'room' => ['nullable', 'string', 'uuid'],
-            'before' => ['nullable', 'string'],
+            'message' => ['nullable', 'string', 'regex:/^[a-f0-9]{24}$/i'],
+            'before' => ['nullable', 'string', 'regex:/^[a-f0-9]{24}$/i'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
@@ -69,30 +70,57 @@ class ChatRoomController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
+        $requestedRoomId = $request->query('room');
+        $activeRoom = is_string($requestedRoomId)
+            ? $rooms->firstWhere('id', $requestedRoomId)
+            : null;
+        abort_if($requestedRoomId !== null && $activeRoom === null, 404);
+
+        $activeRoomId = $activeRoom?->id;
+        $activeMessageId = $request->query('message');
+        abort_if($activeMessageId !== null && $activeRoom === null, 404);
+
         $roomIds = $rooms->pluck('id')->all();
         $lastMessageMap = $this->messageService->getLastMessagePreviewsForRooms($roomIds);
 
-        $activeRoomId = $request->query('room');
-
         // Memoised closure — evaluated at most once per request, only when requested
         // via a partial reload (Inertia::optional).
-        $messagesResult = null;
-        $resolveMessages = function () use (&$messagesResult, $request, $activeRoomId, $user) {
-            if ($messagesResult !== null) {
-                return $messagesResult;
+        $messagesResult = $activeMessageId !== null
+            ? $this->messageService->getMessagesAround($activeRoomId, $activeMessageId)
+            : null;
+        abort_if($activeMessageId !== null && $messagesResult === null, 404);
+        $messagesWereMarkedRead = false;
+        $resolveMessages = function () use (
+            &$messagesResult,
+            &$messagesWereMarkedRead,
+            $request,
+            $activeRoom,
+            $activeRoomId,
+            $activeMessageId,
+            $user,
+        ) {
+            if ($messagesResult === null && ! $activeRoomId) {
+                $messagesResult = ['messages' => [], 'nextCursor' => null, 'hasMore' => false];
             }
-            if (! $activeRoomId) {
-                return $messagesResult = ['messages' => [], 'nextCursor' => null, 'hasMore' => false];
-            }
-            $room = ChatRoom::findOrFail($activeRoomId);
-            Gate::authorize('view', $room);
-            $limit = min((int) $request->query('limit', 30), 50);
-            $result = $this->messageService->getMessages($room->id, $limit, $request->query('before'));
-            if (! empty($result['messages'])) {
-                $this->messageService->markAsRead($room, $user->id, $result['messages'][0]['_id'] ?? null);
+            if ($messagesResult === null) {
+                Gate::authorize('view', $activeRoom);
+                $limit = min((int) $request->query('limit', 30), 50);
+                $messagesResult = $this->messageService->getMessages(
+                    $activeRoomId,
+                    $limit,
+                    $request->query('before'),
+                );
             }
 
-            return $messagesResult = $result;
+            if (! $messagesWereMarkedRead && ! empty($messagesResult['messages'])) {
+                $readThroughMessageId = $activeMessageId
+                    ?? $messagesResult['messages'][0]['_id']
+                    ?? null;
+                $this->messageService->markAsRead($activeRoom, $user->id, $readThroughMessageId);
+                $messagesWereMarkedRead = true;
+            }
+
+            return $messagesResult;
         };
 
         return Inertia::render('chat/index', [
@@ -139,6 +167,7 @@ class ChatRoomController extends Controller
             // Lets notification deep-links open and mark the intended room as
             // read instead of landing users on an empty chat pane.
             'activeRoomId' => $activeRoomId,
+            'activeMessageId' => $activeMessageId,
             // Optional props: only evaluated + sent when explicitly requested via partial reload.
             // Not included on the initial full page load.
             'messages' => Inertia::optional(fn () => $resolveMessages()['messages']),

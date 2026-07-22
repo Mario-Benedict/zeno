@@ -42,6 +42,7 @@ interface NoteEditorHeaderProps {
   onlineUserIds: number[];
   onShareClick: () => void;
   onDeleteClick: () => void;
+  onRetrySave: () => void;
 }
 
 const NoteEditorHeader = ({
@@ -56,11 +57,14 @@ const NoteEditorHeader = ({
   onlineUserIds,
   onShareClick,
   onDeleteClick,
+  onRetrySave,
 }: NoteEditorHeaderProps): React.ReactElement => {
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const savedAtLabel = useRelativeTime(savedAt);
-  const statusLabel = saveStatusLabel(saveStatus, savedAtLabel, t);
+  const statusLabel = canEdit
+    ? saveStatusLabel(saveStatus, savedAtLabel, t)
+    : '';
   const statusColor =
     saveStatus === 'error' ? 'text-status-error' : 'text-dark-secondary';
 
@@ -78,6 +82,18 @@ const NoteEditorHeader = ({
       <div className="flex shrink-0 items-center gap-3 pt-2">
         <span className={`text-xsmall whitespace-nowrap ${statusColor}`}>
           {statusLabel}
+          {saveStatus === 'error' && (
+            <>
+              {' '}
+              <button
+                type="button"
+                onClick={onRetrySave}
+                className="font-semibold text-status-error underline underline-offset-2 hover:text-dark-primary"
+              >
+                {t('common.retry')}
+              </button>
+            </>
+          )}
         </span>
 
         {note.isShared && note.collaborators.length > 0 && (
@@ -113,36 +129,38 @@ const NoteEditorHeader = ({
           </button>
         )}
 
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setMenuOpen((v) => !v)}
-            title={t('notes.more')}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary"
-          >
-            <MoreHorizontalIcon />
-          </button>
+        {isOwner && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              title={t('notes.more')}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-dark-secondary hover:bg-dark-surface-3 hover:text-dark-primary"
+            >
+              <MoreHorizontalIcon />
+            </button>
 
-          {menuOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setMenuOpen(false)}
-              />
-              <div className="absolute top-full right-0 z-20 mt-1 w-40 rounded-lg border border-dark-border bg-dark-surface-3 p-1 shadow-lg">
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onDeleteClick();
-                  }}
-                  className="block w-full rounded-md px-2.5 py-1.5 text-left text-small text-status-error hover:bg-dark-surface-1"
-                >
-                  {t('notes.deleteNote')}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+            {menuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setMenuOpen(false)}
+                />
+                <div className="absolute top-full right-0 z-20 mt-1 w-40 rounded-lg border border-dark-border bg-dark-surface-3 p-1 shadow-lg">
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onDeleteClick();
+                    }}
+                    className="block w-full rounded-md px-2.5 py-1.5 text-left text-small text-status-error hover:bg-dark-surface-1"
+                  >
+                    {t('notes.deleteNote')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,98 +1,15 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import {
-  AvatarUploadModal,
-  UploadIcon,
-} from '@/components/shared/AvatarUploadModal';
+import { AvatarUploadModal } from '@/components/shared/AvatarUploadModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { projectPath } from '@/lib/accountRoutes';
-import { AVATAR_COLORS, avatarHex } from '@/lib/projectAvatar';
 import type { AvatarColor } from '@/lib/projectAvatar';
 import { toSlug } from '@/lib/projectSlug';
 import type { CurrentProject, ProjectRole } from '@/types';
-import { SavedBadge } from './shared';
-
-// ── Avatar display ────────────────────────────────────────────────────────
-
-const ProjectAvatarDisplay = ({
-  name,
-  color,
-  avatarUrl,
-  size = 'lg',
-}: {
-  name: string;
-  color: string;
-  avatarUrl: string | null;
-  size?: 'sm' | 'lg';
-}) => {
-  const dim = size === 'lg' ? 'h-16 w-16 text-large' : 'h-9 w-9 text-xsmall';
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className={`${dim} shrink-0 rounded-xl object-cover`}
-      />
-    );
-  }
-  return (
-    <div
-      className={`${dim} flex shrink-0 items-center justify-center rounded-xl font-bold text-white`}
-      style={{ backgroundColor: avatarHex(color) }}
-    >
-      {name.slice(0, 1).toUpperCase()}
-    </div>
-  );
-};
-
-// ── Color picker popover ──────────────────────────────────────────────────
-
-const ColorPickerPopover = ({
-  current,
-  onSelectColor,
-  onUploadClick,
-}: {
-  current: string;
-  onSelectColor: (c: AvatarColor) => void;
-  onUploadClick: () => void;
-}) => {
-  const { t } = useTranslation();
-
-  return (
-    <div className="absolute top-full right-0 z-50 mt-2 w-72 rounded-xl border border-dark-border bg-dark-surface-2 p-3 shadow-2xl">
-      <p className="mb-2 text-micro font-bold tracking-wider text-dark-secondary uppercase">
-        {t('projectSettingsTabs.color')}
-      </p>
-      <div className="grid grid-cols-10 gap-1.5">
-        {AVATAR_COLORS.map((color) => (
-          <button
-            key={color}
-            type="button"
-            title={color}
-            onClick={() => onSelectColor(color)}
-            className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${
-              current === color
-                ? 'ring-2 ring-white ring-offset-1 ring-offset-dark-surface-2'
-                : ''
-            }`}
-            style={{ backgroundColor: avatarHex(color) }}
-          />
-        ))}
-      </div>
-      <div className="mt-3 border-t border-dark-border pt-2">
-        <button
-          type="button"
-          onClick={onUploadClick}
-          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-small text-dark-primary transition-colors hover:bg-white/[0.07]"
-        >
-          <UploadIcon />
-          {t('projectSettingsTabs.uploadAvatar')}
-        </button>
-      </div>
-    </div>
-  );
-};
+import ProjectAvatarDisplay from './ProjectAvatarDisplay';
+import ProjectColorPickerPopover from './ProjectColorPickerPopover';
+import SavedBadge from './SavedBadge';
 
 // ── GeneralTab ────────────────────────────────────────────────────────────
 
@@ -238,7 +155,7 @@ const GeneralTab = ({
                   />
                 </button>
                 {pickerOpen && (
-                  <ColorPickerPopover
+                  <ProjectColorPickerPopover
                     current={project.avatar_color}
                     onSelectColor={handleColorSelect}
                     onUploadClick={() => {
