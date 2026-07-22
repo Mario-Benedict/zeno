@@ -120,17 +120,17 @@ const ProjectsPage = () => {
 
       <div className="flex h-dvh flex-col bg-dark-surface-1 select-none">
         {/* Top bar */}
-        <div className="flex h-12 shrink-0 items-center justify-between px-6">
+        <div className="flex h-12 shrink-0 items-center justify-between px-4 md:px-6">
           <span className="text-sm font-semibold text-dark-primary">
             {pageTitle}
           </span>
           <AccountSwitcher onSettingsOpen={() => setSettingsOpen(true)} />
         </div>
 
-        {/* Main content */}
-        <div className="flex flex-1 gap-4 overflow-hidden px-6 pb-6">
+        {/* Main content — two columns on md+, stacked and page-scrolled on mobile */}
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 md:flex-row md:overflow-hidden md:px-6 md:pb-6">
           {/* Left panel */}
-          <div className="flex w-90 shrink-0 flex-col gap-4">
+          <div className="flex w-full shrink-0 flex-col gap-4 md:w-90">
             {/* Create project card */}
             <button
               type="button"
@@ -151,7 +151,7 @@ const ProjectsPage = () => {
             </button>
 
             {/* Recently Opened */}
-            <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-dark-surface-2 p-4">
+            <div className="flex flex-col overflow-hidden rounded-xl bg-dark-surface-2 p-4 md:flex-1">
               <h2 className="mb-3 text-sm font-semibold text-dark-primary">
                 {t('projects.recentlyOpened')}
               </h2>
@@ -178,7 +178,7 @@ const ProjectsPage = () => {
           </div>
 
           {/* Right panel */}
-          <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-dark-surface-2 p-4">
+          <div className="flex min-h-[24rem] flex-1 flex-col overflow-hidden rounded-xl bg-dark-surface-2 p-4">
             {/* Search */}
             <div className="relative mb-4">
               <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">

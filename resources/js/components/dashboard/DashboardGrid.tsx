@@ -144,8 +144,11 @@ export const DashboardGrid = ({
         </button>
       </div>
 
-      {/* Grid */}
-      <div className={`grid min-h-0 flex-1 gap-3 ${template.gridClass}`}>
+      {/* Grid — the fixed template grid on md+, a single scrolling column on
+          mobile where the multi-column command-center layout can't fit. */}
+      <div
+        className={`grid min-h-0 flex-1 gap-3 max-md:flex max-md:flex-col max-md:overflow-y-auto max-md:pr-1 ${template.gridClass}`}
+      >
         {template.slotClasses.map((cls, i) => {
           const widgetId = slots[i] ?? null;
           const content = widgetId
@@ -163,7 +166,10 @@ export const DashboardGrid = ({
             : null;
 
           return (
-            <div key={i} className={`group relative min-h-0 ${cls}`}>
+            <div
+              key={i}
+              className={`group relative min-h-0 max-md:min-h-[18rem] max-md:shrink-0 ${cls}`}
+            >
               {widgetId && content ? (
                 <>
                   {content}

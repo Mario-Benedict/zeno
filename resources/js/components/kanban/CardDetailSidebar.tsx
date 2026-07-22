@@ -106,7 +106,7 @@ export const CardDetailSidebar = ({
   };
 
   return (
-    <div className="scrollbar-app w-52 shrink-0 space-y-4 overflow-y-auto border-l border-dark-border px-4 py-4">
+    <div className="scrollbar-app w-52 shrink-0 space-y-4 overflow-y-auto border-l border-dark-border px-4 py-4 max-md:w-full max-md:overflow-visible max-md:border-t max-md:border-l-0">
       {/* Dates */}
       <div>
         <p className="mb-2 text-xsmall font-semibold tracking-wider text-dark-secondary/70 uppercase">

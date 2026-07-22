@@ -75,9 +75,13 @@ const buildNavItems = (
 
 interface SidebarProps {
   projectSlug: string;
+  /** Mobile drawer open state (ignored on md+ where the rail is static). */
+  open?: boolean;
+  /** Close the mobile drawer (e.g. after tapping a nav item). */
+  onClose?: () => void;
 }
 
-const Sidebar = ({ projectSlug }: SidebarProps) => {
+const Sidebar = ({ projectSlug, open = false, onClose }: SidebarProps) => {
   const { t } = useTranslation();
   const page = usePage();
   const { url } = page;
@@ -91,38 +95,54 @@ const Sidebar = ({ projectSlug }: SidebarProps) => {
   };
 
   return (
-    <aside className="flex h-[calc(100dvh-var(--header-height))] flex-col bg-dark-surface-1 px-2 pb-2">
-      <nav className="flex h-full flex-col rounded-lg bg-dark-surface-2 p-2">
-        <div className="flex flex-1 [scrollbar-width:none] flex-col items-center gap-0.5 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [&::-webkit-scrollbar]:hidden">
-          {navItems.map(({ key, nameKey, href, icon: Icon }) => {
-            const active = isActive(href);
+    <>
+      {/* Mobile backdrop — dismisses the drawer on tap. */}
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        className={`fixed inset-0 top-[var(--header-height)] z-40 bg-black/50 transition-opacity duration-200 md:hidden ${
+          open ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      />
 
-            return (
-              <Link
-                key={key}
-                href={href}
-                className={`group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-micro leading-none font-medium transition-colors duration-150 ${
-                  active
-                    ? 'text-dark-primary'
-                    : 'text-dark-secondary hover:text-dark-primary'
-                }`}
-              >
-                <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 ${
+      <aside
+        className={`z-50 flex h-[calc(100dvh-var(--header-height))] flex-col bg-dark-surface-1 px-2 pb-2 max-md:fixed max-md:top-[var(--header-height)] max-md:left-0 max-md:pt-2 max-md:shadow-2xl max-md:transition-transform max-md:duration-200 ${
+          open ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'
+        }`}
+      >
+        <nav className="flex h-full flex-col rounded-lg bg-dark-surface-2 p-2">
+          <div className="flex flex-1 [scrollbar-width:none] flex-col items-center gap-0.5 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [&::-webkit-scrollbar]:hidden">
+            {navItems.map(({ key, nameKey, href, icon: Icon }) => {
+              const active = isActive(href);
+
+              return (
+                <Link
+                  key={key}
+                  href={href}
+                  onClick={onClose}
+                  className={`group flex w-full flex-col items-center justify-center gap-1.5 py-1.5 text-micro leading-none font-medium transition-colors duration-150 ${
                     active
-                      ? 'bg-accent-blue text-white'
-                      : 'bg-transparent group-hover:bg-dark-surface-3'
+                      ? 'text-dark-primary'
+                      : 'text-dark-secondary hover:text-dark-primary'
                   }`}
                 >
-                  <Icon />
-                </div>
-                <span>{t(nameKey)}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-    </aside>
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 ${
+                      active
+                        ? 'bg-accent-blue text-white'
+                        : 'bg-transparent group-hover:bg-dark-surface-3'
+                    }`}
+                  >
+                    <Icon />
+                  </div>
+                  <span>{t(nameKey)}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      </aside>
+    </>
   );
 };
 
