@@ -10,6 +10,10 @@ interface Props {
   onSenderClick?: (senderId: string) => void;
   onMessageSent?: (message: ChatMessage) => void;
   realtimeMessages?: ChatMessage[];
+  /** Back to the room list on mobile (master/detail). */
+  onBack?: () => void;
+  /** Responsive visibility class controlled by the page. */
+  className?: string;
 }
 
 interface PageProps {
@@ -24,11 +28,13 @@ const ChatWindow = ({
   onSenderClick,
   onMessageSent,
   realtimeMessages,
+  onBack,
+  className = '',
 }: Props) => {
   const { project } = usePage<PageProps>().props;
   const projectSlug = project?.project_slug ?? '';
 
-  if (!room) return <ChatEmptyState />;
+  if (!room) return <ChatEmptyState className={className} />;
 
   return (
     <ChatRoomView
@@ -40,6 +46,8 @@ const ChatWindow = ({
       onSenderClick={onSenderClick}
       onMessageSent={onMessageSent}
       realtimeMessages={realtimeMessages}
+      onBack={onBack}
+      className={className}
     />
   );
 };

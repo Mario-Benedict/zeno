@@ -113,7 +113,7 @@ const CreateProjectPanel = ({ open, onClose }: CreateProjectPanelProps) => {
         {/* Panel body */}
         <form
           onSubmit={handleSubmit}
-          className="flex flex-1 flex-col justify-between p-10"
+          className="flex flex-1 flex-col justify-between overflow-y-auto p-6 sm:p-10"
         >
           <div className="flex flex-col items-center gap-8">
             <h1 className="text-center text-xl font-semibold text-dark-primary">

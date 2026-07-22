@@ -14,6 +14,10 @@ interface Props {
   onSenderClick?: (senderId: string) => void;
   onMessageSent?: (message: ChatMessage) => void;
   realtimeMessages?: ChatMessage[];
+  /** Back to the room list on mobile (master/detail). */
+  onBack?: () => void;
+  /** Responsive visibility class controlled by the page. */
+  className?: string;
 }
 
 const ChatRoomView = ({
@@ -24,6 +28,8 @@ const ChatRoomView = ({
   onSenderClick,
   onMessageSent,
   realtimeMessages = [],
+  onBack,
+  className = '',
 }: Props) => {
   const {
     messages,
@@ -67,12 +73,15 @@ const ChatRoomView = ({
   };
 
   return (
-    <div className="relative flex h-full flex-1 flex-col overflow-hidden rounded-lg bg-dark-surface-2">
+    <div
+      className={`relative flex h-full flex-1 flex-col overflow-hidden rounded-lg bg-dark-surface-2 ${className}`}
+    >
       <ChatRoomHeader
         room={room}
         currentUser={currentUser}
         searchActive={showSearch}
         onSearchToggle={() => setShowSearch((visible) => !visible)}
+        onBack={onBack}
       />
 
       {showSearch && (

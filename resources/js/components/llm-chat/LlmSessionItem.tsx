@@ -14,6 +14,8 @@ interface Props {
   onOpenMenu: () => void;
   onCloseMenu: () => void;
   onRequestDelete: () => void;
+  /** Called just before navigating — used to close the mobile drawer. */
+  onNavigate?: () => void;
 }
 
 const LlmSessionItem = ({
@@ -25,6 +27,7 @@ const LlmSessionItem = ({
   onOpenMenu,
   onCloseMenu,
   onRequestDelete,
+  onNavigate,
 }: Props) => {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -44,6 +47,7 @@ const LlmSessionItem = ({
   }, [menuOpen, onCloseMenu]);
 
   const navigate = () => {
+    onNavigate?.();
     router.get(
       projectPath(
         accountIndex,

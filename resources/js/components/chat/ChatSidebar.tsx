@@ -17,6 +17,8 @@ interface Props {
   onStartDm: (memberId: string) => void;
   onCreateGroup: (name: string, participantIds: string[]) => void;
   creatingGroup?: boolean;
+  /** Responsive visibility class controlled by the page (mobile master/detail). */
+  className?: string;
 }
 
 const ChatSidebar = ({
@@ -28,6 +30,7 @@ const ChatSidebar = ({
   onStartDm,
   onCreateGroup,
   creatingGroup = false,
+  className = '',
 }: Props) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
@@ -65,7 +68,9 @@ const ChatSidebar = ({
   });
 
   return (
-    <aside className="relative flex h-full w-55 shrink-0 flex-col overflow-hidden rounded-lg bg-dark-surface-2">
+    <aside
+      className={`relative flex h-full w-full shrink-0 flex-col overflow-hidden rounded-lg bg-dark-surface-2 md:w-55 ${className}`}
+    >
       {/* ── Search bar + new message ── */}
       <div className="flex items-center gap-2 px-3 pt-3 pb-2">
         <div className="flex flex-1 items-center gap-2 rounded-md bg-dark-input px-3 py-[7px] ring-1 ring-transparent transition-all focus-within:bg-dark-input-focus focus-within:ring-dark-border-focus">

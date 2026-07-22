@@ -719,11 +719,11 @@ export const CardDetailModal = ({
 
   return (
     <div
-      className={`m-2 flex h-auto shrink-0 flex-col justify-start overflow-hidden rounded-2xl bg-dark-surface-2 transition-all duration-300 ease-out ${
+      className={`m-2 flex h-auto shrink-0 flex-col justify-start overflow-hidden rounded-2xl bg-dark-surface-2 transition-all duration-300 ease-out max-md:fixed max-md:inset-0 max-md:z-50 max-md:m-0 max-md:!w-full max-md:rounded-none ${
         mounted ? 'w-140 opacity-100' : 'w-0 opacity-0'
       }`}
     >
-      <div className="flex h-full w-140 shrink-0 flex-col">
+      <div className="flex h-full w-140 shrink-0 flex-col max-md:!w-full">
         {/* Header */}
         <div className="flex shrink-0 items-center gap-4 border-b-2 border-dark-secondary px-4 py-3">
           <button
@@ -785,7 +785,7 @@ export const CardDetailModal = ({
           </button>
         </div>
 
-        <div className="scrollbar-app flex flex-1 overflow-y-auto">
+        <div className="scrollbar-app flex flex-1 overflow-y-auto max-md:flex-col">
           <CardDetailBody
             card={localCard}
             currentUser={currentUser}
