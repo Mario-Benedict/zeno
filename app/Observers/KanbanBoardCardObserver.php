@@ -4,11 +4,19 @@ namespace App\Observers;
 
 use App\Models\KanbanBoardCard;
 use App\Models\Reminder;
+use App\Models\TaskConflict;
 
 class KanbanBoardCardObserver
 {
     public function saved(KanbanBoardCard $card): void
     {
+        if ($card->wasChanged('is_completed') && $card->is_completed) {
+            // A finished card can't conflict with anything anymore — drop
+            // any pending/declined conflicts still tied to it so they stop
+            // showing up in the notification popover.
+            TaskConflict::where('kanban_board_card_id', $card->kanban_board_card_id)->delete();
+        }
+
         if (! $card->wasRecentlyCreated
             && ! $card->wasChanged('kanban_board_card_due_date')
             && ! $card->wasChanged('kanban_board_card_title')) {
