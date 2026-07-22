@@ -148,7 +148,7 @@ export const CardDetailBody = ({
     attachmentsLocal.length + (card.attachments?.length || 0);
 
   return (
-    <div className="scrollbar-app min-w-0 flex-1 space-y-4 overflow-y-auto px-3 py-4">
+    <div className="scrollbar-app min-w-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 max-md:flex-none max-md:overflow-visible">
       {/* Labels row */}
       {!!card.labels?.length && (
         <div className="flex flex-wrap gap-1.5">

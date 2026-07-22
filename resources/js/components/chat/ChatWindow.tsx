@@ -8,6 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { ChatMessage, ChatParticipant, ChatRoom } from '@/types/chat';
 import { getRoomDisplayName } from '@/utils/chat';
 import MoreIcon from '@public/icons/large/more.svg';
+import ArrowLeftIcon from '@public/icons/small/arrow_left.svg';
 import CancelIcon from '@public/icons/small/cancel.svg';
 import ChatPlaceholderIcon from '@public/icons/small/chat_placeholder.svg';
 import SearchIcon from '@public/icons/small/search.svg';
@@ -18,6 +19,10 @@ interface Props {
   onSenderClick?: (senderId: string) => void;
   onMessageSent?: (message: ChatMessage) => void;
   realtimeMessages?: ChatMessage[];
+  /** Back to the room list on mobile (master/detail). */
+  onBack?: () => void;
+  /** Responsive visibility class controlled by the page. */
+  className?: string;
 }
 
 interface PageProps {
@@ -25,11 +30,13 @@ interface PageProps {
   [key: string]: unknown;
 }
 
-const EmptyState = () => {
+const EmptyState = ({ className = '' }: { className?: string }) => {
   const { t } = useTranslation();
 
   return (
-    <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 rounded-lg bg-dark-surface-2 select-none">
+    <div
+      className={`flex h-full flex-1 flex-col items-center justify-center gap-3 rounded-lg bg-dark-surface-2 select-none ${className}`}
+    >
       <span className="text-dark-secondary opacity-30">
         <ChatPlaceholderIcon />
       </span>
@@ -45,11 +52,13 @@ const RoomHeader = ({
   currentUser,
   searchActive,
   onSearchToggle,
+  onBack,
 }: {
   room: ChatRoom;
   currentUser: ChatParticipant;
   searchActive: boolean;
   onSearchToggle: () => void;
+  onBack?: () => void;
 }) => {
   const { t } = useTranslation();
   const displayName = getRoomDisplayName(room, currentUser, {
@@ -61,7 +70,15 @@ const RoomHeader = ({
     'text-dark-secondary hover:text-dark-primary hover:bg-dark-surface-2';
 
   return (
-    <header className="flex shrink-0 items-center gap-3 rounded-t-lg border-b border-dark-border bg-dark-surface-3 px-5 py-2.75">
+    <header className="flex shrink-0 items-center gap-3 rounded-t-lg border-b border-dark-border bg-dark-surface-3 px-3 py-2.75 md:px-5">
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label={t('common.back')}
+        className={`${btnBase} ${btnIdle} -ml-1 shrink-0 md:hidden`}
+      >
+        <ArrowLeftIcon className="h-4 w-4" />
+      </button>
       <RoomAvatar room={room} currentUser={currentUser} size={32} />
       <p className="min-w-0 flex-1 truncate text-small font-semibold text-dark-primary">
         {displayName}
@@ -177,6 +194,8 @@ const RoomView = ({
   onSenderClick,
   onMessageSent,
   realtimeMessages = [],
+  onBack,
+  className = '',
 }: {
   room: ChatRoom;
   currentUser: ChatParticipant;
@@ -184,6 +203,8 @@ const RoomView = ({
   onSenderClick?: (senderId: string) => void;
   onMessageSent?: (message: ChatMessage) => void;
   realtimeMessages?: ChatMessage[];
+  onBack?: () => void;
+  className?: string;
 }) => {
   const {
     messages,
@@ -227,12 +248,15 @@ const RoomView = ({
   };
 
   return (
-    <div className="relative flex h-full flex-1 flex-col overflow-hidden rounded-lg bg-dark-surface-2">
+    <div
+      className={`relative flex h-full flex-1 flex-col overflow-hidden rounded-lg bg-dark-surface-2 ${className}`}
+    >
       <RoomHeader
         room={room}
         currentUser={currentUser}
         searchActive={showSearch}
         onSearchToggle={() => setShowSearch((v) => !v)}
+        onBack={onBack}
       />
 
       {showSearch && (
@@ -272,11 +296,13 @@ const ChatWindow = ({
   onSenderClick,
   onMessageSent,
   realtimeMessages,
+  onBack,
+  className = '',
 }: Props) => {
   const { project } = usePage<PageProps>().props;
   const projectSlug = project?.project_slug ?? '';
 
-  if (!room) return <EmptyState />;
+  if (!room) return <EmptyState className={className} />;
 
   return (
     <RoomView
@@ -287,6 +313,8 @@ const ChatWindow = ({
       onSenderClick={onSenderClick}
       onMessageSent={onMessageSent}
       realtimeMessages={realtimeMessages}
+      onBack={onBack}
+      className={className}
     />
   );
 };

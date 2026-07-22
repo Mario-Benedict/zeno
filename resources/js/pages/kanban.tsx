@@ -415,14 +415,14 @@ export default function Kanban({
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex h-full w-full flex-col overflow-hidden bg-dark-surface-1">
-          <header className="flex w-full shrink-0 items-center justify-between px-2 py-2">
-            <div className="relative">
+          <header className="flex w-full shrink-0 items-center justify-between gap-2 px-2 py-2">
+            <div className="relative min-w-0 flex-1 sm:flex-none">
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 type="text"
                 placeholder={t('kanban.searchPlaceholder')}
-                className="w-64 rounded-full border-2 border-dark-surface-3 bg-dark-surface-2 px-4 py-2 pl-9 text-small font-semibold text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
+                className="w-full rounded-full border-2 border-dark-surface-3 bg-dark-surface-2 px-4 py-2 pl-9 text-small font-semibold text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none sm:w-64"
               />
               <span className="absolute top-1/2 left-3 -translate-y-1/2 text-dark-secondary">
                 <SearchIcon className="h-4 w-4" />

@@ -218,8 +218,8 @@ export const EventFormModal = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-dark-border bg-dark-surface-1 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
+      <div className="my-auto max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl border border-dark-border bg-dark-surface-1 shadow-2xl">
         <div className="flex items-center justify-between border-b border-dark-border px-5 py-4">
           <h2 className="text-large font-semibold text-dark-primary">
             {eventToEdit

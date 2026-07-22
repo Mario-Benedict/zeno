@@ -129,6 +129,7 @@ const NotesPage = ({
           onSelectNote={(item) => void openNote(item)}
           onCreateNote={(isShared) => void handleCreate(isShared)}
           onDeleteRequest={setDeleteTargetId}
+          className={selectedNote ? 'max-md:hidden' : ''}
         />
 
         <NoteEditor
@@ -143,6 +144,8 @@ const NotesPage = ({
           onDeleteClick={() =>
             selectedNote && setDeleteTargetId(selectedNote.id)
           }
+          onBack={() => setSelectedNote(null)}
+          className={selectedNote ? '' : 'max-md:hidden'}
         />
       </div>
 

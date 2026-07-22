@@ -58,7 +58,7 @@ export const EventDetailModal = ({
     return (
       <div
         ref={modalRef}
-        className="fixed top-1/2 left-1/2 z-[60] w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-dark-border bg-dark-surface-1 p-6 text-center shadow-2xl ring-1 ring-dark-border/50"
+        className="fixed top-1/2 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-dark-border bg-dark-surface-1 p-6 text-center shadow-2xl ring-1 ring-dark-border/50"
       >
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-dark-surface-3">
           <LockIcon className="h-6 w-6 text-dark-secondary" />
@@ -113,7 +113,7 @@ export const EventDetailModal = ({
   return (
     <div
       ref={modalRef}
-      className="fixed top-1/2 left-1/2 z-[60] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-dark-border bg-dark-surface-1 shadow-2xl ring-1 ring-dark-border/50"
+      className="fixed top-1/2 left-1/2 z-[60] max-h-[90dvh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-dark-border bg-dark-surface-1 shadow-2xl ring-1 ring-dark-border/50"
     >
       <div className="flex items-start justify-between border-b border-dark-border px-5 py-4">
         <div className="pr-4">

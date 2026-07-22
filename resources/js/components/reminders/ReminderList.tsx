@@ -16,6 +16,8 @@ interface ReminderListProps {
   onTogglePin: (reminder: Reminder) => void;
   onDelete: (reminder: Reminder) => void;
   onAddClick: () => void;
+  /** Responsive visibility class controlled by the page (mobile master/detail). */
+  className?: string;
 }
 
 export const ReminderList = ({
@@ -26,6 +28,7 @@ export const ReminderList = ({
   onTogglePin,
   onDelete,
   onAddClick,
+  className = '',
 }: ReminderListProps) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
@@ -61,7 +64,9 @@ export const ReminderList = ({
   const completed = filtered.filter((r) => r.is_completed);
 
   return (
-    <div className="flex w-90 shrink-0 flex-col overflow-hidden rounded-2xl bg-dark-surface-2 p-4">
+    <div
+      className={`flex w-full shrink-0 flex-col overflow-hidden rounded-2xl bg-dark-surface-2 p-4 md:w-90 ${className}`}
+    >
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-large font-bold text-dark-primary">
           {t('reminders.title')}

@@ -59,21 +59,21 @@ export const TimelineHeader = ({
   }, [openMenu]);
 
   return (
-    <header className="flex w-full shrink-0 items-center justify-between gap-3 px-2 py-2">
-      <div className="relative">
+    <header className="flex w-full shrink-0 items-center justify-between gap-2 px-2 py-2 sm:gap-3">
+      <div className="relative min-w-0 flex-1 sm:flex-none">
         <input
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           type="text"
           placeholder={t('timeline.search')}
-          className="w-64 rounded-full border-2 border-dark-surface-3 bg-dark-surface-2 px-4 py-2 pl-9 text-small font-semibold text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none"
+          className="w-full rounded-full border-2 border-dark-surface-3 bg-dark-surface-2 px-4 py-2 pl-9 text-small font-semibold text-dark-primary placeholder-dark-secondary transition focus:border-dark-border-focus focus:outline-none sm:w-64"
         />
         <span className="absolute top-1/2 left-3 -translate-y-1/2 text-dark-secondary">
           <SearchIcon className="h-4 w-4" />
         </span>
       </div>
 
-      <div ref={menuRef} className="flex items-center gap-2">
+      <div ref={menuRef} className="flex shrink-0 items-center gap-2">
         <div className="relative">
           <button
             type="button"
@@ -87,7 +87,7 @@ export const TimelineHeader = ({
             }`}
           >
             <FilterIcon className="h-4 w-4" />
-            <span>{t('timeline.filter')}</span>
+            <span className="hidden sm:inline">{t('timeline.filter')}</span>
             {activeFilterCount > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-blue px-1 text-micro font-bold text-white">
                 {activeFilterCount}
@@ -116,7 +116,7 @@ export const TimelineHeader = ({
             }`}
           >
             <SortIcon className="h-4 w-4" />
-            <span>{t('timeline.sort')}</span>
+            <span className="hidden sm:inline">{t('timeline.sort')}</span>
           </button>
           {openMenu === 'sort' && (
             <TimelineSortMenu sortKey={sortKey} onChange={onSortChange} />
@@ -131,7 +131,7 @@ export const TimelineHeader = ({
           className="hover:bg-opacity-90 flex items-center gap-2 rounded-lg bg-accent-blue px-3 py-2 text-small font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
         >
           <PlusIcon className="h-4 w-4" />
-          <span>{t('timeline.addNewTask')}</span>
+          <span className="hidden sm:inline">{t('timeline.addNewTask')}</span>
         </button>
       </div>
     </header>
