@@ -415,6 +415,40 @@ class ChatMessageService
     }
 
     /**
+     * Hapus seluruh pesan (beserta attachment fisiknya) milik sebuah room.
+     * Dipanggil saat room-nya sendiri akan dihapus (mis. project dihapus),
+     * karena MongoDB tidak ikut tercakup oleh foreign key cascade MySQL pada
+     * `chat_rooms`.
+     *
+     * @param  string  $roomId  UUID dari MySQL chat_rooms.id
+     */
+    public function deleteAllForRoom(string $roomId): void
+    {
+        $paths = [];
+
+        $cursor = $this->collection->find(
+            ['room_id' => $roomId],
+            ['projection' => ['attachments' => 1]],
+        );
+
+        foreach ($cursor as $doc) {
+            $doc = $doc instanceof BSONDocument ? $doc->getArrayCopy() : (array) $doc;
+
+            foreach ((array) ($doc['attachments'] ?? []) as $att) {
+                $att = $att instanceof BSONDocument ? $att->getArrayCopy() : (array) $att;
+
+                if (! empty($att['path'])) {
+                    $paths[] = $att['path'];
+                }
+            }
+        }
+
+        $this->storage->deleteMany($paths);
+
+        $this->collection->deleteMany(['room_id' => $roomId]);
+    }
+
+    /**
      * Update last_read_message_id di MySQL untuk hitung unread count.
      * Dipanggil oleh ChatMessageController setiap kali user membuka room.
      *

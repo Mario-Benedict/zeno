@@ -255,6 +255,51 @@ it('keeps the assignment when the assignee accepts a conflict', function () {
     expect($this->card->fresh()->members()->where('users.id', $this->assignee->id)->exists())->toBeTrue();
 });
 
+it('does not create a conflict against another kanban card that is already marked done', function () {
+    /** @var mixed $this */
+    $this->existingEvent->delete();
+
+    $conflictingCard = KanbanBoardCard::create([
+        'kanban_board_id' => $this->board->kanban_board_id,
+        'position' => 1,
+        'kanban_board_card_title' => 'Already finished',
+        'is_completed' => true,
+        'kanban_board_card_due_date' => $this->dueDate,
+    ]);
+    $conflictingCard->members()->attach($this->assignee->id);
+
+    $this->actingAs($this->admin)
+        ->withSession(['accounts' => [['user_id' => $this->admin->id]], 'account_active_index' => 0])
+        ->post("/u/0/p/{$this->project->project_slug}/cards/{$this->card->kanban_board_card_id}/members", [
+            'user_id' => $this->assignee->id,
+        ])
+        ->assertRedirect();
+
+    expect(TaskConflict::where('kanban_board_card_id', $this->card->kanban_board_card_id)->exists())->toBeFalse();
+});
+
+it('clears pending conflicts for a card once it is marked complete', function () {
+    /** @var mixed $this */
+    $conflict = TaskConflict::create([
+        'kanban_board_card_id' => $this->card->kanban_board_card_id,
+        'assignee_user_id' => $this->assignee->id,
+        'assigned_by_user_id' => $this->admin->id,
+        'conflicting_title' => 'Client sync',
+        'conflicting_start' => $this->existingEvent->start_time,
+        'conflicting_end' => $this->existingEvent->end_time,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['accounts' => [['user_id' => $this->admin->id]], 'account_active_index' => 0])
+        ->patch("/u/0/p/{$this->project->project_slug}/cards/{$this->card->kanban_board_card_id}/detail", [
+            'is_completed' => true,
+        ])
+        ->assertRedirect();
+
+    expect(TaskConflict::find($conflict->id))->toBeNull();
+});
+
 it('rejects a respond attempt from someone other than the assignee', function () {
     /** @var mixed $this */
     $conflict = TaskConflict::create([
