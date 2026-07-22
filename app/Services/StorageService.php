@@ -100,6 +100,18 @@ class StorageService
     }
 
     /**
+     * Hapus seluruh folder (dan isinya) dari storage berdasarkan relative
+     * path. Dipakai untuk konten yang tidak dilacak per-file di database,
+     * seperti gambar note yang di-embed di dalam `content` JSON.
+     *
+     * @param  string  $path  Contoh: 'notes/{note_id}/images'
+     */
+    public function deleteDirectory(string $path): bool
+    {
+        return Storage::disk($this->disk)->deleteDirectory($path);
+    }
+
+    /**
      * Resolve relative path → full URL.
      *
      * - local / public disk : menggunakan Storage::url() → http://localhost/storage/...

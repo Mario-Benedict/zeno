@@ -21,7 +21,10 @@ use Illuminate\Queue\SerializesModels;
  * other Kanban cards due-dated and assigned to them, regardless of time of
  * day — and, if found, creates a pending TaskConflict for the assignee to
  * accept or decline. A pending conflict already open for this card/assignee
- * pair short-circuits the check instead of piling up duplicates.
+ * pair short-circuits the check instead of piling up duplicates. A card
+ * marked done (`is_completed`) is skipped entirely, and never considered as
+ * the "other" commitment either — a finished task can't conflict with
+ * anything.
  */
 class CheckTaskConflictJob implements ShouldQueue
 {
@@ -37,7 +40,7 @@ class CheckTaskConflictJob implements ShouldQueue
     {
         $card = KanbanBoardCard::find($this->kanbanBoardCardId);
 
-        if (! $card || ! $card->kanban_board_card_due_date) {
+        if (! $card || ! $card->kanban_board_card_due_date || $card->is_completed) {
             return;
         }
 
@@ -103,6 +106,7 @@ class CheckTaskConflictJob implements ShouldQueue
     private function findKanbanConflict(KanbanBoardCard $excludingCard, $windowStart, $windowEnd): ?array
     {
         $card = KanbanBoardCard::where('kanban_board_card_id', '!=', $excludingCard->kanban_board_card_id)
+            ->where('is_completed', false)
             ->whereHas('members', fn ($q) => $q->where('users.id', $this->assigneeUserId))
             ->whereNotNull('kanban_board_card_due_date')
             ->where('kanban_board_card_due_date', '<', $windowEnd)
