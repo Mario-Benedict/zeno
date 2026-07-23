@@ -14,22 +14,15 @@ import type { NotificationInboxResponse } from '@/types/reminder';
 import ArrowDown from '@public/icons/small/arrow_down.svg';
 import Bell from '@public/icons/small/bell.svg';
 import Gear from '@public/icons/small/gear.svg';
-import Menu from '@public/icons/small/menu.svg';
 import People from '@public/icons/small/people.svg';
 import Zeno from '@public/logos/logo-mono.svg';
 
 interface AppHeaderProps {
   onNotificationClick?: () => void;
   onOpenSettings?: (tab?: 'general' | 'profile') => void;
-  /** Toggles the mobile navigation drawer (only shown below md). */
-  onToggleSidebar?: () => void;
 }
 
-const Header = ({
-  onNotificationClick,
-  onOpenSettings,
-  onToggleSidebar,
-}: AppHeaderProps) => {
+const Header = ({ onNotificationClick, onOpenSettings }: AppHeaderProps) => {
   const { auth, project, projectNavigation, projectShare, account } =
     usePage().props;
   const { t } = useTranslation();
@@ -109,22 +102,13 @@ const Header = ({
 
   return (
     <header className="flex items-center gap-2 bg-dark-surface-1 p-2 select-none">
-      {/* ── Left: Menu (mobile) + Logo + Project picker ── */}
-      <div className="flex min-w-0 flex-1 items-center gap-2 md:w-100 md:flex-none md:shrink-0">
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          aria-label={t('header.menu')}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-dark-surface-2 text-dark-primary transition-colors hover:bg-dark-surface-3 md:hidden"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-
-        <div className="hidden items-center justify-center rounded-lg bg-dark-surface-2 p-1 text-dark-primary sm:flex">
+      {/* ── Left: Logo + Project picker ── */}
+      <div className="flex w-100 shrink-0 items-center gap-2">
+        <div className="flex items-center justify-center rounded-lg bg-dark-surface-2 p-1 text-dark-primary">
           <Zeno className="h-6 w-6" />
         </div>
 
-        <div ref={projectMenuRef} className="relative min-w-0">
+        <div ref={projectMenuRef} className="relative">
           <button
             type="button"
             onClick={() => setProjectMenuOpen((v) => !v)}
@@ -151,16 +135,13 @@ const Header = ({
         </div>
       </div>
 
-      {/* ── Centre: Search (hidden on small screens) ── */}
-      <div
-        className="hidden min-w-0 flex-1 justify-center px-4 md:flex"
-        role="search"
-      >
+      {/* ── Centre: Search ── */}
+      <div className="flex min-w-0 flex-1 justify-center px-4" role="search">
         <HeaderSearch />
       </div>
 
       {/* ── Right: Actions + Account switcher ── */}
-      <div className="flex shrink-0 items-center justify-end gap-2 md:w-100">
+      <div className="flex w-100 shrink-0 items-center justify-end gap-2">
         <div className="relative">
           <HeaderIconButton
             label={t('header.notifications')}
@@ -191,22 +172,17 @@ const Header = ({
           label={t('header.inviteMembers')}
           disabled={project === null}
           onClick={() => setInviteOpen(true)}
-          className="hidden xs:flex"
         >
           <People />
         </HeaderIconButton>
         <HeaderIconButton
           label={t('header.settings')}
           onClick={() => onOpenSettings?.('general')}
-          className="hidden xs:flex"
         >
           <Gear />
         </HeaderIconButton>
 
-        <div
-          className="mx-1.5 hidden h-5 w-px bg-dark-border xs:block"
-          aria-hidden="true"
-        />
+        <div className="mx-1.5 h-5 w-px bg-dark-border" aria-hidden="true" />
 
         {/* AccountSwitcher manages its own open state + outside-click */}
         <AccountSwitcher

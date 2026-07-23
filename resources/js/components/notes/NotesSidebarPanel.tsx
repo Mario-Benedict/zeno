@@ -14,8 +14,6 @@ interface NotesSidebarPanelProps {
   onSelectNote: (note: NoteListItemType) => void;
   onCreateNote: (isShared: boolean) => void;
   onDeleteRequest: (id: string) => void;
-  /** Responsive visibility class controlled by the page (mobile master/detail). */
-  className?: string;
 }
 
 /**
@@ -32,7 +30,6 @@ const NotesSidebarPanel = ({
   onSelectNote,
   onCreateNote,
   onDeleteRequest,
-  className = '',
 }: NotesSidebarPanelProps): React.ReactElement => {
   const { t } = useTranslation();
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
@@ -52,9 +49,7 @@ const NotesSidebarPanel = ({
   const sharedNotes = filtered.filter((n) => n.isShared);
 
   return (
-    <section
-      className={`flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-lg border border-dark-border/10 bg-dark-surface-2 md:w-[401px] ${className}`}
-    >
+    <section className="flex min-h-0 w-[401px] shrink-0 flex-col overflow-hidden rounded-lg border border-dark-border/10 bg-dark-surface-2">
       <div className="px-4 pt-4">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="m-0 text-h4 font-bold text-dark-primary">

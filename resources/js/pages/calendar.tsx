@@ -20,8 +20,6 @@ import type {
   CalendarProps,
   CalendarViewMode,
 } from '@/types/calendar';
-import ChevronLeftIcon from '@public/icons/small/chevron_left.svg';
-import MenuIcon from '@public/icons/small/menu.svg';
 
 const Calendar = ({
   project,
@@ -52,9 +50,6 @@ const Calendar = ({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentDate(new Date(`${initialDate}T00:00:00`));
   }, [initialDate]);
-
-  // Mobile-only in-page drawer for the filters/mini-calendar sidebar.
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Member checkboxes
   const [members, setMembers] = useState<CalendarMember[]>(() =>
@@ -403,7 +398,7 @@ const Calendar = ({
     <AppLayout project={project}>
       <Head title={`${t('calendar.pageTitle')} - ${project.project_name}`} />
 
-      <div className="relative flex h-full w-full gap-2 overflow-hidden bg-dark-surface-1 p-2">
+      <div className="flex h-full w-full gap-2 overflow-hidden bg-dark-surface-1 p-2">
         <CalendarSidebar
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
@@ -424,49 +419,9 @@ const Calendar = ({
           onToggleLabel={handleToggleLabel}
           eventSourceFilter={eventSourceFilter}
           onEventSourceFilterChange={setEventSourceFilter}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
         />
 
-        <div className="relative flex flex-1 flex-col gap-2 overflow-hidden">
-          {/* Mobile toolbar: open filters + month navigation */}
-          <div className="flex shrink-0 items-center justify-between gap-2 md:hidden">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                aria-label={t('calendar.eventSourceFilterLabel')}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-dark-surface-2 text-dark-primary transition-colors hover:bg-dark-surface-3"
-              >
-                <MenuIcon className="h-4 w-4" />
-              </button>
-              <span className="text-small font-semibold text-dark-primary">
-                {currentDate.toLocaleDateString(undefined, {
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                aria-label={t('calendar.month')}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-dark-surface-2 text-dark-primary transition-colors hover:bg-dark-surface-3"
-              >
-                <ChevronLeftIcon className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                aria-label={t('calendar.month')}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-dark-surface-2 text-dark-primary transition-colors hover:bg-dark-surface-3"
-              >
-                <ChevronLeftIcon className="h-4 w-4 rotate-180" />
-              </button>
-            </div>
-          </div>
-
+        <div className="relative flex flex-1 flex-col overflow-hidden">
           {viewMode === 'month' ? (
             <MonthGrid
               currentDate={currentDate}

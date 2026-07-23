@@ -10,11 +10,6 @@ export default {
   ],
   theme: {
     extend: {
-      // Extra small breakpoint for phones — the default scale starts at sm
-      // (640px), which is too coarse for narrow mobile layouts.
-      screens: {
-        xs: '480px',
-      },
       fontFamily: {
         sans: ['Figtree', ...defaultTheme.fontFamily.sans],
       },
