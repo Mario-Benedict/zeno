@@ -2,7 +2,6 @@ import { EditorContent } from '@tiptap/react';
 import React, { useCallback } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { NoteDetail } from '@/types/notes';
-import ArrowLeftIcon from '@public/icons/small/arrow_left.svg';
 import NoteEditorHeader from './NoteEditorHeader';
 import NoteEmptyState from './NoteEmptyState';
 import { useNoteEditor } from './useNoteEditor';
@@ -17,10 +16,6 @@ interface NoteEditorProps {
   onSaved: (note: NoteDetail) => void;
   onShareClick: () => void;
   onDeleteClick: () => void;
-  /** Back to the notes list on mobile (master/detail). */
-  onBack?: () => void;
-  /** Responsive visibility class controlled by the page. */
-  className?: string;
 }
 
 /**
@@ -37,8 +32,6 @@ const NoteEditor = ({
   onSaved,
   onShareClick,
   onDeleteClick,
-  onBack,
-  className = '',
 }: NoteEditorProps): React.ReactElement => {
   const { t } = useTranslation();
   const {
@@ -77,9 +70,7 @@ const NoteEditor = ({
 
   if (!note) {
     return (
-      <div
-        className={`flex min-h-0 flex-1 flex-col rounded-lg bg-dark-surface-2 p-4 ${className}`}
-      >
+      <div className="flex min-h-0 flex-1 flex-col rounded-lg bg-dark-surface-2 p-4">
         <div className="scrollbar-app flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-dark-surface-3 p-6">
           <NoteEmptyState />
         </div>
@@ -90,18 +81,8 @@ const NoteEditor = ({
   const isOwner = note.ownerId === currentUserId;
 
   return (
-    <div
-      className={`flex min-h-0 flex-1 flex-col rounded-lg bg-dark-surface-2 p-3 md:p-4 ${className}`}
-    >
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-2 flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-small font-medium text-dark-secondary transition-colors hover:bg-dark-surface-3 hover:text-dark-primary md:hidden"
-      >
-        <ArrowLeftIcon className="h-4 w-4" />
-        {t('common.back')}
-      </button>
-      <div className="scrollbar-app flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-dark-surface-3 p-4 md:p-6">
+    <div className="flex min-h-0 flex-1 flex-col rounded-lg bg-dark-surface-2 p-4">
+      <div className="scrollbar-app flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg bg-dark-surface-3 p-6">
         <NoteEditorHeader
           note={note}
           title={title}

@@ -11,18 +11,9 @@ import PlusIcon from '@public/icons/small/plus.svg';
 interface Props {
   sessions: LlmSession[];
   activeSessionId?: string;
-  /** Mobile in-page drawer open state (ignored on md+ where it's a static rail). */
-  open?: boolean;
-  /** Close the mobile drawer (also called after navigating to a session). */
-  onClose?: () => void;
 }
 
-const LlmChatSidebar = ({
-  sessions,
-  activeSessionId,
-  open = false,
-  onClose,
-}: Props) => {
+const LlmChatSidebar = ({ sessions, activeSessionId }: Props) => {
   const { t } = useTranslation();
   const { project, accountIndex } = useProject();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -42,29 +33,15 @@ const LlmChatSidebar = ({
 
   return (
     <>
-      {/* Mobile backdrop */}
-      <div
-        onClick={onClose}
-        aria-hidden="true"
-        className={`absolute inset-0 z-30 rounded-lg bg-black/50 transition-opacity duration-200 md:hidden ${
-          open ? 'opacity-100' : 'pointer-events-none opacity-0'
-        }`}
-      />
-
-      <aside
-        className={`z-40 flex w-55 shrink-0 flex-col overflow-hidden rounded-lg bg-dark-surface-2 max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:w-64 max-md:shadow-2xl max-md:transition-transform max-md:duration-200 ${
-          open ? 'max-md:translate-x-0' : 'max-md:-translate-x-[110%]'
-        }`}
-      >
+      <aside className="flex w-55 shrink-0 flex-col overflow-hidden rounded-lg bg-dark-surface-2">
         <div className="px-3 pt-3 pb-2">
           <button
             type="button"
-            onClick={() => {
-              onClose?.();
+            onClick={() =>
               router.get(
                 projectPath(accountIndex, project.project_slug, '/llm-chat'),
-              );
-            }}
+              )
+            }
             className="flex w-full items-center gap-2 rounded-lg bg-dark-surface-3 px-3 py-2 text-sm text-dark-secondary transition-colors hover:bg-status-info hover:text-white"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0" />
@@ -96,7 +73,6 @@ const LlmChatSidebar = ({
                   onOpenMenu={() => setOpenMenuId(session.llm_chat_session_id)}
                   onCloseMenu={() => setOpenMenuId(null)}
                   onRequestDelete={() => setDeleteTarget(session)}
-                  onNavigate={() => onClose?.()}
                 />
               ))}
             </div>

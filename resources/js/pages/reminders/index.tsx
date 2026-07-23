@@ -17,7 +17,6 @@ import type {
   Reminder,
   RemindersPageProps,
 } from '@/types/reminder';
-import ArrowLeftIcon from '@public/icons/small/arrow_left.svg';
 
 // All write operations use Inertia's `router` with `preserveState` +
 // `preserveScroll` so the page's own optimistic local state drives the UI,
@@ -313,21 +312,9 @@ const RemindersPage = ({
           onTogglePin={handleTogglePin}
           onDelete={handleDeleteReminder}
           onAddClick={() => setAddModalOpen(true)}
-          className={selected ? 'max-md:hidden' : ''}
         />
 
-        <div
-          className={`flex flex-1 flex-col gap-3 overflow-hidden ${selected ? '' : 'max-md:hidden'}`}
-        >
-          <button
-            type="button"
-            onClick={() => setSelectedId(null)}
-            className="flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-small font-medium text-dark-secondary transition-colors hover:bg-dark-surface-2 hover:text-dark-primary md:hidden"
-          >
-            <ArrowLeftIcon className="h-4 w-4" />
-            {t('common.back')}
-          </button>
-
+        <div className="flex flex-1 flex-col gap-3 overflow-hidden">
           <PomodoroTimer
             settings={pomodoroSettings}
             onSaveSettings={handleSavePomodoroSettings}

@@ -83,7 +83,7 @@ const ProjectSettingsModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Sidebar ─────────────────────────────── */}
-        <div className="flex w-36 shrink-0 flex-col border-r border-dark-border bg-dark-surface-1 p-2 sm:w-52">
+        <div className="flex w-52 shrink-0 flex-col border-r border-dark-border bg-dark-surface-1 p-2">
           <div className="mb-4 flex items-center justify-between px-1 pt-1">
             <p className="text-small font-semibold text-dark-primary">
               {t('projectSettings.title')}
@@ -146,7 +146,7 @@ const ProjectSettingsModal = ({
         </div>
 
         {/* ── Content ─────────────────────────────── */}
-        <div className="scrollbar-app min-w-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="scrollbar-app flex-1 overflow-y-auto p-6">
           {activeTab === 'general' && project && (
             <GeneralTab
               project={project}
