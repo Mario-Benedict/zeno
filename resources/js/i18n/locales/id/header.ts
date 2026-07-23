@@ -4,7 +4,6 @@ import type { header as en } from '../en/header';
 export const header: typeof en = {
   selectProject: 'Pilih proyek',
   projectsFallback: 'Proyek',
-  menu: 'Menu',
   search: 'Cari di proyek ini',
   searchShortcut: 'Ctrl K',
   searchHint:

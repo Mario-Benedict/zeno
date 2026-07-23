@@ -1,6 +1,7 @@
 import { createInertiaApp, router } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import DeviceGate from '@/components/shared/DeviceGate';
 import UploadErrorToast from '@/components/shared/UploadErrorToast';
 import { LocaleProvider } from '@/i18n/LocaleContext';
 import { applyThemeClass, getStoredTheme, persistTheme } from '@/lib/theme';
@@ -49,8 +50,10 @@ createInertiaApp({
     createRoot(el).render(
       <StrictMode>
         <LocaleProvider>
-          <App {...props} />
-          <UploadErrorToast />
+          <DeviceGate>
+            <App {...props} />
+            <UploadErrorToast />
+          </DeviceGate>
         </LocaleProvider>
       </StrictMode>,
     );

@@ -9,7 +9,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import AppLayout from '@/layouts/AppLayout';
 import { projectPath } from '@/lib/accountRoutes';
 import type { LlmMessage, LlmSession } from '@/types/llm-chat';
-import MenuIcon from '@public/icons/small/menu.svg';
 
 interface Props {
   sessions: LlmSession[];
@@ -21,9 +20,6 @@ const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
   const { t } = useTranslation();
   const { project, accountIndex } = useProject();
   const { data, setData, post, processing, reset } = useForm({ question: '' });
-
-  // Mobile-only in-page drawer for the session list.
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Optimistic user bubble shown while the API call is in flight.
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
@@ -86,30 +82,16 @@ const LlmChatIndex = ({ sessions, session, messages = [] }: Props) => {
       />
 
       <AppLayout project={project}>
-        <div className="relative flex h-full w-full gap-2 overflow-hidden p-2">
+        <div className="flex h-full w-full gap-2 overflow-hidden p-2">
           <LlmChatSidebar
             sessions={sessions}
             activeSessionId={session?.llm_chat_session_id}
-            open={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
           />
 
           <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg bg-dark-surface-2">
-            {/* Mobile: open the session list drawer */}
-            <div className="flex shrink-0 items-center gap-2 px-3 pt-3 md:hidden">
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="flex items-center gap-1.5 rounded-lg bg-dark-surface-3 px-3 py-1.5 text-small font-medium text-dark-secondary transition-colors hover:text-dark-primary"
-              >
-                <MenuIcon className="h-4 w-4" />
-                {t('llmChat.chats')}
-              </button>
-            </div>
-
             {/* Session title divider */}
             {session && (
-              <div className="shrink-0 px-4 pt-5 pb-3 md:px-6">
+              <div className="shrink-0 px-6 pt-5 pb-3">
                 <div className="flex items-center gap-4">
                   <div className="h-px flex-1 bg-dark-border" />
                   <h2 className="text-sm font-semibold text-dark-primary">

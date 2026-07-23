@@ -220,8 +220,7 @@ export default function Index({
     <AppLayout project={project}>
       <Head title={`${t('nav.chat')} - ${project.project_name}`} />
 
-      {/* gap-2 separates sidebar and window as two distinct boxes.
-          On mobile it's a single pane: the room list, or the open room. */}
+      {/* gap-2 separates sidebar and window as two distinct boxes */}
       <div className="flex h-full w-full gap-2 overflow-hidden p-2">
         <ChatSidebar
           rooms={liveRooms}
@@ -232,7 +231,6 @@ export default function Index({
           onStartDm={openDmWith}
           onCreateGroup={createGroup}
           creatingGroup={creatingGroup}
-          className={activeRoom ? 'max-md:hidden' : ''}
         />
         <ChatWindow
           room={activeRoom}
@@ -245,8 +243,6 @@ export default function Index({
           onSenderClick={openDmWith}
           onMessageSent={updateRoomFromMessage}
           realtimeMessages={realtimeMessages}
-          onBack={() => setSelectedRoomId(null)}
-          className={activeRoom ? '' : 'max-md:hidden'}
         />
       </div>
     </AppLayout>

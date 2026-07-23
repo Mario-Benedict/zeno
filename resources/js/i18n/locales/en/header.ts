@@ -2,7 +2,6 @@
 export const header = {
   selectProject: 'Select project',
   projectsFallback: 'Projects',
-  menu: 'Menu',
   search: 'Search this project',
   searchShortcut: 'Ctrl K',
   searchHint:

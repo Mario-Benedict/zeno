@@ -4,6 +4,7 @@ import { calendar as calendarEn } from './locales/en/calendar';
 import { chat as chatEn } from './locales/en/chat';
 import { common as commonEn } from './locales/en/common';
 import { dashboard as dashboardEn } from './locales/en/dashboard';
+import { deviceGate as deviceGateEn } from './locales/en/deviceGate';
 import { header as headerEn } from './locales/en/header';
 import { kanban as kanbanEn } from './locales/en/kanban';
 import { landing as landingEn } from './locales/en/landing';
@@ -21,6 +22,7 @@ import { calendar as calendarId } from './locales/id/calendar';
 import { chat as chatId } from './locales/id/chat';
 import { common as commonId } from './locales/id/common';
 import { dashboard as dashboardId } from './locales/id/dashboard';
+import { deviceGate as deviceGateId } from './locales/id/deviceGate';
 import { header as headerId } from './locales/id/header';
 import { kanban as kanbanId } from './locales/id/kanban';
 import { landing as landingId } from './locales/id/landing';
@@ -42,6 +44,7 @@ const en = {
   common: commonEn,
   nav: navEn,
   header: headerEn,
+  deviceGate: deviceGateEn,
   account: accountEn,
   projectSettings: projectSettingsEn,
   projectSettingsTabs: projectSettingsTabsEn,
@@ -62,6 +65,7 @@ const id: typeof en = {
   common: commonId,
   nav: navId,
   header: headerId,
+  deviceGate: deviceGateId,
   account: accountId,
   projectSettings: projectSettingsId,
   projectSettingsTabs: projectSettingsTabsId,
